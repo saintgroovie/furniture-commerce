@@ -7,6 +7,7 @@ import {
   isoToLocalInput,
   localInputToIso,
   moveItem,
+  skipReasonLabel,
   slotStatusLabel,
 } from "./catalog-promo-labels.ts"
 
@@ -31,6 +32,25 @@ describe("catalog-promo-labels", () => {
       assert.equal(/[—–]/.test(label), false)
     }
     assert.equal(blockerLabel(null), null)
+  })
+
+  it("skipReasonLabel covers every storefront skip code", () => {
+    const reasons = [
+      "not_found",
+      "unpublished",
+      "bespoke",
+      "not_purchasable",
+      "no_sale_price",
+      "no_image",
+    ] as const
+    for (const reason of reasons) {
+      const label = skipReasonLabel(reason)
+      assert.ok(label && label.length > 0)
+      assert.equal(/[—–]/.test(label), false)
+    }
+    assert.equal(skipReasonLabel("not_found"), "Товар не найден")
+    assert.equal(skipReasonLabel("not_purchasable"), "Товар нельзя купить отдельно")
+    assert.equal(skipReasonLabel("no_sale_price"), blockerLabel("no_sale_price"))
   })
 
   it("formatScheduleRu", () => {

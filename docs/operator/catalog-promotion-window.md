@@ -38,20 +38,20 @@ Fail-closed rules: if the sales-policy link cannot be read, every candidate is t
 | `GET /store/woodright/promotion-slot` | Storefront payload (`slot`, `items[]` with `sale_price`, `original_price`, `discount_percent`, `product`) |
 | `GET/PUT /admin/woodright/catalog-promo` | Slot config + products with base / sale price and blocker |
 | `GET /admin/woodright/catalog-promo/products?q=` | Product picker (published, non-BESPOKE, RUB base price) |
-| `PUT/DELETE /admin/woodright/catalog-promo/products/:id/discount` | Set `{ percent }` or `{ amount }` / clear the sale price in the promo price list |
+| `PUT/DELETE /admin/woodright/catalog-promo/products/:id/discount` | Set `{ percent }` or `{ sale_price }` / `{ clear: true }` in the promo price list |
 | `GET /admin/woodright/catalog-promo/preview` | What the storefront resolves right now + skipped reasons |
 
 ## Seller guide (Admin → Woodright → Промо в каталоге)
 
 | Task | How |
 | --- | --- |
-| Turn the window off / on | Checkbox «Показывать промо-окно в каталоге» → «Сохранить». Storefront fetches the slot `no-store`, so the next catalog request reflects it (regular product cards keep the catalog list cache, ≤ 60 s) |
-| Add a product | «Добавить товар» → type name / SKU / handle → «Добавить» → «Сохранить». A product without a discount shows «Скидка не задана - товар не показывается» until a discount is set |
-| Remove a product | «Убрать» on the product row → «Сохранить» |
-| Change order | ↑ / ↓ on the row → «Сохранить». Order = rotation order |
-| Change the discount | «Скидка, %» → «Обновить скидку» (writes the sale price into the native price list immediately; no «Сохранить» needed). «Убрать скидку» clears it |
-| Schedule | «Показывать с» / «Показывать до» on the slot; discount validity itself lives on the native price list («Открыть прайс-лист в Medusa») |
-| Preview | Section «На сайте» shows the resolved rotation and skipped products with reasons |
+| Turn the window off / on | Checkbox «Показывать промо-окно в каталоге» → «Сохранить». Storefront fetches the slot `no-store`, so the next catalog reload shows it |
+| Add a product | «Добавить товар» → название / артикул / адрес → «Добавить» → задайте скидку (кнопка «Скидка 10%» или % / ₽) → «Сохранить». Без скидки товар в окне не появится |
+| Remove a product | «Убрать» на строке → «Сохранить» |
+| Change order | ↑ / ↓ на строке → «Сохранить». Порядок = очередь ротации |
+| Change the discount | «Скидка, %» или «Цена со скидкой, ₽» → «Обновить скидку» (пишет в нативный прайс-лист сразу, без «Сохранить»). «Убрать скидку» снимает её. «Открыть карточку товара» ведёт в карточку Woodright |
+| Schedule | «Показывать с» / «Показывать до» у окна; срок самой скидки - в нативном прайс-листе («Открыть прайс-лист в Medusa») |
+| Preview | «Что сейчас видит покупатель» - очередь на сайте и список «Не показываются» с причиной |
 
 Storefront reads the seller values only; no product ids or discount values are hard-coded.
 

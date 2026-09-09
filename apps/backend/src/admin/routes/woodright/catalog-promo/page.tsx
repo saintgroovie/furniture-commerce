@@ -1,3 +1,4 @@
+import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { Badge, Button, Container, Heading, Input, Label, StatusBadge, Text } from "@medusajs/ui"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
@@ -13,6 +14,7 @@ import {
   isoToLocalInput,
   localInputToIso,
   moveItem,
+  skipReasonLabel,
   slotStatusLabel,
 } from "../../../components/woodright/catalog-promo-labels"
 import { adminJson, sellerErrorMessage } from "../../../lib/admin-fetch"
@@ -62,12 +64,17 @@ function DiscountEditor({
   const [percent, setPercent] = useState(
     product.discount_percent != null ? String(product.discount_percent) : "10"
   )
+  const [saleRub, setSaleRub] = useState(
+    product.sale_price != null ? String(product.sale_price) : ""
+  )
+  const [lastField, setLastField] = useState<"percent" | "amount">("percent")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (product.discount_percent != null) setPercent(String(product.discount_percent))
-  }, [product.discount_percent])
+    setSaleRub(product.sale_price != null ? String(product.sale_price) : "")
+  }, [product.discount_percent, product.sale_price])
 
   const apply = async (body: Record<string, unknown>) => {
     setBusy(true)
@@ -85,6 +92,17 @@ function DiscountEditor({
     }
   }
 
+  const applyEdited = () => {
+    if (lastField === "amount") {
+      const amount = Number(saleRub)
+      void apply({ sale_price: amount })
+      return
+    }
+    void apply({ percent: Number(percent) })
+  }
+
+  const noBase = product.base_price == null
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-end gap-2">
@@ -99,18 +117,48 @@ function DiscountEditor({
             max={99}
             className="w-24"
             value={percent}
-            onChange={(e) => setPercent(e.target.value)}
-            disabled={busy || product.base_price == null}
+            onChange={(e) => {
+              setPercent(e.target.value)
+              setLastField("percent")
+            }}
+            disabled={busy || noBase}
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label htmlFor={`rub-${product.product_id}`} size="small">
+            Цена со скидкой, ₽
+          </Label>
+          <Input
+            id={`rub-${product.product_id}`}
+            type="number"
+            min={1}
+            className="w-32"
+            value={saleRub}
+            onChange={(e) => {
+              setSaleRub(e.target.value)
+              setLastField("amount")
+            }}
+            disabled={busy || noBase}
           />
         </div>
         <Button
           size="small"
           variant="secondary"
-          disabled={busy || product.base_price == null}
-          onClick={() => void apply({ percent: Number(percent) })}
+          disabled={busy || noBase}
+          onClick={() => applyEdited()}
         >
           {product.sale_price != null ? "Обновить скидку" : "Задать скидку"}
         </Button>
+        {product.sale_price == null && (
+          <Button
+            size="small"
+            variant="secondary"
+            disabled={busy || noBase}
+            onClick={() => void apply({ percent: 10 })}
+          >
+            Скидка 10%
+          </Button>
+        )}
         {product.sale_price != null && (
           <Button
             size="small"
@@ -122,6 +170,9 @@ function DiscountEditor({
           </Button>
         )}
       </div>
+      <Text size="xsmall" className="text-ui-fg-subtle">
+        Скидка пишется сразу в прайс-лист, без кнопки «Сохранить»
+      </Text>
       {error && (
         <Text size="xsmall" className="text-ui-fg-error">
           {error}
@@ -234,7 +285,7 @@ const CatalogPromoPage = () => {
       })
       applyState(json)
       await loadPreview()
-      setNote("Сохранено - сайт обновится в течение минуты")
+      setNote("Сохранено. На сайте сразу - обновите каталог")
     } catch (err) {
       setError(sellerErrorMessage(err, "Не удалось сохранить промо-окно"))
     } finally {
@@ -300,7 +351,10 @@ const CatalogPromoPage = () => {
           <StatusBadge color={status.tone}>{status.text}</StatusBadge>
         </div>
         <Text size="small" className="text-ui-fg-subtle">
-          Одна карточка в первом ряду каталога показывает по очереди товары со скидкой
+          Окно справа от каталога, в поле правее последней колонки
+        </Text>
+        <Text size="small" className="text-ui-fg-subtle">
+          На экране от 1500 px. На узком не показывается
         </Text>
       </div>
 
@@ -331,6 +385,9 @@ const CatalogPromoPage = () => {
               />
               <span>Показывать промо-окно в каталоге</span>
             </label>
+            <Text size="xsmall" className="text-ui-fg-subtle">
+              Включение, состав и порядок применятся после «Сохранить»
+            </Text>
             <div className="flex flex-col gap-1">
               <Label htmlFor="promo-label">Подпись на карточке</Label>
               <Input
@@ -385,9 +442,12 @@ const CatalogPromoPage = () => {
 
           <section className="flex flex-col gap-3 px-6 py-4">
             <Heading level="h2">Товары в промо-окне</Heading>
+            <Text size="small" className="text-ui-fg-subtle">
+              {form.product_ids.length} из {PROMOTION_SLOT_MAX_PRODUCTS}. Порядок = очередь на сайте
+            </Text>
             {form.product_ids.length === 0 && (
               <Text size="small" className="text-ui-fg-subtle">
-                Пока пусто - найдите товар ниже и добавьте
+                Пока пусто. Найдите товар ниже и добавьте
               </Text>
             )}
             <ol className="flex flex-col gap-3" data-testid="promo-products">
@@ -440,6 +500,12 @@ const CatalogPromoPage = () => {
                           </Text>
                         )}
                         {p && <DiscountEditor product={p} onChanged={onProductChanged} />}
+                        <Link
+                          to={`/woodright/products/${id}`}
+                          className="text-ui-fg-interactive text-sm"
+                        >
+                          Открыть карточку товара
+                        </Link>
                       </div>
                       <div className="flex flex-col gap-1">
                         <Button
@@ -492,7 +558,17 @@ const CatalogPromoPage = () => {
                   Ищем…
                 </Text>
               )}
-              {results.length > 0 && (
+              {!searching && query.trim().length === 1 && (
+                <Text size="xsmall" className="text-ui-fg-subtle">
+                  Ещё хотя бы 1 символ
+                </Text>
+              )}
+              {!searching && query.trim().length >= 2 && results.length === 0 && (
+                <Text size="xsmall" className="text-ui-fg-subtle">
+                  Ничего не нашли. Попробуйте артикул или другое название
+                </Text>
+              )}
+              {results.filter((r) => !form.product_ids.includes(r.product_id)).length > 0 && (
                 <ul className="flex flex-col divide-y rounded-lg border border-ui-border-base">
                   {results
                     .filter((r) => !form.product_ids.includes(r.product_id))
@@ -518,6 +594,14 @@ const CatalogPromoPage = () => {
                     ))}
                 </ul>
               )}
+              {!searching &&
+                query.trim().length >= 2 &&
+                results.length > 0 &&
+                results.every((r) => form.product_ids.includes(r.product_id)) && (
+                  <Text size="xsmall" className="text-ui-fg-subtle">
+                    Этот товар уже в окне
+                  </Text>
+                )}
             </div>
           </section>
 
@@ -543,9 +627,12 @@ const CatalogPromoPage = () => {
 
           <section className="flex flex-col gap-2 px-6 py-4">
             <Heading level="h2">Что сейчас видит покупатель</Heading>
+            <Text size="xsmall" className="text-ui-fg-subtle">
+              Справа от каталога, на широком экране
+            </Text>
             {!preview || !preview.visible ? (
               <Text size="small" className="text-ui-fg-subtle">
-                Промо-окно не показывается - каталог обычный
+                Промо-окно не показывается. Каталог обычный
               </Text>
             ) : (
               <ul className="flex flex-wrap gap-3" data-testid="promo-preview">
@@ -574,9 +661,23 @@ const CatalogPromoPage = () => {
               </ul>
             )}
             {preview && preview.skipped.length > 0 && (
-              <Text size="xsmall" className="text-ui-fg-subtle">
-                Не показываются: {preview.skipped.length}
-              </Text>
+              <div className="flex flex-col gap-1">
+                <Text size="small" className="text-ui-fg-subtle">
+                  Не показываются на сайте
+                </Text>
+                <ul className="flex flex-col gap-1" data-testid="promo-skipped">
+                  {preview.skipped.map((row) => {
+                    const p = productById.get(row.product_id)
+                    return (
+                      <li key={row.product_id}>
+                        <Text size="xsmall" className="text-ui-fg-subtle">
+                          {p?.title ?? row.product_id} - {skipReasonLabel(row.reason)}
+                        </Text>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
             )}
           </section>
 
@@ -602,3 +703,7 @@ const CatalogPromoPage = () => {
 }
 
 export default CatalogPromoPage
+
+export const config = defineRouteConfig({
+  label: "Промо в каталоге",
+})
