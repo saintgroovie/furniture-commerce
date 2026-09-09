@@ -23,6 +23,7 @@ export const metadata: Metadata = {
 export default async function PartnersPage() {
   const partners = await getPublicPartners()
   const isEmpty = partners.length === 0
+  const firstDeck = partners[0]?.presentations[0]
 
   return (
     <EditorialShell theme="partners">
@@ -39,6 +40,13 @@ export default async function PartnersPage() {
                 {partnersCopy.emptyCta}
               </Link>
             </div>
+          ) : firstDeck && partners[0] ? (
+            <Link
+              href={`/partners/${partners[0].slug}/presentations/${firstDeck.id}`}
+              className="btn btn-primary ed-partners-hero-cta"
+            >
+              {partnersCopy.viewPresentation}
+            </Link>
           ) : null}
         </div>
         <EditorialFigure

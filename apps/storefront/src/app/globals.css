@@ -12493,86 +12493,199 @@ a.pdp-size-chip:hover {
   font-weight: 400;
 }
 
+.ed-partners-hero-cta {
+  margin-top: 1.5rem;
+  align-self: flex-start;
+}
+
 .ed-logo-wall {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 0 0 4rem;
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 0.75rem 1rem;
-  align-items: end;
+  gap: 0.85rem;
+  align-items: stretch;
 }
 
 .ed-logo-cell {
   grid-column: span 4;
+  min-width: 0;
 }
 
 .ed-logo-cell.is-featured {
-  grid-column: span 7;
+  grid-column: span 8;
 }
 
 .ed-logo-cell.is-large {
-  grid-column: span 5;
+  grid-column: span 6;
 }
 
-.ed-logo-link {
+.ed-logo-card {
+  height: 100%;
+  display: grid;
+  grid-template-rows: minmax(10rem, 1fr) auto;
+  overflow: clip;
+  background: var(--color-surface, #f4efe8);
+}
+
+.ed-logo-cell.is-regular .ed-logo-card {
+  grid-template-rows: minmax(8rem, 0.7fr) auto;
+}
+
+.ed-logo-media {
+  margin: 0;
+  overflow: clip;
+}
+
+.ed-logo-media img {
+  width: 100%;
+  height: 100%;
+  min-height: 10rem;
+  object-fit: cover;
+  transform: scale(1.04);
+}
+
+.ed-logo-copy {
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
-  min-height: 7rem;
-  padding: 1rem 0.2rem;
-  text-decoration: none;
-  border-top: 1px solid var(--color-border);
-}
-
-.ed-logo-link:hover,
-.ed-logo-link:focus-visible {
-  text-decoration: none;
-}
-
-.ed-logo-link:focus-visible {
-  outline: 2px solid var(--color-fg);
-  outline-offset: 4px;
-}
-
-.ed-logo-link img {
-  max-height: 4.5rem;
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
-  filter: grayscale(1);
-  opacity: 0.86;
-}
-
-.ed-logo-cell.is-featured .ed-logo-link img {
-  max-height: 7rem;
+  padding: 1.1rem 1.15rem 1.25rem;
 }
 
 .ed-logo-name {
-  font-size: clamp(1.4rem, 3vw, 2.4rem);
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+  margin: 0;
+  font-size: clamp(1.35rem, 2.6vw, 2.35rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
 }
 
 .ed-logo-cell.is-featured .ed-logo-name {
-  font-size: clamp(2rem, 5vw, 4rem);
+  font-size: clamp(2rem, 4.4vw, 3.6rem);
+}
+
+.ed-logo-name a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ed-logo-name a:hover,
+.ed-logo-name a:focus-visible {
+  text-decoration: none;
 }
 
 .ed-logo-caption,
 .ed-logo-kicker {
+  margin: 0;
   color: var(--color-fg-muted);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.ed-logo-actions {
+  margin-top: 0.55rem;
+}
+
+.ed-logo-actions .btn {
+  min-height: 2.5rem;
+}
+
+.ed-partner-lead-cta {
+  margin: 1.25rem 0 0;
+}
+
+.ed-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.ed-deck-stage {
+  margin: 0;
+  position: relative;
+  overflow: clip;
+  background: #111;
+}
+
+.ed-deck-stage img {
+  width: 100%;
+  height: min(72vh, 42rem);
+  object-fit: cover;
+}
+
+.ed-deck-stage figcaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1.5rem 1.4rem 1.6rem;
+  background: linear-gradient(180deg, transparent, rgba(12, 10, 8, 0.78));
+  color: #f6f1ea;
+}
+
+.ed-deck-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.78;
+}
+
+.ed-deck-stage h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+
+.ed-deck-stage figcaption p:last-child {
+  margin: 0.4rem 0 0;
+  max-width: 36rem;
+  color: rgba(246, 241, 234, 0.86);
+}
+
+.ed-deck-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .ed-logo-link img {
-    transition: opacity 0.25s ease, filter 0.25s ease;
+  .ed-logo-media img {
+    transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .ed-logo-link:hover img,
-  .ed-logo-link:focus-visible img {
-    opacity: 1;
-    filter: none;
+  .ed-logo-card:hover .ed-logo-media img,
+  .ed-logo-card:focus-within .ed-logo-media img {
+    transform: scale(1);
+  }
+
+  .ed-logo-name a {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0 1px;
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    transition: background-size 0.35s ease;
+  }
+
+  .ed-logo-name a:hover,
+  .ed-logo-name a:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  .ed-deck-stage img {
+    animation: ed-deck-ken 12s ease both;
+  }
+}
+
+@keyframes ed-deck-ken {
+  from {
+    transform: scale(1.05);
+  }
+  to {
+    transform: scale(1);
   }
 }
 
@@ -12753,6 +12866,10 @@ a.pdp-size-chip:hover {
   }
 
   .ed-logo-cell,
+  .ed-logo-cell.is-regular {
+    grid-column: span 6;
+  }
+
   .ed-logo-cell.is-featured,
   .ed-logo-cell.is-large {
     grid-column: span 12;
@@ -12791,8 +12908,19 @@ a.pdp-size-chip:hover {
 
   .ed-cta-row .btn,
   .ed-closing-plate .btn,
-  .ed-partners-empty .btn {
+  .ed-partners-empty .btn,
+  .ed-partners-hero-cta,
+  .ed-logo-actions .btn,
+  .ed-partner-lead-cta .btn,
+  .ed-deck-nav .btn {
     width: 100%;
+  }
+
+  .ed-logo-cell,
+  .ed-logo-cell.is-featured,
+  .ed-logo-cell.is-large,
+  .ed-logo-cell.is-regular {
+    grid-column: span 12;
   }
 
   .ed-viewer-iframe {

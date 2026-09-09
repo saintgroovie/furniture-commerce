@@ -1,5 +1,13 @@
 import { getBaseUrl, medusaFetch } from "./base"
 import { resolvePdpMediaSrc } from "../product-images"
+import { LEGACY_PARTNERS } from "../legacy-partners"
+
+export type EditorialSlide = {
+  src: string
+  alt: string
+  title: string
+  caption: string
+}
 
 export type StorePartnerPresentation = {
   id: string
@@ -8,6 +16,7 @@ export type StorePartnerPresentation = {
   cover_url: string | null
   page_count: number | null
   mime: string | null
+  slides?: EditorialSlide[]
 }
 
 export type StorePartner = {
@@ -32,8 +41,12 @@ export function toStorefrontPartner(partner: StorePartner): StorePartner {
     images: partner.images.map((src) => resolvePdpMediaSrc(src)),
     presentations: partner.presentations.map((deck) => ({
       ...deck,
-      file_url: resolvePdpMediaSrc(deck.file_url),
+      file_url: deck.file_url ? resolvePdpMediaSrc(deck.file_url) : "",
       cover_url: deck.cover_url ? resolvePdpMediaSrc(deck.cover_url) : null,
+      slides: deck.slides?.map((slide) => ({
+        ...slide,
+        src: resolvePdpMediaSrc(slide.src),
+      })),
     })),
   }
 }
@@ -47,16 +60,19 @@ function asPartnerList(data: unknown): StorePartner[] {
     .map((item) => toStorefrontPartner(item))
 }
 
-/** Public partner index. Never throws: missing backend → empty editorial state. */
+/** Public partner index. Admin records win; otherwise the confirmed legacy roster. */
 export async function getPublicPartners(): Promise<StorePartner[]> {
   try {
     const base = getBaseUrl()
     const res = await medusaFetch(`${base}/store/partners`)
-    if (!res.ok) return []
-    return asPartnerList(await res.json())
+    if (res.ok) {
+      const remote = asPartnerList(await res.json())
+      if (remote.length > 0) return remote
+    }
   } catch {
-    return []
+    /* Medusa on another SHA or unreachable - show legacy roster. */
   }
+  return LEGACY_PARTNERS
 }
 
 export async function getPublicPartnerBySlug(slug: string): Promise<StorePartner | null> {

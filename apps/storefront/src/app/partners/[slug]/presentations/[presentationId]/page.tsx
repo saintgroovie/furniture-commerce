@@ -44,8 +44,11 @@ export default async function PresentationPage({ params }: { params: Promise<Par
           src={deck.file_url}
           title={deck.title}
           mime={deck.mime}
+          slides={deck.slides}
         />
-        <CopyLines className="ed-body ed-body--muted" lines={partnersCopy.viewerFallback} />
+        {deck.slides?.length ? null : (
+          <CopyLines className="ed-body ed-body--muted" lines={partnersCopy.viewerFallback} />
+        )}
       </article>
     </EditorialShell>
   )
