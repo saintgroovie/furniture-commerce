@@ -8,24 +8,41 @@ export function formatRubAdmin(amount: number | null | undefined): string {
   return `${new Intl.NumberFormat("ru-RU").format(Math.round(amount))}\u00a0₽`
 }
 
+/** Why the storefront skipped a slot product (preview). */
+export function skipReasonLabel(reason: string): string {
+  switch (reason) {
+    case "not_found":
+      return "Товар не найден"
+    case "unpublished":
+      return "Товар не опубликован - в промо не попадёт"
+    case "bespoke":
+      return "Товар по проекту - в промо не попадёт"
+    case "not_purchasable":
+      return "Товар нельзя купить отдельно"
+    case "no_sale_price":
+      return "Скидка не задана - товар не показывается"
+    case "no_image":
+      return "Нет фото - товар не показывается"
+    default:
+      return "Товар не показывается"
+  }
+}
+
 export function blockerLabel(blocker: CatalogPromoAdminProduct["blocker"]): string | null {
   switch (blocker) {
     case null:
       return null
     case "unpublished":
-      return "Товар не опубликован - в промо не попадёт"
     case "bespoke":
-      return "Товар по проекту - в промо не попадёт"
+    case "no_sale_price":
+    case "no_image":
+      return skipReasonLabel(blocker)
     case "no_base_price":
       return "У товара нет обычной цены"
-    case "no_sale_price":
-      return "Скидка не задана - товар не показывается"
     case "sale_not_lower":
       return "Скидочная цена не ниже обычной"
     case "price_list_inactive":
       return "Скидки сейчас не действуют по расписанию"
-    case "no_image":
-      return "Нет фото - товар не показывается"
     default:
       return "Товар не показывается"
   }
