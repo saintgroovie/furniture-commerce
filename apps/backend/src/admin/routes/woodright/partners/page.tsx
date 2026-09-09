@@ -17,10 +17,27 @@ function newId(prefix: string): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}`
 }
 
+function slugFromName(name: string, fallback: string): string {
+  const fromName = name
+    .trim()
+    .toLowerCase()
+    .replace(/ё/g, "e")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80)
+  const fromFallback = fallback
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80)
+  return fromName || fromFallback || "partner"
+}
+
 function emptyPartner(): WoodrightPartner {
+  const id = newId("p")
   return {
-    id: newId("p"),
-    slug: "",
+    id,
+    slug: slugFromName("", id),
     name: "",
     description: null,
     logo_url: null,
@@ -133,7 +150,18 @@ const WoodrightPartnersPage = () => {
                 <Input
                   id={`${partner.id}-name`}
                   value={partner.name}
-                  onChange={(event) => update(partner.id, { name: event.target.value })}
+                  onChange={(event) => {
+                    const name = event.target.value
+                    const generatedFromPrevious = slugFromName(partner.name, partner.id)
+                    const stillAuto =
+                      !partner.slug ||
+                      partner.slug === generatedFromPrevious ||
+                      partner.slug === slugFromName("", partner.id)
+                    update(partner.id, {
+                      name,
+                      slug: stillAuto ? slugFromName(name, partner.id) : partner.slug,
+                    })
+                  }}
                 />
               </div>
               <div className="flex flex-col gap-1">

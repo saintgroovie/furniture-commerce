@@ -8,6 +8,8 @@ import { getPublicPartners } from "@/lib/api/partners"
 import { editorialMedia } from "@/lib/editorial-media"
 import { partnersCopy, seo } from "@/lib/woodright-copy"
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
   title: seo.partners.title,
   description: seo.partners.description,
@@ -20,15 +22,16 @@ export const metadata: Metadata = {
 
 export default async function PartnersPage() {
   const partners = await getPublicPartners()
+  const isEmpty = partners.length === 0
 
   return (
     <EditorialShell theme="partners">
-      <section className={partners.length === 0 ? "ed-partners-hero ed-partners-hero--empty" : "ed-partners-hero"}>
+      <section className={isEmpty ? "ed-partners-hero ed-partners-hero--empty" : "ed-partners-hero"}>
         <div className="ed-partners-hero-copy">
           <p className="ed-eyebrow">Woodright</p>
           <h1>{partnersCopy.h1}</h1>
           <CopyLines className="ed-hero-lead" lines={partnersCopy.statement} />
-          {partners.length === 0 ? (
+          {isEmpty ? (
             <div className="ed-partners-empty">
               <h2>{partnersCopy.emptyTitle}</h2>
               <CopyLines className="ed-body" lines={partnersCopy.emptyBody} />
@@ -45,15 +48,7 @@ export default async function PartnersPage() {
         />
       </section>
 
-      <ul className="ed-partners-strip" data-reveal aria-hidden="true">
-        {editorialMedia.partnersStrip.map((item) => (
-          <li key={item.src}>
-            <img src={item.src} alt="" />
-          </li>
-        ))}
-      </ul>
-
-      {partners.length > 0 ? <PartnerIndex partners={partners} /> : null}
+      {isEmpty ? null : <PartnerIndex partners={partners} />}
     </EditorialShell>
   )
 }
