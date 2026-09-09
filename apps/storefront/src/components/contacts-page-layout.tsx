@@ -27,9 +27,11 @@ export function ContactsPageLayout() {
           alt={editorialMedia.contactsMaterial.alt}
         />
       </figure>
-      <h1 className="contacts-page-title">{contactsCopy.h1}</h1>
-      <p className="contacts-page-intro">{formatRuInline(contactsCopy.lead)}</p>
-      <CopyLines className="contacts-page-visit-hint" lines={contactsCopy.visitHint} />
+      <header className="contacts-page-masthead">
+        <h1 className="contacts-page-title">{contactsCopy.h1}</h1>
+        <p className="contacts-page-intro">{formatRuInline(contactsCopy.lead)}</p>
+        <CopyLines className="contacts-page-visit-hint" lines={contactsCopy.visitHint} />
+      </header>
 
       <div className="contacts-page-stage">
         <section

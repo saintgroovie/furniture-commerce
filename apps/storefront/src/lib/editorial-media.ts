@@ -63,18 +63,4 @@ export const editorialMedia = {
     src: `${P}/greenwich/beds-shared/GR-BED-POOL_cloud_bedroom2_int_View01.jpg`,
     alt: "Спальня Cloud с кроватью Greenwich и рабочим столом",
   },
-  partnersStrip: [
-    {
-      src: `${P}/greenwich/GR-67-1_greenwich_graphite16.jpg`,
-      alt: "Комод Greenwich в графитовой отделке",
-    },
-    {
-      src: `${P}/greenwich/GR-26-1_greenwich_darkblue19_a1fi-rc.jpg`,
-      alt: "Витрина Greenwich в тёмно-синей отделке",
-    },
-    {
-      src: `${P}/oliver/OL-95-1_gallery_02.jpg`,
-      alt: "Детская кровать Oliver",
-    },
-  ],
 } as const

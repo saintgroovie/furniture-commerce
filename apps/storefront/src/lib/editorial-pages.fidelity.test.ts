@@ -55,7 +55,21 @@ assert.match(read("app/about/page.tsx"), /aboutCopy\.links/)
 const partnersPage = read("app/partners/page.tsx")
 assert.match(partnersPage, /getPublicPartners/)
 assert.match(partnersPage, /ed-partners-hero--empty/)
+assert.match(partnersPage, /force-dynamic/)
+assert.doesNotMatch(partnersPage, /ed-partners-strip/)
 assert.doesNotMatch(partnersPage, /ГАБТ|Novikov|Фиолет|Русский Дизайнерский Дом/)
+assert.equal(partnersCopy.emptyTitle, "Студий в списке пока нет")
+
+const contactsLayout = read("components/contacts-page-layout.tsx")
+assert.match(contactsLayout, /contacts-page-masthead/)
+assert.match(contactsLayout, /contacts-page-visit-hint/)
+
+const globals = read("app/globals.css")
+assert.match(globals, /\.contacts-page-masthead\s*\{[^}]*grid-column:\s*1\s*\/\s*span\s*7/s)
+assert.match(globals, /\.contacts-page-media\s*\{[^}]*grid-column:\s*1\s*\/\s*-1/s)
+
+const viewer = read("components/partners/presentation-viewer.tsx")
+assert.doesNotMatch(viewer, /iframe/)
 
 const media = read("lib/editorial-media.ts")
 assert.match(media, /\/product-static\/products/)

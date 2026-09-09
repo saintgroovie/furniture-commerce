@@ -7,6 +7,8 @@ import { PresentationViewer } from "@/components/partners/presentation-viewer"
 import { getPublicPartnerBySlug } from "@/lib/api/partners"
 import { partnersCopy, seo } from "@/lib/woodright-copy"
 
+export const dynamic = "force-dynamic"
+
 type Params = { slug: string; presentationId: string }
 
 export async function generateMetadata({

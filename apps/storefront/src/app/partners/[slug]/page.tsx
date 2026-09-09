@@ -7,6 +7,8 @@ import { getPublicPartnerBySlug } from "@/lib/api/partners"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { partnersCopy, seo } from "@/lib/woodright-copy"
 
+export const dynamic = "force-dynamic"
+
 type Params = { slug: string }
 
 export async function generateMetadata({
