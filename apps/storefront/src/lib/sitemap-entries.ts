@@ -13,6 +13,7 @@ const STATIC_PATHS = [
   "/kids",
   "/kids/willie-winkie",
   "/bespoke",
+  "/bespoke/wall-panels",
   "/bespoke/request",
   "/designers",
   "/contacts",
