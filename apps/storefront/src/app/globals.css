@@ -13343,7 +13343,9 @@ button.pdp-size-chip:hover {
   z-index: 1;
   padding: clamp(1.5rem, 5vw, 4rem);
   color: var(--ed-dark-fg);
-  max-width: 42rem;
+  /* 48rem: at 1280px «складывается в дом» fits on one line (42rem left
+     «в дом» alone on line 3). */
+  max-width: 48rem;
 }
 
 .ed-hero-panel .ed-eyebrow {
