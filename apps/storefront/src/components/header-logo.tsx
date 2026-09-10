@@ -1,42 +1,42 @@
 "use client"
 
 import Link from "next/link"
+import { BespokeBadge } from "@/components/bespoke-badge"
 import { WoodrightWordmark } from "@/components/woodright-wordmark"
-import { useKidsChromeVisual, useKidsSection } from "@/lib/use-kids-section"
+import { useChromeVisual, useSiteSection } from "@/lib/use-site-section"
 
 /**
- * Wordmark + «Kids» pill. Together they render the accepted brand chrome
- * «Woodright Kids». The pill stays in the DOM so adult ↔ kids is a CSS tween
- * (not a mount jump). .logo is translateX(-50%)-centered, so as the slot
- * width opens the pair re-centers and the wordmark glides left.
+ * Wordmark + «KIDS» pill + BESPOKE capsule. Pills stay in the DOM so
+ * section changes are CSS tweens (not mount jumps). .logo is
+ * translateX(-50%)-centered, so as a slot width opens the pair re-centers.
  *
- * Inline SVG (same geometry as the old 273×35 PNG box) so ink stays crisp
- * at any DPR; kids-slot width is fixed in rem and does not depend on
- * raster intrinsic size. Kids chrome links to /kids (not the adult home).
- *
- * Visual open state comes from `useKidsChromeVisual` so kids catalog → PDP
+ * Kids chrome links to /kids; Bespoke chrome links to /bespoke.
+ * Visual open state comes from `useChromeVisual` so kids catalog → PDP
  * can snap-closed and replay the enter glide.
- *
- * Proper names (Greenwich, Cloud, Woodright Kids in product copy) stay Latin.
  */
 export function HeaderLogo() {
-  const sectionKids = useKidsSection()
-  const { kids: visualKids, snap } = useKidsChromeVisual()
+  const section = useSiteSection()
+  const { kids: visualKids, snap } = useChromeVisual()
+
+  const href = section === "kids" ? "/kids" : section === "bespoke" ? "/bespoke" : "/"
+  const ariaLabel =
+    section === "kids"
+      ? "Woodright Kids - на главную детской"
+      : section === "bespoke"
+        ? "Woodright Bespoke"
+        : "Woodright - на главную"
 
   return (
-    <Link
-      href={sectionKids ? "/kids" : "/"}
-      className="logo"
-      aria-label={
-        sectionKids ? "Woodright Kids - на главную детской" : "Woodright - на главную"
-      }
-    >
+    <Link href={href} className="logo" aria-label={ariaLabel}>
       <WoodrightWordmark className="logo-image" />
       <span
         className={`logo-kids-slot${visualKids ? " is-visible" : ""}${snap ? " is-snap" : ""}`}
         aria-hidden="true"
       >
         <span className="logo-kids-badge">Kids</span>
+      </span>
+      <span className="logo-bespoke-slot" aria-hidden="true">
+        <BespokeBadge />
       </span>
     </Link>
   )

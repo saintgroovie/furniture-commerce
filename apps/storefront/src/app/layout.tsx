@@ -13,7 +13,7 @@ import { NavDropdown } from "@/components/nav-dropdown"
 import { ShowroomContactsContent } from "@/components/showroom-contacts-content"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
-import { KidsSectionProvider } from "@/lib/use-kids-section"
+import { SiteSectionProvider } from "@/lib/use-site-section"
 import { getShowroomOrganizationContactLd } from "@/lib/showroom-contacts"
 import { CspNonceProvider } from "@/lib/csp-nonce"
 import { indexingRobotsMetadata } from "@/lib/indexing-policy"
@@ -85,7 +85,7 @@ export default async function RootLayout({
         {/* Provider sits above both the header and <main> so the sticky
             header tint and the route loader share one kids flag (pathname
             + optimistic link clicks). */}
-        <KidsSectionProvider>
+        <SiteSectionProvider>
         <SiteHeader>
           {/* Top bar */}
           <HeaderHoverDropdownProvider>
@@ -157,6 +157,7 @@ export default async function RootLayout({
                 <NavDropdown
                   href="/bespoke"
                   label={navCopy.bespoke}
+                  className="header-nav-bespoke"
                   items={[
                     { label: "Как это работает", href: "/bespoke" },
                     { label: "Стеновые панели", href: "/bespoke/wall-panels" },
@@ -229,7 +230,7 @@ export default async function RootLayout({
             </div>
           }
         />
-        </KidsSectionProvider>
+        </SiteSectionProvider>
         </CspNonceProvider>
       </body>
     </html>

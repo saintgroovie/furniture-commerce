@@ -162,7 +162,9 @@ img {
 }
 
 /* Home / bespoke / kids landings cancel stacked bottom rhythm under .hp. */
-#main-content.page-section:has(> .hp) {
+#main-content.page-section:has(> .hp),
+#main-content.page-section:has(> .kids-theme > .hp),
+#main-content.page-section:has(> .bespoke-theme > .hp) {
   padding-bottom: 0;
 }
 
@@ -211,6 +213,12 @@ img {
   initial-value: #ffffff;
 }
 
+@property --color-logo-ink {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #281c17;
+}
+
 .site-header {
   /* Slightly short + calm decelerate: long springy 1s + oversized max-width
      / 0fr→1fr felt sticky, then jerky once the competing badge translate
@@ -226,7 +234,8 @@ img {
   --header-edge-main: color-mix(in srgb, var(--color-accent) 13%, var(--color-bg));
   transition:
     --header-edge-top var(--logo-kids-duration) var(--logo-kids-ease),
-    --header-edge-main var(--logo-kids-duration) var(--logo-kids-ease);
+    --header-edge-main var(--logo-kids-duration) var(--logo-kids-ease),
+    --color-logo-ink var(--logo-kids-duration) var(--logo-kids-ease);
 }
 
 /* Kids section: same gradients re-tinted with the kids sage green.
@@ -237,6 +246,12 @@ img {
 html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-header {
   --header-edge-top: color-mix(in srgb, #507356 38%, var(--color-surface));
   --header-edge-main: color-mix(in srgb, #507356 13%, #f5f7f5);
+}
+
+.site-header[data-section="bespoke"] {
+  --header-edge-top: color-mix(in srgb, #3E515F 38%, var(--color-surface));
+  --header-edge-main: color-mix(in srgb, #3E515F 13%, #f5f3ee);
+  --color-logo-ink: #3E515F;
 }
 
 /* One-frame snap before kids→PDP enter replay (no wash tween while closed). */
@@ -253,6 +268,12 @@ body:has(.site-header[data-section="kids"]),
 body:has([data-kids-product]) {
   --color-action: #507356;
   --color-action-hover: #446249;
+}
+
+body:has(.site-header[data-section="bespoke"]) {
+  --color-action: #3E515F;
+  --color-action-hover: #305866;
+  --color-logo-ink: #3E515F;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -414,6 +435,128 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   .logo-kids-slot,
   .logo-kids-badge {
     transition: none;
+  }
+}
+
+.logo-bespoke-slot {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  width: 0;
+  overflow: hidden;
+  flex: none;
+  transition: width var(--logo-kids-duration) var(--logo-kids-ease);
+  transition-delay: 0.1s;
+}
+
+.logo-bespoke-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 16px;
+  padding: 0 9px;
+  margin-left: 8px;
+  color: #BFAE46;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-indent: 0.12em;
+  text-transform: uppercase;
+  line-height: 1;
+  white-space: nowrap;
+  flex: none;
+}
+
+.logo-bespoke-badge svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.logo-bespoke-badge rect {
+  fill: none;
+  stroke: #BFAE46;
+  stroke-width: 1;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  transition: stroke-dashoffset 0.34s ease;
+}
+
+.logo-bespoke-badge span {
+  opacity: 0;
+  letter-spacing: 0.22em;
+  transition: opacity 0.18s ease, letter-spacing 0.18s ease;
+}
+
+.site-header[data-section="bespoke"] .logo-bespoke-slot,
+.site-footer[data-section="bespoke"] .logo-bespoke-slot {
+  width: 78px;
+  transition-delay: 0.26s;
+}
+
+.site-header[data-section="bespoke"] .logo-bespoke-badge rect,
+.site-footer[data-section="bespoke"] .logo-bespoke-badge rect {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.46s cubic-bezier(0.4, 0, 0.2, 1) 0.32s;
+}
+
+.site-header[data-section="bespoke"] .logo-bespoke-badge span,
+.site-footer[data-section="bespoke"] .logo-bespoke-badge span {
+  opacity: 1;
+  letter-spacing: 0.12em;
+  transition: opacity 0.32s ease 0.64s, letter-spacing 0.42s var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1)) 0.62s;
+}
+
+.header-nav-bespoke .nav-dropdown-link {
+  position: relative;
+}
+
+.header-nav-bespoke .nav-dropdown-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1.5px;
+  background: #BFAE46;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.site-header[data-section="bespoke"] .header-nav-bespoke .nav-dropdown-link {
+  color: #3E515F;
+}
+
+.site-header[data-section="bespoke"] .header-nav-bespoke .nav-dropdown-link::after {
+  transform: scaleX(1);
+}
+
+@media (max-width: 768px) {
+  .site-header[data-section="bespoke"] .logo-bespoke-slot {
+    width: 72px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-bespoke-slot,
+  .logo-bespoke-badge,
+  .logo-bespoke-badge rect,
+  .logo-bespoke-badge span,
+  .header-nav-bespoke .nav-dropdown-link::after {
+    transition: none;
+  }
+
+  .logo-bespoke-badge rect {
+    stroke-dashoffset: 0;
+  }
+
+  .site-header[data-section="bespoke"] .logo-bespoke-badge span,
+  .site-footer[data-section="bespoke"] .logo-bespoke-badge span {
+    opacity: 1;
   }
 }
 
@@ -2629,6 +2772,54 @@ select:focus-visible {
   opacity: 1;
 }
 
+.loading-visual-bespoke {
+  --loading-base: #d8d9d3;
+  --loading-ink: #3E515F;
+  --loading-bar-a: #305866;
+  --loading-bar-b: #3E515F;
+  opacity: 0;
+}
+
+.loading-bespoke-capsule {
+  display: flex;
+  justify-content: center;
+}
+
+.loading-visual-bespoke .logo-bespoke-slot {
+  width: 78px;
+  height: auto;
+}
+
+.loading-visual-bespoke .logo-bespoke-badge {
+  height: 18px;
+  padding: 0 12px;
+  font-size: 11px;
+  margin-left: 0;
+}
+
+.system-state-loading[data-section="bespoke"] .loading-visual-bespoke .logo-bespoke-badge rect {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.system-state-loading[data-section="bespoke"] .loading-visual-bespoke .logo-bespoke-badge span {
+  opacity: 1;
+  letter-spacing: 0.12em;
+}
+
+.system-state-loading[data-section="bespoke"] .loading-visual-adult,
+.system-state-loading[data-section="bespoke"] .loading-visual-kids {
+  opacity: 0;
+}
+
+.system-state-loading[data-section="kids"] .loading-visual-bespoke {
+  opacity: 0;
+}
+
+.system-state-loading[data-section="bespoke"] .loading-visual-bespoke {
+  opacity: 1;
+}
+
 .loading-mark {
   position: relative;
   width: min(14rem, 56vw);
@@ -2794,10 +2985,13 @@ select:focus-visible {
   );
   transition:
     --footer-wash-top var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1)),
-    --footer-wash-mid var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1));
-  /* Vertical air between the two rules lives on .footer-columns margins. */
+    --footer-wash-mid var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1)),
+    --color-logo-ink var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1));
+  /* Vertical air between the two rules lives on .footer-columns margins.
+     No own top margin: page content (or a full-bleed .hp plate) lands on
+     the footer rule; regular pages keep only main's bottom padding. */
   padding-block: 0 var(--space-lg);
-  margin-top: 2.5rem;
+  margin-top: 0;
   color: var(--color-fg-secondary);
   font-size: 0.9rem;
   /* Never fill leftover viewport height on short pages. */
@@ -2813,6 +3007,17 @@ select:focus-visible {
 html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
   --footer-wash-top: color-mix(in srgb, #507356 28%, #f5f7f5);
   --footer-wash-mid: #f5f7f5;
+}
+
+.site-footer[data-section="bespoke"] {
+  --footer-wash-top: color-mix(in srgb, #305866 24%, #f5f3ee);
+  --footer-wash-mid: #f5f3ee;
+  --color-logo-ink: #3E515F;
+  color: #5b6771;
+}
+
+.site-footer[data-section="bespoke"] .footer-column-title {
+  color: #3E515F;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -3005,6 +3210,13 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
 
 .footer-brand-mark {
   display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.footer-brand-lockup {
+  display: inline-flex;
   align-items: flex-start;
 }
 
@@ -3024,6 +3236,17 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-footer {
 
 .footer-brand-logo .logo-kids-slot {
   height: 18px;
+}
+
+.footer-brand-logo .logo-bespoke-badge {
+  height: 14px;
+  padding: 0 8px;
+  font-size: 9px;
+  margin-left: 0;
+}
+
+.footer-bespoke-line {
+  margin-top: 4px;
 }
 
 /* Shared body: margin 0 - vertical offset comes from title row + row-gap. */
@@ -7710,9 +7933,20 @@ a.pdp-size-chip:hover {
 /* ---- Bespoke Section ---- */
 
 .bespoke-theme {
-  --color-accent: #7c6a5b;
-  --color-bg: #f8f5f2;
-  --color-border: #e0d8d0;
+  --color-accent: #3E515F;
+  --color-action: #3E515F;
+  --color-action-hover: #305866;
+  --color-logo-ink: #3E515F;
+  --color-bg: #f5f3ee;
+  --color-surface: #ffffff;
+  --color-border: #d8d9d3;
+  --color-fg: #2a3238;
+  --color-fg-secondary: #5b6771;
+  --bespoke-gold: #BFAE46;
+  --bespoke-deep: #2b4650;
+  --bespoke-teal: #305866;
+  background: var(--color-bg);
+  color: var(--color-fg);
 }
 
 /* ---- Cross-Entry Block ---- */
