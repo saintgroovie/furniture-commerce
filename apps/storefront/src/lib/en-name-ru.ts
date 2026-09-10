@@ -22,12 +22,26 @@ function motifExactNames(): Record<string, string> {
   return out
 }
 
-/** Exact tokens / short phrases (case-insensitive match). */
+/**
+ * Exact tokens / short phrases (case-insensitive).
+ * Willie Winkie motif titles come last from motif-theme SoT.
+ * Greenwich models and other collection nicknames: transcription, not meaning.
+ */
 const EXACT_NAME_RU: Record<string, string> = {
   hole: "Хоул",
   scale: "Скейл",
   step: "Степ",
+  wide: "Уайд",
+  stone: "Стоун",
+  base: "Бейс",
+  level: "Левел",
+  total: "Тотал",
+  cristal: "Кристалл",
+  crystal: "Кристалл",
+  frame: "Фрейм",
+  plane: "Плейн",
   molly: "Молли",
+  tommy: "Томми",
   oxford: "Оксфорд",
   grace: "Грейс",
   nord: "Норд",
@@ -53,11 +67,25 @@ const EXACT_NAME_RU: Record<string, string> = {
   oliver: "Оливер",
   provence: "Прованс",
   monchelsea: "Мончелси",
+  monchesea: "Мончелси",
   country: "Кантри",
   willie: "Вилли",
   winkie: "Винки",
   "willie winkie": "Вилли Винки",
   "willie-winkie": "Вилли Винки",
+  alice: "Алиса",
+  albion: "Альбион",
+  brigantine: "Бригантина",
+  "brigantine blue": "Бригантина",
+  "brigantine ivory": "Бригантина",
+  "princess rose": "Принцесса Роза",
+  "royal guardsmen": "Королевская стража",
+  "black isle": "Чёрный остров",
+  lorna: "Лорна",
+  linda: "Линда",
+  lilian: "Лилиан",
+  lillian: "Лилиан",
+  leona: "Леона",
   ...motifExactNames(),
 }
 
@@ -179,12 +207,16 @@ export function transcribeEnNamesInRuText(text: string): string {
     })
   }
 
-  // Multi-word exact dictionary first (willie winkie)
+  // Multi-word / hyphen / apostrophe phrases first (Ant's Village, Rural Scenery)
   const multi = Object.keys(EXACT_NAME_RU)
-    .filter((k) => k.includes(" ") || k.includes("-"))
+    .filter((k) => /[\s\-']/.test(k))
     .sort((a, b) => b.length - a.length)
   for (const key of multi) {
-    const re = new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/-/g, "[-\\s]")}\\b`, "gi")
+    const body = key
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/-/g, "[-\\s]")
+      .replace(/'/g, "[''`’]?")
+    const re = new RegExp(`\\b${body}\\b`, "gi")
     out = out.replace(re, EXACT_NAME_RU[key]!)
   }
 
