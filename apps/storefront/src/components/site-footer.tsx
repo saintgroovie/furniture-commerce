@@ -2,13 +2,15 @@
 
 import Link from "next/link"
 import type { ReactNode } from "react"
+import { BespokeBadge } from "@/components/bespoke-badge"
 import { WoodrightWordmark } from "@/components/woodright-wordmark"
-import { useKidsChromeVisual, useKidsSection } from "@/lib/use-kids-section"
+import { useChromeVisual, useSiteSection } from "@/lib/use-site-section"
 
 /**
- * Footer shell: kids sage wash via data-section (same flag as the header),
- * and Woodright Kids wordmark linking to /kids when the section is active.
- * Visual chrome follows `useKidsChromeVisual` so kids → PDP replays enter.
+ * Footer shell: kids sage / bespoke teal wash via data-section (same flag
+ * as the header). Wordmark links to /kids or /bespoke when that section
+ * is active. Visual chrome follows `useChromeVisual` so kids → PDP
+ * replays enter.
  */
 export function SiteFooter({
   brandBody,
@@ -19,38 +21,51 @@ export function SiteFooter({
   nav: ReactNode
   bottom: ReactNode
 }) {
-  const sectionKids = useKidsSection()
-  const { kids: visualKids, snap } = useKidsChromeVisual()
+  const section = useSiteSection()
+  const { section: visual, kids: visualKids, snap } = useChromeVisual()
+  const href = section === "kids" ? "/kids" : section === "bespoke" ? "/bespoke" : "/"
+  const ariaLabel =
+    section === "kids"
+      ? "Woodright Kids - на главную детской"
+      : section === "bespoke"
+        ? "Woodright Bespoke"
+        : "Woodright - на главную"
 
   return (
     <footer
       className={`site-footer${snap ? " is-kids-snap" : ""}`}
-      data-section={visualKids ? "kids" : "main"}
+      data-section={visual}
     >
       <div className="footer-inner">
         <div className="footer-columns">
           <div className="footer-column footer-brand">
             <div className="footer-brand-copy">
               <Link
-                href={sectionKids ? "/kids" : "/"}
+                href={href}
                 className="footer-column-title footer-brand-logo"
-                aria-label={
-                  sectionKids
-                    ? "Woodright Kids - на главную детской"
-                    : "Woodright - на главную"
-                }
+                aria-label={ariaLabel}
               >
                 <span className="footer-brand-mark">
-                  <WoodrightWordmark className="footer-brand-wordmark" />
-                  <span
-                    className={`logo-kids-slot${visualKids ? " is-visible" : ""}${snap ? " is-snap" : ""}`}
-                    aria-hidden="true"
-                  >
-                    <span className="logo-kids-badge">Kids</span>
+                  <span className="footer-brand-lockup">
+                    <WoodrightWordmark className="footer-brand-wordmark" />
+                    <span
+                      className={`logo-kids-slot${visualKids ? " is-visible" : ""}${snap ? " is-snap" : ""}`}
+                      aria-hidden="true"
+                    >
+                      <span className="logo-kids-badge">Kids</span>
+                    </span>
+                  </span>
+                  <span className="logo-bespoke-slot" aria-hidden="true">
+                    <BespokeBadge />
                   </span>
                 </span>
               </Link>
               {brandBody}
+              {visual === "bespoke" ? (
+                <span className="footer-row footer-bespoke-line">
+                  Woodright Bespoke - мебель по проекту
+                </span>
+              ) : null}
             </div>
           </div>
           {nav}

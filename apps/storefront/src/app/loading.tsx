@@ -1,26 +1,33 @@
 "use client"
 
-import { useEffect, useRef } from "react"
-import { systemCopy } from "@/lib/woodright-copy"
+import { useEffect, useState } from "react"
+import { BespokeBadge } from "@/components/bespoke-badge"
 import { WoodrightWordmark } from "@/components/woodright-wordmark"
+import { systemCopy } from "@/lib/woodright-copy"
 import {
   useKidsEnterOnLoadingAppear,
-  useKidsSectionTransition,
-} from "@/lib/use-kids-section"
+  useSiteSectionTransition,
+  type SiteSection,
+} from "@/lib/use-site-section"
 
-/* One fully-painted color variant of the loader (wordmark + track). The
-   brown and kids-green variants are stacked in the same grid cell and
-   cross-faded with opacity - a compositor-only recolor, so the brown ↔
-   green transition stays fluid even while the main thread is busy
-   streaming the destination page (a registered-custom-property color
-   tween would run on the main thread and freeze exactly then). */
-function LoadingVisual({ variant }: { variant: "adult" | "kids" }) {
+/* One fully-painted color variant of the loader (wordmark + track).
+   Variants are stacked in the same grid cell and cross-faded with opacity
+   — a compositor-only recolor, so the transition stays fluid even while
+   the main thread is busy streaming the destination page. */
+function LoadingVisual({ variant }: { variant: SiteSection }) {
   return (
-    <div className={`loading-visual loading-visual-${variant}`}>
+    <div className={`loading-visual loading-visual-${variant === "main" ? "adult" : variant}`}>
       <div className="loading-mark">
         <WoodrightWordmark className="loading-mark-base" />
         <WoodrightWordmark className="loading-mark-sheen" />
       </div>
+      {variant === "bespoke" ? (
+        <div className="loading-bespoke-capsule" aria-hidden="true">
+          <span className="logo-bespoke-slot">
+            <BespokeBadge />
+          </span>
+        </div>
+      ) : null}
       <div className="loading-track">
         <span className="loading-track-bar" />
       </div>
@@ -32,40 +39,40 @@ export default function Loading() {
   /* Mounts showing the section the user is leaving (`from` is captured at
      link-click time, while the URL is still the old one) and flips
      data-section to the destination once the loader itself has finished
-     fading in (appear = 0.15s delay + 0.35s). Delayed flip uses a DOM
-     attribute write (not React state) so timing stays intact without
-     setState-in-effect. */
-  const { from, target } = useKidsSectionTransition()
-  const rootRef = useRef<HTMLDivElement>(null)
+     fading in (appear = 0.15s delay + 0.35s). Same-section navigations
+     mount settled — no false recolor. */
+  const { from, target } = useSiteSectionTransition()
+  const [section, setSection] = useState<SiteSection>(from)
+  /* Kids catalog → PDP: start KIDS enter with this loader's appear delay
+     (not on the catalog click). */
   useKidsEnterOnLoadingAppear()
 
-  const initialKids = Boolean(from && target) || Boolean(from)
+  /* Kids catalog → PDP can briefly lose optimistic context before the
+     product bridge settles. If both from+target say kids, never paint
+     the adult (brown) loader — adopt kids immediately. Do not sync the
+     adult→kids cross-fade case (from !== target). */
+  if (from === "kids" && target === "kids" && section !== "kids") {
+    setSection("kids")
+  }
 
   useEffect(() => {
-    const el = rootRef.current
-    if (!el) return
-    if (from === target) {
-      el.dataset.section = target ? "kids" : "main"
-      return
-    }
-    const timer = window.setTimeout(() => {
-      el.dataset.section = target ? "kids" : "main"
-    }, 550)
-    return () => window.clearTimeout(timer)
-  }, [from, target])
+    if (section === target) return
+    const timer = setTimeout(() => setSection(target), 550)
+    return () => clearTimeout(timer)
+  }, [section, target])
 
   return (
     <div
-      ref={rootRef}
       className="system-state system-state-loading"
       data-state="loading"
-      data-section={initialKids ? "kids" : "main"}
+      data-section={section}
       aria-busy="true"
       aria-live="polite"
     >
       <div className="loading-stack" aria-hidden="true">
-        <LoadingVisual variant="adult" />
+        <LoadingVisual variant="main" />
         <LoadingVisual variant="kids" />
+        <LoadingVisual variant="bespoke" />
       </div>
       <p className="system-state-loading-text">{systemCopy.loading.label}</p>
     </div>
