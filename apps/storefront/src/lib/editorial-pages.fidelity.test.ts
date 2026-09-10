@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url"
 import { footer, nav, partnersCopy } from "./woodright-copy"
 import { collectStaticSitemapEntries } from "./sitemap-entries"
 import { toStorefrontPartner } from "./api/partners"
+import { LEGACY_PARTNERS } from "./legacy-partners"
 
 const srcRoot = join(dirname(fileURLToPath(import.meta.url)), "..")
 function read(relFromSrc: string): string {
@@ -54,11 +55,33 @@ assert.match(read("app/about/page.tsx"), /aboutCopy\.links/)
 
 const partnersPage = read("app/partners/page.tsx")
 assert.match(partnersPage, /getPublicPartners/)
-assert.match(partnersPage, /ed-partners-hero--empty/)
+assert.match(partnersPage, /PartnerIndex/)
+assert.match(partnersPage, /partnersCopy\.viewPresentation/)
 assert.match(partnersPage, /force-dynamic/)
 assert.doesNotMatch(partnersPage, /ed-partners-strip/)
-assert.doesNotMatch(partnersPage, /ГАБТ|Novikov|Фиолет|Русский Дизайнерский Дом/)
+assert.doesNotMatch(partnersPage, /Novikov|Фиолет|Русский Дизайнерский Дом/)
+assert.equal(partnersCopy.viewPresentation, "Смотреть презентацию")
 assert.equal(partnersCopy.emptyTitle, "Студий в списке пока нет")
+
+const legacy = read("lib/legacy-partners.ts")
+assert.match(legacy, /Большой театр/)
+assert.match(legacy, /ВГБИЛ им\. М\. И\. Рудомино/)
+assert.match(legacy, /Городское собрание Сочи/)
+assert.match(legacy, /Академия управления МВД/)
+assert.match(legacy, /Мариинский дворец/)
+assert.match(legacy, /ПАО «Совкомфлот»/)
+assert.match(legacy, /Тверская картинная галерея/)
+assert.doesNotMatch(legacy, /Novikov|Фиолет|Русский Дизайнерский Дом|ГАБТ/)
+assert.equal(LEGACY_PARTNERS.length, 7)
+assert.deepEqual(
+  LEGACY_PARTNERS.map((partner) => partner.slug),
+  ["bolshoi", "vgbll", "sochi", "mvd-academy", "mariinsky-palace", "sovcomflot", "tver-gallery"]
+)
+assert.ok(LEGACY_PARTNERS.every((partner) => (partner.presentations[0]?.slides?.length ?? 0) >= 3))
+
+const partnerIndex = read("components/partners/partner-index.tsx")
+assert.match(partnerIndex, /ed-logo-card/)
+assert.match(partnerIndex, /partnersCopy\.viewPresentation/)
 
 const contactsLayout = read("components/contacts-page-layout.tsx")
 assert.match(contactsLayout, /contacts-page-masthead/)
@@ -69,7 +92,11 @@ assert.match(globals, /\.contacts-page-masthead\s*\{[^}]*grid-column:\s*1\s*\/\s
 assert.match(globals, /\.contacts-page-media\s*\{[^}]*grid-column:\s*1\s*\/\s*-1/s)
 
 const viewer = read("components/partners/presentation-viewer.tsx")
+assert.match(viewer, /EditorialDeck/)
+assert.match(viewer, /ed-deck-stage/)
 assert.doesNotMatch(viewer, /iframe/)
+assert.match(globals, /\.ed-logo-card\s*\{/)
+assert.match(globals, /\.ed-deck-stage\s*\{/)
 
 const media = read("lib/editorial-media.ts")
 assert.match(media, /\/product-static\/products/)

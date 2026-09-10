@@ -48,6 +48,16 @@ export default async function PartnerPage({ params }: { params: Promise<Params> 
         ) : null}
         <h1>{partner.name}</h1>
         {partner.description ? <p className="ed-body">{formatRuInline(partner.description)}</p> : null}
+        {partner.presentations[0] ? (
+          <p className="ed-partner-lead-cta">
+            <Link
+              href={`/partners/${partner.slug}/presentations/${partner.presentations[0].id}`}
+              className="btn btn-primary"
+            >
+              {partnersCopy.viewPresentation}
+            </Link>
+          </p>
+        ) : null}
         {partner.website_url ? (
           <p>
             <a
