@@ -19,6 +19,21 @@ assert.match(
   /MEDUSA_LOCAL_HTTP=1 is ignored in production/,
   "must document ignoring MEDUSA_LOCAL_HTTP in production for Secure cookies"
 )
+assert.match(
+  cfg,
+  /WOODRIGHT_BACKEND_MODE/,
+  "local LaunchAgent qa/develop must be able to persist HTTP session cookies"
+)
+assert.match(
+  cfg,
+  /cookieSecureForRuntime/,
+  "cookie Secure must use the HTTP+qa/develop helper, not NODE_ENV alone"
+)
+assert.match(
+  cfg,
+  /WOODRIGHT_EXPOSURE/,
+  "public exposure must not get the HTTP cookie exception"
+)
 assert.doesNotMatch(
   cfg,
   /jwtSecret:\s*process\.env\.JWT_SECRET\s*\?\?/,

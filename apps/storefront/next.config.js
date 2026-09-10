@@ -3,6 +3,7 @@ const path = require("path")
 const {
   resolveMedusaBackendInternalUrl,
 } = require("./medusa-backend-internal-url.cjs")
+const { adminAppRedirects } = require("./src/lib/admin-app-redirects.cjs")
 
 // Server-only upstream for rewrites. Do NOT prefer NEXT_PUBLIC_* here — that baked
 // the public :9000 host into /product-static and blocked closing the published port.
@@ -63,6 +64,7 @@ const nextConfig = {
    */
   async redirects() {
     return [
+      ...adminAppRedirects(),
       { source: "/designers/terms", destination: "/designers", permanent: true },
       { source: "/designers/materials", destination: "/designers", permanent: true },
       { source: "/bespoke/catalog", destination: "/bespoke", permanent: true },
