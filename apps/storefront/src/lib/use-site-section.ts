@@ -8,7 +8,7 @@ import {
   useEffect,
   useLayoutEffect,
   useMemo,
-  useRef,
+  useReducer,
   useState,
   type ReactNode,
 } from "react"
@@ -76,6 +76,25 @@ const SiteSectionContext = createContext<SiteSectionContextValue>({
 
 type PendingNav = { target: SiteSection; from: SiteSection }
 
+type KidsEnterState = { armed: boolean; nonce: number }
+
+function kidsEnterReducer(
+  state: KidsEnterState,
+  action: "arm" | "disarm" | "play"
+): KidsEnterState {
+  switch (action) {
+    case "arm":
+      return state.armed ? state : { ...state, armed: true }
+    case "disarm":
+      return state.armed ? { ...state, armed: false } : state
+    case "play":
+      if (!state.armed) return state
+      return { armed: false, nonce: state.nonce + 1 }
+    default:
+      return state
+  }
+}
+
 function settledSection(pathname: string, productKids: boolean): SiteSection {
   if (productKids) return "kids"
   return sectionFromPath(pathname)
@@ -98,18 +117,14 @@ export function SiteSectionProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const [pending, setPending] = useState<PendingNav | null>(null)
   const [productKids, setProductKidsState] = useState(false)
-  const [kidsEnterNonce, setKidsEnterNonce] = useState(0)
-  const [chromeSection, setChromeSection] = useState<SiteSection>(
-    settledSection(pathname, false)
-  )
-  const [chromeSnap, setChromeSnap] = useState(false)
-  /** Click armed a kids→PDP enter; cleared once the glide actually starts. */
-  const enterArmedRef = useRef(false)
+  const [kidsEnter, dispatchKidsEnter] = useReducer(kidsEnterReducer, {
+    armed: false,
+    nonce: 0,
+  })
+  const kidsEnterNonce = kidsEnter.nonce
 
   const playKidsEnterReplay = useCallback(() => {
-    if (!enterArmedRef.current) return
-    enterArmedRef.current = false
-    setKidsEnterNonce((n) => n + 1)
+    dispatchKidsEnter("play")
   }, [])
 
   const notifyLoadingAppear = useCallback(() => {
@@ -133,27 +148,24 @@ export function SiteSectionProvider({ children }: { children: ReactNode }) {
   /* Reset optimistic nav after the route commits — except kids→product:
      `/product/*` is not a kids path, so clearing here would drop kids
      chrome until KidsProductSection runs (brown loader). */
-  useEffect(() => {
+  const [pathForPending, setPathForPending] = useState(pathname)
+  if (pathname !== pathForPending) {
+    setPathForPending(pathname)
     setPending((prev) => {
       if (prev?.target === "kids" && isProductPath(pathname)) return prev
       return null
     })
-  }, [pathname])
-
-  /* Leave PDP opt-in when leaving /product/* so adult routes don't stick.
-     On /product/* also re-read the SSR `data-kids-product` marker so a
-     hard refresh opts chrome in before KidsProductSection's effect. */
-  useLayoutEffect(() => {
     if (!isProductPath(pathname)) {
       setProductKidsState(false)
-      enterArmedRef.current = false
-      return
-    }
-    if (document.querySelector("[data-kids-product]")) {
+      dispatchKidsEnter("disarm")
+    } else if (
+      typeof document !== "undefined" &&
+      document.querySelector("[data-kids-product]")
+    ) {
       setProductKidsState(true)
       setPending(null)
     }
-  }, [pathname])
+  }
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -189,7 +201,7 @@ export function SiteSectionProvider({ children }: { children: ReactNode }) {
       setPending({ target, from })
       /* Arm only — the enter glide waits for loader appear (or PDP settle). */
       if (fromKids && targetKids && isProductPath(path)) {
-        enterArmedRef.current = true
+        dispatchKidsEnter("arm")
       }
     }
 
@@ -201,43 +213,46 @@ export function SiteSectionProvider({ children }: { children: ReactNode }) {
   const target = pending ? pending.target : settled
   const from = pending ? pending.from : settled
 
-  /* Keep visual chrome aligned with section target. Kids→PDP enter replay
-     (below) briefly overrides this in the same commit / following frames. */
-  useLayoutEffect(() => {
-    setChromeSection(target)
-    setChromeSnap(false)
-  }, [target])
+  /* Enter replay override: null means follow `target`. */
+  const [chromeOverride, setChromeOverride] = useState<{
+    section: SiteSection
+    snap: boolean
+  } | null>(null)
+  const [enterNonceSeen, setEnterNonceSeen] = useState(0)
+  if (kidsEnterNonce !== enterNonceSeen) {
+    setEnterNonceSeen(kidsEnterNonce)
+    if (kidsEnterNonce) {
+      if (
+        typeof window !== "undefined" &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ) {
+        setChromeOverride(null)
+      } else {
+        setChromeOverride({ section: "main", snap: true })
+      }
+    }
+  }
 
-  /* Snap-closed then open — driven by nonce from loader appear / PDP settle. */
   useLayoutEffect(() => {
     if (!kidsEnterNonce) return
-
     if (
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches
     ) {
-      setChromeSection("kids")
-      setChromeSnap(false)
       document.documentElement.classList.remove("is-kids-chrome-snap")
       return
     }
-
     let cancelled = false
     let outer = 0
     let inner = 0
-    setChromeSnap(true)
-    setChromeSection("main")
     document.documentElement.classList.add("is-kids-chrome-snap")
-
     outer = window.requestAnimationFrame(() => {
       inner = window.requestAnimationFrame(() => {
         if (cancelled) return
         document.documentElement.classList.remove("is-kids-chrome-snap")
-        setChromeSnap(false)
-        setChromeSection("kids")
+        setChromeOverride(null)
       })
     })
-
     return () => {
       cancelled = true
       window.cancelAnimationFrame(outer)
@@ -245,6 +260,9 @@ export function SiteSectionProvider({ children }: { children: ReactNode }) {
       document.documentElement.classList.remove("is-kids-chrome-snap")
     }
   }, [kidsEnterNonce])
+
+  const chromeSection = chromeOverride ? chromeOverride.section : target
+  const chromeSnap = chromeOverride ? chromeOverride.snap : false
 
   const value = useMemo(
     () => ({
