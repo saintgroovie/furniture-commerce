@@ -68,6 +68,25 @@ export function BespokeSubnav() {
 
   const active = activeIndex(bespokeSectionNav.tabs, pathname, hash)
 
+  /* Sticky offset + anchor scroll-margin follow the real header height
+     (54+46 desktop, 64+44 phone rows, safe-area) via --wr-header-h on <html>;
+     CSS keeps static fallbacks for the no-JS first paint. */
+  useEffect(() => {
+    const header = document.querySelector<HTMLElement>(".site-header")
+    if (!header) return
+    const root = document.documentElement
+    const apply = () => {
+      root.style.setProperty("--wr-header-h", `${Math.round(header.getBoundingClientRect().height)}px`)
+    }
+    apply()
+    const ro = new ResizeObserver(apply)
+    ro.observe(header)
+    return () => {
+      ro.disconnect()
+      root.style.removeProperty("--wr-header-h")
+    }
+  }, [])
+
   /* Indicator geometry is written straight to the DOM (measure → style),
      so a resize never round-trips through React state. */
   useEffect(() => {
@@ -85,6 +104,20 @@ export function BespokeSubnav() {
       ind.style.left = `${b.left - r.left + root.scrollLeft}px`
       ind.style.width = `${b.width}px`
       ind.classList.add("is-ready")
+      /* Phone: .bespoke-subnav-inner scrolls horizontally under a 40px fade
+         mask - keep the active tab fully in view (horizontal only, never
+         moves the page). */
+      const scroller = root.parentElement
+      if (scroller && scroller.scrollWidth > scroller.clientWidth) {
+        const s = scroller.getBoundingClientRect()
+        const overflowRight = b.right - (s.right - 40)
+        const overflowLeft = s.left - b.left
+        const behavior: ScrollBehavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? "auto"
+          : "smooth"
+        if (overflowRight > 0) scroller.scrollBy({ left: overflowRight, behavior })
+        else if (overflowLeft > 0) scroller.scrollBy({ left: -overflowLeft, behavior })
+      }
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -94,26 +127,28 @@ export function BespokeSubnav() {
 
   return (
     <nav className="bespoke-subnav" aria-label={bespokeSectionNav.ariaLabel}>
-      <span className="bespoke-subnav-mark">{bespokeSectionNav.mark}</span>
-      <div className="bespoke-subnav-tabs" ref={tabsRef}>
-        {bespokeSectionNav.tabs.map((tab, i) => {
-          const isActive = i === active
-          const isAnchor = tab.href.includes("#")
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              aria-current={isActive ? (isAnchor ? "location" : "page") : undefined}
-            >
-              {tab.label}
-            </Link>
-          )
-        })}
-        <span className="bespoke-subnav-ind" ref={indRef} aria-hidden="true" />
+      <div className="bespoke-subnav-inner">
+        <span className="bespoke-subnav-mark">{bespokeSectionNav.mark}</span>
+        <div className="bespoke-subnav-tabs" ref={tabsRef}>
+          {bespokeSectionNav.tabs.map((tab, i) => {
+            const isActive = i === active
+            const isAnchor = tab.href.includes("#")
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                aria-current={isActive ? (isAnchor ? "location" : "page") : undefined}
+              >
+                {tab.label}
+              </Link>
+            )
+          })}
+          <span className="bespoke-subnav-ind" ref={indRef} aria-hidden="true" />
+        </div>
+        <Link href={bespokeSectionNav.cta.href} className="bespoke-subnav-cta">
+          {bespokeSectionNav.cta.label}
+        </Link>
       </div>
-      <Link href={bespokeSectionNav.cta.href} className="bespoke-subnav-cta">
-        {bespokeSectionNav.cta.label}
-      </Link>
     </nav>
   )
 }
