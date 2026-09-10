@@ -79,9 +79,19 @@ assert.ok(
 /* The visible rail rules must live INSIDE the ≥PROMOTION_WINDOW_MIN_VIEWPORT media block (a top-level
    `.catalog-promo-sidebar { position: absolute }` would show it everywhere). */
 const mediaOpen = `@media (min-width: ${PROMOTION_WINDOW_MIN_VIEWPORT}px) {`
-const mediaStart = css.indexOf(mediaOpen)
+/* Several blocks share this breakpoint (the filter rail leaves the content
+   area at the same width): pick the one that styles the promo rail. */
+let mediaStart = -1
+let mediaEnd = -1
+for (let at = css.indexOf(mediaOpen); at >= 0; at = css.indexOf(mediaOpen, at + 1)) {
+  const end = css.indexOf("\n}\n", at)
+  if (end > at && css.slice(at, end).includes(".catalog-promo-sidebar")) {
+    mediaStart = at
+    mediaEnd = end
+    break
+  }
+}
 assert.ok(mediaStart >= 0, `rail appears at ≥ ${PROMOTION_WINDOW_MIN_VIEWPORT}px (gutter card ≥ 150px)`)
-const mediaEnd = css.indexOf("\n}\n", mediaStart)
 assert.ok(mediaEnd > mediaStart, "media block closes")
 const mediaBlock = css.slice(mediaStart, mediaEnd)
 assert.ok(
