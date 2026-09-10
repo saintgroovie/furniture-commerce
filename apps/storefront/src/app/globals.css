@@ -248,12 +248,14 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .site-header {
   --header-edge-main: color-mix(in srgb, #507356 13%, #f5f7f5);
 }
 
-/* Bespoke: both strips wash in the same blue-grey ink - the main bar is the
-   lighter step of the top bar (mixed on surface, not on the warm page cream,
-   so it reads as pale blue rather than beige). */
+/* Bespoke: three strips (top bar, main bar, section subnav) wash in the
+   same ink as the page buttons (--color-action #3E515F), stepping lighter
+   downwards. Mixed on surface, not on the warm page cream, so the edges read
+   as blue rather than beige; the mix ratios are deliberately heavier than
+   Kids so the tint is unmistakably the Bespoke blue. */
 .site-header[data-section="bespoke"] {
-  --header-edge-top: color-mix(in srgb, #3E515F 38%, var(--color-surface));
-  --header-edge-main: color-mix(in srgb, #3E515F 16%, var(--color-surface));
+  --header-edge-top: color-mix(in srgb, #3E515F 58%, var(--color-surface));
+  --header-edge-main: color-mix(in srgb, #3E515F 36%, var(--color-surface));
   --color-logo-ink: #3E515F;
 }
 
@@ -10339,37 +10341,63 @@ a.pdp-size-chip:hover {
 }
 
 /* Subnav sits between header and page; full-bleed like .hp, sticky under
-   the two header bars (54 + 46 + 2px rules). */
+   the two header bars (54 + 46 + 2px rules). Visually it is the third,
+   lightest step of the header edge wash (top 58% -> main 36% -> here 16%),
+   so the three strips read as one chrome block. */
 .bespoke-subnav {
+  --bsp-edge-sub: color-mix(in srgb, #3E515F 16%, var(--color-surface));
   position: sticky;
-  top: 102px;
+  /* --wr-header-h is measured by BespokeSubnav; 102px = 54 + 46 + 2 rules. */
+  top: var(--wr-header-h, 102px);
   z-index: 40;
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-top: calc(-1 * var(--space-xl));
+  box-sizing: border-box;
+  height: 46px;
+  border-bottom: 1px solid var(--color-border);
+  background: linear-gradient(
+    90deg,
+    var(--bsp-edge-sub) 0%,
+    var(--color-surface) 13.5%,
+    var(--color-surface) 86.5%,
+    var(--bsp-edge-sub) 100%
+  );
+  font-size: 0.84375rem;
+  color: var(--color-fg-secondary);
+}
+
+/* Inner row shares .container geometry (max-width + page gutter), so the
+   mark lines up with «Каталог» and the CTA with «Корзина» in the main bar. */
+.bespoke-subnav-inner {
+  width: 100%;
+  max-width: var(--max-width);
+  height: 100%;
+  margin-inline: auto;
+  padding-inline: max(var(--page-gutter), var(--safe-left))
+    max(var(--page-gutter), var(--safe-right));
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 20px;
-  box-sizing: border-box;
-  height: 46px;
-  padding: 0 clamp(1rem, 4vw, 3.5rem);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg);
-  font-size: 0.84375rem;
-  color: var(--color-fg-secondary);
 }
 
 .bespoke-subnav a {
   text-decoration: none;
 }
 
+/* Section mark: light gold gradient ink (the only gold text in the chrome). */
 .bespoke-subnav-mark {
   display: inline-flex;
   align-items: center;
   height: 22px;
   padding-right: 20px;
   border-right: 1px solid var(--color-border);
-  color: var(--color-accent);
+  color: var(--bespoke-gold, #BFAE46);
+  background: linear-gradient(90deg, #a8952f 0%, #BFAE46 45%, #d6c878 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -10453,19 +10481,28 @@ a.pdp-size-chip:hover {
 
 @media (max-width: 768px) {
   .bespoke-subnav {
-    /* Mobile header = 58px top bar + 1px rule; main bar is hidden. */
-    top: 59px;
+    /* Phone header = 64px logo row + 1px rule + 44px burger row (the burger
+       renders as its own block under .header-top). */
+    top: var(--wr-header-h, 109px);
     height: 42px;
+  }
+
+  .bespoke-subnav-inner {
     gap: 18px;
-    padding: 0 18px;
     overflow-x: auto;
     scrollbar-width: none;
     -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
     mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
   }
 
-  .bespoke-subnav::-webkit-scrollbar {
+  .bespoke-subnav-inner::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Tail spacer so the last tab can scroll out from under the fade mask. */
+  .bespoke-subnav-tabs::after {
+    content: "";
+    flex: 0 0 44px;
   }
 
   .bespoke-subnav-mark,
@@ -10478,13 +10515,53 @@ a.pdp-size-chip:hover {
   }
 }
 
-/* Shared editorial primitives */
+/* Shared editorial primitives. Text blocks sit on the header's .container
+   lines («Каталог» left / «Корзина» right), not on the wider home rail. */
 .bsp-wrap {
   width: 100%;
-  max-width: 1440px;
+  max-width: var(--max-width);
   margin-inline: auto;
-  padding-inline: clamp(1rem, 4vw, 3.5rem);
+  padding-inline: max(var(--page-gutter), var(--safe-left))
+    max(var(--page-gutter), var(--safe-right));
   box-sizing: border-box;
+}
+
+/* Subnav anchors (#projects / #process): land the whole section, eyebrow
+   and title included, below the sticky chrome (header 102px + subnav 46px +
+   its rule) with a breath of cream above the eyebrow. */
+.bsp-hub {
+  --bsp-chrome-h: calc(var(--wr-header-h, 102px) + 47px);
+}
+
+.bsp-hub [id] {
+  scroll-margin-top: calc(var(--bsp-chrome-h) + 28px);
+}
+
+/* Dark plates carry their own padding - land flush under the subnav rule. */
+.bsp-hub .bsp-proj[id] {
+  scroll-margin-top: var(--bsp-chrome-h);
+}
+
+/* Anchor targets fade in only - the reveal translateY made the title hop
+   after the jump landed. */
+.bsp-hub [id].will-reveal {
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .bsp-hub {
+    --bsp-chrome-h: calc(var(--wr-header-h, 109px) + 43px);
+  }
+
+  .bsp-hub [id] {
+    scroll-margin-top: calc(var(--bsp-chrome-h) + 20px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:has(.bsp-hub) {
+    scroll-behavior: smooth;
+  }
 }
 
 .bsp-section {
@@ -10546,19 +10623,34 @@ a.pdp-size-chip:hover {
 }
 
 /* 01 Hero: 5/7 split, text on cream, full-height photo */
+/* 12 content columns on the .container rail plus bleed gutters: the text
+   block starts on the «Каталог» line (cols 2-6 = 5/12), the photo runs from
+   7/12 to the right viewport edge. */
 .bsp-hero {
+  --bsp-rail: min(
+    calc(100% - 2 * var(--page-gutter)),
+    calc(var(--max-width) - 2 * var(--page-gutter))
+  );
   display: grid;
-  grid-template-columns: 5fr 7fr;
+  grid-template-columns:
+    minmax(var(--page-gutter), 1fr)
+    repeat(12, calc(var(--bsp-rail) / 12))
+    minmax(var(--page-gutter), 1fr);
   min-height: min(560px, 78vh);
   background: var(--color-bg);
 }
 
 .bsp-hero-text {
+  grid-column: 2 / 7;
   position: relative;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 56px clamp(1.5rem, 4vw, 3rem) 48px;
+  padding: 56px clamp(1.5rem, 3vw, 3rem) 48px 0;
+}
+
+.bsp-hero-media {
+  grid-column: 7 / -1;
 }
 
 .bsp-hero-text::after {
@@ -10574,7 +10666,7 @@ a.pdp-size-chip:hover {
 .bsp-hero-index {
   position: absolute;
   top: 56px;
-  left: clamp(1.5rem, 4vw, 3rem);
+  left: 0;
   margin: 0;
   display: flex;
   align-items: center;
@@ -11260,13 +11352,16 @@ a.pdp-size-chip:hover {
   }
 
   .bsp-hero-media {
+    grid-column: 1;
     order: -1;
     min-height: 300px;
     aspect-ratio: 16 / 10;
   }
 
   .bsp-hero-text {
-    padding: 24px 20px 26px;
+    grid-column: 1;
+    padding: 24px max(var(--page-gutter), var(--safe-right)) 26px
+      max(var(--page-gutter), var(--safe-left));
   }
 
   .bsp-hero-text::after {
