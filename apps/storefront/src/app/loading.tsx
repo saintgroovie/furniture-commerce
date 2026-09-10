@@ -51,11 +51,9 @@ export default function Loading() {
      product bridge settles. If both from+target say kids, never paint
      the adult (brown) loader — adopt kids immediately. Do not sync the
      adult→kids cross-fade case (from !== target). */
-  useEffect(() => {
-    if (from === "kids" && target === "kids" && section !== "kids") {
-      setSection("kids")
-    }
-  }, [from, target, section])
+  if (from === "kids" && target === "kids" && section !== "kids") {
+    setSection("kids")
+  }
 
   useEffect(() => {
     if (section === target) return
