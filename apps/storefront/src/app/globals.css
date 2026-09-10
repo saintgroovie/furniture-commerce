@@ -4028,7 +4028,8 @@ button:disabled,
 
 /* Micro-caps label - same voice as section titles, quiet next to swatches */
 .product-card-selector-label {
-  font-size: 0.5625rem;
+  /* 11px: 9px micro-caps were below the phone readability floor. */
+  font-size: 0.6875rem;
   font-weight: 500;
   color: var(--color-fg-muted);
   flex: 0 0 auto;
@@ -4787,7 +4788,7 @@ button.pdp-material-trigger:focus-visible {
 
 .product-card-model-chip {
   flex: 0 0 auto;
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   line-height: 1.2;
   letter-spacing: 0.02em;
   padding: 2.5px 7px;
