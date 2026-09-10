@@ -42,7 +42,12 @@ function assertSingleUpholsteryAxis(
   assert.equal(isFabricFamilyOnlyUpholstery(selectors.upholstery), true, handle)
   for (const row of selectors.upholstery!) {
     assert.ok(isFabricFamilyUpholsteryKey(row.key), `${handle}: ${row.key}`)
-    assert.equal(row.swatchHex, undefined, `${handle}: no invented swatchHex for ${row.key}`)
+    /* Without metadata hex, PASS C must not invent swatchHex. */
+    assert.equal(
+      row.swatchHex ?? null,
+      null,
+      `${handle}: no invented swatchHex for ${row.key}`
+    )
   }
 }
 
@@ -106,12 +111,11 @@ describe("PASS B.1 Case A — single Обивка axis", () => {
 })
 
 describe("PASS B.1 media semantics", () => {
-  it("family values keep execution mainSrc for hero swap but are not swatchHex claims", () => {
+  it("family values keep execution mainSrc for hero swap", () => {
     const product = multiFabricProduct("ol-07-1", ["leona", "lillian"])
     const selectors = buildIntraProductExecutionSelectors(product, product.thumbnail)
     for (const row of selectors.upholstery ?? []) {
       assert.ok(row.mainSrc, "mainSrc for media preview")
-      assert.equal(row.swatchHex, undefined)
     }
   })
 
@@ -121,7 +125,7 @@ describe("PASS B.1 media semantics", () => {
     assert.equal(selectors.separateFabricRows, undefined)
   })
 
-  it("metadata swatch_hex on family keys is stripped (no fake color tiles)", () => {
+  it("PASS C: metadata swatch_hex on family keys is kept for color swatches (not product-thumb tiles)", () => {
     const product = {
       handle: "ol-07-1",
       thumbnail: "/static/x.jpg",
@@ -136,7 +140,9 @@ describe("PASS B.1 media semantics", () => {
     }
     const selectors = buildIntraProductExecutionSelectors(product, product.thumbnail)
     for (const row of selectors.upholstery ?? []) {
-      assert.equal(row.swatchHex, undefined, row.key)
+      assert.equal(row.swatchHex, "#abcdef", row.key)
+      assert.equal(row.presentation, "swatch_color", row.key)
+      assert.equal(row.swatchImageUrl ?? null, null, "no invented texture URL")
     }
   })
 })
