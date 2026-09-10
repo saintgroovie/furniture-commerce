@@ -2351,7 +2351,8 @@ main:has(.contacts-page) {
   line-height: 1.3;
   letter-spacing: -0.01em;
   color: var(--color-fg);
-  text-wrap: pretty;
+  /* pretty still left «проекту?» alone on line 3 at 390px. */
+  text-wrap: balance;
   overflow-wrap: anywhere;
   word-break: normal;
 }
@@ -13348,6 +13349,8 @@ button.pdp-size-chip:hover {
 
 .ed-hero-panel h1 {
   margin: 0;
+  /* No one-word last line («в дом») inside the 42rem panel. */
+  text-wrap: balance;
   font-size: clamp(2.2rem, 6vw, 4.4rem);
   font-weight: 400;
   letter-spacing: -0.04em;
