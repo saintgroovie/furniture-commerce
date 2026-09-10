@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { CheckoutForm } from "@/components/checkout-form"
+import { CopyLines } from "@/components/copy-lines"
 import { checkoutCopy } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
@@ -18,9 +19,10 @@ export default function CheckoutPage() {
           <br />
           {checkoutCopy.lead[1]}
         </p>
-        <p className="checkout-payment-clarity checkout-payment-clarity-page">
-          {checkoutCopy.paymentClarity}
-        </p>
+        <CopyLines
+          className="checkout-payment-clarity checkout-payment-clarity-page"
+          lines={checkoutCopy.paymentClarity}
+        />
       </div>
 
       <CheckoutForm />
