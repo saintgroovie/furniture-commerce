@@ -10625,9 +10625,10 @@ a.pdp-size-chip:hover {
 
 @media (max-width: 768px) {
   .bespoke-subnav {
-    /* Phone header = 64px logo row + 1px rule + 44px burger row (the burger
-       renders as its own block under .header-top). */
-    top: var(--wr-header-h, 109px);
+    /* Phone header = 64px logo row + 1px rule (+ notch safe area); the
+       burger overlays the logo row. JS measures the real height into
+       --wr-header-h; this is the no-JS / first-paint fallback. */
+    top: var(--wr-header-h, calc(65px + var(--safe-top)));
     height: 42px;
   }
 
@@ -10694,7 +10695,7 @@ a.pdp-size-chip:hover {
 
 @media (max-width: 768px) {
   .bsp-hub {
-    --bsp-chrome-h: calc(var(--wr-header-h, 109px) + 43px);
+    --bsp-chrome-h: calc(var(--wr-header-h, calc(65px + var(--safe-top))) + 43px);
   }
 
   .bsp-hub [id] {
@@ -11498,8 +11499,13 @@ a.pdp-size-chip:hover {
   .bsp-hero-media {
     grid-column: 1;
     order: -1;
-    min-height: 300px;
-    aspect-ratio: 16 / 10;
+    /* No min-height with an aspect-ratio: on a 390px column `min-height:
+       300px` transferred to width 480px and the photo ran 90px past the
+       viewport (clipped by html overflow-x: clip). 4:3 keeps ~290px tall
+       on phones and stays inside the column. */
+    min-height: 0;
+    width: 100%;
+    aspect-ratio: 4 / 3;
   }
 
   .bsp-hero-text {
@@ -12583,17 +12589,20 @@ a.pdp-size-chip:hover {
   }
 
   .mobile-nav-btn {
+    /* <MobileNav /> is a sibling of .header-top (it must stay outside the
+       inert chrome while the dialog is open), so it cannot occupy the grid's
+       third slot. Pin it over that slot instead: sticky .site-header is the
+       containing block; 10px = (64px row - 44px button) / 2. Without this the
+       button used to fall into its own 44px row under the logo (109px header). */
     display: flex;
     align-items: center;
     justify-content: center;
-    position: static;
-    grid-column: 3;
-    justify-self: end;
-    align-self: center;
+    position: absolute;
+    top: calc(var(--safe-top) + 10px);
+    right: max(var(--page-gutter), var(--safe-right));
     width: 44px;
     height: 44px;
     min-width: 0;
-    max-width: 100%;
     min-height: 44px;
     cursor: pointer;
     z-index: 52;
