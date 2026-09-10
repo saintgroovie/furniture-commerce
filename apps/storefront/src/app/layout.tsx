@@ -159,6 +159,7 @@ export default async function RootLayout({
                   label={navCopy.bespoke}
                   items={[
                     { label: "Как это работает", href: "/bespoke" },
+                    { label: "Стеновые панели", href: "/bespoke/wall-panels" },
                     { label: "Оставить заявку", href: "/bespoke/request" },
                     { label: "Дизайнерам", href: "/designers" },
                   ]}

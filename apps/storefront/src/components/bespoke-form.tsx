@@ -164,12 +164,18 @@ export function BespokeForm() {
   const productSku = searchParams.get("sku")?.trim() || undefined
   const productHandle = searchParams.get("handle")?.trim() || undefined
   const storefrontSection = searchParams.get("section")?.trim() || undefined
+  /* Optional preselect from a direction page (e.g. /bespoke/wall-panels?task=wall_panels);
+     unknown values are ignored so the select never shows an invalid option. */
+  const requestedTask = searchParams.get("task")?.trim() ?? ""
+  const initialTaskType = copy.taskOptions.some((option) => option.value === requestedTask)
+    ? requestedTask
+    : ""
 
   const [status, setStatus] = useState<Status>("idle")
   const [errorMessage, setErrorMessage] = useState("")
   const [nameError, setNameError] = useState("")
   const [phoneError, setPhoneError] = useState("")
-  const [taskType, setTaskType] = useState("")
+  const [taskType, setTaskType] = useState(initialTaskType)
   const submittingRef = useRef(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
