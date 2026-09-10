@@ -23,7 +23,7 @@ import {
 export type { SiteSection }
 
 /**
- * Must match `.system-state-loading` in globals.css:
+ * Must match `.route-veil` in globals.css:
  * `animation: loading-appear 0.35s ease 0.15s forwards`.
  * Kids chrome enter replay starts when this delay elapses on the route loader
  * (not on the catalog click).

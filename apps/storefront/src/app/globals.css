@@ -388,13 +388,17 @@ body:has(.site-header[data-section="bespoke"]) {
   padding: 0;
   overflow: hidden;
   transform: translateY(var(--logo-kids-nudge-y));
-  transition: width var(--logo-kids-duration) var(--logo-kids-ease);
+  /* Exit (base): the badge tucks toward the wordmark first (see
+     .logo-kids-badge), then the clip closes - 0.14s later. */
+  transition: width var(--logo-kids-duration) var(--logo-kids-ease) 0.14s;
 }
 
 .logo-kids-slot.is-visible,
 html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot {
   /* gap + badge in one width tween */
   width: calc(var(--logo-kids-gap) + var(--logo-kids-w));
+  /* Enter: clip opens with the wash, no delay. */
+  transition-delay: 0s;
 }
 
 /* Snap-closed frame for enter replay — must win over .is-visible width. */
@@ -424,15 +428,24 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot {
   white-space: nowrap;
   color: #628c6a;
   opacity: 0;
-  /* Exit: fade with the closing wipe (base rule). Enter uses the
-     .is-visible rule below (slight delay so the clip has opened). */
-  transition: opacity 0.22s ease;
+  /* Exit (base): the pill shrinks and slides back under the wordmark while
+     it fades; the slot clip closes 0.14s later so the motion is seen, not
+     cut. Transform + opacity only - the wipe stays the single layout tween. */
+  transform: translateX(-8px) scale(0.84);
+  transform-origin: left center;
+  transition:
+    opacity 0.26s ease 0.04s,
+    transform 0.4s cubic-bezier(0.4, 0, 0.6, 1);
 }
 
 .logo-kids-slot.is-visible .logo-kids-badge,
 html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .logo-kids-badge {
   opacity: 1;
-  transition: opacity 0.32s ease 0.06s;
+  transform: none;
+  /* Enter: pop out with a soft overshoot once the clip has started opening. */
+  transition:
+    opacity 0.3s ease 0.12s,
+    transform 0.56s cubic-bezier(0.34, 1.4, 0.64, 1) 0.1s;
 }
 
 .logo-kids-slot.is-snap .logo-kids-badge {
@@ -444,6 +457,10 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   .logo-kids-slot,
   .logo-kids-badge {
     transition: none;
+  }
+
+  .logo-kids-badge {
+    transform: none;
   }
 }
 
@@ -461,8 +478,11 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   padding-right: 1px;
   overflow: hidden;
   flex: none;
+  /* Exit (base) choreography: label blurs out → stroke retracts → capsule
+     tucks under the wordmark → clip closes (0.24s in). Enter reverses it
+     (see the open rules below). */
   transition: max-width var(--logo-kids-duration, 0.52s) var(--logo-kids-ease, cubic-bezier(0.33, 1, 0.68, 1));
-  transition-delay: 0.1s;
+  transition-delay: 0.24s;
 }
 
 .logo-bespoke-badge {
@@ -482,6 +502,10 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   line-height: 1;
   white-space: nowrap;
   flex: none;
+  /* Closed state: tucked back toward the wordmark. */
+  transform: translateX(-6px) scale(0.9);
+  transform-origin: left center;
+  transition: transform 0.42s cubic-bezier(0.4, 0, 0.6, 1) 0.06s;
 }
 
 .logo-bespoke-badge svg {
@@ -504,13 +528,16 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   stroke-width: 1;
   stroke-dasharray: 100;
   stroke-dashoffset: 100;
-  transition: stroke-dashoffset 0.34s ease;
+  /* Exit: the line retracts after the label has gone. */
+  transition: stroke-dashoffset 0.38s cubic-bezier(0.4, 0, 0.6, 1) 0.08s;
 }
 
 .logo-bespoke-badge span {
   opacity: 0;
   letter-spacing: 0.22em;
-  transition: opacity 0.18s ease, letter-spacing 0.18s ease;
+  /* Exit: label fades first; the tracking resets only after the clip has
+     closed (a live letter-spacing tween would stretch the capsule box). */
+  transition: opacity 0.2s ease, letter-spacing 0s linear 0.8s;
 }
 
 .site-header[data-section="bespoke"] .logo-bespoke-slot,
@@ -519,6 +546,14 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   /* Ceiling only - the real width is the badge's own box. */
   max-width: 7.5rem;
   transition-delay: 0.26s;
+}
+
+.site-header[data-section="bespoke"] .logo-bespoke-badge,
+.site-footer[data-section="bespoke"] .logo-bespoke-badge,
+.logo-bespoke-slot.is-open .logo-bespoke-badge {
+  transform: none;
+  /* Enter: capsule pops out with a soft overshoot as the clip opens. */
+  transition: transform 0.58s cubic-bezier(0.34, 1.3, 0.64, 1) 0.3s;
 }
 
 .site-header[data-section="bespoke"] .logo-bespoke-badge rect,
@@ -606,6 +641,10 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   .logo-bespoke-badge span,
   .header-nav-bespoke .nav-dropdown-link::after {
     transition: none;
+  }
+
+  .logo-bespoke-badge {
+    transform: none;
   }
 
   .logo-bespoke-badge rect {
@@ -2770,26 +2809,55 @@ select:focus-visible {
   justify-content: center;
 }
 
-.system-state-loading {
-  padding-block: var(--space-3xl);
+/* ---- Route veil (visible route loader) ----
+   Fixed cover under the sticky header. Mounts with loading.tsx, stays up
+   after the route commits until the new page's first-screen images are
+   loaded (lib/route-veil.tsx), then fades out over the finished page. */
+.route-veil {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--space-lg);
+  justify-content: center;
+  padding: var(--space-xl) var(--space-lg);
+  background: var(--color-bg);
   /* Delayed fade-in so the loader never flashes on near-instant
-     navigations. Kept short: the section cross-fade (loading.tsx flips
+     navigations. Kept short: the section cross-fade (route-veil.tsx flips
      data-section at 550ms) must start only after this has finished,
-     otherwise the "from" color is never actually seen. */
+     otherwise the "from" colour is never actually seen. */
   opacity: 0;
   animation: loading-appear 0.35s ease 0.15s forwards;
 }
 
-/* Brown ↔ kids-green recolor = cross-fade of two fully-painted variants
-   stacked in one grid cell. Opacity is compositor-only, so the recolor
-   stays fluid while the main thread streams the destination page (a
-   custom-property color tween runs on the main thread and would freeze
-   exactly then). The flip is driven by loading.tsx: mounts showing the
-   section being left, flips data-section a frame later. */
+.route-veil-closing {
+  pointer-events: none;
+  animation: route-veil-out 0.48s ease forwards;
+}
+
+.route-veil-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-lg);
+  /* Optical centre: sit a little above the geometric middle of the cover. */
+  transform: translateY(-6vh);
+}
+
+/* Fallback slot inside <main> while the RSC payload streams: keeps the page
+   height so the footer does not jump; the veil paints over it. */
+.route-loading-fallback {
+  min-height: 60vh;
+}
+
+/* Brown ↔ kids-green ↔ bespoke-blue recolor = cross-fade of three fully
+   painted variants stacked in one grid cell. Opacity is compositor-only, so
+   the recolor stays fluid while the main thread streams the destination
+   page (a custom-property colour tween runs on the main thread and would
+   freeze exactly then). The flip is driven by route-veil.tsx: mounts showing
+   the section being left, flips data-section after the fade-in. */
 .loading-stack {
   display: grid;
 }
@@ -2823,17 +2891,9 @@ select:focus-visible {
   opacity: 0;
 }
 
-.system-state-loading[data-section="kids"] .loading-visual-adult {
-  opacity: 0;
-}
-
-.system-state-loading[data-section="kids"] .loading-visual-kids {
-  opacity: 1;
-}
-
 /* Bespoke loader = same cross-fade gesture as adult → kids, in blue + gold:
    ink wordmark sheen, progress bar glides from blue-grey into the capsule
-   gold, capsule line-draws under the wordmark. */
+   gold, capsule pops and line-draws next to the wordmark. */
 .loading-visual-bespoke {
   --loading-base: #d8d9d3;
   --loading-ink: #3E515F;
@@ -2842,51 +2902,41 @@ select:focus-visible {
   opacity: 0;
 }
 
-.loading-bespoke-capsule {
-  display: flex;
-  justify-content: center;
-}
-
-.loading-visual-bespoke .logo-bespoke-slot {
-  max-width: none;
-  height: auto;
-}
-
-.loading-visual-bespoke .logo-bespoke-badge {
-  height: 18px;
-  padding: 0 12px;
-  font-size: 11px;
-  margin-left: 0;
-}
-
-.system-state-loading[data-section="bespoke"] .loading-visual-bespoke .logo-bespoke-badge rect {
-  stroke-dashoffset: 0;
-  transition: stroke-dashoffset 0.55s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.system-state-loading[data-section="bespoke"] .loading-visual-bespoke .logo-bespoke-badge span {
-  opacity: 1;
-  letter-spacing: 0.12em;
-}
-
-.system-state-loading[data-section="bespoke"] .loading-visual-adult,
-.system-state-loading[data-section="bespoke"] .loading-visual-kids {
+.route-veil[data-section="kids"] .loading-visual-adult,
+.route-veil[data-section="kids"] .loading-visual-bespoke,
+.route-veil[data-section="bespoke"] .loading-visual-adult,
+.route-veil[data-section="bespoke"] .loading-visual-kids {
   opacity: 0;
 }
 
-.system-state-loading[data-section="kids"] .loading-visual-bespoke {
-  opacity: 0;
-}
-
-.system-state-loading[data-section="bespoke"] .loading-visual-bespoke {
+.route-veil[data-section="kids"] .loading-visual-kids,
+.route-veil[data-section="bespoke"] .loading-visual-bespoke {
   opacity: 1;
 }
 
 .loading-mark {
   position: relative;
   width: min(14rem, 56vw);
-  /* The sheen animates mask-position (paint, not compositor); contain
-     keeps that repaint clipped to the wordmark box. */
+  /* With a pill open the lockup re-centres: the wordmark glides left by half
+     the pill (same gesture as the header's translateX(-50%) re-centre). */
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* All three stacked marks glide together, so the cross-fade never shows a
+   doubled wordmark; only the active variant's pill pops into the freed room. */
+.route-veil[data-section="kids"] .loading-mark {
+  transform: translateX(calc(-1 * var(--loading-pill-shift-kids, 2.35rem)));
+}
+
+.route-veil[data-section="bespoke"] .loading-mark {
+  transform: translateX(calc(-1 * var(--loading-pill-shift-bespoke, 3.55rem)));
+}
+
+/* The sheen animates mask-position (paint, not compositor); contain keeps
+   that repaint clipped to the wordmark box. The pill sits outside this box,
+   so containment lives on the art wrapper, not on .loading-mark. */
+.loading-mark-art {
+  position: relative;
   contain: layout paint;
 }
 
@@ -2912,6 +2962,67 @@ select:focus-visible {
   -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
   animation: loading-sheen 2.4s cubic-bezier(0.45, 0.05, 0.35, 0.95) infinite;
+}
+
+/* Section pill next to the wordmark - the header lockup, enlarged with the
+   loader wordmark (28px vs 20px). Hidden until its variant is the active
+   section, then pops in with a soft overshoot. */
+.loading-pill {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.7rem;
+  opacity: 0;
+  transform: translate(-10px, -50%) scale(0.6);
+  transform-origin: left center;
+  will-change: transform, opacity;
+}
+
+.route-veil[data-section="kids"] .loading-pill-kids,
+.route-veil[data-section="bespoke"] .loading-pill-bespoke {
+  animation: loading-pill-pop 0.62s cubic-bezier(0.34, 1.45, 0.64, 1) 0.2s both;
+}
+
+.loading-pill .logo-kids-badge {
+  margin-left: 0;
+  height: 1.5rem;
+  padding: 0 0.75rem;
+  font-size: 0.8125rem;
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+.loading-pill .logo-bespoke-slot {
+  max-width: none;
+  height: auto;
+  padding-right: 2px;
+}
+
+.loading-pill .logo-bespoke-badge {
+  height: 24px;
+  padding: 0 14px;
+  margin-left: 0;
+  font-size: 13px;
+  transform: none;
+  transition: none;
+}
+
+.loading-pill .logo-bespoke-badge rect {
+  rx: 11.5px;
+}
+
+.route-veil[data-section="bespoke"] .loading-pill-bespoke .logo-bespoke-badge rect {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.28s;
+}
+
+.route-veil[data-section="bespoke"] .loading-pill-bespoke .logo-bespoke-badge span {
+  opacity: 1;
+  letter-spacing: 0.12em;
+  transition: opacity 0.3s ease 0.5s, letter-spacing 0.4s ease 0.5s;
 }
 
 .loading-track {
@@ -2946,6 +3057,26 @@ select:focus-visible {
   }
 }
 
+@keyframes route-veil-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes loading-pill-pop {
+  from {
+    opacity: 0;
+    transform: translate(-10px, -50%) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: translate(0, -50%) scale(1);
+  }
+}
+
 @keyframes loading-sheen {
   0% {
     -webkit-mask-position: 100% 0;
@@ -2967,13 +3098,26 @@ select:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .system-state-loading {
+  .route-veil {
     opacity: 1;
     animation: none;
   }
 
-  .loading-visual {
+  .route-veil-closing {
+    opacity: 0;
+  }
+
+  .loading-visual,
+  .loading-pill .logo-bespoke-badge rect,
+  .loading-pill .logo-bespoke-badge span {
     transition: none;
+  }
+
+  .route-veil[data-section="kids"] .loading-pill-kids,
+  .route-veil[data-section="bespoke"] .loading-pill-bespoke {
+    animation: none;
+    opacity: 1;
+    transform: translate(0, -50%);
   }
 
   .loading-mark-sheen {
