@@ -1,0 +1,1082 @@
+[
+  {
+    "handle": "co-02-1",
+    "collection": "country-london-paris",
+    "pool": 84,
+    "auto_keep": 11,
+    "auto_drop": 75,
+    "has_main": true,
+    "gallery_n": 11,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-05-1",
+    "collection": "country-london-paris",
+    "pool": 32,
+    "auto_keep": 8,
+    "auto_drop": 24,
+    "has_main": true,
+    "gallery_n": 4,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-08-1",
+    "collection": "country-london-paris",
+    "pool": 32,
+    "auto_keep": 8,
+    "auto_drop": 24,
+    "has_main": true,
+    "gallery_n": 4,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-14-2",
+    "collection": "country-london-paris",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-15-2",
+    "collection": "country-london-paris",
+    "pool": 24,
+    "auto_keep": 6,
+    "auto_drop": 18,
+    "has_main": true,
+    "gallery_n": 8,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-61-1",
+    "collection": "country-london-paris",
+    "pool": 36,
+    "auto_keep": 9,
+    "auto_drop": 27,
+    "has_main": true,
+    "gallery_n": 8,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-62-1",
+    "collection": "country-london-paris",
+    "pool": 39,
+    "auto_keep": 8,
+    "auto_drop": 32,
+    "has_main": true,
+    "gallery_n": 6,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-62-2",
+    "collection": "country-london-paris",
+    "pool": 16,
+    "auto_keep": 4,
+    "auto_drop": 12,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-62-3",
+    "collection": "country-london-paris",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-65-1",
+    "collection": "country-london-paris",
+    "pool": 40,
+    "auto_keep": 10,
+    "auto_drop": 30,
+    "has_main": true,
+    "gallery_n": 5,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-65-2",
+    "collection": "country-london-paris",
+    "pool": 32,
+    "auto_keep": 8,
+    "auto_drop": 24,
+    "has_main": true,
+    "gallery_n": 4,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-66-1",
+    "collection": "country-london-paris",
+    "pool": 32,
+    "auto_keep": 8,
+    "auto_drop": 24,
+    "has_main": true,
+    "gallery_n": 4,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "co-69-1",
+    "collection": "country-london-paris",
+    "pool": 20,
+    "auto_keep": 5,
+    "auto_drop": 15,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "clp_operator"
+  },
+  {
+    "handle": "ol-00-1",
+    "collection": "oliver",
+    "pool": 89,
+    "auto_keep": 1,
+    "auto_drop": 88,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-01-2",
+    "collection": "oliver",
+    "pool": 19,
+    "auto_keep": 3,
+    "auto_drop": 16,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-02-1",
+    "collection": "oliver",
+    "pool": 16,
+    "auto_keep": 3,
+    "auto_drop": 13,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-03-1",
+    "collection": "oliver",
+    "pool": 26,
+    "auto_keep": 3,
+    "auto_drop": 23,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-05-1",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-05-2",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-05-3",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-05-н",
+    "collection": "oliver",
+    "pool": 3,
+    "auto_keep": 0,
+    "auto_drop": 3,
+    "has_main": false,
+    "gallery_n": 0,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-06-1",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-07-1",
+    "collection": "oliver",
+    "pool": 20,
+    "auto_keep": 5,
+    "auto_drop": 15,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-08-1",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-08-2",
+    "collection": "oliver",
+    "pool": 3,
+    "auto_keep": 1,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-09-2",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-14-1",
+    "collection": "oliver",
+    "pool": 36,
+    "auto_keep": 4,
+    "auto_drop": 32,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-14-2",
+    "collection": "oliver",
+    "pool": 36,
+    "auto_keep": 4,
+    "auto_drop": 32,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-15-1",
+    "collection": "oliver",
+    "pool": 4,
+    "auto_keep": 1,
+    "auto_drop": 3,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-15-2",
+    "collection": "oliver",
+    "pool": 4,
+    "auto_keep": 1,
+    "auto_drop": 3,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-16-1",
+    "collection": "oliver",
+    "pool": 36,
+    "auto_keep": 4,
+    "auto_drop": 32,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-16-2",
+    "collection": "oliver",
+    "pool": 36,
+    "auto_keep": 4,
+    "auto_drop": 32,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-17-1",
+    "collection": "oliver",
+    "pool": 36,
+    "auto_keep": 4,
+    "auto_drop": 32,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-17-2",
+    "collection": "oliver",
+    "pool": 36,
+    "auto_keep": 4,
+    "auto_drop": 32,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-17-3",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 3,
+    "auto_drop": 9,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-18-1",
+    "collection": "oliver",
+    "pool": 32,
+    "auto_keep": 4,
+    "auto_drop": 28,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-18-2",
+    "collection": "oliver",
+    "pool": 36,
+    "auto_keep": 4,
+    "auto_drop": 32,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-21-1",
+    "collection": "oliver",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-23-1",
+    "collection": "oliver",
+    "pool": 104,
+    "auto_keep": 12,
+    "auto_drop": 92,
+    "has_main": true,
+    "gallery_n": 6,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-25-1",
+    "collection": "oliver",
+    "pool": 19,
+    "auto_keep": 2,
+    "auto_drop": 17,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-26-1",
+    "collection": "oliver",
+    "pool": 19,
+    "auto_keep": 3,
+    "auto_drop": 16,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-26-2",
+    "collection": "oliver",
+    "pool": 20,
+    "auto_keep": 3,
+    "auto_drop": 17,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-30-1",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-42-1",
+    "collection": "oliver",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-43-1",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-44-1",
+    "collection": "oliver",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-44-2",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-55-1",
+    "collection": "oliver",
+    "pool": 16,
+    "auto_keep": 4,
+    "auto_drop": 12,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-55-2",
+    "collection": "oliver",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-56-1",
+    "collection": "oliver",
+    "pool": 8,
+    "auto_keep": 3,
+    "auto_drop": 5,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-57-1",
+    "collection": "oliver",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-57-2",
+    "collection": "oliver",
+    "pool": 8,
+    "auto_keep": 1,
+    "auto_drop": 7,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-57-3",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-61-1",
+    "collection": "oliver",
+    "pool": 20,
+    "auto_keep": 3,
+    "auto_drop": 17,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-61-2",
+    "collection": "oliver",
+    "pool": 20,
+    "auto_keep": 3,
+    "auto_drop": 17,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-62-1",
+    "collection": "oliver",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-62-2",
+    "collection": "oliver",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-64-1",
+    "collection": "oliver",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-65-1",
+    "collection": "oliver",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-65-2",
+    "collection": "oliver",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-66-1",
+    "collection": "oliver",
+    "pool": 20,
+    "auto_keep": 2,
+    "auto_drop": 18,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-66-4",
+    "collection": "oliver",
+    "pool": 20,
+    "auto_keep": 2,
+    "auto_drop": 18,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-67-1",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-68-1",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-68-2",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-69-1",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-69-2",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-69-3",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-69-4",
+    "collection": "oliver",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-81-1",
+    "collection": "oliver-kids",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-82-1",
+    "collection": "oliver-kids",
+    "pool": 32,
+    "auto_keep": 6,
+    "auto_drop": 26,
+    "has_main": true,
+    "gallery_n": 3,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-83-1",
+    "collection": "oliver-kids",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-84-1",
+    "collection": "oliver-kids",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-84-2",
+    "collection": "oliver-kids",
+    "pool": 4,
+    "auto_keep": 2,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-85-1",
+    "collection": "oliver-kids",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-85-2",
+    "collection": "oliver-kids",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-86-1",
+    "collection": "oliver-kids",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-95-1",
+    "collection": "oliver-kids",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "ol-95-3",
+    "collection": "oliver-kids",
+    "pool": 4,
+    "auto_keep": 2,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-02-1",
+    "collection": "provence",
+    "pool": 54,
+    "auto_keep": 3,
+    "auto_drop": 51,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-03-1",
+    "collection": "provence",
+    "pool": 12,
+    "auto_keep": 3,
+    "auto_drop": 9,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-05-2",
+    "collection": "provence",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-06-2",
+    "collection": "provence",
+    "pool": 20,
+    "auto_keep": 2,
+    "auto_drop": 18,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-08-2",
+    "collection": "provence",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-09-1",
+    "collection": "provence",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-09-2",
+    "collection": "provence",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-14-1",
+    "collection": "provence",
+    "pool": 3,
+    "auto_keep": 1,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-15-1",
+    "collection": "provence",
+    "pool": 4,
+    "auto_keep": 2,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-15-2",
+    "collection": "provence",
+    "pool": 4,
+    "auto_keep": 2,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-16-1",
+    "collection": "provence",
+    "pool": 3,
+    "auto_keep": 1,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-17-1",
+    "collection": "provence",
+    "pool": 3,
+    "auto_keep": 1,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-18-1",
+    "collection": "provence",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-23-1",
+    "collection": "provence",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-42-2",
+    "collection": "provence",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-43-1",
+    "collection": "provence",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-55-1",
+    "collection": "provence",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-55-2",
+    "collection": "provence",
+    "pool": 4,
+    "auto_keep": 2,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-61-1",
+    "collection": "provence",
+    "pool": 16,
+    "auto_keep": 3,
+    "auto_drop": 13,
+    "has_main": true,
+    "gallery_n": 2,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-62-1",
+    "collection": "provence",
+    "pool": 16,
+    "auto_keep": 2,
+    "auto_drop": 14,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-65-5",
+    "collection": "provence",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-65-6",
+    "collection": "provence",
+    "pool": 4,
+    "auto_keep": 2,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-65-7",
+    "collection": "provence",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-65-8",
+    "collection": "provence",
+    "pool": 12,
+    "auto_keep": 2,
+    "auto_drop": 10,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-66-6",
+    "collection": "provence",
+    "pool": 4,
+    "auto_keep": 2,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-66-7",
+    "collection": "provence",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-68-1",
+    "collection": "provence",
+    "pool": 3,
+    "auto_keep": 1,
+    "auto_drop": 2,
+    "has_main": true,
+    "gallery_n": 0,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-68-2",
+    "collection": "provence",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  },
+  {
+    "handle": "pv-69-1",
+    "collection": "provence",
+    "pool": 8,
+    "auto_keep": 2,
+    "auto_drop": 6,
+    "has_main": true,
+    "gallery_n": 1,
+    "seed": "auto"
+  }
+]

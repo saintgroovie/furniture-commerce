@@ -1,0 +1,312 @@
+{
+  "p0_closed": true,
+  "p1_closed": true,
+  "local_medusa_apply": true,
+  "production_apply": "unsafe_scope",
+  "ship_now_handles": [
+    "ol-00-1",
+    "ol-01-2",
+    "ol-02-1",
+    "ol-03-1",
+    "ol-05-1",
+    "ol-05-2",
+    "ol-05-3",
+    "ol-06-1",
+    "ol-07-1",
+    "ol-08-1",
+    "ol-08-2",
+    "ol-09-2",
+    "ol-14-1",
+    "ol-14-2",
+    "ol-15-1",
+    "ol-15-2",
+    "ol-16-1",
+    "ol-16-2",
+    "ol-17-1",
+    "ol-17-2",
+    "ol-17-3",
+    "ol-18-1",
+    "ol-18-2",
+    "ol-21-1",
+    "ol-23-1",
+    "ol-25-1",
+    "ol-26-1",
+    "ol-26-2",
+    "ol-30-1",
+    "ol-42-1",
+    "ol-43-1",
+    "ol-44-1",
+    "ol-44-2",
+    "ol-55-1",
+    "ol-55-2",
+    "ol-56-1",
+    "ol-57-1",
+    "ol-57-2",
+    "ol-57-3",
+    "ol-61-1",
+    "ol-61-2",
+    "ol-62-1",
+    "ol-62-2",
+    "ol-64-1",
+    "ol-65-1",
+    "ol-65-2",
+    "ol-66-1",
+    "ol-66-4",
+    "ol-67-1",
+    "ol-68-1",
+    "ol-68-2",
+    "ol-69-1",
+    "ol-69-2",
+    "ol-69-3",
+    "ol-69-4",
+    "ol-81-1",
+    "ol-82-1",
+    "ol-83-1",
+    "ol-84-1",
+    "ol-84-2",
+    "ol-85-1",
+    "ol-85-2",
+    "ol-86-1",
+    "ol-95-1",
+    "ol-95-3",
+    "pv-02-1",
+    "pv-03-1",
+    "pv-05-2",
+    "pv-06-2",
+    "pv-08-2",
+    "pv-09-1",
+    "pv-09-2",
+    "pv-14-1",
+    "pv-15-1",
+    "pv-15-2",
+    "pv-16-1",
+    "pv-17-1",
+    "pv-18-1",
+    "pv-23-1",
+    "pv-42-2",
+    "pv-43-1",
+    "pv-55-1",
+    "pv-55-2",
+    "pv-61-1",
+    "pv-62-1",
+    "pv-65-5",
+    "pv-65-6",
+    "pv-65-7",
+    "pv-65-8",
+    "pv-66-6",
+    "pv-66-7",
+    "pv-68-1",
+    "pv-68-2",
+    "pv-69-1"
+  ],
+  "ship_now_count": 94,
+  "second_live_angle": 63,
+  "main_only": 31,
+  "hold_count": 14,
+  "self_check": {
+    "ol-84-1": {
+      "ok": true,
+      "note": "ok",
+      "kept_basenames": [
+        "ol-84-1_main.jpg",
+        "ol-84-1-i2.jpg"
+      ],
+      "dropped_basenames": [
+        "ol-84-1_gallery_01.jpg",
+        "ol-84-1_main.jpg",
+        "ol-84-1-i1.jpg",
+        "ol-84-1-i2.jpg"
+      ]
+    },
+    "ol-05-1": {
+      "ok": true,
+      "note": "ok",
+      "kept_basenames": [
+        "ol-05-1_main.jpg",
+        "ol-05-1-i2.jpg",
+        "ol-05-1_gallery_01.jpg"
+      ],
+      "dropped_basenames": [
+        "ol-05-1_gallery_01.jpg",
+        "ol-05-1_gallery_02.jpg",
+        "ol-05-1_main.jpg",
+        "ol-05-1-i1.jpg",
+        "ol-05-1-i2.jpg",
+        "ol-05-1-i4.jpg"
+      ]
+    },
+    "ol-69-1": {
+      "ok": true,
+      "note": "ok",
+      "kept_basenames": [
+        "ol-69-1_main.jpg",
+        "ol-69-1-i2.jpg",
+        "ol-69-1_gallery_01.jpg"
+      ],
+      "dropped_basenames": [
+        "ol-69-1_gallery_01.jpg",
+        "ol-69-1_gallery_02.jpg",
+        "ol-69-1_main.jpg",
+        "ol-69-1-i1.jpg",
+        "ol-69-1-i2.jpg",
+        "ol-69-1-i4.jpg"
+      ]
+    },
+    "ol-25-1": {
+      "ok": true,
+      "note": "ok",
+      "kept_basenames": [
+        "ol-25-1_main.jpg",
+        "ol-25-1-i2.jpg"
+      ],
+      "dropped_basenames": [
+        "ol-25-1_gallery_01.jpg",
+        "ol-25-1_gallery_02.jpg",
+        "ol-25-1-ab.jpg",
+        "ol-25-1_gallery_03.jpg",
+        "ol-25-1_gallery_04.jpg",
+        "ol-25-1_main.jpg",
+        "ol-25-1-i1.jpg",
+        "ol-25-1-i2.jpg",
+        "ol-25-1-i3.jpg"
+      ]
+    },
+    "pv-05-2": {
+      "ok": true,
+      "note": "ok",
+      "kept_basenames": [
+        "pv-05-2_main.jpg",
+        "pv-05-2-i2.jpg",
+        "pv-05-2_gallery_01.jpg"
+      ],
+      "dropped_basenames": [
+        "pv-05-2_gallery_02.jpg",
+        "pv-05-2_gallery_01.jpg",
+        "pv-05-2_gallery_03.jpg",
+        "pv-05-2_main.jpg",
+        "pv-05-2-i1.jpg",
+        "pv-05-2-i2.jpg",
+        "pv-05-2-i3.jpg",
+        "pv-05-2-i4.jpg"
+      ]
+    },
+    "pv-06-2": {
+      "ok": true,
+      "note": "ok",
+      "kept_basenames": [
+        "pv-06-2_main.jpg",
+        "pv-06-2-i2.jpg",
+        "pv-06-2_gallery_01.jpg"
+      ],
+      "dropped_basenames": [
+        "pv-06-2_gallery_02.jpg",
+        "pv-06-2_gallery_01.jpg",
+        "pv-06-2_gallery_03.jpg",
+        "pv-06-2_gallery_04.jpg",
+        "pv-06-2_main.jpg",
+        "pv-06-2-i1.jpg",
+        "pv-06-2-i2.jpg",
+        "pv-06-2-i3.jpg",
+        "pv-06-2-i4.jpg",
+        "pv-06-2-i5.jpg"
+      ]
+    },
+    "pv-02-1": {
+      "ok": true,
+      "note": "ok",
+      "kept_basenames": [
+        "pv-02-1_main.jpg",
+        "pv-02-1-i2.jpg",
+        "pv-02-1-i3.jpg",
+        "pv-02-1_gallery_01.jpg"
+      ],
+      "dropped_basenames": [
+        "pv-02-1_gallery_02.jpg",
+        "pv-02-1_gallery_01.jpg",
+        "pv-02-1_main.jpg",
+        "provence_white_p10_i0_694x374.png",
+        "provence_white_p10_i1_781x1074.png",
+        "provence_white_p10_i2_550x262.png",
+        "provence_white_p10_i3_428x288.png",
+        "provence_white_p12_i0_1142x761.png",
+        "provence_white_p1_i0_1016x936.png",
+        "provence_white_p2_i0_1303x1267.png",
+        "provence_white_p3_i0_687x718.png",
+        "provence_white_p3_i1_499x708.png"
+      ]
+    },
+    "pv-09-1": {
+      "ok": true,
+      "note": "ok",
+      "kept_basenames": [
+        "pv-09-1_main.jpg",
+        "pv-09-1-i2.jpg",
+        "pv-09-1_gallery_01.jpg"
+      ],
+      "dropped_basenames": [
+        "pv-09-1_gallery_02.jpg",
+        "pv-09-1_gallery_01.jpg",
+        "pv-09-1_main.jpg",
+        "pv-09-1-i1.jpg",
+        "pv-09-1-i2.jpg",
+        "pv-09-1-i3.jpg"
+      ]
+    },
+    "pv-23-1": {
+      "ok": true,
+      "note": "ok",
+      "kept_basenames": [
+        "pv-23-1_main.jpg",
+        "pv-23-1-i2.jpg",
+        "pv-23-1_gallery_01.jpg"
+      ],
+      "dropped_basenames": [
+        "pv-23-1_gallery_02.jpg",
+        "pv-23-1_gallery_01.jpg",
+        "pv-23-1_gallery_03.jpg",
+        "pv-23-1_main.jpg",
+        "pv-23-1-i1.jpg",
+        "pv-23-1-i2.jpg",
+        "pv-23-1-i3.jpg",
+        "pv-23-1-i4.jpg"
+      ]
+    },
+    "pv-65-5": {
+      "ok": true,
+      "note": "ok",
+      "kept_basenames": [
+        "pv-65-5_gallery_01.jpg",
+        "pv-65-5-i2.jpg"
+      ],
+      "dropped_basenames": [
+        "pv-65-5_gallery_02.jpg",
+        "pv-65-5_gallery_01.jpg",
+        "pv-65-5-i1.jpg",
+        "pv-65-5-i2.jpg"
+      ]
+    },
+    "pv-65-8": {
+      "ok": true,
+      "note": "ok",
+      "kept_basenames": [
+        "pv-65-8_main.jpg",
+        "pv-65-8-i2.jpg",
+        "pv-65-8_gallery_01.jpg"
+      ],
+      "dropped_basenames": [
+        "pv-65-8_gallery_02.jpg",
+        "pv-65-8_gallery_01.jpg",
+        "pv-65-8_main.jpg",
+        "pv-65-8-i1.jpg",
+        "pv-65-8-i2.jpg",
+        "pv-65-8-i3.jpg"
+      ]
+    }
+  },
+  "dry_run": {
+    "sku": 94,
+    "skipped": 0,
+    "missing_files": 2,
+    "ol-84-1_images": 2
+  }
+}
