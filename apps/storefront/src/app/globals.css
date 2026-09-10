@@ -8982,7 +8982,9 @@ a.pdp-size-chip:hover {
   display: flex;
   flex-direction: column;
   gap: var(--space-3xl);
-  padding-bottom: var(--space-2xl);
+  /* Last full-bleed plate (HomeFinal / KidsFinal / BespokeFinal) must sit
+     on the footer rule. Stacked --space-2xl here reads as an empty band. */
+  padding-bottom: 0;
 }
 
 .hp-wrap {
@@ -12660,7 +12662,9 @@ a.pdp-size-chip:hover {
   }
 
   .site-footer {
-    margin-top: var(--space-lg);
+    /* Keep the desktop flush join on tablet/phone. space-lg here was the
+       empty strip between page content and the footer hairline. */
+    margin-top: 0;
     font-size: 1rem;
   }
 }
@@ -12668,7 +12672,7 @@ a.pdp-size-chip:hover {
 @media (max-width: 768px) {
   .hp {
     gap: var(--space-xl);
-    padding-bottom: var(--space-lg);
+    padding-bottom: 0;
   }
 
   .hp-wrap {
