@@ -22,7 +22,8 @@ function isGallery01Url(url: string): boolean {
 
 function metaOf(product: Record<string, unknown>): Record<string, unknown> {
   const m = product.metadata
-  return m && typeof m === "object" && !Array.isArray(m) ? m : {}
+  if (!m || typeof m !== "object" || Array.isArray(m)) return {}
+  return m as Record<string, unknown>
 }
 
 function asString(v: unknown): string {
