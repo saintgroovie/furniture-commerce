@@ -17,6 +17,10 @@ import {
   resolvePaymentLaunchMode,
   validatePaymentLaunchMode,
 } from "./src/lib/payment-launch-mode"
+import {
+  cookieSecureForRuntime,
+  isLocalQaHttp,
+} from "./src/lib/cookie-secure-runtime"
 
 loadEnv(process.env.NODE_ENV || "development", process.cwd())
 
@@ -142,9 +146,19 @@ function resolveSecret(
   return v.length >= 32 ? v : localFallback
 }
 
-if (isProduction && localHttp) {
+const localQaHttp = isLocalQaHttp({
+  localHttp,
+  backendMode: process.env.WOODRIGHT_BACKEND_MODE,
+  exposure: process.env.WOODRIGHT_EXPOSURE,
+  runtimeRole: process.env.WOODRIGHT_RUNTIME_ROLE,
+})
+
+if (isProduction && localHttp && !localQaHttp) {
   // Staging/demo is HTTPS behind Traefik. Ignoring MEDUSA_LOCAL_HTTP for cookies
   // prevents connect.sid without Secure (observed live misconfiguration).
+  // Local LaunchAgent `WOODRIGHT_BACKEND_MODE=qa|develop` plus MEDUSA_LOCAL_HTTP=1
+  // is HTTP loopback: `medusa start` sets NODE_ENV=production, so Secure cookies
+  // are never stored and Admin login loops on /app/login.
   console.warn(
     "[woodright] MEDUSA_LOCAL_HTTP=1 is ignored in production for cookie Secure flags"
   )
@@ -197,14 +211,19 @@ export default defineConfig({
         "supersecret-cookie-min-32chars!!"
       ),
     },
-    // Production HTTPS: always Secure. Local HTTP only when not production.
-    cookieOptions: isProduction
+    // Production HTTPS: always Secure. Local LaunchAgent qa/develop + HTTP
+    // loopback can persist connect.sid even when `medusa start` sets production.
+    cookieOptions: cookieSecureForRuntime({
+      isProduction,
+      localHttp,
+      backendMode: process.env.WOODRIGHT_BACKEND_MODE,
+      exposure: process.env.WOODRIGHT_EXPOSURE,
+      runtimeRole: process.env.WOODRIGHT_RUNTIME_ROLE,
+    })
       ? { secure: true, sameSite: "lax" as const }
-      : localHttp || !isProduction
-        ? { secure: false, sameSite: "lax" as const }
-        : { secure: true, sameSite: "lax" as const },
+      : { secure: false, sameSite: "lax" as const },
     sessionOptions:
-      !isProduction || localHttp
+      !isProduction || localHttp || localQaHttp
         ? { saveUninitialized: true }
         : undefined,
   },
