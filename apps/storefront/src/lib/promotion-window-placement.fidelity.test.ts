@@ -76,7 +76,7 @@ assert.ok(
   railRule.some((r) => /display:\s*none/.test(r)),
   "rail hidden by default (no gutter → no window)"
 )
-/* The visible rail rules must live INSIDE the ≥1500px media block (a top-level
+/* The visible rail rules must live INSIDE the ≥PROMOTION_WINDOW_MIN_VIEWPORT media block (a top-level
    `.catalog-promo-sidebar { position: absolute }` would show it everywhere). */
 const mediaOpen = `@media (min-width: ${PROMOTION_WINDOW_MIN_VIEWPORT}px) {`
 const mediaStart = css.indexOf(mediaOpen)
