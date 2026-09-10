@@ -3,24 +3,26 @@ import { bespokeLanding } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { bespokeMedia } from "./bespoke-media"
 
-/** Final CTA over the panelled-hallway photo, existing finalCta copy. */
+/** Final CTA plate: deep teal over the hallway photo, lands on the footer rule. */
 export function BespokeFinal() {
   const { finalCta } = bespokeLanding
   return (
-    <section className="hp-bfinal" aria-labelledby="hp-bfinal-title" data-reveal>
+    <section className="bsp-final" aria-labelledby="bsp-final-title" data-reveal>
       <img
         src={bespokeMedia.final.src}
         alt={bespokeMedia.final.alt}
-        className="hp-bfinal-img"
+        className="bsp-final-img"
+        style={{ objectPosition: bespokeMedia.final.pos }}
         loading="lazy"
         decoding="async"
         draggable={false}
       />
-      <div className="hp-bfinal-scrim" aria-hidden="true" />
-      <div className="hp-bfinal-body">
-        <h2 id="hp-bfinal-title">{finalCta.title}</h2>
-        <CopyLines className="hp-bfinal-text" lines={finalCta.text} />
-        <Link href="/bespoke/request" className="btn btn-primary hp-bfinal-btn">
+      <div className="bsp-final-scrim" aria-hidden="true" />
+      <div className="bsp-final-body">
+        <span className="bsp-final-line" aria-hidden="true" />
+        <h2 id="bsp-final-title">{finalCta.title}</h2>
+        <CopyLines className="bsp-final-text" lines={finalCta.text} />
+        <Link href="/bespoke/request" className="btn bsp-btn bsp-final-btn">
           {finalCta.button}
         </Link>
       </div>
