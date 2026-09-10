@@ -13231,6 +13231,14 @@ a.pdp-size-chip:hover {
   overflow-x: clip;
 }
 
+/* Same inset as header .container / catalog: Шоурум·Каталог left, Корзина right. */
+.ed--partners {
+  --partners-gutter: max(
+    var(--page-gutter),
+    calc((100vw - var(--max-width)) / 2 + var(--page-gutter))
+  );
+}
+
 .ed-wrap {
   width: 100%;
   max-width: 1440px;
@@ -13674,15 +13682,16 @@ a.pdp-size-chip:hover {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(1.5rem, 5vw, 4rem) clamp(1.25rem, 3vw, 2rem)
+    clamp(1.5rem, 5vw, 4rem) var(--partners-gutter);
 }
 
 .ed-partners-hero-copy h1 {
   margin: 0;
-  font-size: clamp(3rem, 10vw, 8rem);
+  font-size: clamp(2rem, 3.6vw, 2.875rem);
   font-weight: 400;
-  letter-spacing: -0.06em;
-  line-height: 0.9;
+  letter-spacing: -0.025em;
+  line-height: 1.06;
 }
 
 .ed-partners-hero-copy .ed-hero-lead {
@@ -13728,52 +13737,68 @@ a.pdp-size-chip:hover {
   align-self: flex-start;
 }
 
+.ed-partner-index {
+  width: 100%;
+  padding-inline: var(--partners-gutter);
+}
+
 .ed-logo-wall {
   list-style: none;
   margin: 0;
   padding: 0 0 4rem;
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.85rem;
   align-items: stretch;
 }
 
 .ed-logo-cell {
-  grid-column: span 4;
   min-width: 0;
-}
-
-.ed-logo-cell.is-featured {
-  grid-column: span 8;
-}
-
-.ed-logo-cell.is-large {
-  grid-column: span 6;
 }
 
 .ed-logo-card {
   height: 100%;
   display: grid;
-  grid-template-rows: minmax(10rem, 1fr) auto;
+  grid-template-rows: minmax(11rem, 1fr) auto;
   overflow: clip;
   background: var(--color-surface, #f4efe8);
 }
 
 .ed-logo-cell.is-regular .ed-logo-card {
-  grid-template-rows: minmax(8rem, 0.7fr) auto;
+  grid-template-rows: minmax(9rem, 0.85fr) auto;
 }
 
-.ed-logo-media {
-  margin: 0;
-  overflow: clip;
+.ed-logo-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 9.5rem;
+  padding: 1.4rem 1.2rem 0.4rem;
+  color: var(--color-logo-ink, #5a4234);
 }
 
-.ed-logo-media img {
+.ed-logo-cell.is-featured .ed-logo-mark {
+  min-height: 13rem;
+  padding-top: 2rem;
+}
+
+.ed-logo-mark svg {
   width: 100%;
-  height: 100%;
-  min-height: 10rem;
-  object-fit: cover;
-  transform: scale(1.04);
+  max-width: 22rem;
+  height: auto;
+}
+
+.ed-logo-mark img {
+  width: auto;
+  max-width: 14rem;
+  max-height: 7.5rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.ed-logo-cell.is-featured .ed-logo-mark img {
+  max-height: 9.5rem;
+  max-width: 18rem;
 }
 
 .ed-logo-copy {
@@ -13883,13 +13908,17 @@ a.pdp-size-chip:hover {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .ed-logo-media img {
-    transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  .ed-logo-mark svg,
+  .ed-logo-mark img {
+    transform: translateY(0);
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .ed-logo-card:hover .ed-logo-media img,
-  .ed-logo-card:focus-within .ed-logo-media img {
-    transform: scale(1);
+  .ed-logo-card:hover .ed-logo-mark svg,
+  .ed-logo-card:focus-within .ed-logo-mark svg,
+  .ed-logo-card:hover .ed-logo-mark img,
+  .ed-logo-card:focus-within .ed-logo-mark img {
+    transform: translateY(-0.35rem);
   }
 
   .ed-logo-name a {
@@ -13930,6 +13959,16 @@ a.pdp-size-chip:hover {
 .ed-partner-logo {
   max-height: 4rem;
   width: auto;
+}
+
+.ed-partner-logo-mark {
+  max-width: 22rem;
+  color: var(--color-logo-ink, #5a4234);
+}
+
+.ed-partner-logo-mark svg {
+  width: 100%;
+  height: auto;
 }
 
 .ed-partner-gallery {
@@ -14095,14 +14134,19 @@ a.pdp-size-chip:hover {
     position: static;
   }
 
-  .ed-logo-cell,
-  .ed-logo-cell.is-regular {
-    grid-column: span 6;
+  .ed-logo-wall {
+    grid-template-columns: 1fr;
   }
 
+  .ed-logo-cell,
+  .ed-logo-cell.is-regular,
   .ed-logo-cell.is-featured,
   .ed-logo-cell.is-large {
-    grid-column: span 12;
+    grid-column: auto;
+  }
+
+  .ed-partners-hero-copy {
+    padding-inline: var(--partners-gutter);
   }
 
   .ed-presentation-card {
@@ -14123,7 +14167,7 @@ a.pdp-size-chip:hover {
   }
 
   .ed-partners-hero-copy h1 {
-    font-size: clamp(2.6rem, 16vw, 4.5rem);
+    font-size: 1.875rem;
   }
 
   .contacts-page-media img {
@@ -14150,7 +14194,7 @@ a.pdp-size-chip:hover {
   .ed-logo-cell.is-featured,
   .ed-logo-cell.is-large,
   .ed-logo-cell.is-regular {
-    grid-column: span 12;
+    grid-column: auto;
   }
 
   .ed-viewer-iframe {

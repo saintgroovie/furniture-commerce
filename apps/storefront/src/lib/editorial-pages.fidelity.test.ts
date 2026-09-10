@@ -4,7 +4,7 @@
  *   yarn dlx tsx src/lib/editorial-pages.fidelity.test.ts
  */
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { footer, nav, partnersCopy } from "./woodright-copy"
@@ -78,10 +78,30 @@ assert.deepEqual(
   ["bolshoi", "vgbll", "sochi", "mvd-academy", "mariinsky-palace", "sovcomflot", "tver-gallery"]
 )
 assert.ok(LEGACY_PARTNERS.every((partner) => (partner.presentations[0]?.slides?.length ?? 0) >= 3))
+assert.equal(LEGACY_PARTNERS.find((partner) => partner.slug === "bolshoi")?.logo_url, null)
+for (const file of [
+  "vgbll.svg",
+  "sochi.svg",
+  "mvd-academy.png",
+  "mariinsky-palace.svg",
+  "sovcomflot.png",
+  "tver-gallery.svg",
+]) {
+  assert.ok(
+    existsSync(join(srcRoot, "../public/editorial/partners", file)),
+    `missing partner mark ${file}`
+  )
+}
 
 const partnerIndex = read("components/partners/partner-index.tsx")
 assert.match(partnerIndex, /ed-logo-card/)
+assert.match(partnerIndex, /PartnerMark/)
+assert.match(partnerIndex, /ed-logo-mark/)
 assert.match(partnerIndex, /partnersCopy\.viewPresentation/)
+assert.doesNotMatch(partnerIndex, /ed-logo-media/)
+assert.match(read("components/partners/partner-mark.tsx"), /БОЛЬШОЙ/)
+assert.match(read("components/partners/partner-mark.tsx"), /СОВКОМФЛОТ/)
+assert.doesNotMatch(read("components/partners/partner-mark.tsx"), /Novikov|Фиолет|unsplash/)
 
 const contactsLayout = read("components/contacts-page-layout.tsx")
 assert.match(contactsLayout, /contacts-page-masthead/)
@@ -96,6 +116,7 @@ assert.match(viewer, /EditorialDeck/)
 assert.match(viewer, /ed-deck-stage/)
 assert.doesNotMatch(viewer, /iframe/)
 assert.match(globals, /\.ed-logo-card\s*\{/)
+assert.match(globals, /\.ed-logo-mark\s*\{/)
 assert.match(globals, /\.ed-deck-stage\s*\{/)
 
 const media = read("lib/editorial-media.ts")

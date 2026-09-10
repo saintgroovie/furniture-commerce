@@ -1,7 +1,7 @@
 /**
  * Buyer-facing partner index from owner-confirmed legacy roster (BES-012).
  * Names and work captions come from FACT_LEDGER + BESPOKE_POSITIONING.
- * No third-party logo files exist in the repo - marks are typographic.
+ * Marks: public-domain heraldry / official-site SVG where found; Bolshoi keeps PartnerMark.
  */
 import { editorialMedia } from "./editorial-media"
 import type { StorePartner } from "./api/partners"
@@ -64,7 +64,7 @@ export const LEGACY_PARTNERS: StorePartner[] = [
     slug: "vgbll",
     name: "ВГБИЛ им. М. И. Рудомино",
     description: "Проектирование и изготовление мебели",
-    logo_url: null,
+    logo_url: "/editorial/partners/vgbll.svg",
     website_url: null,
     featured: false,
     sort_order: 20,
@@ -96,7 +96,7 @@ export const LEGACY_PARTNERS: StorePartner[] = [
     slug: "sochi",
     name: "Городское собрание Сочи",
     description: "Конференц-зал: стол, трибуна, комплект",
-    logo_url: null,
+    logo_url: "/editorial/partners/sochi.svg",
     website_url: null,
     featured: false,
     sort_order: 30,
@@ -128,7 +128,7 @@ export const LEGACY_PARTNERS: StorePartner[] = [
     slug: "mvd-academy",
     name: "Академия управления МВД",
     description: "Историческая библиотека",
-    logo_url: null,
+    logo_url: "/editorial/partners/mvd-academy.png",
     website_url: null,
     featured: false,
     sort_order: 40,
@@ -160,7 +160,7 @@ export const LEGACY_PARTNERS: StorePartner[] = [
     slug: "mariinsky-palace",
     name: "Мариинский дворец",
     description: "Чертежи, изготовление, монтаж",
-    logo_url: null,
+    logo_url: "/editorial/partners/mariinsky-palace.svg",
     website_url: null,
     featured: true,
     sort_order: 50,
@@ -192,7 +192,7 @@ export const LEGACY_PARTNERS: StorePartner[] = [
     slug: "sovcomflot",
     name: "ПАО «Совкомфлот»",
     description: "Зал заседаний совета директоров",
-    logo_url: null,
+    logo_url: "/editorial/partners/sovcomflot.png",
     website_url: null,
     featured: false,
     sort_order: 60,
@@ -224,7 +224,7 @@ export const LEGACY_PARTNERS: StorePartner[] = [
     slug: "tver-gallery",
     name: "Тверская картинная галерея",
     description: "Музейные витрины и постаменты",
-    logo_url: null,
+    logo_url: "/editorial/partners/tver-gallery.svg",
     website_url: null,
     featured: false,
     sort_order: 70,
