@@ -1160,6 +1160,7 @@ export const partnersCopy = {
   materialsTitle: "Материалы",
   presentationsTitle: "Презентации",
   viewPresentation: "Смотреть презентацию",
+  openCase: "Смотреть работу",
   openFile: "Открыть файл",
   downloadFile: "Скачать",
   pages: (count: number) => `${count} стр.`,

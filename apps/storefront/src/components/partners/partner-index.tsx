@@ -2,10 +2,11 @@ import Link from "next/link"
 import { partnersCopy } from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import type { StorePartner } from "@/lib/api/partners"
+import { PartnerMark } from "@/components/partners/partner-mark"
 
-function cellScale(partner: StorePartner, index: number): string {
+function cellScale(partner: StorePartner): string {
   if (partner.featured) return "is-featured"
-  if (index === 2 || index === 6) return "is-large"
+  if (partner.images.length > 0) return "is-large"
   return "is-regular"
 }
 
@@ -14,20 +15,28 @@ export function PartnerIndex({ partners }: { partners: StorePartner[] }) {
     <section className="ed-partner-index ed-wrap" data-reveal aria-label={partnersCopy.h1}>
       <ul className="ed-logo-wall">
         {partners.map((partner, index) => {
-          const cover = partner.presentations[0]?.cover_url ?? partner.images[0] ?? null
           const deck = partner.presentations[0]
+          const cover = partner.images[0]
           return (
             <li
               key={partner.id}
-              className={`ed-logo-cell ${cellScale(partner, index)}`}
+              className={`ed-logo-cell ${cellScale(partner)}`}
               style={{ ["--reveal-i" as string]: String(index) }}
             >
               <article className="ed-logo-card">
                 {cover ? (
-                  <figure className="ed-logo-media">
+                  <div className="ed-logo-photo">
                     <img src={cover} alt="" />
-                  </figure>
-                ) : null}
+                  </div>
+                ) : (
+                  <div className="ed-logo-mark">
+                    {partner.logo_url ? (
+                      <img src={partner.logo_url} alt="" />
+                    ) : (
+                      <PartnerMark slug={partner.slug} name={partner.name} />
+                    )}
+                  </div>
+                )}
                 <div className="ed-logo-copy">
                   {partner.featured ? (
                     <p className="ed-logo-kicker">{partnersCopy.featuredLabel}</p>
@@ -48,7 +57,7 @@ export function PartnerIndex({ partners }: { partners: StorePartner[] }) {
                       </Link>
                     ) : (
                       <Link href={`/partners/${partner.slug}`} className="btn btn-secondary">
-                        {partnersCopy.backToIndex}
+                        {partnersCopy.openCase}
                       </Link>
                     )}
                   </div>

@@ -12617,26 +12617,68 @@ a.pdp-size-chip:hover {
 .ed-logo-card {
   height: 100%;
   display: grid;
-  grid-template-rows: minmax(10rem, 1fr) auto;
+  grid-template-rows: minmax(11rem, 1fr) auto;
   overflow: clip;
   background: var(--color-surface, #f4efe8);
 }
 
 .ed-logo-cell.is-regular .ed-logo-card {
-  grid-template-rows: minmax(8rem, 0.7fr) auto;
+  grid-template-rows: minmax(9rem, 0.85fr) auto;
 }
 
-.ed-logo-media {
-  margin: 0;
+.ed-logo-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 9.5rem;
+  padding: 1.4rem 1.2rem 0.4rem;
+  color: var(--color-logo-ink, #5a4234);
+}
+
+.ed-logo-cell.is-featured .ed-logo-mark {
+  min-height: 13rem;
+  padding-top: 2rem;
+}
+
+.ed-logo-mark svg {
+  width: 100%;
+  max-width: 22rem;
+  height: auto;
+}
+
+.ed-logo-mark img {
+  width: auto;
+  max-width: 14rem;
+  max-height: 7.5rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.ed-logo-cell.is-featured .ed-logo-mark img {
+  max-height: 9.5rem;
+  max-width: 18rem;
+}
+
+.ed-logo-photo {
+  min-height: 11rem;
   overflow: clip;
+  background: #1c1814;
 }
 
-.ed-logo-media img {
+.ed-logo-cell.is-featured .ed-logo-photo {
+  min-height: 16rem;
+}
+
+.ed-logo-cell.is-large .ed-logo-photo {
+  min-height: 13rem;
+}
+
+.ed-logo-photo img {
+  display: block;
   width: 100%;
   height: 100%;
-  min-height: 10rem;
+  min-height: 11rem;
   object-fit: cover;
-  transform: scale(1.04);
 }
 
 .ed-logo-copy {
@@ -12746,13 +12788,27 @@ a.pdp-size-chip:hover {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .ed-logo-media img {
-    transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  .ed-logo-mark svg,
+  .ed-logo-mark img {
+    transform: translateY(0);
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .ed-logo-card:hover .ed-logo-media img,
-  .ed-logo-card:focus-within .ed-logo-media img {
+  .ed-logo-photo img {
     transform: scale(1);
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .ed-logo-card:hover .ed-logo-mark svg,
+  .ed-logo-card:focus-within .ed-logo-mark svg,
+  .ed-logo-card:hover .ed-logo-mark img,
+  .ed-logo-card:focus-within .ed-logo-mark img {
+    transform: translateY(-0.35rem);
+  }
+
+  .ed-logo-card:hover .ed-logo-photo img,
+  .ed-logo-card:focus-within .ed-logo-photo img {
+    transform: scale(1.035);
   }
 
   .ed-logo-name a {
@@ -12793,6 +12849,16 @@ a.pdp-size-chip:hover {
 .ed-partner-logo {
   max-height: 4rem;
   width: auto;
+}
+
+.ed-partner-logo-mark {
+  max-width: 22rem;
+  color: var(--color-logo-ink, #5a4234);
+}
+
+.ed-partner-logo-mark svg {
+  width: 100%;
+  height: auto;
 }
 
 .ed-partner-gallery {
