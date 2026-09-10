@@ -5961,7 +5961,10 @@ a.product-card-member-chip:hover {
 .catalog-filter-layout {
   --catalog-sidebar-gap: var(--space-lg);
   --catalog-gutter: max(var(--space-lg), calc((100vw - var(--max-width)) / 2 + var(--space-lg)));
-  --catalog-sidebar-w: clamp(0px, calc(var(--catalog-gutter) - var(--catalog-sidebar-gap)), 200px);
+  /* Rail width = gutter minus the gap to the grid AND the page margin on the
+     viewport side; with a single gap the rails touched the screen edge at
+     1500-1650px. */
+  --catalog-sidebar-w: clamp(0px, calc(var(--catalog-gutter) - 2 * var(--catalog-sidebar-gap)), 200px);
   position: relative;
   display: flex;
   align-items: start;
@@ -5999,16 +6002,16 @@ a.product-card-member-chip:hover {
    catalog column. Same width formula as the filter card, so both gutters
    read as one symmetric pair around the grid, and the grid itself keeps
    its columns / rows / sort untouched (the window is not a grid cell).
-   Shown only once the gutter can hold a legible card: from 1500px the
-   rail is ≥150px (photo + 2-line title + two price lines still read
-   comfortably; the 14" MacBook at 1512px gets the window). Below that
-   there is no usable leftover right of the grid, so the window is simply
-   absent (never folded into the grid or a horizontal banner). */
+   Shown only once the gutter can hold a legible card: from 1551px (same
+   breakpoint where the filter rail leaves the content area) the rail is
+   ≥150px (photo + 2-line title + two price lines still read comfortably).
+   Below that there is no usable leftover right of the grid, so the window
+   is simply absent (never folded into the grid or a horizontal banner). */
 .catalog-promo-sidebar {
   display: none;
 }
 
-@media (min-width: 1500px) {
+@media (min-width: 1551px) {
   .catalog-promo-sidebar {
     position: absolute;
     top: 0;
