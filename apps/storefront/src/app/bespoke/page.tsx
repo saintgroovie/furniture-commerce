@@ -1,8 +1,10 @@
 import type { Metadata } from "next"
 import { seo } from "@/lib/woodright-copy"
 import { BespokeHero } from "@/components/home/bespoke-hero"
-import { BespokeWhen } from "@/components/home/bespoke-when"
+import { BespokeBoundary } from "@/components/home/bespoke-boundary"
 import { BespokeDirections } from "@/components/home/bespoke-directions"
+import { BespokeProjects } from "@/components/home/bespoke-projects"
+import { BespokeMaterials } from "@/components/home/bespoke-materials"
 import { BespokeProcess } from "@/components/home/bespoke-process"
 import { BespokeFinal } from "@/components/home/bespoke-final"
 import { HomeRevealObserver } from "@/components/home/home-reveal-observer"
@@ -19,11 +21,13 @@ export const metadata: Metadata = {
 
 export default function BespokePage() {
   return (
-    <div className="hp hp--bespoke">
+    <div className="hp hp--bespoke bsp-hub">
       <HomeRevealObserver />
       <BespokeHero />
-      <BespokeWhen />
+      <BespokeBoundary />
       <BespokeDirections />
+      <BespokeProjects />
+      <BespokeMaterials />
       <BespokeProcess />
       <BespokeFinal />
     </div>

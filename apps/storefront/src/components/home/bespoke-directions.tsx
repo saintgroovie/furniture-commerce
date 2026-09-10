@@ -1,56 +1,48 @@
 import Link from "next/link"
+import type { CSSProperties } from "react"
 import { bespokeLanding } from "@/lib/woodright-copy"
-import { CopyLines } from "@/components/copy-lines"
 import { formatRuInline } from "@/lib/format-ru-copy"
-import { wallPanelsMedia } from "@/components/wall-panels/wall-panels-media"
-
-/** Cover frame per direction id: the direction page's own hero, as its entry card. */
-const DIRECTION_MEDIA: Record<string, { src: string; alt: string; pos?: string }> = {
-  "wall-panels": wallPanelsMedia.hero,
-}
+import { bespokeMedia, type BespokeFrame } from "./bespoke-media"
 
 /**
- * «Направления»: entry points into Bespoke direction pages. One wide
- * editorial card per confirmed direction; the list is data-driven so new
- * pages slot in without layout work.
+ * «03 · Направления»: two photo cards (furniture / wall panels) with a round
+ * arrow, then the designers row. Card list is data-driven from copy.
  */
 export function BespokeDirections() {
-  const { directionsTitle, directionsLead, directions } = bespokeLanding
-  if (directions.length === 0) return null
+  const { directions, ctaSecondary } = bespokeLanding
   return (
-    <section className="hp-section hp-bdir hp-wrap" aria-labelledby="hp-bdir-title" data-reveal>
-      <div className="hp-bdir-head">
-        <h2 id="hp-bdir-title" className="hp-section-title">
-          {directionsTitle}
-        </h2>
-        <p className="hp-section-lead">{formatRuInline(directionsLead)}</p>
-      </div>
-      <ul className="hp-bdir-list">
-        {directions.map((item, i) => {
-          const media = DIRECTION_MEDIA[item.id]
+    <section className="bsp-section bsp-wrap" aria-labelledby="bsp-dir-title" data-reveal>
+      <p className="bsp-eyebrow">{directions.eyebrow}</p>
+      <h2 id="bsp-dir-title" className="bsp-h2">
+        {formatRuInline(directions.title)}
+      </h2>
+      <ul className="bsp-dirs">
+        {directions.cards.map((card, i) => {
+          const media: BespokeFrame | undefined =
+            bespokeMedia.directions[card.id as keyof typeof bespokeMedia.directions]
           return (
-            <li key={item.id} style={{ "--reveal-i": i } as React.CSSProperties}>
-              <Link href={item.href} className="hp-bdir-card">
+            <li key={card.id} style={{ "--reveal-i": i } as CSSProperties}>
+              <Link href={card.href} className="bsp-dir">
                 {media ? (
-                  <span className="hp-bdir-media">
-                    <img
-                      src={media.src}
-                      alt={media.alt}
-                      style={media.pos ? { objectPosition: media.pos } : undefined}
-                      loading="lazy"
-                      decoding="async"
-                      draggable={false}
-                    />
-                  </span>
+                  <img
+                    src={media.src}
+                    alt=""
+                    style={media.pos ? { objectPosition: media.pos } : undefined}
+                    loading="lazy"
+                    decoding="async"
+                    draggable={false}
+                  />
                 ) : null}
-                <span className="hp-bdir-body">
-                  <span className="hp-index" aria-hidden="true">
-                    {String(i + 1).padStart(2, "0")}
+                <span className="bsp-dir-body">
+                  <span className="bsp-dir-copy">
+                    <span className="bsp-dir-index" aria-hidden="true">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="bsp-dir-title">{card.title}</span>
+                    <span className="bsp-dir-text">{formatRuInline(card.text)}</span>
                   </span>
-                  <h3>{item.title}</h3>
-                  <CopyLines as="span" className="hp-bdir-text" lines={item.text} />
-                  <span className="hp-bdir-cta">
-                    {item.cta} <span aria-hidden="true">→</span>
+                  <span className="bsp-dir-arrow" aria-hidden="true">
+                    →
                   </span>
                 </span>
               </Link>
@@ -58,6 +50,15 @@ export function BespokeDirections() {
           )
         })}
       </ul>
+      <div className="bsp-dir-row">
+        <p>
+          <b>{directions.designersRow.title}</b>
+          <span>{formatRuInline(directions.designersRow.text)}</span>
+        </p>
+        <Link href="/designers" className="bsp-dir-row-link">
+          {ctaSecondary}
+        </Link>
+      </div>
     </section>
   )
 }

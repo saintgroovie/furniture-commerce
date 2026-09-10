@@ -54,9 +54,10 @@ export function SiteFooter({
                     >
                       <span className="logo-kids-badge">Kids</span>
                     </span>
-                  </span>
-                  <span className="logo-bespoke-slot" aria-hidden="true">
-                    <BespokeBadge />
+                    {/* BESPOKE capsule sits right of the wordmark, same row as KIDS. */}
+                    <span className="logo-bespoke-slot" aria-hidden="true">
+                      <BespokeBadge />
+                    </span>
                   </span>
                 </span>
               </Link>

@@ -17,7 +17,13 @@ import { SiteSectionProvider } from "@/lib/use-site-section"
 import { getShowroomOrganizationContactLd } from "@/lib/showroom-contacts"
 import { CspNonceProvider } from "@/lib/csp-nonce"
 import { indexingRobotsMetadata } from "@/lib/indexing-policy"
-import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
+import {
+  a11yCopy,
+  bespokeSectionNav,
+  footer as footerCopy,
+  nav as navCopy,
+  seo,
+} from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
 
@@ -159,9 +165,8 @@ export default async function RootLayout({
                   label={navCopy.bespoke}
                   className="header-nav-bespoke"
                   items={[
-                    { label: "Как это работает", href: "/bespoke" },
-                    { label: "Стеновые панели", href: "/bespoke/wall-panels" },
-                    { label: "Оставить заявку", href: "/bespoke/request" },
+                    ...bespokeSectionNav.tabs,
+                    bespokeSectionNav.cta,
                     { label: "Дизайнерам", href: "/designers" },
                   ]}
                 />
