@@ -13307,6 +13307,9 @@ button.pdp-size-chip:hover {
   position: absolute;
   inset: 0;
   margin: 0;
+  /* Phone .ed-hero is 72vh while the img keeps min-height 86vh: clip the
+     photo to the figure so it cannot spill over the next section heading. */
+  overflow: hidden;
 }
 
 .ed-hero-media img {
