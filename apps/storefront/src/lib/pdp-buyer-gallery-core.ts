@@ -13,6 +13,7 @@ import {
 } from "./oliver-buyer-gallery"
 import { restoreEvidenceProtectedAngles } from "./media-near-dup-collapse"
 import { resolveCardHeroAndNearDuplicateExtras } from "./product-images"
+import { promoteClosedFrontHero } from "./catalog-closed-front-hero"
 
 function mainSrcMatchesUrl(mainNorm: string, url: string): boolean {
   if (!mainNorm) return false
@@ -38,7 +39,10 @@ export function buildPdpBuyerFacingGallery(product: Record<string, unknown>): {
       ? prepareOliverBuyerGalleryHashOnly(raw, handle!, sortUrlsByBuyerPolicy)
       : prepareOliverBuyerGallery(raw, handle!, collapseBuyerGalleryUrls)
     : collapseBuyerGalleryUrls(raw, { handle })
-  const restored = restoreEvidenceProtectedAngles(handle, collapsed, raw)
+  const restored = promoteClosedFrontHero(
+    product,
+    restoreEvidenceProtectedAngles(handle, collapsed, raw)
+  )
   const mainSrc = restored[0] ?? ""
   const mainNorm = mainSrc.trim()
   const extraSrcs = restored.slice(1).filter((u) => !mainSrcMatchesUrl(mainNorm, u))

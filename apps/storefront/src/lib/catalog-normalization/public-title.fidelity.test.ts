@@ -10,6 +10,8 @@ import {
   resolvePublicProductTitle,
   extractLatinModelName,
   isMedusaStubOptionTitle,
+  productHasHingeSideOption,
+  stripHingeSideParenthetical,
 } from "./index"
 import { annotateExecutionPresentations } from "../../../../backend/src/lib/catalog-normalization/annotate-presentations"
 
@@ -230,6 +232,57 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
   assert.equal(adultMotif.public_title, "Консоль Ballet (гл. 440)")
   assert.match(adultMotif.public_title, /Ballet/)
   assert.match(adultMotif.public_title, /\(гл\. 440\)/)
+}
+
+{
+  const r = resolvePublicProductTitle({
+    handle: "ol-01-2",
+    title: "Шкаф для одежды 1-дв. с зеркалом (ручка слева/справа)",
+    metadata: {
+      canonical_name: "Шкаф для одежды 1-дв. с зеркалом  (руч.лев/пр)",
+    },
+  })
+  assert.equal(r.public_title, "Шкаф для одежды 1-дв. с зеркалом")
+  assert.doesNotMatch(r.public_title, /ручка|лев\/пр|слева\/справа/)
+  assert.ok(r.notes.includes("stripped_hinge_side_parenthetical"))
+}
+
+{
+  const stored = resolvePublicProductTitle({
+    handle: "ol-00-1",
+    title: "Шкаф угловой (ручка слева/справа)",
+    metadata: { public_title: "Шкаф угловой (ручка слева/справа)" },
+  })
+  assert.equal(stored.public_title, "Шкаф угловой")
+}
+
+{
+  const nightstand = resolvePublicProductTitle({
+    handle: "ol-08-2",
+    title: "Тумбочка прикроватная с дверкой (ручка слева/справа)",
+  })
+  assert.equal(nightstand.public_title, "Тумбочка прикроватная с дверкой")
+}
+
+{
+  assert.equal(
+    productHasHingeSideOption({
+      handle: "ol-01-2",
+      title: "Шкаф для одежды 1-дв. с зеркалом (ручка слева/справа)",
+    }),
+    true
+  )
+  assert.equal(
+    productHasHingeSideOption({
+      handle: "ol-02-1",
+      title: "Шкаф для одежды 2-дв.",
+    }),
+    false
+  )
+  assert.equal(
+    stripHingeSideParenthetical("Шкаф угловой (ручка слева/справа)"),
+    "Шкаф угловой"
+  )
 }
 
 console.log("catalog-normalization public-title fidelity: ok")

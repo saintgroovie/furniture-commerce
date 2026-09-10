@@ -16,7 +16,9 @@ import { PdpPriceBlock } from "@/components/pdp-price-block"
 import { resolveOriginalBasePrice } from "@/lib/sale-price"
 import { PdpMaterialTierSelect } from "@/components/pdp-material-tier-select"
 import { PdpSizeChips } from "@/components/pdp-size-chips"
+import { PdpHingeSideSelect } from "@/components/pdp-hinge-side-select"
 import { buildMaterialTierOptions } from "@/lib/material-tiers"
+import { productHasHingeSideOption } from "@/lib/catalog-normalization"
 import { CopyLines } from "@/components/copy-lines"
 import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
 import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
@@ -55,6 +57,7 @@ import {
 } from "@/lib/product-images"
 import { collectProductImageUrls } from "@/lib/oliver-buyer-gallery"
 import { restoreEvidenceProtectedAngles } from "@/lib/media-near-dup-collapse"
+import { promoteClosedFrontHero } from "@/lib/catalog-closed-front-hero"
 import { filterProvenceSceneOnlyPdpExtras } from "@/lib/provence-scene-only-pdp"
 import { buildPdpBuyerFacingGallery } from "@/lib/pdp-buyer-gallery.server"
 import {
@@ -81,13 +84,11 @@ import { actions, labels, pdpCopy, productTypeBadgeLabels, willieWinkieMotifsCop
 import { KidsProductSection } from "@/components/kids-product-section"
 
 function pdpHeroThumbnail(product: Record<string, unknown>): string | undefined {
-  const t = product.thumbnail
-  if (typeof t !== "string") return undefined
-  const s = t.trim()
-  return s.length > 0 ? s : undefined
+  const src = cardThumbnailSrcFromProduct(product)
+  return src || undefined
 }
 
-/** OG / JSON-LD: same stable source as PDP hero — `thumbnail` only. */
+/** OG / JSON-LD: same source as PDP hero (wardrobe closed front when `_main` is interior). */
 function primaryImageForMeta(product: Record<string, unknown>): string | undefined {
   return pdpHeroThumbnail(product)
 }
@@ -356,10 +357,13 @@ export default async function ProductPage({
   )
   // Shared PDP boundary: restore evidence-protected angles, then drop true near-dups
   // (covers Oliver buyer gallery, execution selectors, and plain collect paths).
-  const restoredOrder = restoreEvidenceProtectedAngles(
-    handle,
-    [bundledMain, ...bundledExtras],
-    collectProductImageUrls(product as Record<string, unknown>)
+  const restoredOrder = promoteClosedFrontHero(
+    product as Record<string, unknown>,
+    restoreEvidenceProtectedAngles(
+      handle,
+      [bundledMain, ...bundledExtras],
+      collectProductImageUrls(product as Record<string, unknown>)
+    )
   )
   const evidenced = resolveCardHeroAndNearDuplicateExtras(
     restoredOrder[0] ?? bundledMain,
@@ -669,6 +673,11 @@ export default async function ProductPage({
                   materialTiers={materialTiers}
                   requestQuote={isRequestQuoteProduct(product)}
                   selectorLabel={displayGroupSelector}
+                />
+              )}
+              {productHasHingeSideOption(product) && (
+                <PdpHingeSideSelect
+                  productKey={handle || (product.id as string)}
                 />
               )}
               {/* Portal target for execution option groups (Дерево/Обивка/Цвет/…).
