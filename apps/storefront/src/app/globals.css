@@ -2670,9 +2670,9 @@ html.mobile-nav-open {
   }
 
   .mobile-nav-group-cart {
+    /* Links already carry border-bottom; an extra border-top here drew a
+       second rule with an empty band above «Корзина». Group gap separates. */
     margin-top: var(--space-sm);
-    padding-top: var(--space-sm);
-    border-top: 1px solid var(--color-border);
   }
 
   .mobile-nav a {
@@ -12719,9 +12719,9 @@ button.pdp-size-chip:hover {
   }
 
   .mobile-nav-group-cart {
+    /* Links already carry border-bottom; an extra border-top here drew a
+       second rule with an empty band above «Корзина». Group gap separates. */
     margin-top: var(--space-sm);
-    padding-top: var(--space-sm);
-    border-top: 1px solid var(--color-border);
   }
 
   .mobile-nav a {
