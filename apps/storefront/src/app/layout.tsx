@@ -13,6 +13,7 @@ import { NavDropdown } from "@/components/nav-dropdown"
 import { ShowroomContactsContent } from "@/components/showroom-contacts-content"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
+import { RouteVeilProvider } from "@/lib/route-veil"
 import { SiteSectionProvider } from "@/lib/use-site-section"
 import { getShowroomOrganizationContactLd } from "@/lib/showroom-contacts"
 import { CspNonceProvider } from "@/lib/csp-nonce"
@@ -92,6 +93,9 @@ export default async function RootLayout({
             header tint and the route loader share one kids flag (pathname
             + optimistic link clicks). */}
         <SiteSectionProvider>
+        {/* Veil = the visible route loader; it renders after <footer> as a
+            fixed cover under the header (see lib/route-veil.tsx). */}
+        <RouteVeilProvider>
         <SiteHeader>
           {/* Top bar */}
           <HeaderHoverDropdownProvider>
@@ -235,6 +239,7 @@ export default async function RootLayout({
             </div>
           }
         />
+        </RouteVeilProvider>
         </SiteSectionProvider>
         </CspNonceProvider>
       </body>
