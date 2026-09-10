@@ -13,11 +13,18 @@ import { NavDropdown } from "@/components/nav-dropdown"
 import { ShowroomContactsContent } from "@/components/showroom-contacts-content"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
-import { KidsSectionProvider } from "@/lib/use-kids-section"
+import { RouteVeilProvider } from "@/lib/route-veil"
+import { SiteSectionProvider } from "@/lib/use-site-section"
 import { getShowroomOrganizationContactLd } from "@/lib/showroom-contacts"
 import { CspNonceProvider } from "@/lib/csp-nonce"
 import { indexingRobotsMetadata } from "@/lib/indexing-policy"
-import { a11yCopy, footer as footerCopy, nav as navCopy, seo } from "@/lib/woodright-copy"
+import {
+  a11yCopy,
+  bespokeSectionNav,
+  footer as footerCopy,
+  nav as navCopy,
+  seo,
+} from "@/lib/woodright-copy"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
 
@@ -85,7 +92,10 @@ export default async function RootLayout({
         {/* Provider sits above both the header and <main> so the sticky
             header tint and the route loader share one kids flag (pathname
             + optimistic link clicks). */}
-        <KidsSectionProvider>
+        <SiteSectionProvider>
+        {/* Veil = the visible route loader; it renders after <footer> as a
+            fixed cover under the header (see lib/route-veil.tsx). */}
+        <RouteVeilProvider>
         <SiteHeader>
           {/* Top bar */}
           <HeaderHoverDropdownProvider>
@@ -157,10 +167,10 @@ export default async function RootLayout({
                 <NavDropdown
                   href="/bespoke"
                   label={navCopy.bespoke}
+                  className="header-nav-bespoke"
                   items={[
-                    { label: "Как это работает", href: "/bespoke" },
-                    { label: "Стеновые панели", href: "/bespoke/wall-panels" },
-                    { label: "Оставить заявку", href: "/bespoke/request" },
+                    ...bespokeSectionNav.tabs,
+                    bespokeSectionNav.cta,
                     { label: "Дизайнерам", href: "/designers" },
                   ]}
                 />
@@ -229,7 +239,8 @@ export default async function RootLayout({
             </div>
           }
         />
-        </KidsSectionProvider>
+        </RouteVeilProvider>
+        </SiteSectionProvider>
         </CspNonceProvider>
       </body>
     </html>

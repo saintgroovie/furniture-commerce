@@ -51,9 +51,37 @@ assert.match(mobileNav, /aria-current/)
 
 const hero = read("src/components/home/bespoke-hero.tsx")
 assert.match(hero, /href="\/bespoke\/request"/)
-assert.match(hero, /href="\/designers"/)
-assert.match(hero, /bespokeLanding\.h1/)
-assert.match(hero, /bespokeLanding\.ctaPrimary/)
+/* Brand lockup (wordmark + BESPOKE capsule) carries the "Woodright Bespoke" name;
+   the visible H1 is the direction («Мебель / по проекту»). */
+assert.match(hero, /aria-label=\{h1\}/)
+assert.match(hero, /hero\.title\[0\]/)
+assert.match(hero, /\{ctaPrimary\}/)
+assert.doesNotMatch(hero, /По проекту"/)
+
+const directions = read("src/components/home/bespoke-directions.tsx")
+assert.match(directions, /href="\/designers"/)
+assert.match(directions, /\{ctaSecondary\}/)
+
+/* Hub copy guardrails (SITE_COMMERCIAL_SERVICE_SOT + BESPOKE_POSITIONING). */
+const hubCopy = JSON.stringify(bespokeLanding)
+for (const banned of [
+  "—",
+  "–",
+  "под ключ",
+  "любой сложности",
+  "30%",
+  "эскиз в подарок",
+  "замер",
+  "монтаж",
+  "реставрац",
+  "Настроить и заказать",
+  "В корзину",
+]) {
+  assert.doesNotMatch(hubCopy, new RegExp(banned, "i"), `bespokeLanding must not contain «${banned}»`)
+}
+assert.equal(bespokeLanding.process.steps.length, 4)
+assert.equal(bespokeLanding.projects.cards.length, 4)
+assert.equal(bespokeLanding.directions.cards[1]?.href, "/bespoke/wall-panels")
 
 const pageMeta = read("src/app/bespoke/page.tsx")
 assert.match(pageMeta, /seo\.bespoke\.title/)
