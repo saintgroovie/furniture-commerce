@@ -7634,6 +7634,16 @@ a.pdp-size-chip:hover {
   text-decoration: none;
 }
 
+button.pdp-size-chip {
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+button.pdp-size-chip:hover {
+  border-color: var(--color-fg-muted);
+}
+
 .pdp-size-chip.is-active {
   border-color: color-mix(in srgb, var(--color-action) 35%, transparent);
   background: color-mix(in srgb, var(--color-action) 4%, var(--color-bg));

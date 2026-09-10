@@ -20,6 +20,7 @@ import {
   containCatalogCardExecutionSelectors,
   enrichCardColorVariantsWithCatalogExtras,
   finishLabelForProduct,
+  cardThumbnailSrcFromProduct,
   hasPdpExecutionControls,
   isFabricFamilyOnlyUpholstery,
   isFabricFamilyUpholsteryKey,
@@ -38,7 +39,6 @@ import {
 import {
   collectExtraProductImageUrls,
   mergeUniqueExtraUrls,
-  normalizeImageEntryUrl,
   resolveCardHeroAndNearDuplicateExtras,
   resolvePdpMediaBundle,
   resolveStorefrontProductImageSrc,
@@ -71,21 +71,9 @@ type Product = {
 const BADGE_LABELS = productTypeBadgeLabels
 
 function cardThumbnailSrc(product: Product): string | null {
-  const t = product.thumbnail
-  if (typeof t === "string") {
-    const s = t.trim()
-    if (s.length > 0) {
-      return resolveCatalogCardHeroSrc(s, resolveStorefrontProductImageSrc)
-    }
-  }
-  const images = product.images
-  if (Array.isArray(images) && images.length > 0) {
-    const u = normalizeImageEntryUrl(images[0])
-    if (u) {
-      return resolveCatalogCardHeroSrc(u, resolveStorefrontProductImageSrc)
-    }
-  }
-  return null
+  const src = cardThumbnailSrcFromProduct(product as Record<string, unknown>)
+  if (!src) return null
+  return resolveCatalogCardHeroSrc(src, resolveStorefrontProductImageSrc)
 }
 
 export function ProductCard({
@@ -133,10 +121,7 @@ export function ProductCard({
   const handle = product.handle ?? ""
   const isOliver = handle.startsWith("ol-")
   const productHref = `/product/${product.id}`
-  const displayTitle =
-    displayGroup && typeof product.title === "string" && product.title.trim()
-      ? product.title.trim()
-      : getBuyerFacingProductTitle(product as Record<string, unknown>)
+  const displayTitle = getBuyerFacingProductTitle(product as Record<string, unknown>)
   const thumbSrc = cardThumbnailSrc(product)
   const mainSrcForCard = thumbSrc ?? ""
 

@@ -15,6 +15,12 @@ import {
   readPdpMaterialSelection,
   usePdpMaterialSelection,
 } from "@/lib/cart/pdp-material-selection"
+import {
+  hingeSideForProduct,
+  readPdpHingeSideSelection,
+  usePdpHingeSideSelection,
+} from "@/lib/cart/pdp-hinge-side"
+import { productHasHingeSideOption } from "@/lib/catalog-normalization"
 import type { MaterialTierOption } from "@/lib/material-tiers"
 import { addLineItem } from "@/lib/api/cart"
 import { cartLineConfigurationIdentity } from "@/lib/cart-line-identity"
@@ -65,9 +71,20 @@ export function ProductCta({
   const [error, setError] = useState<string | null>(null)
   const gate = usePdpPurchaseGate()
   const materialSelection = usePdpMaterialSelection()
+  const hingeSelection = usePdpHingeSideSelection()
   const productKey = productKeyOf(product)
   const gateOk = gateMatchesProduct(gate, productKey)
   const purchase = readProductPurchase(product)
+  const hingeRequired = productHasHingeSideOption(product)
+
+  function selectedHingeSide(live = false): string | null {
+    if (!hingeRequired) return null
+    const selection = live ? readPdpHingeSideSelection() : hingeSelection
+    const value = hingeSideForProduct(selection, productKey)
+    if (value === "left") return pdpCopy.hingeSideLeft
+    if (value === "right") return pdpCopy.hingeSideRight
+    return null
+  }
 
   /* Selected material execution; falls back to the default (first) tier. */
   function selectedMaterialTier(live = false): MaterialTierOption | null {
@@ -83,6 +100,8 @@ export function ProductCta({
     if (productId) params.set("product_id", productId)
     const tier = selectedMaterialTier()
     if (tier) params.set("material", tier.label)
+    const hinge = selectedHingeSide()
+    if (hinge) params.set("handle_side", hinge)
     if (extra) {
       for (const [key, value] of Object.entries(extra)) {
         if (value?.trim()) params.set(key, value.trim())
@@ -125,10 +144,12 @@ export function ProductCta({
 
   /* Defaults publish after mount; until then allow CTA — add-to-cart falls
      back to first material tier + omits finish (= standard color price). */
+  const hingeBlocked = hingeRequired && !selectedHingeSide()
   const selectionBlocked =
-    gateOk &&
-    gate.requiresSelection &&
-    (!gate.complete || !gate.combinationAvailable)
+    (gateOk &&
+      gate.requiresSelection &&
+      (!gate.complete || !gate.combinationAvailable)) ||
+    hingeBlocked
   const canAdd = Boolean(variantId) && !selectionBlocked && !adding
 
   async function handleAddToCart(e: MouseEvent<HTMLButtonElement>) {
@@ -145,6 +166,7 @@ export function ProductCta({
         return
       }
     }
+    if (hingeRequired && !selectedHingeSide(true)) return
     /* Captured before the awaits: the flight dot launches from the CTA's
        center, and currentTarget is only valid synchronously. */
     const rect = e.currentTarget.getBoundingClientRect()
@@ -165,9 +187,13 @@ export function ProductCta({
       /* Материальное исполнение: на сервер уходит только код — label, multiplier
          и итоговую цену backend пересчитывает сам из product metadata. */
       const materialTier = selectedMaterialTier(true)
+      const hingeLabel = selectedHingeSide(true)
       const specs = [
         ...(materialTier
           ? [{ label: pdpCopy.materialTierLabel, value: materialTier.label }]
+          : []),
+        ...(hingeLabel
+          ? [{ label: pdpCopy.hingeSideLabel, value: hingeLabel }]
           : []),
         ...(selection?.specs ?? []),
       ]

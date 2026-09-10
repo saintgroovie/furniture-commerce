@@ -1069,6 +1069,10 @@ export const pdpCopy = {
   optionChooseValue: "Выберите",
   /** Material execution dropdown + cart line spec label. */
   materialTierLabel: "Исполнение",
+  /** Door-handing: left/right handle. Same product, not a SKU. */
+  hingeSideLabel: "Ручка",
+  hingeSideLeft: "Слева",
+  hingeSideRight: "Справа",
   serviceLines: [
     "Массив дерева и ручная отделка",
     "Шоурум в Химках - принимаем по договорённости",
