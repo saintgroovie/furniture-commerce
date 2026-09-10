@@ -18,19 +18,19 @@ export const WILLIE_WINKIE_COLLECTION = "willie-winkie" as const
  * `motif_title` — product.metadata may still hold English internal labels.
  */
 export const MOTIF_BUYER_DISPLAY_NAMES_RU = {
-  "ants-village": "Деревня муравьёв",
+  "ants-village": "Деревня муравьев",
   ballet: "Балет",
   fairies: "Феи",
   "fantasy-kingdom": "Сказочное королевство",
   infanta: "Инфанта",
   molly: "Молли",
-  pastoral: "Пастораль",
+  pastoral: "Полевые цветы",
   "royal-lilies": "Королевские лилии",
   "rural-scenery": "Сельский пейзаж",
   "sweet-home": "Милый дом",
   "teddy-bear": "Плюшевый мишка",
-  templars: "Тамплиеры",
-  "tiggy-winkle": "Тигги-Винкл",
+  templars: "Рыцари",
+  "tiggy-winkle": "Ежик",
   tommy: "Томми",
 } as const satisfies Record<string, string>
 

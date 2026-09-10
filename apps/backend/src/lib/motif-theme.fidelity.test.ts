@@ -137,7 +137,7 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
   const themes = buildMotifThemes(sample)
   assert.equal(themes.length, 3)
   const templars = themes.find((t) => t.motif_slug === "templars")!
-  assert.equal(templars.motif_title, "Тамплиеры")
+  assert.equal(templars.motif_title, "Рыцари")
   assert.equal(templars.motif_available_family_count, 3)
   assert.equal(templars.motif_available_product_count, 3)
   assert.equal(templars.cta_kind, "view_collection")
@@ -145,7 +145,7 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
   assert.ok(templars.motif_cover?.includes("te-"))
   assert.equal(templars.preview_products.length, 3)
   assert.ok(templars.preview_products.every((p) => p.title !== "INTERNAL SOURCE TITLE"))
-  assert.ok(templars.preview_products.every((p) => p.motif_title === "Тамплиеры"))
+  assert.ok(templars.preview_products.every((p) => p.motif_title === "Рыцари"))
   assert.ok(templars.preview_products.every((p) => !("sku" in p)))
   assert.ok(templars.preview_products.every((p) => !("id" in p)))
 
@@ -169,10 +169,10 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
 
 {
   const detail = buildMotifThemeDetail(sample, "templars")!
-  assert.equal(detail.motif_title, "Тамплиеры")
+  assert.equal(detail.motif_title, "Рыцари")
   assert.equal(detail.products.length, 3)
   assert.ok(detail.products.every((p) => p.motif_slug === "templars"))
-  assert.ok(detail.products.every((p) => p.motif_title === "Тамплиеры"))
+  assert.ok(detail.products.every((p) => p.motif_title === "Рыцари"))
   assert.equal(buildMotifThemeDetail(sample, "missing"), null)
   const leaks = assertBuyerSafeMotifPayload(detail)
   assert.deepEqual(leaks, [], leaks.join(", "))
@@ -186,7 +186,7 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
   })!
   assert.equal(matched.motif_status, "matched")
   assert.equal(matched.redirect_handle, null)
-  assert.equal(matched.selected_motif?.motif_title, "Тамплиеры")
+  assert.equal(matched.selected_motif?.motif_title, "Рыцари")
   assert.equal(matched.motif_options.length, 3) // same family: templars/ballet/tommy komod
   assert.ok(matched.motif_options.every((o) => o.product_handle !== ""))
   assert.ok(matched.motif_options.every((o) => !isLegacyEnglishMotifTitle(o.motif_title)))
@@ -231,7 +231,7 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
   assert.equal(unsupportedFamily.motif_status, "unsupported")
   assert.equal(unsupportedFamily.redirect_handle, null)
   assert.equal(unsupportedFamily.selected_motif?.motif_slug, "templars")
-  assert.equal(unsupportedFamily.selected_motif?.motif_title, "Тамплиеры")
+  assert.equal(unsupportedFamily.selected_motif?.motif_title, "Рыцари")
 
   const absent = buildMotifContext({
     products: sample,
@@ -240,7 +240,7 @@ assert.equal(MOTIF_CTA_LABELS.view_collection, "Посмотреть колле�
   })!
   assert.equal(absent.motif_status, "absent")
   assert.equal(absent.selected_motif?.motif_slug, "templars")
-  assert.equal(absent.selected_motif?.motif_title, "Тамплиеры")
+  assert.equal(absent.selected_motif?.motif_title, "Рыцари")
 
   const leaks = assertBuyerSafeMotifPayload(matched)
   assert.deepEqual(leaks, [], leaks.join(", "))
