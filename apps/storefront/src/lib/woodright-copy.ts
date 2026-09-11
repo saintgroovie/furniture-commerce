@@ -1231,7 +1231,7 @@ export const contactsCopy = {
   messengerTelegramAria: "Написать в Telegram",
   messengerWhatsappAria: "Написать в WhatsApp",
   messengerMaxAria: "Написать в MAX",
-  ctaTitle: "Есть вопрос по мебели или индивидуальному проекту?",
+  ctaTitle: ["Есть вопрос по мебели", "или индивидуальному проекту?"],
   ctaBody:
     "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
   ctaPrimary: "Оставить заявку",
