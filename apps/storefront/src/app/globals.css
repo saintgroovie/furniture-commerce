@@ -3622,6 +3622,13 @@ button,
   white-space: nowrap;
 }
 
+/* Link-styled CTAs must not pick up `a:hover { text-decoration: underline }`. */
+a.btn,
+a.btn:hover,
+a.btn:focus-visible {
+  text-decoration: none;
+}
+
 button:disabled,
 .btn:disabled {
   opacity: 0.5;
@@ -9916,7 +9923,7 @@ button.pdp-size-chip:hover {
   background: var(--hp-kids-accent);
 }
 
-.hp-kids-cta .btn-primary:hover {
+.hp-kids-cta .btn-primary:hover:not(:disabled) {
   background: #3f5c44;
 }
 
@@ -10133,7 +10140,10 @@ button.pdp-size-chip:hover {
   line-height: 1.6;
 }
 
-.hp-final-btn {
+/* Cream-on-photo plate. Compound selectors must beat `.btn-primary:hover:not(:disabled)`
+   (action-hover brown on the dark scrim + brand-hover text = invisible label). */
+a.btn.hp-final-btn,
+.hp-final-btn.btn-primary {
   margin-top: var(--space-lg);
   background: #f6f1ea;
   color: var(--color-brand);
@@ -10143,11 +10153,14 @@ button.pdp-size-chip:hover {
   font-size: 1.0625rem;
   box-sizing: border-box;
   max-width: 100%;
+  text-decoration: none;
 }
 
-.hp-final-btn:hover {
+a.btn.hp-final-btn:hover:not(:disabled),
+.hp-final-btn.btn-primary:hover:not(:disabled) {
   background: #fff;
   color: var(--color-brand-hover);
+  text-decoration: none;
 }
 
 /* ---- Responsive --------------------------------------------------------- */
@@ -10459,15 +10472,21 @@ button.pdp-size-chip:hover {
   line-height: 1.3;
 }
 
-.hp-kfinal-btn {
+/* Cream-on-olive band. Kids `--color-action-hover` (#446249) is the same family
+   as this plate, so `.btn-primary:hover:not(:disabled)` makes the chip vanish. */
+a.btn.hp-kfinal-btn,
+.hp-kfinal-btn.btn-primary {
   margin-top: var(--space-lg);
   background: #f2f6ef;
   color: #3c5642;
+  text-decoration: none;
 }
 
-.hp-kfinal-btn:hover {
+a.btn.hp-kfinal-btn:hover:not(:disabled),
+.hp-kfinal-btn.btn-primary:hover:not(:disabled) {
   background: #fff;
   color: #2f4534;
+  text-decoration: none;
 }
 
 @media (max-width: 1024px) {
@@ -11486,15 +11505,19 @@ button.pdp-size-chip:hover {
   color: rgba(238, 241, 238, 0.82);
 }
 
+a.btn.bsp-final-btn,
 .bsp-final-btn {
   margin-top: 26px;
   background: #f3f1ea;
   color: var(--bespoke-teal, #305866);
+  text-decoration: none;
 }
 
+a.btn.bsp-final-btn:hover:not(:disabled),
 .bsp-final-btn:hover:not(:disabled) {
   background: #fff;
   color: var(--bespoke-teal, #305866);
+  text-decoration: none;
 }
 
 /* Responsive */
