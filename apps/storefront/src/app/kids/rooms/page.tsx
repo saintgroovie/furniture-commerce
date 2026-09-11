@@ -66,9 +66,7 @@ export default async function KidsRoomsPage() {
   return (
     <div data-state="success">
       <h1>{kidsRoomsCopy.h1}</h1>
-      <p className="info-text" style={{ marginTop: "0.5rem" }}>
-        {kidsRoomsCopy.lead}
-      </p>
+      <CopyLines className="info-text" style={{ marginTop: "0.5rem" }} lines={kidsRoomsCopy.lead} />
       <ul className="product-grid" style={{ marginTop: "1.5rem" }}>
         {list.map((rs: { id?: string }) => (
           <li key={rs.id}>

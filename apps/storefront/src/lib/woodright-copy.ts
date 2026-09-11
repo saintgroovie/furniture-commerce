@@ -1069,6 +1069,10 @@ export const pdpCopy = {
   optionChooseValue: "Выберите",
   /** Material execution dropdown + cart line spec label. */
   materialTierLabel: "Исполнение",
+  /** Door-handing: left/right handle. Same product, not a SKU. */
+  hingeSideLabel: "Ручка",
+  hingeSideLeft: "Слева",
+  hingeSideRight: "Справа",
   serviceLines: [
     "Массив дерева и ручная отделка",
     "Шоурум в Химках - принимаем по договорённости",
@@ -1227,7 +1231,7 @@ export const contactsCopy = {
   messengerTelegramAria: "Написать в Telegram",
   messengerWhatsappAria: "Написать в WhatsApp",
   messengerMaxAria: "Написать в MAX",
-  ctaTitle: "Есть вопрос по мебели или индивидуальному проекту?",
+  ctaTitle: ["Есть вопрос по мебели", "или индивидуальному проекту?"],
   ctaBody:
     "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
   ctaPrimary: "Оставить заявку",

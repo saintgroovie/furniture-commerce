@@ -136,6 +136,7 @@ export function pdpPriceHintForGate(gate: PdpPurchaseGate): string {
       Обивка: "обивку",
       Изголовье: "изголовье",
       Отделка: "отделку",
+      Ручка: "ручку",
     }
     return map[label] ?? label.toLowerCase()
   }

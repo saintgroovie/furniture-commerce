@@ -934,7 +934,7 @@ function CatalogPriceFilterInner({
           />
         </label>
         <span className="catalog-filter-price-dash" aria-hidden>
-          —
+          -
         </span>
         <label>
           <span className="sr-only">Цена до, рублей</span>
@@ -952,7 +952,7 @@ function CatalogPriceFilterInner({
       {priceRange && (
         <p className="catalog-filter-price-hint">
           {priceRange.min.toLocaleString("ru-RU")}
-          {"\u00A0– "}
+          {"\u00A0- "}
           {priceRange.max.toLocaleString("ru-RU")} ₽
         </p>
       )}
