@@ -25,7 +25,9 @@ const LEGAL_PATH_LABELS: Record<string, string> = {
   "/contacts": "Контакты",
 }
 
-const LEGAL_PATH_RE = /(\/[a-z][a-z-]*)(?![a-z-])/g
+/* Bare paths only: a preceding letter, digit, ":" "/" "." or "-" means the
+   slash belongs to a URL / domain (https://example.ru/payment), not a page. */
+const LEGAL_PATH_RE = /(?<![\w:/.-])(\/[a-z][a-z-]*)(?![a-z-])/g
 
 function renderLegalLine(line: string): ReactNode {
   const nodes: ReactNode[] = []
