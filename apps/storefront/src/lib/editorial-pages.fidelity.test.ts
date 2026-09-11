@@ -4,12 +4,12 @@
  *   yarn dlx tsx src/lib/editorial-pages.fidelity.test.ts
  */
 import assert from "node:assert/strict"
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { footer, nav, partnersCopy } from "./woodright-copy"
 import { collectStaticSitemapEntries } from "./sitemap-entries"
-import { toStorefrontPartner } from "./api/partners"
+import { mergeRemotePartnersWithLegacy, toStorefrontPartner } from "./api/partners"
 import { LEGACY_PARTNERS } from "./legacy-partners"
 
 const srcRoot = join(dirname(fileURLToPath(import.meta.url)), "..")
@@ -72,16 +72,77 @@ assert.match(legacy, /Мариинский дворец/)
 assert.match(legacy, /ПАО «Совкомфлот»/)
 assert.match(legacy, /Тверская картинная галерея/)
 assert.doesNotMatch(legacy, /Novikov|Фиолет|Русский Дизайнерский Дом|ГАБТ/)
-assert.equal(LEGACY_PARTNERS.length, 7)
+assert.doesNotMatch(legacy, /editorialMedia|\/greenwich\/|unsplash|pexels/i)
+assert.equal(LEGACY_PARTNERS.length, 9)
 assert.deepEqual(
   LEGACY_PARTNERS.map((partner) => partner.slug),
-  ["bolshoi", "vgbll", "sochi", "mvd-academy", "mariinsky-palace", "sovcomflot", "tver-gallery"]
+  [
+    "bolshoi",
+    "vgbll",
+    "sochi",
+    "mvd-academy",
+    "mariinsky-palace",
+    "sovcomflot",
+    "tver-gallery",
+    "kunstkamera",
+    "ran-presidential",
+  ]
 )
-assert.ok(LEGACY_PARTNERS.every((partner) => (partner.presentations[0]?.slides?.length ?? 0) >= 3))
+const photographed = LEGACY_PARTNERS.filter((partner) => partner.images.length > 0)
+assert.ok(photographed.every((partner) => (partner.presentations[0]?.slides?.length ?? 0) >= 3))
+assert.ok(
+  photographed.every((partner) =>
+    partner.images.every((src) => src.startsWith(`/editorial/partners/${partner.slug}/`))
+  )
+)
+assert.ok(LEGACY_PARTNERS.filter((partner) => partner.images.length === 0).every((partner) => partner.presentations.length === 0))
+assert.equal(
+  LEGACY_PARTNERS.find((partner) => partner.slug === "bolshoi")?.logo_url,
+  "/editorial/partners/bolshoi/logo.jpg"
+)
+for (const file of [
+  "vgbll.svg",
+  "sochi.svg",
+  "mvd-academy.png",
+  "mariinsky-palace.svg",
+  "sovcomflot.png",
+  "tver-gallery.svg",
+  "bolshoi/hall.jpg",
+  "bolshoi/logo.jpg",
+  "mvd-academy/reading-room.jpg",
+  "mariinsky-palace/vitrines.jpg",
+  "kunstkamera/expeditions.jpg",
+  "ran-presidential/hall.jpg",
+]) {
+  assert.ok(
+    existsSync(join(srcRoot, "../public/editorial/partners", file)),
+    `missing partner media ${file}`
+  )
+}
 
 const partnerIndex = read("components/partners/partner-index.tsx")
 assert.match(partnerIndex, /ed-logo-card/)
+assert.match(partnerIndex, /PartnerMark/)
+assert.match(partnerIndex, /ed-logo-mark/)
+assert.match(partnerIndex, /ed-logo-photo/)
 assert.match(partnerIndex, /partnersCopy\.viewPresentation/)
+assert.doesNotMatch(partnerIndex, /ed-logo-media/)
+assert.match(read("components/partners/partner-mark.tsx"), /БОЛЬШОЙ/)
+assert.match(read("components/partners/partner-mark.tsx"), /СОВКОМФЛОТ/)
+assert.doesNotMatch(read("components/partners/partner-mark.tsx"), /КУНСТКАМЕРА|ПРЕЗИДЕНТСКИЙ ЗАЛ/)
+assert.doesNotMatch(read("components/partners/partner-mark.tsx"), /Novikov|Фиолет|unsplash/)
+
+const stubbedRemote = [
+  {
+    ...LEGACY_PARTNERS[0],
+    images: ["/product-static/products/greenwich/stub.jpg"],
+    presentations: [],
+  },
+]
+const merged = mergeRemotePartnersWithLegacy(stubbedRemote, LEGACY_PARTNERS)
+assert.equal(merged.find((partner) => partner.slug === "bolshoi")?.images[0], "/editorial/partners/bolshoi/hall.jpg")
+assert.ok(merged.some((partner) => partner.slug === "kunstkamera"))
+assert.doesNotMatch(read("app/partners/page.tsx"), /partnersAtmosphere/)
 
 const contactsLayout = read("components/contacts-page-layout.tsx")
 assert.match(contactsLayout, /contacts-page-masthead/)
@@ -96,6 +157,8 @@ assert.match(viewer, /EditorialDeck/)
 assert.match(viewer, /ed-deck-stage/)
 assert.doesNotMatch(viewer, /iframe/)
 assert.match(globals, /\.ed-logo-card\s*\{/)
+assert.match(globals, /\.ed-logo-mark\s*\{/)
+assert.match(globals, /\.ed-logo-photo\s*\{/)
 assert.match(globals, /\.ed-deck-stage\s*\{/)
 
 const media = read("lib/editorial-media.ts")
