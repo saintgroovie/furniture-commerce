@@ -6580,27 +6580,92 @@ a.product-card-member-chip:hover {
      --catalog-filter-fit (set from CatalogFilterControls on scroll) keeps
      that bottom gap exact even before the drawer sticks, when it sits
      lower than 53px in the flow; calc() is the stuck-state fallback. */
+  /* Phones: the drawer is a fixed bottom sheet over a scrim, not an inline
+     sticky card. Inline, its height was whatever was left between its
+     in-flow top and the viewport bottom (often ~200px), so «Коллекции» /
+     «Тип изделия» collapsed into a two-row internal scroller and the type
+     facet was effectively invisible. The sheet always gets up to 82dvh;
+     only .catalog-filter-scroll scrolls, «Применить» / «Показать» stay
+     anchored. --catalog-filter-fit (inline-fit helper) is ignored here. */
+  .catalog-filter-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 64;
+    background: rgba(38, 28, 20, 0.42);
+    animation: catalog-filter-scrim-in 0.22s ease-out both;
+  }
+
   .catalog-filter-sidebar {
-    position: sticky;
-    top: 53px;
-    z-index: 40;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    z-index: 65;
     display: none;
     flex-direction: column;
     gap: var(--space-sm);
     width: auto;
-    margin-left: 0;
-    margin-right: 0;
-    max-height: var(--catalog-filter-fit, calc(100vh - 53px - var(--space-lg)));
+    margin: 0;
+    max-height: min(82dvh, calc(100dvh - 65px - var(--safe-top)));
     overflow: hidden;
-    margin-bottom: var(--space-md);
-    padding: var(--space-md);
+    padding: calc(var(--space-md) + 10px) var(--space-md)
+      max(var(--space-md), var(--safe-bottom));
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    border-bottom: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     background: var(--color-surface);
+    box-shadow: 0 -14px 40px rgba(38, 28, 20, 0.18);
+  }
+
+  /* Grab-handle cue: this is a sheet, it can be dismissed. */
+  .catalog-filter-sidebar::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-fg-muted) 45%, transparent);
+    transform: translateX(-50%);
   }
 
   .catalog-filter-sidebar-open {
     display: flex;
+    animation: catalog-filter-sheet-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes catalog-filter-sheet-up {
+    from {
+      transform: translateY(24px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  @keyframes catalog-filter-scrim-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-filter-sidebar-open,
+    .catalog-filter-backdrop {
+      animation: none;
+    }
+  }
+
+  html.catalog-filters-open,
+  body.catalog-filters-open {
+    overflow: hidden;
   }
 
   .catalog-filter-apply-mobile {
@@ -6615,6 +6680,156 @@ a.product-card-member-chip:hover {
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
+  }
+
+  /* Drawer on phones: «Тип изделия» before «Коллекции» (primary facet first;
+     it is also what the chip row above the toolbar exposes). Active chips
+     keep the very top. Desktop sidebar order is unchanged. */
+  .catalog-filter-scroll .catalog-active-chips {
+    order: -2;
+  }
+
+  .catalog-filter-group-category {
+    order: -1;
+  }
+
+  /* Count badge on the «Фильтры» toggle - the drawer is collapsed, so this
+     is the only cue that something is set inside it. */
+  .catalog-filter-mobile-toggle {
+    position: relative;
+  }
+
+  .catalog-filter-toggle-count {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--color-action);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+}
+
+.catalog-filter-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .catalog-filter-backdrop {
+    display: block;
+  }
+}
+
+/* ---- Catalog «Тип мебели» chip row (phones only) ----
+   Horizontally scrollable pills under the product-type tabs. On ≥769px the
+   sidebar list is always visible, so the row is hidden there. Bleeds to the
+   viewport edge (negative container gutter) so the row visibly continues
+   under the gutter - the cue that it scrolls. */
+.catalog-type-chips {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .catalog-type-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    margin-top: var(--space-sm);
+    margin-inline: calc(-1 * max(var(--page-gutter), var(--safe-left)))
+      calc(-1 * max(var(--page-gutter), var(--safe-right)));
+  }
+
+  .catalog-type-chips-label {
+    padding-inline: max(var(--page-gutter), var(--safe-left));
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+
+  .catalog-type-chips-track {
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-inline: max(var(--page-gutter), var(--safe-left))
+      max(var(--page-gutter), var(--safe-right));
+    padding-bottom: 2px;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: max(var(--page-gutter), var(--safe-left));
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .catalog-type-chips-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .catalog-type-chip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-fg-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    scroll-snap-align: start;
+    transition:
+      background 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+  }
+
+  .catalog-type-chip:hover {
+    text-decoration: none;
+    border-color: color-mix(in srgb, var(--color-action) 45%, var(--color-border));
+    color: var(--color-fg);
+  }
+
+  .catalog-type-chip:hover {
+    text-decoration: none;
+    border-color: color-mix(in srgb, var(--color-action) 45%, var(--color-border));
+    color: var(--color-fg);
+  }
+
+  .catalog-type-chip-count {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--color-fg-muted);
+  }
+
+  .catalog-type-chip-active {
+    border-color: var(--color-action);
+    background: var(--color-action);
+    color: #fff;
+  }
+
+  .catalog-type-chip-active .catalog-type-chip-count {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .catalog-type-chip:focus-visible {
+    outline: 2px solid var(--color-action);
+    outline-offset: 2px;
   }
 }
 

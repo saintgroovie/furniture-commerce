@@ -62,6 +62,11 @@ export const catalogUiCopy = {
   searchPlaceholderCompact: "Название, коллекция или категория",
   searchClear: "Очистить поиск",
   searchSubmit: "Найти",
+  /** ≤768px: horizontal chip row that surfaces the «Тип изделия» facet
+   *  outside the collapsed filter drawer (test users could not find it). */
+  typeChipsLabel: "Тип мебели",
+  typeChipsAll: "Все",
+  filtersToggle: "Фильтры",
 }
 
 export const systemCopy = {
