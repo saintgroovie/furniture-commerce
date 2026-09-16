@@ -902,8 +902,25 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   box-shadow: inset 0 -1.5px 0 currentColor;
 }
 
+/* Current section in the phone menu: a short pill-shaped rule beside a
+   bolder label. The old full-height inset 3px bar sat flush against the
+   text (rows have no left padding) and read as a rendering glitch. */
 .mobile-nav a[aria-current="page"] {
-  box-shadow: inset 3px 0 0 currentColor;
+  position: relative;
+  padding-left: 14px;
+  font-weight: 600;
+}
+
+.mobile-nav a[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 1.05em;
+  border-radius: 999px;
+  background: currentColor;
+  transform: translateY(-50%);
 }
 
 /* "Детская" is the one section entry point in the main nav that gets a
@@ -12717,17 +12734,59 @@ a.btn.bsp-final-btn:hover:not(:disabled),
   }
 
   .mobile-nav-overlay {
+    /* Full-viewport sheet with its own top row (.mobile-nav-top). It used to
+       start under the sticky header (top: 64px), which in in-app browsers
+       (Telegram / VK webview) left a band of page content above the menu
+       once the header had scrolled away. Sits above the header (z 50) and
+       the header burger (z 52). */
     position: fixed;
-    top: calc(64px + var(--safe-top));
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: var(--color-surface);
-    z-index: 51;
+    z-index: 60;
     overflow-y: auto;
     overflow-x: hidden;
+    padding-top: var(--safe-top);
     padding-bottom: max(var(--space-lg), var(--safe-bottom));
     min-width: 0;
+  }
+
+  .mobile-nav-top {
+    /* Same three-slot geometry as .header-top-inner: spacer | wordmark | close. */
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    height: 64px;
+    padding: 0 max(var(--page-gutter), var(--safe-right)) 0
+      max(var(--page-gutter), var(--safe-left));
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mobile-nav-brand {
+    grid-column: 2;
+    justify-self: center;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .mobile-nav-close {
+    grid-column: 3;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+
+  .mobile-nav-close:focus-visible {
+    outline: 2px solid var(--color-action);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
   }
 
   .mobile-nav {
