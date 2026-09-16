@@ -283,6 +283,7 @@ export function CatalogFilterControls({
       enabled,
       [
         document.querySelector(".catalog-controls"),
+        document.querySelector(".catalog-type-chips"),
         document.querySelector(".catalog-search"),
         document.querySelector(".catalog-sort"),
         document.querySelector(".catalog-product-area"),
@@ -485,10 +486,13 @@ export function CatalogFilterControls({
                 : "catalog-type-chip"
             }
             scroll={false}
-            aria-pressed={state.category.length === 0}
+            aria-current={state.category.length === 0 ? "true" : undefined}
             onClick={(e) => onFilterLinkClick(e, { ...state, category: [] })}
           >
             {catalogUiCopy.typeChipsAll}
+            {state.category.length === 0 && (
+              <span className="sr-only">{catalogUiCopy.typeChipSelected}</span>
+            )}
           </Link>
           {facets.categories.map((opt) => {
             const isActive = state.category.includes(opt.value)
@@ -506,11 +510,14 @@ export function CatalogFilterControls({
                     : "catalog-type-chip"
                 }
                 scroll={false}
-                aria-pressed={isActive}
+                aria-current={isActive ? "true" : undefined}
                 onClick={(e) => onFilterLinkClick(e, next)}
               >
                 {opt.label}
                 <span className="catalog-type-chip-count">{opt.count}</span>
+                {isActive && (
+                  <span className="sr-only">{catalogUiCopy.typeChipSelected}</span>
+                )}
               </Link>
             )
           })}

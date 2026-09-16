@@ -5531,9 +5531,24 @@ a.product-card-member-chip:hover {
   }
 }
 
-.catalog-filter-shell[data-pending="true"] {
+/* Pending navigation dims the *content* of the shell, not the shell itself:
+   the phone filter sheet + scrim are fixed descendants of the shell, and an
+   opacity < 1 on the shell would (a) dim them, (b) open a stacking context
+   that traps their z-index under the site header, (c) kill their clicks. */
+.catalog-filter-shell[data-pending="true"] > .catalog-controls,
+.catalog-filter-shell[data-pending="true"] > .catalog-type-chips,
+.catalog-filter-shell[data-pending="true"] > .catalog-filter-toolbar,
+.catalog-filter-shell[data-pending="true"] .catalog-product-area,
+.catalog-filter-shell[data-pending="true"] .catalog-promo-sidebar {
   opacity: 0.72;
   pointer-events: none;
+}
+
+@media (min-width: 769px) {
+  .catalog-filter-shell[data-pending="true"] .catalog-filter-sidebar {
+    opacity: 0.72;
+    pointer-events: none;
+  }
 }
 
 /* --catalog-toolbar-inset = this card's own padding (5px) + border (1px):
