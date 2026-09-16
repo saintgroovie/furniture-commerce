@@ -283,6 +283,7 @@ export function CatalogFilterControls({
       enabled,
       [
         document.querySelector(".catalog-controls"),
+        document.querySelector(".catalog-type-chips"),
         document.querySelector(".catalog-search"),
         document.querySelector(".catalog-sort"),
         document.querySelector(".catalog-product-area"),
@@ -329,6 +330,10 @@ export function CatalogFilterControls({
     requestCloseBuyerDialogPeer(BUYER_DIALOG_LAYER.catalogFilters)
     const sidebar = sidebarRef.current
     setFilterBackgroundInert(true)
+    // Bottom sheet on phones: lock the page behind it (same pattern as the
+    // mobile nav's html/body.mobile-nav-open).
+    document.documentElement.classList.add("catalog-filters-open")
+    document.body.classList.add("catalog-filters-open")
     requestAnimationFrame(() => {
       listFocusable(sidebar)[0]?.focus()
     })
@@ -342,6 +347,8 @@ export function CatalogFilterControls({
     document.addEventListener("keydown", onKeyDown)
     return () => {
       document.removeEventListener("keydown", onKeyDown)
+      document.documentElement.classList.remove("catalog-filters-open")
+      document.body.classList.remove("catalog-filters-open")
       setFilterBackgroundInert(false)
     }
   }, [mobileOpen, closeMobileFilters, setFilterBackgroundInert])
@@ -432,6 +439,91 @@ export function CatalogFilterControls({
 
   const active = hasActiveCatalogFilters(state)
   const hasBespokeTab = showBespokeCta
+  /* Badge on the mobile «Фильтры» toggle: how many facet values are set
+     inside the collapsed drawer (price range counts once). */
+  const activeFilterCount =
+    state.category.length +
+    state.collection.length +
+    (state.priceMin != null || state.priceMax != null ? 1 : 0) +
+    (state.q ? 1 : 0)
+
+  /* ≤768px: «Тип изделия» as a horizontally scrollable chip row right under
+     the product-type tabs. On phones the facet used to live only inside the
+     collapsed drawer, below «Коллекции», in an internally scrolling list -
+     test users could not find it. Desktop keeps the sidebar list (row is
+     display:none there). Same hrefs / toggle semantics as the drawer links. */
+  const typeChipsRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const track = typeChipsRef.current
+    if (!track) return
+    const activeChip = track.querySelector<HTMLElement>(
+      ".catalog-type-chip-active"
+    )
+    if (!activeChip) return
+    // Keep the (first) selected chip in view without moving the page:
+    // scrollLeft only, never scrollIntoView (that can scroll the document).
+    const target =
+      activeChip.offsetLeft - (track.clientWidth - activeChip.offsetWidth) / 2
+    const max = track.scrollWidth - track.clientWidth
+    const next = Math.max(0, Math.min(max, target))
+    if (Math.abs(track.scrollLeft - next) > 1) {
+      track.scrollTo({ left: next, behavior: "smooth" })
+    }
+  }, [state.category])
+
+  const typeChips =
+    facets.categories.length > 0 ? (
+      <nav className="catalog-type-chips" aria-label={catalogUiCopy.typeChipsLabel}>
+        <span className="catalog-type-chips-label" aria-hidden="true">
+          {catalogUiCopy.typeChipsLabel}
+        </span>
+        <div className="catalog-type-chips-track" ref={typeChipsRef}>
+          <Link
+            href={buildCatalogHref(basePath, { ...state, category: [] })}
+            className={
+              state.category.length === 0
+                ? "catalog-type-chip catalog-type-chip-active"
+                : "catalog-type-chip"
+            }
+            scroll={false}
+            aria-current={state.category.length === 0 ? "true" : undefined}
+            onClick={(e) => onFilterLinkClick(e, { ...state, category: [] })}
+          >
+            {catalogUiCopy.typeChipsAll}
+            {state.category.length === 0 && (
+              <span className="sr-only">{catalogUiCopy.typeChipSelected}</span>
+            )}
+          </Link>
+          {facets.categories.map((opt) => {
+            const isActive = state.category.includes(opt.value)
+            const next = {
+              ...state,
+              category: toggleMulti(state.category, opt.value),
+            }
+            return (
+              <Link
+                key={opt.value}
+                href={buildCatalogHref(basePath, next)}
+                className={
+                  isActive
+                    ? "catalog-type-chip catalog-type-chip-active"
+                    : "catalog-type-chip"
+                }
+                scroll={false}
+                aria-current={isActive ? "true" : undefined}
+                onClick={(e) => onFilterLinkClick(e, next)}
+              >
+                {opt.label}
+                <span className="catalog-type-chip-count">{opt.count}</span>
+                {isActive && (
+                  <span className="sr-only">{catalogUiCopy.typeChipSelected}</span>
+                )}
+              </Link>
+            )
+          })}
+        </div>
+      </nav>
+    ) : null
 
   const filterPanel = (
     <div className="catalog-filter-panel">
@@ -543,7 +635,7 @@ export function CatalogFilterControls({
       )}
 
       {facets.collections.length > 0 && (
-        <fieldset className="catalog-filter-group">
+        <fieldset className="catalog-filter-group catalog-filter-group-collection">
           <legend>Коллекции</legend>
           <div className="catalog-filter-checks">
             <Link
@@ -593,7 +685,7 @@ export function CatalogFilterControls({
       )}
 
       {facets.categories.length > 0 && (
-        <fieldset className="catalog-filter-group">
+        <fieldset className="catalog-filter-group catalog-filter-group-category">
           <legend>Тип изделия</legend>
           <div className="catalog-filter-checks">
             <Link
@@ -730,6 +822,8 @@ export function CatalogFilterControls({
         )}
       </div>
 
+      {typeChips}
+
       <div className="catalog-filter-toolbar">
         <form
           className="catalog-search"
@@ -829,12 +923,25 @@ export function CatalogFilterControls({
             }
             onClick={() => setMobileOpen((v) => !v)}
           >
-            Фильтры
+            {catalogUiCopy.filtersToggle}
+            {activeFilterCount > 0 && (
+              <span className="catalog-filter-toggle-count" aria-hidden="true">
+                {activeFilterCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
 
       <div className="catalog-filter-layout">
+        {/* Phone bottom sheet scrim; tap outside = close (no apply). */}
+        {mobileOpen && (
+          <div
+            className="catalog-filter-backdrop"
+            aria-hidden="true"
+            onClick={() => closeMobileFilters(true)}
+          />
+        )}
         <aside
           ref={sidebarRef}
           id={CATALOG_FILTER_SIDEBAR_ID}

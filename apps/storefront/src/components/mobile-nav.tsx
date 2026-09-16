@@ -21,6 +21,7 @@ import {
 } from "@/lib/buyer-dialog-a11y"
 import { a11yCopy, nav as navCopy } from "@/lib/woodright-copy"
 import { isPrimaryNavCurrent } from "@/lib/nav-current"
+import { WoodrightWordmark } from "@/components/woodright-wordmark"
 
 type NavLink = {
   href: string
@@ -59,6 +60,7 @@ export function MobileNav() {
   const pathname = usePathname()
   const [pathAtOpen, setPathAtOpen] = useState(pathname)
   const btnRef = useRef<HTMLButtonElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
   // Close on route change (adjust state during render - React-recommended reset).
@@ -113,7 +115,10 @@ export function MobileNav() {
     const panel = panelRef.current
 
     requestAnimationFrame(() => {
-      listFocusable(panel)[0]?.focus()
+      // The sheet's own close button first: the safe, non-navigating control
+      // (the brand link would send a screen-reader user home).
+      const first = closeRef.current ?? listFocusable(panel)[0]
+      first?.focus()
     })
 
     function onKeyDown(e: KeyboardEvent) {
@@ -166,45 +171,70 @@ export function MobileNav() {
           : { "aria-hidden": true as const })}
       >
         {open ? (
-          <nav className="mobile-nav" aria-label={a11yCopy.mobileNavLabel}>
-            <div className="mobile-nav-group">
-              {PRIMARY.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={item.className}
-                  aria-current={
-                    isPrimaryNavCurrent(pathname, item.href) ? "page" : undefined
-                  }
-                  onClick={() => close(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-            <div className="mobile-nav-group">
-              {SECONDARY.map((item) => (
-                <Link key={item.href} href={item.href} onClick={() => close(false)}>
-                  {item.label}
-                </Link>
-              ))}
+          <>
+            {/* Own top row: the sheet covers the whole viewport (inset: 0), so
+                it no longer depends on the sticky header staying in view -
+                in-app browsers (Telegram / VK) scrolled it away and page
+                content peeked above the menu. */}
+            <div className="mobile-nav-top">
               <Link
-                href="/contacts"
-                className="mobile-nav-showroom-link"
+                href="/"
+                className="mobile-nav-brand"
+                aria-label="Woodright - на главную"
                 onClick={() => close(false)}
               >
-                {navCopy.showroom}
+                <WoodrightWordmark className="logo-image" />
               </Link>
-              <Link href="/contacts" onClick={() => close(false)}>
-                {navCopy.contacts}
-              </Link>
+              <button
+                ref={closeRef}
+                type="button"
+                className="mobile-nav-close"
+                aria-label={a11yCopy.closeMenu}
+                onClick={() => close(true)}
+              >
+                <span className="mobile-nav-icon is-open" aria-hidden="true" />
+              </button>
             </div>
-            <div className="mobile-nav-group mobile-nav-group-cart">
-              <Link href="/cart" onClick={() => close(false)}>
-                {navCopy.cart}
-              </Link>
-            </div>
-          </nav>
+            <nav className="mobile-nav" aria-label={a11yCopy.mobileNavLabel}>
+              <div className="mobile-nav-group">
+                {PRIMARY.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={item.className}
+                    aria-current={
+                      isPrimaryNavCurrent(pathname, item.href) ? "page" : undefined
+                    }
+                    onClick={() => close(false)}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+              <div className="mobile-nav-group">
+                {SECONDARY.map((item) => (
+                  <Link key={item.href} href={item.href} onClick={() => close(false)}>
+                    {item.label}
+                  </Link>
+                ))}
+                <Link
+                  href="/contacts"
+                  className="mobile-nav-showroom-link"
+                  onClick={() => close(false)}
+                >
+                  {navCopy.showroom}
+                </Link>
+                <Link href="/contacts" onClick={() => close(false)}>
+                  {navCopy.contacts}
+                </Link>
+              </div>
+              <div className="mobile-nav-group mobile-nav-group-cart">
+                <Link href="/cart" onClick={() => close(false)}>
+                  {navCopy.cart}
+                </Link>
+              </div>
+            </nav>
+          </>
         ) : null}
       </div>
     </>
