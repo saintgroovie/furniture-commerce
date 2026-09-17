@@ -366,10 +366,7 @@ function RouteVeil({
      so the loader covers the assembling page including chrome. */
   useLayoutEffect(() => {
     if (!visible) return
-    if (bootCover) {
-      setTop(0)
-      return
-    }
+    if (bootCover) return
     const header = document.querySelector<HTMLElement>(".site-header")
     if (!header) return
     const apply = () => setTop(Math.round(header.getBoundingClientRect().bottom))
