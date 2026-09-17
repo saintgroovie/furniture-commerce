@@ -80,11 +80,14 @@ export function ProductCard({
   product,
   displayGroup,
   priorityHero = false,
+  atfHero = false,
 }: {
   product: Product
   displayGroup?: DisplayGroup
   /** PERF-08: first above-fold card in the grid. */
   priorityHero?: boolean
+  /** Additional first-screen cards: eager decode, not fetchpriority=high. */
+  atfHero?: boolean
 }) {
   const type =
     product.product_classification?.product_type ??
@@ -302,6 +305,7 @@ export function ProductCard({
       href={productHref}
       title={displayTitle}
       priorityHero={priorityHero}
+      atfHero={atfHero}
       productHandle={handle}
     />
   ) : (
@@ -319,6 +323,7 @@ export function ProductCard({
       href={productHref}
       alt={displayTitle}
       priorityHero={priorityHero}
+      atfHero={atfHero}
     />
   )
 

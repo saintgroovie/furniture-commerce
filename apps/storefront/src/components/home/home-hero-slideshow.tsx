@@ -150,6 +150,8 @@ export function HomeHeroSlideshow({
             className="hp-hero-img"
             data-slide={i}
             data-active={layerOn ? "true" : "false"}
+            data-veil-atf={i === 0 ? "true" : undefined}
+            loading={i === 0 ? "eager" : "lazy"}
             fetchPriority={i === 0 ? "high" : undefined}
             decoding="async"
             draggable={false}

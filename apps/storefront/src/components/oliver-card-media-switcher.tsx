@@ -15,6 +15,7 @@ type Props = {
   href: string
   title: string
   priorityHero?: boolean
+  atfHero?: boolean
   productHandle?: string
 }
 
@@ -34,6 +35,7 @@ export function OliverCardMediaSwitcher({
   href,
   title,
   priorityHero = false,
+  atfHero = false,
   productHandle,
 }: Props) {
   return (
@@ -50,6 +52,7 @@ export function OliverCardMediaSwitcher({
       alt={title}
       oliverMode={true}
       priorityHero={priorityHero}
+      atfHero={atfHero}
       productHandle={productHandle}
     />
   )
