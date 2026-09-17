@@ -2850,9 +2850,26 @@ select:focus-visible {
   animation: loading-appear 0.35s ease 0.15s forwards;
 }
 
+/* First document load: cover is already in the HTML. No delayed fade-in,
+   or the assembling page shows through for ~500ms. */
+.route-veil-boot {
+  opacity: 1;
+  animation: none;
+  z-index: 60;
+}
+
 .route-veil-closing {
   pointer-events: none;
   animation: route-veil-out 0.48s ease forwards;
+}
+
+.route-veil-boot.route-veil-closing {
+  animation: route-veil-out 0.48s ease forwards;
+}
+
+/* JS never hydrated / commit never ran: inline layout timer reveals the page. */
+.route-veil[data-veil-failsafe="1"] {
+  display: none !important;
 }
 
 .route-veil-body {
@@ -3117,6 +3134,11 @@ select:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .route-veil {
+    opacity: 1;
+    animation: none;
+  }
+
+  .route-veil-boot {
     opacity: 1;
     animation: none;
   }

@@ -27,7 +27,9 @@ export function FeaturedCard({
         <HomeImg
           src={product.img}
           alt={product.title}
-          loading="lazy"
+          loading={index === 0 ? "eager" : "lazy"}
+          fetchPriority={index === 0 ? "high" : undefined}
+          data-veil-atf={index === 0 ? "true" : undefined}
           decoding="async"
           draggable={false}
         />

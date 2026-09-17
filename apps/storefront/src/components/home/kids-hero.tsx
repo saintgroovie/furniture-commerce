@@ -1,12 +1,19 @@
 import Link from "next/link"
+import { preload } from "react-dom"
 import { kidsHome } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { kidsMedia } from "./kids-media"
+import { resolveHomeImageSrc } from "./home-image"
 import { HomeHeroSlideshow } from "./home-hero-slideshow"
+
+const KIDS_HERO_LCP = resolveHomeImageSrc(kidsMedia.heroSlides[0]!.src, {
+  surface: "KIDS_HERO",
+})
 
 /** Kids hero: still-life slideshow on a soft olive field (no kids interior
  *  photography exists yet — tracked in kids-media.ts). */
 export function KidsHero() {
+  preload(KIDS_HERO_LCP, { as: "image", fetchPriority: "high" })
   return (
     <section className="hp-hero" aria-labelledby="hp-kids-hero-title">
       <div className="hp-hero-plate hp-khero-plate">

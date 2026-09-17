@@ -1,10 +1,17 @@
 import Link from "next/link"
+import { preload } from "react-dom"
 import { homeCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { homeMedia } from "./home-media"
+import { resolveHomeImageSrc } from "./home-image"
 import { HomeHeroSlideshow } from "./home-hero-slideshow"
 
+const HERO_LCP = resolveHomeImageSrc(homeMedia.heroSlides[0]!.src, {
+  surface: "HOME_HERO",
+})
+
 export function HomeHero() {
+  preload(HERO_LCP, { as: "image", fetchPriority: "high" })
   const { hero } = homeCopy
   return (
     <section className="hp-hero" aria-labelledby="hp-hero-title">

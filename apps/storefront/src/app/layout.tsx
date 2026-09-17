@@ -81,6 +81,16 @@ export default async function RootLayout({
     <html lang="ru" className={localSansClass}>
       <body>
         <CspNonceProvider nonce={nonce}>
+        <noscript>
+          <style>{`.route-veil{display:none!important}`}</style>
+        </noscript>
+        <script
+          nonce={nonce}
+          dangerouslySetInnerHTML={{
+            __html:
+              "setTimeout(function(){var n=document.querySelector('.route-veil-boot');if(n)n.setAttribute('data-veil-failsafe','1');},15000);",
+          }}
+        />
         <script
           type="application/ld+json"
           nonce={nonce}

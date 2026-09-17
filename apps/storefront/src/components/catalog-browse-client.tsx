@@ -22,6 +22,7 @@ import { groupProductsForDisplay } from "@/lib/display-group"
 import { isUnmodifiedPrimaryClick } from "@/lib/client/is-unmodified-primary-click"
 import { actions, promotionCopy } from "@/lib/woodright-copy"
 import { useCspNonce } from "@/lib/csp-nonce"
+import { catalogCardAtfFlags } from "@/lib/catalog-atf"
 
 export type CatalogBrowseCopy = {
   emptyFilteredTitle: string
@@ -179,15 +180,19 @@ export function CatalogBrowseClient({
           </div>
         ) : (
           <ul className="product-grid catalog-product-grid">
-            {displayEntries.map((entry, index) => (
+            {displayEntries.map((entry, index) => {
+              const atf = catalogCardAtfFlags(index)
+              return (
               <li key={(entry.product as Record<string, unknown>).id as string}>
                 <ProductCard
                   product={entry.product as never}
                   displayGroup={entry.displayGroup}
-                  priorityHero={index === 0}
+                  priorityHero={atf.priorityHero}
+                  atfHero={atf.atfHero}
                 />
               </li>
-            ))}
+              )
+            })}
           </ul>
         )}
       </CatalogFilterControls>

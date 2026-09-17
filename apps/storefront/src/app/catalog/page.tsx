@@ -37,6 +37,7 @@ import {
 import { actions, catalogCopy, seo } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { formatRuInline } from "@/lib/format-ru-copy"
+import { catalogCardAtfFlags } from "@/lib/catalog-atf"
 
 // Base catalog path only - filter/sort/pagination query strings are not
 // separate canonical targets (SEO contract: one indexable catalog URL).
@@ -165,15 +166,19 @@ export default async function CatalogPage({
             </div>
           ) : (
             <ul className="product-grid catalog-product-grid">
-              {displayEntries.map((entry, index) => (
+              {displayEntries.map((entry, index) => {
+                const atf = catalogCardAtfFlags(index)
+                return (
                 <li key={(entry.product as Record<string, unknown>).id as string}>
                   <ProductCard
                     product={entry.product as never}
                     displayGroup={entry.displayGroup}
-                    priorityHero={index === 0}
+                    priorityHero={atf.priorityHero}
+                    atfHero={atf.atfHero}
                   />
                 </li>
-              ))}
+                )
+              })}
             </ul>
           )}
         </CatalogFilterControls>

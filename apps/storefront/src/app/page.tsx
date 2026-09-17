@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Suspense } from "react"
 import { getSiteUrl } from "@/lib/api/base"
 import { indexingCanonical } from "@/lib/indexing-policy"
 import { homeCopy, seo } from "@/lib/woodright-copy"
@@ -202,16 +203,26 @@ function buildScenes(sceneProducts: Map<string, HomeProduct>): HomeScene[] {
   return scenes
 }
 
-export default async function HomePage() {
-  const { featured, kids, sceneProducts } = await loadHomeShowcase()
-  const scenes = buildScenes(sceneProducts)
-  const sceneCaption = homeCopy.woodBlock.text[1]
-
+export default function HomePage() {
   return (
     <div className="hp">
       <HomeRevealObserver />
       <HomeHero />
       <HomeEntries />
+      <Suspense fallback={<div data-home-showcase-pending="" hidden />}>
+        <HomeShowcaseSections />
+      </Suspense>
+    </div>
+  )
+}
+
+async function HomeShowcaseSections() {
+  const { featured, kids, sceneProducts } = await loadHomeShowcase()
+  const scenes = buildScenes(sceneProducts)
+  const sceneCaption = homeCopy.woodBlock.text[1]
+
+  return (
+    <>
       <HomeClassics featured={featured} />
 
       <section className="hp-section hp-rooms hp-wrap" aria-label={formatRuInline(sceneCaption)} data-reveal>
@@ -223,6 +234,6 @@ export default async function HomePage() {
       <HomeKids products={kids} />
       <HomeProject />
       <HomeFinal />
-    </div>
+    </>
   )
 }

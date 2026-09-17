@@ -82,6 +82,8 @@ type Props = {
   heroObjectPosition?: string
   /** PERF-08: first above-fold card hero — high fetch priority, not lazy. */
   priorityHero?: boolean
+  /** Additional first-screen cards: eager, no fetchpriority=high. */
+  atfHero?: boolean
   /** Product handle for evidence-backed near-dup collapse. */
   productHandle?: string
 }
@@ -245,6 +247,7 @@ function ProductCardMediaGalleryCoreInner({
   layout = "card",
   heroObjectPosition,
   priorityHero = false,
+  atfHero = false,
   productHandle,
 }: Props) {
   const isGreenwichBed = Boolean(greenwichBedMatrix && greenwichBedMatrix.length > 0)
@@ -1833,8 +1836,9 @@ function ProductCardMediaGalleryCoreInner({
         src={displayHeroSrc}
         alt={alt}
         className={`${isPdp ? "product-detail-img" : "card-img"}${isPdp ? " is-zoomable" : ""}`}
-        loading={priorityHero && !isPdp ? "eager" : "lazy"}
+        loading={(priorityHero || atfHero) && !isPdp ? "eager" : "lazy"}
         fetchPriority={priorityHero && !isPdp ? "high" : undefined}
+        data-veil-atf={(priorityHero || atfHero) && !isPdp ? "true" : undefined}
         style={
           isPdp && heroObjectPosition
             ? { objectPosition: heroObjectPosition }

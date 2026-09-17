@@ -29,6 +29,7 @@ type HomeImgProps = {
   "data-slide"?: number | string
   "data-cycle"?: number | string
   "data-active"?: string
+  "data-veil-atf"?: string
 }
 
 type HomeImgInnerProps = Omit<HomeImgProps, "src" | "surface"> & {
@@ -51,6 +52,7 @@ function HomeImgInner({
   "data-slide": dataSlide,
   "data-cycle": dataCycle,
   "data-active": dataActive,
+  "data-veil-atf": dataVeilAtf,
 }: HomeImgInnerProps) {
   const [current, setCurrent] = useState(preferred)
 
@@ -69,6 +71,7 @@ function HomeImgInner({
       data-slide={dataSlide}
       data-cycle={dataCycle}
       data-active={dataActive}
+      data-veil-atf={dataVeilAtf}
       onError={() => {
         if (!current) return
         if (current !== original) {
@@ -102,6 +105,7 @@ export function HomeImg({
         data-slide={rest["data-slide"]}
         data-cycle={rest["data-cycle"]}
         data-active={rest["data-active"]}
+        data-veil-atf={rest["data-veil-atf"]}
         decoding={rest.decoding ?? "async"}
         draggable={rest.draggable ?? false}
         style={rest.style}
