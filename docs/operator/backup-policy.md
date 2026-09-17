@@ -1,7 +1,8 @@
 # Woodright backup policy (demo staging)
 
-**Scope:** `woodright-demo.ru` staging stack on Timeweb VM.  
-**Not** a production SLA for `woodright.ru`.
+**Scope:** `woodright-demo.ru` staging stack on Timeweb VM `200.169.188.39`.  
+**Not** a production SLA for `woodright.ru`.  
+Live host / SSH key: `docs/operator/timeweb-demo-runtime.md`.
 
 ## Objectives
 
@@ -31,8 +32,10 @@
 
 | Destination | Path | Status |
 |-------------|------|--------|
-| VM local protected | `/srv/woodright/backups/automated/` | primary automation |
+| VM local protected | `/srv/woodright/backups/automated/` | primary automation (Timeweb) |
+| Yandex evac dumps (2026-09-17) | Timeweb `/srv/woodright/backups/evac-from-yc-20260917T184508Z/` | one-shot; not the daily timer |
 | Mac verified copy | `/Users/leonidmbp/Documents/projects/woodright-backups/p0-*` | manual P0; **not** deleted by retention |
+| Mac Yandex evac dumps | `/Users/leonidmbp/Documents/projects/woodright-backups/evac-yc-20260917T184508Z/postgres/` | second copy of unique DBs |
 | Second offsite | (none) | deferred until owner provides credentials |
 
 Permissions: directories `0700`, files `0600`. Not published via Traefik. Not mounted into storefront.

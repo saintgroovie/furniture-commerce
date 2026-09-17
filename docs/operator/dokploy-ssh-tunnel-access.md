@@ -5,8 +5,10 @@ Dokploy UI port `3000` is published for local/loopback use only. Public NIC acce
 ## Open a tunnel from your laptop
 
 ```sh
-ssh -N -L 33000:127.0.0.1:3000 leonid@<server-host>
+ssh -N -L 33000:127.0.0.1:3000 woodright-demo-vm
 ```
+
+(`woodright-demo-vm` → live Timeweb `200.169.188.39`. Private key path: `docs/operator/timeweb-demo-runtime.md`.)
 
 Then open: `http://127.0.0.1:33000`
 

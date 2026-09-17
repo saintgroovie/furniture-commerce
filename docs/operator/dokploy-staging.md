@@ -1,5 +1,7 @@
 # Dokploy staging — Woodright
 
+Live public demo host (2026-09-17): Timeweb `200.169.188.39`. SSH key and aliases: `docs/operator/timeweb-demo-runtime.md`.
+
 ## Public image pin consistency
 
 Compose interpolates immutable digests from Dokploy `.env`:
