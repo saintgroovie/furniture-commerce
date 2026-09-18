@@ -46,6 +46,9 @@ Owner-authorized 2026-09-18 pull. Files are **not** in this repo (`*.sql` / arch
 |---|---|---|
 | `u232077_db.sql` | 283 MB | Fresh mysqldump; 260 `CREATE TABLE`; completed 2026-09-18 18:47 MSK |
 | `2026-09-12.u232077.tar.gz` | 2.0 GB | Panel full backup; `gzip -t` OK; contains `.system/db.mysql.u232077_db` + `data/` |
+| `from-backup-20260912/` | small | Extracted from that archive only: `config.local.php`, `config.php`, `.htaccess`, `admin.php`, `robots.txt`, backup metadata |
+
+Not downloaded (junk / duplicate): panel daily diffs, `images/` (~1.9 GB), `var/cache`, Adminer `__sql.php`, a second SQL from inside the tar. Docroot still has public `__sql.php` (Adminer) and un-renamed `admin.php`.
 
 ## Where secrets and the full inventory live
 
