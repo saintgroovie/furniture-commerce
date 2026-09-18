@@ -57,7 +57,11 @@ DOKPLOY_NET="dokploy-network"
 SF_NAME="woodright-public-production-storefront"
 BE_NAME="woodright-public-production-backend"
 LEGACY_APEX_A="79.133.175.43"
-NEW_STACK_A="89.169.188.29"
+# Never default a public A target. Obsolete Yandex demo and Timeweb public demo
+# are refused even when passed explicitly.
+OBSOLETE_YANDEX_DEMO_A="89.169.188.29"
+TIMEWEB_PUBLIC_DEMO_A="200.169.188.39"
+NEW_STACK_A=""
 REQUIRED_BUILD_PROFILE="public_production"
 REQUIRED_RUNTIME_ROLE="public_production"
 REQUIRED_DB_ALIAS="public_production_db"
@@ -112,8 +116,14 @@ Usage:
     --source-sha <40hex> \
     --storefront-digest sha256:<64hex> \
     --backend-digest sha256:<64hex> \
+    [--new-stack-a <IPv4>] \
     [--confirm I_UNDERSTAND_PUBLIC_APEX_ROUTING_CUTOVER] \
     [--approval-path PATH]
+
+dry-run and execute require an explicit public IPv4 via --new-stack-a or
+WOODRIGHT_PUBLIC_APEX_NEW_STACK_A. Hardcoded Yandex 89.169.188.29 and Timeweb
+demo 200.169.188.39 are refused. This helper does not treat demo/staging as
+public_production. Rollback may omit --new-stack-a.
 
 execute requires owner approval JSON + confirm token.
 Accepted SHA/digests are derived from OWNER_APPROVED_RELEASE + EXPECTED_RELEASE +
@@ -150,6 +160,10 @@ parse_args() {
         BE_DIGEST="${2:-}"
         shift 2
         ;;
+      --new-stack-a)
+        NEW_STACK_A="${2:-}"
+        shift 2
+        ;;
       --confirm)
         CONFIRM="${2:-}"
         shift 2
@@ -175,6 +189,46 @@ require_sha() {
 
 require_digest() {
   [[ "$1" =~ ^sha256:[0-9a-f]{64}$ ]] || die "digest must be sha256:<64hex> (got '$1')"
+}
+
+require_ipv4() {
+  local ip="$1"
+  python3 -c 'import ipaddress,sys
+s=sys.argv[1]
+try:
+    a=ipaddress.IPv4Address(s)
+except Exception:
+    raise SystemExit(2)
+if int(a) == 0:
+    raise SystemExit(3)
+' "$ip" >/dev/null \
+    || die "new-stack-a must be a unicast IPv4 address (got '$ip')"
+}
+
+validate_new_stack_a() {
+  local ip="$1"
+  require_ipv4 "$ip"
+  [[ "$ip" != "$OBSOLETE_YANDEX_DEMO_A" ]] \
+    || die "new-stack-a refused: obsolete Yandex demo $OBSOLETE_YANDEX_DEMO_A is not a public_production target"
+  [[ "$ip" != "$TIMEWEB_PUBLIC_DEMO_A" ]] \
+    || die "new-stack-a refused: Timeweb public demo $TIMEWEB_PUBLIC_DEMO_A is not a public_production target"
+  [[ "$ip" != "$LEGACY_APEX_A" ]] \
+    || die "new-stack-a refused: legacy CS-Cart $LEGACY_APEX_A is not a public_production target"
+}
+
+resolve_new_stack_a() {
+  if [[ -z "$NEW_STACK_A" && -n "${WOODRIGHT_PUBLIC_APEX_NEW_STACK_A:-}" ]]; then
+    NEW_STACK_A="$WOODRIGHT_PUBLIC_APEX_NEW_STACK_A"
+  fi
+  if [[ "$MODE" == "rollback" ]]; then
+    if [[ -n "$NEW_STACK_A" ]]; then
+      validate_new_stack_a "$NEW_STACK_A"
+    fi
+    return 0
+  fi
+  [[ -n "$NEW_STACK_A" ]] \
+    || die "NEW_STACK_A_REQUIRED: pass --new-stack-a <IPv4> or WOODRIGHT_PUBLIC_APEX_NEW_STACK_A before dry-run/execute. Hardcoded Yandex $OBSOLETE_YANDEX_DEMO_A and Timeweb demo $TIMEWEB_PUBLIC_DEMO_A are refused."
+  validate_new_stack_a "$NEW_STACK_A"
 }
 
 apex_traefik_file() {
@@ -1073,6 +1127,15 @@ probe_loopback() {
 }
 
 print_dns_operator_steps() {
+  if [[ -z "$NEW_STACK_A" ]]; then
+    cat <<EOF
+# DNS is NOT mutated by this helper.
+# Do not retarget A records until an explicit --new-stack-a IPv4 is supplied.
+# Refused defaults: ${OBSOLETE_YANDEX_DEMO_A} (obsolete Yandex demo), ${TIMEWEB_PUBLIC_DEMO_A} (Timeweb public demo).
+# Keep MX / TXT / NS unchanged. Rollback DNS: restore web A to ${LEGACY_APEX_A}; delete api A.
+EOF
+    return 0
+  fi
   cat <<EOF
 # DNS is NOT mutated by this helper. Future owner-authorized ITB panel steps:
 # 1. Keep MX / TXT / NS unchanged.
@@ -1097,6 +1160,7 @@ main() {
   require_sha "$SOURCE_SHA"
   require_digest "$SF_DIGEST"
   require_digest "$BE_DIGEST"
+  resolve_new_stack_a
 
   assert_template_safe
   EVIDENCE_DIR="${WOODRIGHT_APEX_EVIDENCE_DIR:-${WOODRIGHT_EVIDENCE_ROOT}/apex-routing-${TS_RUN}}"
