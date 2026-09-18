@@ -1,0 +1,208 @@
+{
+  "generated_at": "2026-09-09T23:07:57Z",
+  "products": 108,
+  "products_with_main": 107,
+  "auto_keep_photos": 315,
+  "auto_drop_photos": 1615,
+  "drop_reasons": {
+    "exact_duplicate": 877,
+    "identity_ambiguous": 140,
+    "unpreviewable": 36,
+    "surplus_vs_operator_clp": 90,
+    "surplus_angle_or_dup_family": 467,
+    "cross_sku": 3,
+    "tiny_thumbnail": 2
+  },
+  "operator_remaining": [
+    {
+      "handle": "ol-05-н",
+      "reason": "no_confident_main",
+      "collection": "oliver",
+      "pool": 3,
+      "keepable": 0
+    }
+  ],
+  "remaining_count": 1,
+  "by_collection": {
+    "country-london-paris": {
+      "products": 13,
+      "with_main": 13,
+      "keep": 89,
+      "drop": 317
+    },
+    "oliver": {
+      "products": 56,
+      "with_main": 55,
+      "keep": 145,
+      "drop": 941
+    },
+    "oliver-kids": {
+      "products": 10,
+      "with_main": 10,
+      "keep": 24,
+      "drop": 96
+    },
+    "provence": {
+      "products": 29,
+      "with_main": 29,
+      "keep": 57,
+      "drop": 261
+    }
+  },
+  "drop_examples": [
+    {
+      "handle": "pv-68-1",
+      "reason": "tiny_thumbnail",
+      "role": "unknown",
+      "id": "leginv_55f35837df416bc3",
+      "filename": "PV-68-1_main.jpg",
+      "source_type": "backend_static",
+      "rel": "apps/backend/static/products/provence/PV-68-1_main.jpg",
+      "w": 225,
+      "h": 287,
+      "bytes": 7098
+    }
+  ],
+  "keep_examples_head": [
+    {
+      "handle": "co-02-1",
+      "role": "front_3_4",
+      "id": "leginv_83bb28a669c54c49",
+      "filename": "CO-02-1_color_blue_02.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-02-1_color_blue_02.jpg"
+    },
+    {
+      "handle": "co-02-1",
+      "role": "front",
+      "id": "leginv_0266738f66b22e36",
+      "filename": "CO-02-1_color_grey_01.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-02-1_color_grey_01.jpg"
+    },
+    {
+      "handle": "co-02-1",
+      "role": "front_3_4",
+      "id": "leginv_64e787f505b05552",
+      "filename": "CO-02-1_color_grey_02.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-02-1_color_grey_02.jpg"
+    },
+    {
+      "handle": "co-02-1",
+      "role": "front",
+      "id": "leginv_e29b44a7196125e0",
+      "filename": "CO-02-1_color_olive_01.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-02-1_color_olive_01.jpg"
+    },
+    {
+      "handle": "co-02-1",
+      "role": "front_3_4",
+      "id": "leginv_91256df6690a73e7",
+      "filename": "CO-02-1_color_olive_02.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-02-1_color_olive_02.jpg"
+    },
+    {
+      "handle": "co-02-1",
+      "role": "front",
+      "id": "leginv_42eb3e5d056aca3c",
+      "filename": "CO-02-1_gallery_01.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-02-1_gallery_01.jpg"
+    },
+    {
+      "handle": "co-02-1",
+      "role": "front_3_4",
+      "id": "leginv_d56cd7483848ed29",
+      "filename": "CO-02-1_gallery_02.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-02-1_gallery_02.jpg"
+    },
+    {
+      "handle": "co-02-1",
+      "role": "front_3_4",
+      "id": "leginv_4941b1bf23b8fec3",
+      "filename": "CO-02-1_gallery_03.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-02-1_gallery_03.jpg"
+    },
+    {
+      "handle": "co-02-1",
+      "role": "front_3_4",
+      "id": "leginv_3c903223ea69cb12",
+      "filename": "co-02-1-blue-i1.jpg",
+      "rel": "data/raw/downloaded-assets/country-london-paris/co-02-1-blue-i1.jpg"
+    },
+    {
+      "handle": "co-05-1",
+      "role": "front",
+      "id": "leginv_117704379d0c6c9d",
+      "filename": "CO-05-1_color_grey_01.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-05-1_color_grey_01.jpg"
+    },
+    {
+      "handle": "co-05-1",
+      "role": "front_3_4",
+      "id": "leginv_14b66a4dfeadae7f",
+      "filename": "CO-05-1_color_grey_02.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-05-1_color_grey_02.jpg"
+    },
+    {
+      "handle": "co-05-1",
+      "role": "front",
+      "id": "leginv_31ed2c8a2f0e88e9",
+      "filename": "CO-05-1_color_olive_01.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-05-1_color_olive_01.jpg"
+    },
+    {
+      "handle": "co-05-1",
+      "role": "front_3_4",
+      "id": "leginv_e2a7d9531f0986d9",
+      "filename": "CO-05-1_color_olive_02.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-05-1_color_olive_02.jpg"
+    },
+    {
+      "handle": "co-05-1",
+      "role": "front",
+      "id": "leginv_f90e8218f540fc46",
+      "filename": "CO-05-1_gallery_01.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-05-1_gallery_01.jpg"
+    },
+    {
+      "handle": "co-05-1",
+      "role": "front_3_4",
+      "id": "leginv_42b1b2d1ec81c763",
+      "filename": "co-05-1-blue-i1.jpg",
+      "rel": "data/raw/downloaded-assets/country-london-paris/co-05-1-blue-i1.jpg"
+    },
+    {
+      "handle": "co-05-1",
+      "role": "front",
+      "id": "leginv_f02167f79ca5cc28",
+      "filename": "co-05-1-blue-i2.jpg",
+      "rel": "data/raw/downloaded-assets/country-london-paris/co-05-1-blue-i2.jpg"
+    },
+    {
+      "handle": "co-05-1",
+      "role": "front_3_4",
+      "id": "leginv_783453adb68d3311",
+      "filename": "co-05-1-iso-2.jpg",
+      "rel": "data/raw/downloaded-assets/country-london-paris/co-05-1-iso-2.jpg"
+    },
+    {
+      "handle": "co-08-1",
+      "role": "front",
+      "id": "leginv_b08e96b50f45be9c",
+      "filename": "CO-08-1_color_blue_01.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-08-1_color_blue_01.jpg"
+    },
+    {
+      "handle": "co-08-1",
+      "role": "front_3_4",
+      "id": "leginv_5c74badd803f7372",
+      "filename": "CO-08-1_color_blue_02.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-08-1_color_blue_02.jpg"
+    },
+    {
+      "handle": "co-08-1",
+      "role": "front",
+      "id": "leginv_a47eceb02e28399d",
+      "filename": "CO-08-1_color_grey_01.jpg",
+      "rel": "apps/backend/static/products/country-london-paris/CO-08-1_color_grey_01.jpg"
+    }
+  ]
+}
