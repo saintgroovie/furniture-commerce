@@ -1,29 +1,22 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { useCallback, useEffect, useState, type CSSProperties } from "react"
+import { Container, Text } from "@medusajs/ui"
+import { useCallback, useEffect, useState } from "react"
+import { Link, useSearchParams } from "react-router-dom"
+import { DeskFrame } from "../../../components/woodright/DeskNav"
 import { adminJson } from "../../../lib/admin-fetch"
+import { DESK_STAGE_LABEL } from "../../../../lib/woodright-admin/seller-desk"
 
-const STAGE_LABELS: Record<string, string> = {
-  new: "Новый заказ",
-  needs_confirmation: "Требует подтверждения",
-  specification_in_progress: "Согласование комплектации",
-  awaiting_customer_approval: "Ожидает согласования клиента",
-  confirmed: "Подтверждён",
-  in_production: "В производстве",
-  quality_control: "Проверка качества",
-  ready_for_delivery: "Готов к передаче",
-  on_hold: "Приостановлен",
-  canceled: "Отменён",
-}
-
-const FILTERS = [
-  "",
+const COLUMNS = [
   "new",
   "needs_confirmation",
+  "specification_in_progress",
   "awaiting_customer_approval",
+  "confirmed",
   "in_production",
   "quality_control",
   "ready_for_delivery",
   "on_hold",
+  "canceled",
 ] as const
 
 type ListResponse = {
@@ -39,7 +32,8 @@ type ListResponse = {
 }
 
 const ProductionPage = () => {
-  const [stage, setStage] = useState("")
+  const [searchParams] = useSearchParams()
+  const focus = searchParams.get("focus")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [rows, setRows] = useState<ListResponse["order_processes"]>([])
@@ -48,106 +42,72 @@ const ProductionPage = () => {
     setLoading(true)
     setError(null)
     try {
-      const qs = stage ? `?stage=${encodeURIComponent(stage)}` : ""
-      const res = await adminJson<ListResponse>(
-        `/admin/woodright/order-processes${qs}`
-      )
+      const res = await adminJson<ListResponse>("/admin/woodright/order-processes")
       setRows(res.order_processes ?? [])
     } catch (e) {
       setError(e instanceof Error ? e.message : "Не удалось загрузить")
     } finally {
       setLoading(false)
     }
-  }, [stage])
+  }, [])
 
   useEffect(() => {
     void load()
   }, [load])
 
   return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ marginTop: 0 }}>Производство</h1>
-      <p style={{ color: "#667085", marginBottom: 16 }}>
-        Заказы Woodright по этапам изготовления
-      </p>
-
-      <label style={{ display: "inline-block", marginBottom: 16 }}>
-        Этап{" "}
-        <select
-          value={stage}
-          onChange={(e) => setStage(e.target.value)}
-          style={{ marginLeft: 8, padding: "4px 8px" }}
-        >
-          <option value="">Все</option>
-          {FILTERS.filter(Boolean).map((s) => (
-            <option key={s} value={s}>
-              {STAGE_LABELS[s] ?? s}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      {loading && <p>Загрузка…</p>}
-      {error && <p style={{ color: "#b42318" }}>{error}</p>}
-
-      {!loading && !error && (
-        <table style={table}>
-          <thead>
-            <tr>
-              <th style={th}>Заказ</th>
-              <th style={th}>Этап</th>
-              <th style={th}>Версия</th>
-              <th style={th}>Оценка</th>
-              <th style={th}>Сообщение клиенту</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.length === 0 ? (
-              <tr>
-                <td colSpan={5} style={td}>
-                  Пока нет процессов
-                </td>
-              </tr>
-            ) : (
-              rows.map((r) => (
-                <tr key={r.id}>
-                  <td style={td}>
-                    <a href={`/orders/${r.order_id}`}>{r.order_id}</a>
-                  </td>
-                  <td style={td}>
-                    {STAGE_LABELS[r.current_stage] ?? r.current_stage}
-                  </td>
-                  <td style={td}>{r.version}</td>
-                  <td style={td}>
-                    {r.estimated_completion_date
-                      ? String(r.estimated_completion_date).slice(0, 10)
-                      : "нет"}
-                  </td>
-                  <td style={td}>{r.customer_message ?? ""}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      )}
-    </div>
+    <Container className="p-0">
+      <DeskFrame
+        title="Производство"
+        lead="Заказы по этапам изготовления"
+        active="production"
+      >
+        {loading ? (
+          <div className="px-6 py-4">
+            <Text size="small" className="text-ui-fg-subtle">
+              Загрузка…
+            </Text>
+          </div>
+        ) : null}
+        {error ? (
+          <div className="px-6 py-4">
+            <Text size="small" className="text-ui-fg-error">
+              {error}
+            </Text>
+          </div>
+        ) : null}
+        <div className="overflow-x-auto px-6 py-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 min-w-[720px]">
+            {COLUMNS.map((col) => (
+              <div key={col} className="rounded-md border border-ui-border-base p-2">
+                <Text size="small" className="text-ui-fg-subtle mb-2">
+                  {DESK_STAGE_LABEL[col] ?? col}
+                </Text>
+                {rows
+                  .filter((r) => r.current_stage === col)
+                  .map((r) => (
+                    <Link
+                      key={r.id}
+                      to={`/orders/${r.order_id}`}
+                      className={`block rounded-md border px-2 py-2 mb-2 text-sm ${
+                        focus === r.order_id
+                          ? "border-ui-border-strong"
+                          : "border-ui-border-base"
+                      }`}
+                    >
+                      <span className="font-medium">{r.order_id}</span>
+                      {r.customer_message ? (
+                        <span className="block text-ui-fg-subtle">{r.customer_message}</span>
+                      ) : null}
+                    </Link>
+                  ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </DeskFrame>
+    </Container>
   )
-}
-
-const table: CSSProperties = {
-  width: "100%",
-  borderCollapse: "collapse",
-  fontSize: 13,
-}
-const th: CSSProperties = {
-  textAlign: "left",
-  borderBottom: "1px solid #e5e5e5",
-  padding: "8px 6px",
-}
-const td: CSSProperties = {
-  borderBottom: "1px solid #f0f0f0",
-  padding: "8px 6px",
-  verticalAlign: "top",
 }
 
 export const config = defineRouteConfig({

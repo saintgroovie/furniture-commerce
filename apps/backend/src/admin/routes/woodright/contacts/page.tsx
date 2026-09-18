@@ -1,6 +1,7 @@
-import { Button, Container, Heading, Input, Label, Text } from "@medusajs/ui"
+import { Button, Container, Input, Label, Text } from "@medusajs/ui"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import { DeskFrame } from "../../../components/woodright/DeskNav"
 import { adminJson, sellerErrorMessage } from "../../../lib/admin-fetch"
 import { useDirtyGuard } from "../../../lib/use-dirty-guard"
 import type { WoodrightSiteContacts } from "../../../../lib/woodright-admin/site-contacts"
@@ -88,14 +89,15 @@ const WoodrightContactsPrepPage = () => {
 
   return (
     <Container className="divide-y p-0">
+      <DeskFrame
+        title="Контакты"
+        lead="Черновик. На витрине ещё не живут"
+        active="site"
+      >
       <div className="px-6 py-4">
-        <Link to="/woodright" className="text-ui-fg-subtle text-sm">
-          Woodright
+        <Link to="/woodright/partners" className="text-ui-fg-subtle text-sm">
+          К партнёрам
         </Link>
-        <Heading className="mt-2">Контакты - подготовка</Heading>
-        <Text size="small" className="text-ui-fg-subtle">
-          Эти настройки пока не подключены к публичному сайту
-        </Text>
         <Text size="small" className="text-ui-fg-subtle">
           Статус: {WOODRIGHT_CONTACTS_SOURCE_STATUS === "staged_not_live" ? "черновик, не на сайте" : "черновик"}
         </Text>
@@ -194,6 +196,7 @@ const WoodrightContactsPrepPage = () => {
           Сохранить черновик
         </Button>
       </form>
+      </DeskFrame>
     </Container>
   )
 }

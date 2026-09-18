@@ -7,6 +7,7 @@ import type {
   CatalogPromoAdminState,
 } from "../../../../lib/woodright-admin/catalog-promo-admin"
 import { PROMOTION_SLOT_MAX_PRODUCTS } from "../../../../modules/promotion-slot/slot-contract"
+import { DeskFrame } from "../../../components/woodright/DeskNav"
 import {
   blockerLabel,
   formatRubAdmin,
@@ -342,20 +343,15 @@ const CatalogPromoPage = () => {
 
   return (
     <Container className="divide-y p-0">
+      <DeskFrame
+        title="Акции"
+        lead="Окно справа от каталога, от 1500 px. На узком не показывается"
+        active="promo"
+      >
       <div className="px-6 py-4">
-        <Link to="/woodright" className="text-ui-fg-subtle text-sm">
-          Woodright
-        </Link>
-        <div className="mt-2 flex flex-wrap items-center gap-3">
-          <Heading>Промо в каталоге</Heading>
+        <div className="flex flex-wrap items-center gap-3">
           <StatusBadge color={status.tone}>{status.text}</StatusBadge>
         </div>
-        <Text size="small" className="text-ui-fg-subtle">
-          Окно справа от каталога, в поле правее последней колонки
-        </Text>
-        <Text size="small" className="text-ui-fg-subtle">
-          На экране от 1500 px. На узком не показывается
-        </Text>
       </div>
 
       {loading && (
@@ -698,6 +694,7 @@ const CatalogPromoPage = () => {
           </div>
         </>
       )}
+      </DeskFrame>
     </Container>
   )
 }
