@@ -72,7 +72,11 @@ Not copied (duplicates or recoverable): 23 GB media tarballs, `/srv/woodright/sr
 
 Do **not** restore these dumps onto live `woodright_staging` without a separate owner approval. Isolated rehearsal only (`docs/operator/backup-restore-runbook.md`).
 
-Apex cutover helper still names the old Yandex A in `ops/release/cutover-public-apex-routing.sh` (`NEW_STACK_A`). That pair is **not** running on Timeweb. Do not retarget `woodright.ru` DNS until public_production is stood up here.
+Apex cutover helper `ops/release/cutover-public-apex-routing.sh` does **not**
+hardcode `NEW_STACK_A`. dry-run/execute require `--new-stack-a` /
+`WOODRIGHT_PUBLIC_APEX_NEW_STACK_A` and refuse `89.169.188.29` and
+`200.169.188.39`. Public_production is **not** running on Timeweb. Do not
+retarget `woodright.ru` DNS until that pair is stood up on an intended host.
 
 ## Evacuation inventory (2026-09-18)
 

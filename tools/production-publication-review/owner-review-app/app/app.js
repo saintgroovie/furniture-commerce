@@ -417,7 +417,7 @@ function renderTop() {
   const prod = tb.products ?? s.production_products ?? 238;
   const vars = tb.variants ?? s.production_variants ?? 239;
   document.getElementById("topStats").innerHTML = `
-    <span class="binding-badge">${esc(tb.label || "Production-candidate VM")} · ${esc(tb.ssh_host || "89.169.188.29")}</span>
+    <span class="binding-badge">${esc(tb.label || "Production-candidate VM")} · ${esc(tb.ssh_host || "ssh host unset")}</span>
     <span>VM <strong>${prod}</strong>/<strong>${vars}</strong></span>
     <span><strong>${c.sku}</strong> SKU</span>
     <span>repair SKU: <strong>${ac.vm_repair_required_sku ?? v.repair_required_sku ?? ac.approved_repairs_not_applied ?? 0}</strong></span>

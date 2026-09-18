@@ -48,7 +48,7 @@ Legal / payment / notification remain DNS-launch gates, not this routing helper.
 | Buyer apex `https://woodright.ru` | A `79.133.175.43` TTL 3600, nginx 1.30.2 + PHP 7.4.33 CS-Cart | legacy |
 | `www.woodright.ru` | same A, 301 → `https://woodright.ru` | legacy |
 | `api.woodright.ru` | **no A/CNAME** | absent |
-| New-stack VM (snapshot 2026-09-02) | `89.169.188.29` | Yandex Cloud at the time of this snapshot |
+| New-stack VM (snapshot 2026-09-02) | `89.169.188.29` | Historical Yandex demo only; helper refuses this A; not a live target |
 | Live public demo (2026-09-17) | `200.169.188.39` | Timeweb; DNS `woodright-demo.ru` / `www` / `api`. Yandex `89.169.188.29` evacuated, dumps on Timeweb. See `docs/operator/timeweb-demo-runtime.md` |
 | Isolated SF | `127.0.0.1:3300` → container `:3002` | accepted `caf82b0` production-profile digest `sha256:4f05f940…16162ac4` |
 | Isolated BE | `127.0.0.1:9300` → container `:9000` | accepted `caf82b0` production-profile digest `sha256:5bd38b41…a86618d` |
@@ -123,8 +123,13 @@ Do **not** publish raw `:3300` / `:9300` on `0.0.0.0`. Do **not** add `admin.woo
    this identity cannot mutate ITB DNS. Buyers remain on `79.133.175.43` until
    A records move.
 6. ITB panel DNS (authorized launch mutation, not this readiness cycle).
-   The A target `89.169.188.29` is the **2026-09-02 Yandex snapshot**. Live demo is Timeweb `200.169.188.39`; public_production is **not** on Timeweb yet. Do not point `woodright.ru` at either IP until that pair is running on the intended VM (`docs/operator/timeweb-demo-runtime.md`).
-   - create A `api.woodright.ru` → intended new-stack A (not the dead Yandex demo IP)
+   Helper `ops/release/cutover-public-apex-routing.sh` no longer hardcodes a
+   destination A. dry-run/execute require `--new-stack-a <IPv4>` or
+   `WOODRIGHT_PUBLIC_APEX_NEW_STACK_A`. Refused even if passed:
+   `89.169.188.29` (obsolete Yandex demo) and `200.169.188.39` (Timeweb public
+   demo, not public_production). Do not point `woodright.ru` at either IP until
+   that pair is running on the intended VM (`docs/operator/timeweb-demo-runtime.md`).
+   - create A `api.woodright.ru` → the explicit `--new-stack-a` IPv4
    - retarget A `woodright.ru` and `www.woodright.ru` → same
    - leave MX/TXT/NS unchanged
 7. Immediate health: TLS for apex/www/api, HTML 200, CSS 200, `/health` on API, `x-woodright-release-sha` = accepted production SHA, no redirect loop.

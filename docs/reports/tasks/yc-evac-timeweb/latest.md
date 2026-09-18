@@ -1,3 +1,4 @@
 # yc-evac-timeweb latest
 
-Contour close: live Yandex recheck 2026-09-18 08:26 UTC (counts matched dumps; extra 11M copied). See `docs/operator/timeweb-demo-runtime.md` **Evacuation inventory**.
+Closeout 2026-09-18 09:45 UTC: Timeweb recovery proven; Yandex control plane still unauthenticated.
+See `docs/reports/tasks/yc-evac-timeweb/runs/20260918T0945Z/closeout.md`.

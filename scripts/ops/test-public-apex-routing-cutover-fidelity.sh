@@ -329,6 +329,8 @@ export WOODRIGHT_APEX_SKIP_FLOCK=1
 export WOODRIGHT_APEX_SKIP_HTTP_PROBE=1
 export WOODRIGHT_APEX_OWNED_STATE="$SRV/meta/public_production/APEX_ROUTING_OWNED.json"
 export WOODRIGHT_FAKE_DIG_A='{"woodright.ru":"79.133.175.43","www.woodright.ru":"79.133.175.43","api.woodright.ru":""}'
+# Explicit public target required. TEST-NET-1 is a fixture, not a live destination.
+export WOODRIGHT_PUBLIC_APEX_NEW_STACK_A="${WOODRIGHT_PUBLIC_APEX_NEW_STACK_A:-192.0.2.10}"
 
 run() {
   env WOODRIGHT_ENVIRONMENT=public_production \
@@ -1273,6 +1275,74 @@ assert not d.get("mutations"), d.get("mutations")
 print("ok")
 PY
 pass "dry-run docker mutations empty"
+
+# explicit public A required; obsolete Yandex / Timeweb demo / CS-Cart refused
+init_state
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-new-stack-missing"
+if (
+  unset WOODRIGHT_PUBLIC_APEX_NEW_STACK_A
+  run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/new-stack-missing.txt"
+); then
+  fail "dry-run without --new-stack-a should refuse"
+else
+  grep -q 'NEW_STACK_A_REQUIRED' "$TMP/new-stack-missing.txt" \
+    && pass "dry-run refused without explicit new-stack-a" \
+    || fail "missing-target error token absent"
+fi
+[[ ! -f "$TMP/evidence-new-stack-missing/preflight.json" ]] \
+  && pass "missing new-stack-a wrote no preflight" \
+  || fail "missing new-stack-a leaked preflight"
+
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-new-stack-yandex"
+if WOODRIGHT_PUBLIC_APEX_NEW_STACK_A=89.169.188.29 \
+  run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/new-stack-yandex.txt"; then
+  fail "Yandex demo IP should be refused as new-stack-a"
+else
+  grep -q 'obsolete Yandex demo' "$TMP/new-stack-yandex.txt" \
+    && pass "obsolete Yandex demo IP refused" \
+    || fail "Yandex refuse message missing"
+fi
+
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-new-stack-timeweb"
+if WOODRIGHT_PUBLIC_APEX_NEW_STACK_A=200.169.188.39 \
+  run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/new-stack-timeweb.txt"; then
+  fail "Timeweb public demo IP should be refused as new-stack-a"
+else
+  grep -q 'Timeweb public demo' "$TMP/new-stack-timeweb.txt" \
+    && pass "Timeweb public demo IP refused" \
+    || fail "Timeweb refuse message missing"
+fi
+
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-new-stack-cscart"
+if WOODRIGHT_PUBLIC_APEX_NEW_STACK_A=79.133.175.43 \
+  run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/new-stack-cscart.txt"; then
+  fail "legacy CS-Cart IP should be refused as new-stack-a"
+else
+  grep -q 'legacy CS-Cart' "$TMP/new-stack-cscart.txt" \
+    && pass "legacy CS-Cart IP refused" \
+    || fail "CS-Cart refuse message missing"
+fi
+
+export WOODRIGHT_PUBLIC_APEX_NEW_STACK_A=192.0.2.10
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-new-stack-ok"
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/new-stack-ok.txt"; then
+  python3 - "$TMP/evidence-new-stack-ok/preflight.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+assert d.get("new_stack_a")=="192.0.2.10", d.get("new_stack_a")
+assert d.get("dns_mutation")=="NO"
+print("ok")
+PY
+  pass "explicit TEST-NET-1 new-stack-a recorded in preflight"
+else
+  fail "explicit TEST-NET-1 new-stack-a should pass dry-run"
+  cat "$TMP/new-stack-ok.txt"
+fi
 
 if [[ "$FAILED" -ne 0 ]]; then
   echo "FAILED=$FAILED"
