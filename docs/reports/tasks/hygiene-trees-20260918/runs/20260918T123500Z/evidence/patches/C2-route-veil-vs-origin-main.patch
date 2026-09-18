@@ -1,0 +1,183 @@
+diff --git a/apps/storefront/src/lib/route-veil.tsx b/apps/storefront/src/lib/route-veil.tsx
+index 2b754a5..7efce83 100644
+--- a/apps/storefront/src/lib/route-veil.tsx
++++ b/apps/storefront/src/lib/route-veil.tsx
+@@ -80,7 +80,7 @@ function pendingImages(root: ParentNode): HTMLImageElement[] {
+   const vh = window.innerHeight || 800
+   const out: HTMLImageElement[] = []
+   root.querySelectorAll("img").forEach((img) => {
+-    if (img.complete) return
++    if (img.complete && img.naturalWidth > 0) return
+     const src = img.currentSrc || img.getAttribute("src")
+     if (!src) return
+     const r = img.getBoundingClientRect()
+@@ -96,29 +96,52 @@ function pendingImages(root: ParentNode): HTMLImageElement[] {
+   return out
+ }
+ 
+-function firstScreenImages(root: ParentNode): HTMLImageElement[] {
++function incompleteAtf(root: ParentNode): HTMLImageElement[] {
+   const marked = Array.from(
+     root.querySelectorAll<HTMLImageElement>("img[data-veil-atf]")
+   )
+-  return marked.length > 0 ? marked : pendingImages(root)
++  if (marked.length === 0) return pendingImages(root)
++  return marked.filter((img) => {
++    const src = img.currentSrc || img.getAttribute("src")
++    if (!src) return true
++    if (!img.complete) return true
++    return img.naturalWidth === 0 && img.naturalHeight === 0
++  })
+ }
+ 
+ /** Consecutive empty polls (~480ms) before we trust that no image is coming. */
+ const IMAGE_CLEAR_POLLS = 4
+ 
++function decodeSoon(
++  imgs: HTMLImageElement[],
++  deadline: number
++): Promise<void> {
++  const cap = Math.max(0, Math.min(IMAGE_POLL_MS, deadline - Date.now()))
++  const decodeWait = Promise.all(
++    imgs.slice(0, 12).map((img) =>
++      typeof img.decode === "function"
++        ? img.decode().then(
++            () => undefined,
++            () => undefined
++          )
++        : Promise.resolve()
++    )
++  ).then(() => undefined)
++  return Promise.race([
++    decodeWait,
++    new Promise<void>((r) => window.setTimeout(r, cap)),
++  ])
++}
++
+ /**
+  * Resolves when nested Suspense is gone and IMAGE_CLEAR_POLLS consecutive
+- * polls find no pending first-screen image (download + decode), or at the
+- * deadline. Failed images (complete, natural size 0) are treated as settled.
++ * polls find no pending first-screen image, or at the deadline.
+  */
+ function waitForImages(root: ParentNode, deadline: number): Promise<void> {
+   return new Promise((resolve) => {
+-    const decodedSrcs = new Set<string>()
+     let clearPolls = 0
+     let seenAtf = false
+     const started = Date.now()
+-    const currentSrc = (img: HTMLImageElement) =>
+-      img.currentSrc || img.getAttribute("src") || ""
+     const tick = () => {
+       if (Date.now() >= deadline) return resolve()
+       if (pageStillStreaming(root)) {
+@@ -127,21 +150,7 @@ function waitForImages(root: ParentNode, deadline: number): Promise<void> {
+         return
+       }
+       if (root.querySelector("img[data-veil-atf]")) seenAtf = true
+-      const candidates = firstScreenImages(root)
+-      const pending: HTMLImageElement[] = []
+-      for (const img of candidates) {
+-        const src = currentSrc(img)
+-        if (!src) {
+-          pending.push(img)
+-          continue
+-        }
+-        if (decodedSrcs.has(src)) continue
+-        if (img.complete && img.naturalWidth === 0 && img.naturalHeight === 0) {
+-          decodedSrcs.add(src)
+-          continue
+-        }
+-        pending.push(img)
+-      }
++      const pending = incompleteAtf(root)
+       if (pending.length === 0) {
+         const canTrustEmpty = seenAtf || Date.now() - started >= LAYOUT_GRACE_MS
+         if (canTrustEmpty) {
+@@ -152,35 +161,7 @@ function waitForImages(root: ParentNode, deadline: number): Promise<void> {
+         return
+       }
+       clearPolls = 0
+-      const cap = Math.max(0, Math.min(IMAGE_POLL_MS, deadline - Date.now()))
+-      const decodeWait = Promise.all(
+-        pending.slice(0, 12).map((img) => {
+-          const src = currentSrc(img)
+-          if (typeof img.decode !== "function") {
+-            if (img.complete && src) decodedSrcs.add(src)
+-            return Promise.resolve()
+-          }
+-          return img.decode().then(
+-            () => {
+-              if (src && currentSrc(img) === src) decodedSrcs.add(src)
+-            },
+-            () => {
+-              if (
+-                src &&
+-                currentSrc(img) === src &&
+-                img.complete &&
+-                img.naturalWidth === 0
+-              ) {
+-                decodedSrcs.add(src)
+-              }
+-            }
+-          )
+-        })
+-      ).then(() => undefined)
+-      void Promise.race([
+-        decodeWait,
+-        new Promise<void>((r) => window.setTimeout(r, cap)),
+-      ]).then(() => {
++      void decodeSoon(pending, deadline).then(() => {
+         if (Date.now() >= deadline) return resolve()
+         window.setTimeout(tick, IMAGE_POLL_MS)
+       })
+@@ -279,17 +260,14 @@ export function RouteVeilProvider({ children }: { children: ReactNode }) {
+   }, [])
+ 
+   /* First visit: loading.tsx may never mount (page already in the tree) or
+-     it may own commit via unmount. Keep polling while the fallback exists;
+-     if it is replaced before hydrating, we still settle instead of sticking. */
++     it may own commit via unmount. If the fallback is absent after a couple
++     of frames, settle from here so the SSR cover does not stick forever. */
+   useEffect(() => {
+     let cancelled = false
+     let frames = 0
+     const tick = () => {
+       if (cancelled) return
+-      if (document.querySelector(".route-loading-fallback")) {
+-        window.setTimeout(tick, 50)
+-        return
+-      }
++      if (document.querySelector(".route-loading-fallback")) return
+       frames += 1
+       if (frames < 3) {
+         window.requestAnimationFrame(tick)
+@@ -298,16 +276,8 @@ export function RouteVeilProvider({ children }: { children: ReactNode }) {
+       commit()
+     }
+     window.requestAnimationFrame(tick)
+-    const bootRun = run.current
+-    const stuck = window.setTimeout(() => {
+-      if (cancelled) return
+-      if (run.current !== bootRun) return
+-      if (phaseRef.current !== "loading") return
+-      commit()
+-    }, VEIL_IMAGE_WAIT_CAP_MS + 2000)
+     return () => {
+       cancelled = true
+-      window.clearTimeout(stuck)
+     }
+   }, [commit])
+ 
+@@ -366,7 +336,10 @@ function RouteVeil({
+      so the loader covers the assembling page including chrome. */
+   useLayoutEffect(() => {
+     if (!visible) return
+-    if (bootCover) return
++    if (bootCover) {
++      setTop(0)
++      return
++    }
+     const header = document.querySelector<HTMLElement>(".site-header")
+     if (!header) return
+     const apply = () => setTop(Math.round(header.getBoundingClientRect().bottom))

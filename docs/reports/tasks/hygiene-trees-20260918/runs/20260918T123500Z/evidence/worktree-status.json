@@ -1,0 +1,5374 @@
+{
+"results": [
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce",
+"branch": "docs/timeweb-demo-cutover-20260917",
+"detached": false,
+"head": "2205a6aa3e5dc5c1503b0d21eec3273e2edf3be5",
+"dirty_n": 22,
+"dirty_sample": [
+" M apps/storefront/src/app/catalog/page.tsx",
+" M apps/storefront/src/app/globals.css",
+" M apps/storefront/src/app/page.tsx",
+" M apps/storefront/src/components/catalog-browse-client.tsx",
+" M apps/storefront/src/components/home/home-classics.tsx",
+" M apps/storefront/src/components/home/home-hero-slideshow.tsx",
+" M apps/storefront/src/components/home/home-hero.tsx",
+" M apps/storefront/src/components/home/home-img.tsx",
+" M apps/storefront/src/components/home/kids-hero.tsx",
+" M apps/storefront/src/components/oliver-card-media-switcher.tsx",
+" M apps/storefront/src/components/product-card-media-gallery-core.tsx",
+" M apps/storefront/src/components/product-card-media-switcher.tsx"
+],
+"ahead_main": 0,
+"behind_main": 36,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-app-boundary-20260910",
+"short": "~/.woodright/worktrees/admin-app-boundary-20260910",
+"branch": "wip/admin-app-boundary-20260910",
+"detached": false,
+"head": "c463efd21cca34623cc4a1ce61116d0ffbd04f6c",
+"dirty_n": 4,
+"dirty_sample": [
+"?? apps/backend/node_modules",
+"?? apps/backend/src/scripts/apply-ship-now-v2board.js",
+"?? apps/backend/src/scripts/apply-ship-now-v2board.ts",
+"?? docs/reports/tasks/admin-prod-cutover/"
+],
+"ahead_main": 1,
+"behind_main": 39,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-provenance-n20-20260824",
+"short": "~/.woodright/worktrees/admin-provenance-n20-20260824",
+"branch": "feat/admin-import-provenance-presentation-n20",
+"detached": false,
+"head": "babd3dc38360fff9e80507015e23a8abf7153863",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 162,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-281c445",
+"short": "~/.woodright/worktrees/admin-workspace-281c445",
+"branch": null,
+"detached": true,
+"head": "281c445c3af8978a6e4fd3210477f9ac99a8d654",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 3,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-3b5a27d",
+"short": "~/.woodright/worktrees/admin-workspace-3b5a27d",
+"branch": null,
+"detached": true,
+"head": "3b5a27db5798abc2a20bbdde81f3e49e42bcca3e",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 1,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-3b5a27d-accept",
+"short": "~/.woodright/worktrees/admin-workspace-3b5a27d-accept",
+"branch": null,
+"detached": true,
+"head": "3b5a27db5798abc2a20bbdde81f3e49e42bcca3e",
+"dirty_n": 4,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 1,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-50174ba",
+"short": "~/.woodright/worktrees/admin-workspace-50174ba",
+"branch": null,
+"detached": true,
+"head": "50174baf9bff2f76625fb8710103528ff030d940",
+"dirty_n": 23,
+"dirty_sample": [
+" M apps/backend/medusa-config.ts",
+" M apps/backend/src/api/admin/bespoke-requests/[id]/route.ts",
+" M apps/backend/src/api/admin/bespoke-requests/route.ts",
+" M apps/backend/src/api/admin/leads/[id]/route.ts",
+" M apps/backend/src/api/admin/leads/route.ts",
+" M apps/backend/src/api/admin/payment-links/[id]/route.ts",
+" M apps/backend/src/api/admin/payment-links/route.ts",
+" M apps/backend/src/api/admin/room-sets/[id]/route.ts",
+" M apps/backend/src/api/admin/room-sets/route.ts",
+" M apps/backend/src/api/store/bespoke-requests/route.ts",
+" M apps/backend/src/api/store/leads/route.ts",
+" M apps/backend/src/modules/bespoke-request/models/bespoke-request.ts"
+],
+"ahead_main": 0,
+"behind_main": 824,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-e6c355f",
+"short": "~/.woodright/worktrees/admin-workspace-e6c355f",
+"branch": null,
+"detached": true,
+"head": "e6c355fae56a235db3cc2b6f1a28b83fe32b0824",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 2,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-main-reconcile",
+"short": "~/.woodright/worktrees/admin-workspace-main-reconcile",
+"branch": "fix/admin-workspace-main-reconcile",
+"detached": false,
+"head": "9e6a4835d5147c2911fb3062bf56555f02b592f4",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 86,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-main-reconcile-proof",
+"short": "~/.woodright/worktrees/admin-workspace-main-reconcile-proof",
+"branch": null,
+"detached": true,
+"head": "9e6a4835d5147c2911fb3062bf56555f02b592f4",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 86,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-ux-hardening-slice7",
+"short": "~/.woodright/worktrees/admin-workspace-ux-hardening-slice7",
+"branch": "feat/admin-workspace-ux-hardening-slice7",
+"detached": false,
+"head": "a9e4386ab52609f40e9297e97198f15d725df4bd",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/backend/src/lib/provence-pdf-catalog-contamination.ts"
+],
+"ahead_main": 0,
+"behind_main": 96,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/bespoke-chrome-20260910",
+"short": "~/.woodright/worktrees/bespoke-chrome-20260910",
+"branch": "fix/mobile-menu-sheet-type-chips-20260916",
+"detached": false,
+"head": "98680455790ca5d5b393877bc9834460a32745dc",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 13,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/bespoke-wall-panels-20260908",
+"short": "~/.woodright/worktrees/bespoke-wall-panels-20260908",
+"branch": "feat/bespoke-wall-panels-20260908",
+"detached": false,
+"head": "cae5f665f6837f3a4d5f92fbb0bc38adfbbcd575",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 57,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/buyer-facing-catalog-names-20260910",
+"short": "~/.woodright/worktrees/buyer-facing-catalog-names-20260910",
+"branch": "fix/buyer-facing-catalog-names-20260910",
+"detached": false,
+"head": "bbe7adb53da1cfac3c704c61c73413be5a062bfa",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 62,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/checkout-payment-clarity-layout-20260911",
+"short": "~/.woodright/worktrees/checkout-payment-clarity-layout-20260911",
+"branch": "fix/checkout-payment-clarity-layout-20260911",
+"detached": false,
+"head": "049e1a689cf77011a3cd550f116d7e28cb0cd771",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 42,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/clean-boot-audit-50174ba",
+"short": "~/.woodright/worktrees/clean-boot-audit-50174ba",
+"branch": null,
+"detached": true,
+"head": "50174baf9bff2f76625fb8710103528ff030d940",
+"dirty_n": 31,
+"dirty_sample": [
+" M apps/backend/medusa-config.ts",
+" M apps/backend/src/api/admin/bespoke-requests/[id]/route.ts",
+" M apps/backend/src/api/admin/bespoke-requests/route.ts",
+" M apps/backend/src/api/admin/leads/[id]/route.ts",
+" M apps/backend/src/api/admin/leads/route.ts",
+" M apps/backend/src/api/admin/payment-links/[id]/route.ts",
+" M apps/backend/src/api/admin/payment-links/route.ts",
+" M apps/backend/src/api/admin/room-sets/[id]/route.ts",
+" M apps/backend/src/api/admin/room-sets/route.ts",
+" M apps/backend/src/api/store/bespoke-requests/route.ts",
+" M apps/backend/src/api/store/leads/route.ts",
+" M apps/backend/src/modules/bespoke-request/models/bespoke-request.ts"
+],
+"ahead_main": 0,
+"behind_main": 824,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/commercial-service-sot-main-20260828T163727Z",
+"short": "~/.woodright/worktrees/commercial-service-sot-main-20260828T163727Z",
+"branch": "docs/commercial-service-sot",
+"detached": false,
+"head": "7305d70d0a3f61b854d14c2048803b34cbb67d7b",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 129,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/cta-hover-contrast-20260911",
+"short": "~/.woodright/worktrees/cta-hover-contrast-20260911",
+"branch": "fix/invert-cta-hover-contrast-20260911",
+"detached": false,
+"head": "60cacf1c0262c1c3f2369edd6e4bbf84a1dfff0a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 21,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/cta-manager-assisted-20260821",
+"short": "~/.woodright/worktrees/cta-manager-assisted-20260821",
+"branch": "fix/storefront-cta-manager-assisted-20260821",
+"detached": false,
+"head": "d35d9e4702a7f2367e7514d99838ba61d8feafcd",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 164,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/editorial-content-partners-20260908",
+"short": "~/.woodright/worktrees/editorial-content-partners-20260908",
+"branch": "feat/editorial-content-partners-20260908",
+"detached": false,
+"head": "15115e3ddc17d8946beeff284042baf5a10794d3",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/backend/node_modules"
+],
+"ahead_main": 0,
+"behind_main": 74,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/fix-admin-workspace-boot-hygiene",
+"short": "~/.woodright/worktrees/fix-admin-workspace-boot-hygiene",
+"branch": "fix/admin-workspace-boot-hygiene-50174ba",
+"detached": false,
+"head": "281c445c3af8978a6e4fd3210477f9ac99a8d654",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 3,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/fix-footer-gap-20260910",
+"short": "~/.woodright/worktrees/fix-footer-gap-20260910",
+"branch": "fix/storefront-footer-page-gap-20260910",
+"detached": false,
+"head": "685b79c04d614ab0fd3751e6dd6071d33ebbd2da",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 51,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/fix-kids-brand-header",
+"short": "~/.woodright/worktrees/fix-kids-brand-header",
+"branch": "fix/kids-brand-header-20260903",
+"detached": false,
+"head": "3f75975cdeb4cf39dae8c3920b6c51d4433e51e6",
+"dirty_n": 2,
+"dirty_sample": [
+"?? apps/storefront/.yarn",
+"?? docs/reports/tasks/"
+],
+"ahead_main": 0,
+"behind_main": 105,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/fix-public-apex-traefik-convergence",
+"short": "~/.woodright/worktrees/fix-public-apex-traefik-convergence",
+"branch": "fix/public-apex-traefik-convergence",
+"detached": false,
+"head": "443ef157ad29cdcd1cbefc8218455d36e72594a1",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 143,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/kids-pdp-cta-naming-20260908",
+"short": "~/.woodright/worktrees/kids-pdp-cta-naming-20260908",
+"branch": "fix/kids-pdp-cta-naming-layout-20260908",
+"detached": false,
+"head": "168aef0a4367259bad20351958b3f5edaf43e64b",
+"dirty_n": 1,
+"dirty_sample": [
+"?? docs/reports/tasks/"
+],
+"ahead_main": 0,
+"behind_main": 76,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/legal-warranty-reconciliation-20260830T1132Z",
+"short": "~/.woodright/worktrees/legal-warranty-reconciliation-20260830T1132Z",
+"branch": "docs/legal-warranty-reconciliation",
+"detached": false,
+"head": "8289f0c78410556c2adccd5524801e2cd719caa7",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 125,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/main-8131b8d-apex",
+"short": "~/.woodright/worktrees/main-8131b8d-apex",
+"branch": null,
+"detached": true,
+"head": "8131b8d76e94aba3737cf0b486f32ac5fd0f6362",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 142,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/main-caf82b0-rc",
+"short": "~/.woodright/worktrees/main-caf82b0-rc",
+"branch": null,
+"detached": true,
+"head": "caf82b048b9caefae30679342aec3d4fc42a8d89",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 161,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/main-pr201-merged-bdfbeef",
+"short": "~/.woodright/worktrees/main-pr201-merged-bdfbeef",
+"branch": null,
+"detached": true,
+"head": "bdfbeefd60161581ebcf2c89e689817c647573d3",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 166,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/main-pr204-merged-b4f088c",
+"short": "~/.woodright/worktrees/main-pr204-merged-b4f088c",
+"branch": null,
+"detached": true,
+"head": "b4f088cc748e99dd83539f8d58ad1576137b45f9",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 151,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/main-pr210-merged-8131b8d",
+"short": "~/.woodright/worktrees/main-pr210-merged-8131b8d",
+"branch": null,
+"detached": true,
+"head": "8131b8d76e94aba3737cf0b486f32ac5fd0f6362",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 142,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/media-sku-auto-triage-20260910",
+"short": "~/.woodright/worktrees/media-sku-auto-triage-20260910",
+"branch": "docs/media-sku-auto-triage-20260910",
+"detached": false,
+"head": "7cde05690e3e882ced83d9dab16bff01af25d8bb",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 3,
+"behind_main": 61,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-apex-caf82b0-routing-prep-20260902",
+"short": "~/.woodright/worktrees/ops-apex-caf82b0-routing-prep-20260902",
+"branch": "ops/public-apex-caf82b0-routing-prep",
+"detached": false,
+"head": "5fc1255559e70e1d520be55265d0adb8d2b8d1fe",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 108,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-install-src-0d39c49",
+"short": "~/.woodright/worktrees/ops-install-src-0d39c49",
+"branch": null,
+"detached": true,
+"head": "0d39c494cead7265e36cdac10f62bd995a562346",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 103,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-launch-gates-dns-prep-20260903",
+"short": "~/.woodright/worktrees/ops-launch-gates-dns-prep-20260903",
+"branch": "ops/public-production-launch-gates-20260903",
+"detached": false,
+"head": "7392c59fab794850d877bc25fe9b2c734304187c",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 106,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-legal-notification-record-20260903",
+"short": "~/.woodright/worktrees/ops-legal-notification-record-20260903",
+"branch": "ops/record-legal-notification-owner-tokens-20260903",
+"detached": false,
+"head": "12dc21cd1d66e4c99c0bb9afe9d1a8a280df79ab",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 104,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-local-hybrid-hardening-20260827",
+"short": "~/.woodright/worktrees/ops-local-hybrid-hardening-20260827",
+"branch": "ops/local-hybrid-hardening-20260827",
+"detached": false,
+"head": "0b70553334dadbdd849b145f42b4848095baebee",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 133,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-n14-expected-release",
+"short": "~/.woodright/worktrees/ops-n14-expected-release",
+"branch": "fix/ops-component-aware-expected-release-n14",
+"detached": false,
+"head": "89c1353d61499c0c153f129c8a400a9d88517987",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 174,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-public-apex-cutover",
+"short": "~/.woodright/worktrees/ops-public-apex-cutover",
+"branch": "ops/public-apex-cutover",
+"detached": false,
+"head": "b794ccbe4123a99c73ce52dee6f2bcc402833731",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 152,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-public-apex-traefik-probe-dry-run",
+"short": "~/.woodright/worktrees/ops-public-apex-traefik-probe-dry-run",
+"branch": "ops/public-apex-traefik-probe-dry-run",
+"detached": false,
+"head": "743981a742fdc7ecd275de37ce0d9a5fb5169e4c",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 150,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-public-demo-edge-settle",
+"short": "~/.woodright/worktrees/ops-public-demo-edge-settle",
+"branch": "ops/public-demo-traefik-endpoint-authority",
+"detached": false,
+"head": "01b3c7c835882a9021521cff0cffaf39f202372e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 127,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-public-demo-env-identity",
+"short": "~/.woodright/worktrees/ops-public-demo-env-identity",
+"branch": "ops/public-demo-env-identity",
+"detached": false,
+"head": "ef7dc6830b2bd15fc7dfbe60ab4fdc1395a6adf7",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 123,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-public-production-owner-env-20260904",
+"short": "~/.woodright/worktrees/ops-public-production-owner-env-20260904",
+"branch": "ops/public-production-owner-env-reconcile-20260904",
+"detached": false,
+"head": "cf1f8319aeb612c5622756d8790938a3e6842454",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 102,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/ops-public-production-pair-cutover",
+"short": "~/.woodright/worktrees/ops-public-production-pair-cutover",
+"branch": "ops/public-production-pair-cutover",
+"detached": false,
+"head": "be6bf660ec22508957ca63b935f71e285244cebe",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 167,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/p2p3-dim-trust-release-sha-20260824",
+"short": "~/.woodright/worktrees/p2p3-dim-trust-release-sha-20260824",
+"branch": "fix/p2p3-dim-trust-component-release-sha",
+"detached": false,
+"head": "84fbebb334dfa5178f6d027e24cb543e86dc7119",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 160,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/partners-contacts-finish-20260909",
+"short": "~/.woodright/worktrees/partners-contacts-finish-20260909",
+"branch": "feat/partners-legacy-index-20260909",
+"detached": false,
+"head": "3fffcb7106081801f7019d4e40e1785aa5f98c1a",
+"dirty_n": 2,
+"dirty_sample": [
+"?? apps/backend/node_modules",
+"?? docs/reports/tasks/media-sku-auto-triage/"
+],
+"ahead_main": 0,
+"behind_main": 59,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/partners-powerline-covers-20260910",
+"short": "~/.woodright/worktrees/partners-powerline-covers-20260910",
+"branch": "fix/partners-powerline-covers-20260910",
+"detached": false,
+"head": "2c6b83c12ab71ddea7ed4c5f83ec3c2a9f61a549",
+"dirty_n": 2,
+"dirty_sample": [
+" M apps/storefront/src/app/globals.css",
+" M apps/storefront/src/components/partners/partner-index.tsx"
+],
+"ahead_main": 0,
+"behind_main": 43,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/partners-wordmarks-20260910",
+"short": "~/.woodright/worktrees/partners-wordmarks-20260910",
+"branch": "feat/partners-wordmarks-20260910",
+"detached": false,
+"head": "a7e7e91f2706c6ebf4827184e455e5a3a32ac33d",
+"dirty_n": 198,
+"dirty_sample": [
+"?? .cursor/rules/dash-typography.mdc",
+"?? .cursor/skills/",
+"?? .local/",
+"?? .vscode/",
+"?? apps/backend/node_modules",
+"?? apps/backend/src/admin/assets/",
+"?? apps/backend/src/lib/country-operator-gallery-order.ts",
+"?? apps/backend/src/lib/medusa-image-url.ts",
+"?? apps/backend/src/lib/medusa-product-media.test.ts",
+"?? apps/backend/src/lib/medusa-product-media.ts",
+"?? apps/backend/src/lib/missing-photo-placeholder.ts",
+"?? apps/backend/src/lib/oliver-fabric-from-media.ts"
+],
+"ahead_main": 0,
+"behind_main": 17,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/partners-wordmarks-on-main-20260911",
+"short": "~/.woodright/worktrees/partners-wordmarks-on-main-20260911",
+"branch": "feat/partners-wordmarks-on-main-20260911",
+"detached": false,
+"head": "38e6c1c7087a0c93098dc04b5cf36f13ff3b688f",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 39,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/postal-index-reconciled-20260831T1845Z",
+"short": "~/.woodright/worktrees/postal-index-reconciled-20260831T1845Z",
+"branch": "docs/postal-index-reconciled",
+"detached": false,
+"head": "b8b63b17bb1528bb417894a95d848c0f9b3f6b46",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 119,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/pr200-merged-main-1b4c1e3",
+"short": "~/.woodright/worktrees/pr200-merged-main-1b4c1e3",
+"branch": null,
+"detached": true,
+"head": "1b4c1e3fcb77c89f90a1ff18bedb6190cd90fb16",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 169,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/pr202-merged-main-dd304d1",
+"short": "~/.woodright/worktrees/pr202-merged-main-dd304d1",
+"branch": null,
+"detached": true,
+"head": "dd304d1bf92d59c85795b5091ed0386365bcca6d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 163,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/pr205-compose-merged-54830a0",
+"short": "~/.woodright/worktrees/pr205-compose-merged-54830a0",
+"branch": "fix/cutover-rollback-component-sha-env",
+"detached": false,
+"head": "74d9622121bde04cf7e737c0d497d30f070bf154",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 146,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/pr205-compose-template-20260827",
+"short": "~/.woodright/worktrees/pr205-compose-template-20260827",
+"branch": "fix/prod-compose-component-sha-template",
+"detached": false,
+"head": "21cf68514077230c27fd166b9cc00ca41d9510d0",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 156,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/promotion-window-20260908",
+"short": "~/.woodright/worktrees/promotion-window-20260908",
+"branch": "feat/catalog-promo-admin-ux-20260909",
+"detached": false,
+"head": "07cbba4db6112d4061b783a9f18659a74e79ccb0",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 66,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/provence-group-n13",
+"short": "~/.woodright/worktrees/provence-group-n13",
+"branch": "feat/provence-pv-15-16-group",
+"detached": false,
+"head": "c5d7db82e25fc4cc77bd93531cf25f6a18c12769",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 187,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/public-demo-cutover-capability-hardening-20260907",
+"short": "~/.woodright/worktrees/public-demo-cutover-capability-hardening-20260907",
+"branch": "fix/public-demo-cutover-capability-hardening-20260907",
+"detached": false,
+"head": "2b3c4e540c1dd37889ddc82f8db4d085cefb3da1",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 81,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/public-demo-scoped-ownership-converge-20260821",
+"short": "~/.woodright/worktrees/public-demo-scoped-ownership-converge-20260821",
+"branch": "fix/public-demo-scoped-ownership-converge",
+"detached": false,
+"head": "f9da83764185268e55353069081d2bc036ab508d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 170,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/returns-warranty-legal-pack-20260901",
+"short": "~/.woodright/worktrees/returns-warranty-legal-pack-20260901",
+"branch": "docs/returns-warranty-legal-pack",
+"detached": false,
+"head": "344ff22bbecf6979f55a8597488a02aee9bb192d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 117,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/review-pr221-main-20260901T1918",
+"short": "~/.woodright/worktrees/review-pr221-main-20260901T1918",
+"branch": null,
+"detached": true,
+"head": "0d39c494cead7265e36cdac10f62bd995a562346",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 103,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/runtime-candidate-main",
+"short": "~/.woodright/worktrees/runtime-candidate-main",
+"branch": null,
+"detached": true,
+"head": "66317570930a9e1b2f96b1d1f6c8e800b12f787e",
+"dirty_n": 18,
+"dirty_sample": [
+" M apps/backend/package.json",
+" M apps/backend/src/admin/routes/woodright/catalog-promo/page.tsx",
+" M apps/backend/src/admin/routes/woodright/contacts/page.tsx",
+" M apps/backend/src/admin/routes/woodright/page.tsx",
+" M apps/backend/src/admin/routes/woodright/partners/page.tsx",
+" M apps/backend/src/admin/routes/woodright/production/page.tsx",
+" M apps/backend/src/admin/routes/woodright/products/[id]/page.tsx",
+" M apps/backend/src/admin/routes/woodright/products/new/page.tsx",
+" M apps/backend/src/admin/routes/woodright/products/page.tsx",
+"?? apps/backend/src/admin/components/woodright/DeskNav.tsx",
+"?? apps/backend/src/admin/lib/use-desk-extras.ts",
+"?? apps/backend/src/admin/routes/woodright/media/"
+],
+"ahead_main": 0,
+"behind_main": 39,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/seller-console-20260911",
+"short": "~/.woodright/worktrees/seller-console-20260911",
+"branch": "wip/seller-console-qa-20260911",
+"detached": false,
+"head": "2c6b83c12ab71ddea7ed4c5f83ec3c2a9f61a549",
+"dirty_n": 2,
+"dirty_sample": [
+" M apps/storefront/src/app/checkout/page.tsx",
+"?? apps/storefront/src/app/qa/woodright-seller-console/"
+],
+"ahead_main": 0,
+"behind_main": 43,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/seller-desk-admin-20260918",
+"short": "~/.woodright/worktrees/seller-desk-admin-20260918",
+"branch": "feat/seller-desk-admin-20260918",
+"detached": false,
+"head": "bc37a78ff8a0c54f706c3b7b3bb9c451b998ba41",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 8,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/storefront-returns-warranty-policy-20260901",
+"short": "~/.woodright/worktrees/storefront-returns-warranty-policy-20260901",
+"branch": "feat/storefront-returns-warranty-policy",
+"detached": false,
+"head": "f1d366ebc89ef22c1b960e4fc406e7ae381efead",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 111,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/wardrobe-closed-front-hinge-20260911",
+"short": "~/.woodright/worktrees/wardrobe-closed-front-hinge-20260911",
+"branch": "fix/wardrobe-closed-front-hinge-option-20260911",
+"detached": false,
+"head": "2ba6abe793cf14d604fed29551f58a53468ba4e4",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 37,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/warranty-contract-aligned-20260831T1732Z",
+"short": "~/.woodright/worktrees/warranty-contract-aligned-20260831T1732Z",
+"branch": "docs/warranty-contract-aligned",
+"detached": false,
+"head": "f5bfd4b97869602b5a975a58318da5fae7bcf98d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 121,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/furniture-commerce-wt-first-load-veil",
+"short": "~/Developer/furniture-commerce-wt-first-load-veil",
+"branch": "perf/catalog-browse-html-lean-20260917",
+"detached": false,
+"head": "c1d86af61666806ade88943da0f4f28cf82bb834",
+"dirty_n": 4,
+"dirty_sample": [
+" M apps/backend/src/api/store/products/catalog-browse-projection.fidelity.test.ts",
+" M apps/backend/src/api/store/products/catalog-browse-projection.ts",
+" M apps/storefront/src/lib/catalog-browse-client-product.fidelity.test.ts",
+" M apps/storefront/src/lib/catalog-browse-client-product.ts"
+],
+"ahead_main": 0,
+"behind_main": 9,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-admin-pr194-20260813/admin-actualization-night-20260812",
+"short": "~/Developer/woodright-admin-pr194-20260813/admin-actualization-night-20260812",
+"branch": "feat/admin-actualization-night-20260812",
+"detached": false,
+"head": "0dee958768a223e5becdc666d98e21c92dfc8f80",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/backend/src/modules/product-extension/migrations/"
+],
+"ahead_main": 0,
+"behind_main": 191,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-content-legal-launch-20260820",
+"short": "~/Developer/woodright-content-legal-launch-20260820",
+"branch": null,
+"detached": true,
+"head": "ced25101f71f34caf98b62d1e7855be4f91ef977",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 175,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-legal-content-remediation-20260804",
+"short": "~/Developer/woodright-legal-content-remediation-20260804",
+"branch": "feat/legal-content-remediation-20260804",
+"detached": false,
+"head": "99a277c3121f6833cfaaf4b980e7dd51e9beef71",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 6,
+"behind_main": 407,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/docker-runtime-refresh",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/docker-runtime-refresh",
+"branch": "chore/docker-runtime-refresh-20260729",
+"detached": false,
+"head": "6d2b279c211ab2225e8e26d1382c224116ab3b28",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 646,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/final-main-proof",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/final-main-proof",
+"branch": null,
+"detached": true,
+"head": "f67d0694013126105177745868d7029596784050",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 637,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/final-main-verification",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/final-main-verification",
+"branch": null,
+"detached": true,
+"head": "f67d0694013126105177745868d7029596784050",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 637,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/main-backend-for-next16",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/main-backend-for-next16",
+"branch": null,
+"detached": true,
+"head": "1c7290ea9f0ca32912c50db4c284bc4a6f2bd183",
+"dirty_n": 3,
+"dirty_sample": [
+" D apps/backend/static/products/.gitignore",
+"?? apps/backend/static/products",
+"?? apps/backend/static/products.empty-local/"
+],
+"ahead_main": 0,
+"behind_main": 577,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/medusa-2-18-0",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/medusa-2-18-0",
+"branch": "chore/medusa-2-18-0-20260729",
+"detached": false,
+"head": "061e738cf85c4ed4036997f53b9f55d7c5e2530e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 645,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/next16-react19",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/next16-react19",
+"branch": "experiment/next16-react19-20260729",
+"detached": false,
+"head": "55c07f12c10616b5c55691c942bb2a322263c71c",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/undefined/"
+],
+"ahead_main": 0,
+"behind_main": 523,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/ops-3a7bb89",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/ops-3a7bb89",
+"branch": null,
+"detached": true,
+"head": "3a7bb897d6ffe981c2b3688899ef74719647274f",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 466,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/ops-6db0028",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/ops-6db0028",
+"branch": null,
+"detached": true,
+"head": "6db00287e6c50a9dfe4e818993dde607992082c9",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 495,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/post-upgrade-regressions",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/post-upgrade-regressions",
+"branch": "fix/post-upgrade-regressions-20260730",
+"detached": false,
+"head": "2cacaf4a2bda5886b4d29a44b45fa9bc0a294af7",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 589,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/qualify-f8766f5",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/qualify-f8766f5",
+"branch": null,
+"detached": true,
+"head": "f8766f52fe573c16011bca6e7aa788ec5556a51a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 498,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/release-65269f2",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/release-65269f2",
+"branch": null,
+"detached": true,
+"head": "65269f24dadd590ba02308e12aa07a0e6d8f0152",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 644,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/safe-dependency-refresh",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/safe-dependency-refresh",
+"branch": "chore/safe-dependency-refresh-20260729",
+"detached": false,
+"head": "9578623abb0aa15520cb0d26f1be005d1823f61a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 3,
+"behind_main": 646,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/toolchain-patches",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/toolchain-patches",
+"branch": "chore/toolchain-patches-20260729",
+"detached": false,
+"head": "b3755628e00533cd32a052457c64e988cfb272d3",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 638,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/typescript-7-0-2",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/typescript-7-0-2",
+"branch": "experiment/typescript-7-0-2-20260729",
+"detached": false,
+"head": "6d2b279c211ab2225e8e26d1382c224116ab3b28",
+"dirty_n": 2,
+"dirty_sample": [
+" M apps/backend/package.json",
+" M apps/storefront/package.json"
+],
+"ahead_main": 0,
+"behind_main": 646,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/typescript7-after-yarn417",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/typescript7-after-yarn417",
+"branch": "experiment/typescript-7-0-2-after-yarn417-20260730",
+"detached": false,
+"head": "e17595ba9f892d4a07f36e222643c85fda8c3263",
+"dirty_n": 4,
+"dirty_sample": [
+" M apps/backend/package.json",
+" M apps/backend/yarn.lock",
+" M apps/storefront/package.json",
+" M apps/storefront/yarn.lock"
+],
+"ahead_main": 0,
+"behind_main": 602,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/yarn-4-17-1",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/yarn-4-17-1",
+"branch": "chore/yarn-4-17-1-20260729",
+"detached": false,
+"head": "dd0267a435559c34ac2cf2e9209227d28985127e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 642,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-ops-compose-keeper-recreate-20260802",
+"short": "~/Developer/woodright-ops-compose-keeper-recreate-20260802",
+"branch": "fix/ops-compose-keeper-recreate-20260802",
+"detached": false,
+"head": "e545c1684678144fa0ace5895d7da9e6e00b9b08",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 467,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-ops-install-386d630-20260804",
+"short": "~/Developer/woodright-ops-install-386d630-20260804",
+"branch": null,
+"detached": true,
+"head": "386d6301fba90701242aa3130e6e99cc6e49bd87",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 422,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-ops-owner-approved-promotion-governance-20260804",
+"short": "~/Developer/woodright-ops-owner-approved-promotion-governance-20260804",
+"branch": "fix/ops-owner-approved-promotion-governance-20260804",
+"detached": false,
+"head": "61f6a01d07479f3064787e478aea35cd529748c6",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 423,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-ops-production-authority-monitor-20260803",
+"short": "~/Developer/woodright-ops-production-authority-monitor-20260803",
+"branch": "fix/ops-production-authority-monitor-20260803",
+"detached": false,
+"head": "31c875298e5008765ce43e3913e97888f10daeea",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 433,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-ops-public-cutover-recovery-20260801",
+"short": "~/Developer/woodright-ops-public-cutover-recovery-20260801",
+"branch": "fix/ops-public-cutover-recovery-20260801",
+"detached": false,
+"head": "7f518c33d1f8c996aa5d7d02fca6f2035e27379e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 496,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-postmerge-pr166-main-20260804",
+"short": "~/Developer/woodright-postmerge-pr166-main-20260804",
+"branch": null,
+"detached": true,
+"head": "45a22fae36db29c86aa3aa8bd9235f5cd2cb7638",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 392,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-public-demo-legacy-active-cleanup-20260804",
+"short": "~/Developer/woodright-public-demo-legacy-active-cleanup-20260804",
+"branch": null,
+"detached": true,
+"head": "9bcfa6b259462028d7c5cac3a61011649dca74ca",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 389,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-public-production-manual-invoice-20260804",
+"short": "~/Developer/woodright-public-production-manual-invoice-20260804",
+"branch": "feat/public-production-manual-invoice-contract-20260804",
+"detached": false,
+"head": "8089a592de82c46e696bbee2ec17f78423c0aa72",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 393,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-public-production-monitor-backup-20260804",
+"short": "~/Developer/woodright-public-production-monitor-backup-20260804",
+"branch": "feat/public-production-monitor-backup-contracts-20260804",
+"detached": false,
+"head": "e6bada778e52c3f435a4fac2d5bc9ba83c15d17e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 399,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-public-production-payment-notifications-20260804",
+"short": "~/Developer/woodright-public-production-payment-notifications-20260804",
+"branch": "feat/public-production-payment-notification-decisions-20260804",
+"detached": false,
+"head": "d8c02abbfebe9610a603ebca653349cf355b1bc1",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 4,
+"behind_main": 394,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-public-production-profile-seo-20260804",
+"short": "~/Developer/woodright-public-production-profile-seo-20260804",
+"branch": "feat/public-production-profile-indexable-seo-20260804",
+"detached": false,
+"head": "15c3361608e00bbeebbd81805dc9dc9c56a6528a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 406,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-release-sha-public-bind-gate-20260804",
+"short": "~/Developer/woodright-release-sha-public-bind-gate-20260804",
+"branch": null,
+"detached": true,
+"head": "4121279c294a1703161ccc9cd2166abaa1bd4ec0",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 418,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-a11y-20260722",
+"short": "~/Documents/projects/furniture-commerce-a11y-20260722",
+"branch": "a11y/buyer-wcag-aa-20260722",
+"detached": false,
+"head": "2ee6b129effc6842d1f9d7aa2706bab155903f88",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 726,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-api-lean-20260721",
+"short": "~/Documents/projects/furniture-commerce-api-lean-20260721",
+"branch": "perf/api-lean-catalog-callers-20260721",
+"detached": false,
+"head": "07c33026f6e2b40eec62c85928208fb1c04f6584",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 765,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-backend-compat-20260716",
+"short": "~/Documents/projects/furniture-commerce-backend-compat-20260716",
+"branch": "fix/backend-runtime-schema-compatibility-20260716",
+"detached": false,
+"head": "ed9771f5da37639da5518848f5dc2d1b496ca62c",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 833,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-backup-mon-20260722",
+"short": "~/Documents/projects/furniture-commerce-backup-mon-20260722",
+"branch": "ops/monitor-product-static-check",
+"detached": false,
+"head": "b2e4769cf420616fd0bb58e413969a709a5c5f40",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 720,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-cart-eval-20260715",
+"short": "~/Documents/projects/furniture-commerce-cart-eval-20260715",
+"branch": "audit/cart-fields-eval-20260715",
+"detached": false,
+"head": "4c80c768fac865f226a8794690117fecb8d67756",
+"dirty_n": 4,
+"dirty_sample": [
+" M apps/storefront/src/lib/api/cart.ts",
+" M apps/storefront/tsconfig.json",
+"?? apps/storefront/.next-cart-eval/",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 6,
+"behind_main": 836,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-media-opt-20260721",
+"short": "~/Documents/projects/furniture-commerce-catalog-media-opt-20260721",
+"branch": "perf/catalog-media-derivatives-strip-20260721",
+"detached": false,
+"head": "eae5bb8968d290d206347e3ecef71418cae4b27e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 791,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-merchandising-order-20260721",
+"short": "~/Documents/projects/furniture-commerce-catalog-merchandising-order-20260721",
+"branch": "feat/catalog-default-merchandising-order-20260721",
+"detached": false,
+"head": "0d1520b303af34eb1f99bd38263912e86c0779fd",
+"dirty_n": 1,
+"dirty_sample": [
+"?? tmp/"
+],
+"ahead_main": 1,
+"behind_main": 792,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-normalization",
+"short": "~/Documents/projects/furniture-commerce-catalog-normalization",
+"branch": "audit/catalog-normalization-20260712",
+"detached": false,
+"head": "e3e43b3f39d227daf63a9d1971a6ffb2dee74642",
+"dirty_n": 39,
+"dirty_sample": [
+" M apps/backend/src/api/admin/bespoke-requests/[id]/route.ts",
+" M apps/backend/src/api/middlewares.ts",
+" M apps/backend/src/api/store/products/[id]/route.ts",
+" M apps/backend/src/api/store/products/catalog-browse-projection.fidelity.test.ts",
+" M apps/backend/src/api/store/products/catalog-browse-projection.ts",
+" M apps/backend/src/api/store/products/load-store-product-list.ts",
+" M apps/backend/src/api/store/room-sets/[slug]/route.ts",
+" M apps/backend/src/links/product-product-extension.ts",
+" M apps/backend/src/modules/bespoke-request/models/bespoke-request.ts",
+" M apps/backend/src/modules/lead/models/lead.ts",
+" M apps/backend/src/modules/payment-link/models/payment-link.ts",
+" M apps/backend/src/modules/product-extension/models/product-type.ts"
+],
+"ahead_main": 0,
+"behind_main": 864,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-normalization-night-20260812",
+"short": "~/Documents/projects/furniture-commerce-catalog-normalization-night-20260812",
+"branch": "feat/catalog-normalization-night-20260812",
+"detached": false,
+"head": "006d5f7c62f9b7b77f732f412519d9bde0412de8",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/backend/node_modules"
+],
+"ahead_main": 0,
+"behind_main": 195,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-options-night-20260812",
+"short": "~/Documents/projects/furniture-commerce-catalog-options-night-20260812",
+"branch": "audit/catalog-options-variants-night-20260812",
+"detached": false,
+"head": "16ae0c19e73b9ef833572df57919180ea71bf481",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 4,
+"behind_main": 194,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-performance-20260715",
+"short": "~/Documents/projects/furniture-commerce-catalog-performance-20260715",
+"branch": "perf/catalog-loading-20260715",
+"detached": false,
+"head": "a5d2f47a398243e9315f3cc9493f70ef414e0812",
+"dirty_n": 4,
+"dirty_sample": [
+"?? apps/backend/node_modules",
+"?? apps/storefront/next-env.d.ts",
+"?? apps/storefront/scripts/catalog-ssr-img-gate.mjs",
+"?? tmp/"
+],
+"ahead_main": 2,
+"behind_main": 856,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ci-ts-closure-20260721",
+"short": "~/Documents/projects/furniture-commerce-ci-ts-closure-20260721",
+"branch": "chore/ci-typescript-build-closure-20260721",
+"detached": false,
+"head": "6d4004292b07d578ab54b8d3d2465754acce06bb",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 793,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-clean-main-measure-20260715",
+"short": "~/Documents/projects/furniture-commerce-clean-main-measure-20260715",
+"branch": null,
+"detached": true,
+"head": "b7b9c60bd4effb3f86824285edc742380b77a77a",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 856,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-compose-no-publish-20260721",
+"short": "~/Documents/projects/furniture-commerce-compose-no-publish-20260721",
+"branch": "chore/staging-compose-no-host-publish-20260721",
+"detached": false,
+"head": "24a72fcd400b13d7822d1f3aa67abe6e549dc0b3",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 802,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-deploy-candidate-20260716",
+"short": "~/Documents/projects/furniture-commerce-deploy-candidate-20260716",
+"branch": "integrate/deploy-candidate-20260716",
+"detached": false,
+"head": "f33486a41b7769a602353c0863a833b841c51239",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 810,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-design-freeze-20260715",
+"short": "~/Documents/projects/furniture-commerce-design-freeze-20260715",
+"branch": "fix/storefront-approved-design-pdp-polish-20260715",
+"detached": false,
+"head": "c762d9cb5d57489d862bf5e22cedb6dcc56de85b",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 846,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-design-integration-20260715",
+"short": "~/Documents/projects/furniture-commerce-design-integration-20260715",
+"branch": "fix/storefront-design-recovery-integration-20260715",
+"detached": false,
+"head": "db483479c3aee70ffce3b04f7f6e28ac2c4f759f",
+"dirty_n": 2,
+"dirty_sample": [
+"?? apps/storefront/.next-integ-dev/",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 850,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-design-mode-20260714",
+"short": "~/Documents/projects/furniture-commerce-design-mode-20260714",
+"branch": "feat/storefront-design-mode-local-20260714",
+"detached": false,
+"head": "b56d225afe54a342f849dda43ab33519829cec67",
+"dirty_n": 12,
+"dirty_sample": [
+" M .cursor/rules/woodright-model-routing.mdc",
+" M apps/backend/src/lib/gallery-content-dedupe.ts",
+" M apps/backend/src/lib/oliver-finish-execution-guard.ts",
+" M apps/storefront/next.config.js",
+" M apps/storefront/src/lib/greenwich-bed-media.ts",
+" M apps/storefront/src/lib/pdp-buyer-gallery-core.ts",
+"?? .cursor/rules/woodright-design-mode-safety.mdc",
+"?? .nosync",
+"?? apps/backend/src/lib/oliver-pdf-catalog-contamination.ts",
+"?? apps/storefront/next-env.d.ts",
+"?? apps/storefront/scripts/design-mode-storefront.sh",
+"?? docs/ai/woodright-design-mode-local-workflow.md"
+],
+"ahead_main": 1,
+"behind_main": 845,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-design-recovery-20260715",
+"short": "~/Documents/projects/furniture-commerce-design-recovery-20260715",
+"branch": "recovery/storefront-design-20260715",
+"detached": false,
+"head": "4c80c768fac865f226a8794690117fecb8d67756",
+"dirty_n": 30,
+"dirty_sample": [
+" M apps/storefront/src/app/globals.css",
+" M apps/storefront/src/app/loading.tsx",
+" M apps/storefront/src/app/product/[id]/page.tsx",
+" M apps/storefront/src/components/header-logo.tsx",
+" M apps/storefront/src/components/pdp-hero-affordance.tsx",
+" M apps/storefront/src/components/product-card-media-gallery-core.tsx",
+" M apps/storefront/src/components/site-footer.tsx",
+" M apps/storefront/src/components/site-header.tsx",
+" M apps/storefront/src/lib/card-color-media.ts",
+" M apps/storefront/src/lib/en-name-ru.ts",
+" M apps/storefront/src/lib/format-ru-copy.fidelity.test.ts",
+" M apps/storefront/src/lib/format-ru-copy.ts"
+],
+"ahead_main": 6,
+"behind_main": 836,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-docker-slim-sf-20260721",
+"short": "~/Documents/projects/furniture-commerce-docker-slim-sf-20260721",
+"branch": "perf/docker-slim-storefront-20260721",
+"detached": false,
+"head": "5c772ff471ed587a1b40d1b26d8b0779f606f8d3",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 752,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-durable-local-servers-20260725",
+"short": "~/Documents/projects/furniture-commerce-durable-local-servers-20260725",
+"branch": "chore/durable-local-servers-20260725",
+"detached": false,
+"head": "1bf3f909600661350d246780d20d6e10a1dfbcb2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 666,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-durable-rules-upstream-20260728",
+"short": "~/Documents/projects/furniture-commerce-durable-rules-upstream-20260728",
+"branch": "chore/upstream-durable-rule-strengthenings-20260728",
+"detached": false,
+"head": "3f5ec06aa29f76c11c0bbac87f6ce684e32fee4b",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 659,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-a11y-p2-dialogs-20260723",
+"short": "~/Documents/projects/furniture-commerce-fix-a11y-p2-dialogs-20260723",
+"branch": "fix/a11y-p2-dialog-inert-focus-20260723",
+"detached": false,
+"head": "2c2988cd89b7ebc9b1d9b8ece7b5b1afab0ac878",
+"dirty_n": 1,
+"dirty_sample": [
+" M apps/storefront/scripts/a11y-dialog-keyboard.smoke.cjs"
+],
+"ahead_main": 0,
+"behind_main": 711,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-brand-ink-39231a-20260716",
+"short": "~/Documents/projects/furniture-commerce-fix-brand-ink-39231a-20260716",
+"branch": "fix/brand-ink-39231a-20260716",
+"detached": false,
+"head": "65a5d3bcacbf55c347f6b78650ce13cc8ba84999",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 835,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-brand-ink-473128-20260716",
+"short": "~/Documents/projects/furniture-commerce-fix-brand-ink-473128-20260716",
+"branch": "fix/brand-ink-473128-20260716",
+"detached": false,
+"head": "f59218df2264aeddacba469777cb747f38f80d21",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 833,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-brand-ink-5a4234-20260716",
+"short": "~/Documents/projects/furniture-commerce-fix-brand-ink-5a4234-20260716",
+"branch": "fix/brand-ink-5a4234-20260716",
+"detached": false,
+"head": "a6fa9890d9b4f95f75b6ef478d0987e9f4d965dd",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 831,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-catalog-integrity-facets-20260721",
+"short": "~/Documents/projects/furniture-commerce-fix-catalog-integrity-facets-20260721",
+"branch": "fix/catalog-integrity-facets-public-cleanup-20260721",
+"detached": false,
+"head": "143d93b2db7956ae697db33ade4ae7664099b066",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 757,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-catalog-product-type-closure-20260721",
+"short": "~/Documents/projects/furniture-commerce-fix-catalog-product-type-closure-20260721",
+"branch": "fix/catalog-product-type-closure-20260721",
+"detached": false,
+"head": "7a1bc3040fcc999b6294c0ddfe7c5ef6be3ea441",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 751,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-catalog-product-type-closure-integration-20260721",
+"short": "~/Documents/projects/furniture-commerce-fix-catalog-product-type-closure-integration-20260721",
+"branch": "fix/catalog-product-type-closure-integration-20260721",
+"detached": false,
+"head": "db9b434c023c9907ea5dae78532708869fab3d2b",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 741,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-greenwich-darkblue-matrix-20260716",
+"short": "~/Documents/projects/furniture-commerce-fix-greenwich-darkblue-matrix-20260716",
+"branch": "fix/greenwich-darkblue-matrix-split-20260716",
+"detached": false,
+"head": "0bd101ffbbb156581ad3edb3bc9b61204dce07d2",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 837,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-greenwich-paint-matrix-20260716",
+"short": "~/Documents/projects/furniture-commerce-fix-greenwich-paint-matrix-20260716",
+"branch": "fix/greenwich-paint-matrix-catalog-projection-20260716",
+"detached": false,
+"head": "ae1bccaa96f43dc0643952c577a20117db80bc3e",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 839,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-ops-backend-alias-20260724",
+"short": "~/Documents/projects/furniture-commerce-fix-ops-backend-alias-20260724",
+"branch": "fix/ops-backend-alias-multihome-dns-20260724",
+"detached": false,
+"head": "0cf6f63a8aced9eefdcbf70b9dd105fdb80f03c6",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 705,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-ops-hold-cutover-lock-20260725",
+"short": "~/Documents/projects/furniture-commerce-fix-ops-hold-cutover-lock-20260725",
+"branch": "fix/ops-hold-cutover-lock-for-pin-reconcile-20260725",
+"detached": false,
+"head": "ce25bb353197efb862194cf5b692fe398dfd1bab",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 696,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-ops-reconcile-image-pins-20260724",
+"short": "~/Documents/projects/furniture-commerce-fix-ops-reconcile-image-pins-20260724",
+"branch": "fix/ops-reconcile-public-image-pins-20260724",
+"detached": false,
+"head": "d74addb79fc4d237b99a1f8e484d23e38ae6a109",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 699,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-pair-peer-approval",
+"short": "~/Documents/projects/furniture-commerce-fix-pair-peer-approval",
+"branch": "fix/public-demo-pair-peer-approval",
+"detached": false,
+"head": "4b1f1fbd2bf22e7bf5845754873cb5fc1ff196c1",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 206,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-pricing-default-min-unit-drift-20260722",
+"short": "~/Documents/projects/furniture-commerce-fix-pricing-default-min-unit-drift-20260722",
+"branch": "fix/pricing-default-min-unit-drift-20260722",
+"detached": false,
+"head": "013f27fc956b1a7d731ef20fc2afca84c7db564b",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 736,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-public-catalog-defects-20260721",
+"short": "~/Documents/projects/furniture-commerce-fix-public-catalog-defects-20260721",
+"branch": "fix/pricing-card-pdp-cart-parity-20260721",
+"detached": false,
+"head": "c675d8a6eb95148b6f3faf808491575f11c90ab6",
+"dirty_n": 5,
+"dirty_sample": [
+" D apps/backend/static/products/.gitignore",
+"?? apps/backend/.yarn",
+"?? apps/backend/node_modules",
+"?? apps/backend/static/products",
+"?? apps/backend/static/products.empty-bak-20260804/"
+],
+"ahead_main": 0,
+"behind_main": 767,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-runtime-identity-app-bake-20260722",
+"short": "~/Documents/projects/furniture-commerce-fix-runtime-identity-app-bake-20260722",
+"branch": "fix/runtime-identity-app-bake-20260722",
+"detached": false,
+"head": "f59fa6192563011310d400ad51b9f25f42d6e98a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 728,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-runtime-identity-public-candidate-guard-20260722",
+"short": "~/Documents/projects/furniture-commerce-fix-runtime-identity-public-candidate-guard-20260722",
+"branch": "fix/runtime-identity-public-candidate-guard-20260722",
+"detached": false,
+"head": "04b53ef8314a23b28828d0f33ecbddbf760fdea2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 5,
+"behind_main": 729,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-https-og-hardening-20260721",
+"short": "~/Documents/projects/furniture-commerce-https-og-hardening-20260721",
+"branch": "fix/https-og-metadata-hardening-20260721",
+"detached": false,
+"head": "2726678347bb9b435176b84f329d2c1647b2b36a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 801,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-internal-backend-cutover-20260721",
+"short": "~/Documents/projects/furniture-commerce-internal-backend-cutover-20260721",
+"branch": "fix/staging-image-workflow-secret-contract-20260721",
+"detached": false,
+"head": "9e06369c03a643be8aaf57fef75e180321d426f1",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 804,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-kids-bespoke-fail-closed-20260716",
+"short": "~/Documents/projects/furniture-commerce-kids-bespoke-fail-closed-20260716",
+"branch": "fix/kids-cart-bespoke-fail-closed-20260716",
+"detached": false,
+"head": "388206ed552aa0de9286a86538c2fbce3efe15ca",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 841,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-main-after-perf-20260716",
+"short": "~/Documents/projects/furniture-commerce-main-after-perf-20260716",
+"branch": null,
+"detached": true,
+"head": "82b64bfe18b4b230fd5c2edaad7f9598dc583b40",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 842,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-main-post-merge-20260715",
+"short": "~/Documents/projects/furniture-commerce-main-post-merge-20260715",
+"branch": "qa/main-post-design-merge-20260715",
+"detached": false,
+"head": "899695f44ebcd71c24ab99fe1b6c9b5118132e7b",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/storefront/.next-post-merge-dev/",
+"?? apps/storefront/.yarn",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 849,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-pdp-parity-20260717",
+"short": "~/Documents/projects/furniture-commerce-pdp-parity-20260717",
+"branch": "fix/pdp-gallery-configurator-parity-20260717",
+"detached": false,
+"head": "e53ba434a7324c71d2da0f36443f54efa61cb23d",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 808,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-phase8-home-20260721",
+"short": "~/Documents/projects/furniture-commerce-phase8-home-20260721",
+"branch": "perf/home-bytes-bundle-20260721",
+"detached": false,
+"head": "b890f37556e13952fbac6860e889540dd12ff8b2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 782,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-post-pr40-main-20260716",
+"short": "~/Documents/projects/furniture-commerce-post-pr40-main-20260716",
+"branch": null,
+"detached": true,
+"head": "99b64c898048e7bce6c874d389d2acfc23eea689",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 840,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-pr181-sync",
+"short": "~/Documents/projects/furniture-commerce-pr181-sync",
+"branch": "sync/pr181-main-into-footer",
+"detached": false,
+"head": "b171b64dd8c7363aec03cbc5116d356ca694b136",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 208,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-pr38-candidate-20260716",
+"short": "~/Documents/projects/furniture-commerce-pr38-candidate-20260716",
+"branch": null,
+"detached": true,
+"head": "12ff9a7d466cb734ca9c3bd5a8d7dfd65836ccff",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 845,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-provenance-20260721",
+"short": "~/Documents/projects/furniture-commerce-provenance-20260721",
+"branch": "chore/staging-image-provenance-sbom-20260721",
+"detached": false,
+"head": "87b3e42e5a56e2e3d2637471f7caa02992f894f4",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 789,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-qa-runtime",
+"short": "~/Documents/projects/furniture-commerce-qa-runtime",
+"branch": null,
+"detached": true,
+"head": "a5d2f47a398243e9315f3cc9493f70ef414e0812",
+"dirty_n": 3,
+"dirty_sample": [
+"?? .woodright-qa-runtime-marker",
+"?? apps/backend/node_modules",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 2,
+"behind_main": 856,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-release-74fbad4",
+"short": "~/Documents/projects/furniture-commerce-release-74fbad4",
+"branch": null,
+"detached": true,
+"head": "74fbad4b4247653278517ead3826548e3f44ed6b",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 207,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-release-ad6ab49",
+"short": "~/Documents/projects/furniture-commerce-release-ad6ab49",
+"branch": null,
+"detached": true,
+"head": "ad6ab49d6225c19c401aa951aee7e626a9a328ac",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/backend/node_modules"
+],
+"ahead_main": 0,
+"behind_main": 725,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-runtime-main-20260715",
+"short": "~/Documents/projects/furniture-commerce-runtime-main-20260715",
+"branch": "runtime/main-storefront-20260715",
+"detached": false,
+"head": "899695f44ebcd71c24ab99fe1b6c9b5118132e7b",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 849,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-runtime-main-34a400f",
+"short": "~/Documents/projects/furniture-commerce-runtime-main-34a400f",
+"branch": null,
+"detached": true,
+"head": "34a400f90ca887ae14267406a0ecb2c231dc1813",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 838,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-runtime-main-82b64bf",
+"short": "~/Documents/projects/furniture-commerce-runtime-main-82b64bf",
+"branch": null,
+"detached": true,
+"head": "82b64bfe18b4b230fd5c2edaad7f9598dc583b40",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 842,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-runtime-main-99b64c8",
+"short": "~/Documents/projects/furniture-commerce-runtime-main-99b64c8",
+"branch": null,
+"detached": true,
+"head": "5a5a6c92a45b4da939a18fb511b69714205d8ce3",
+"dirty_n": 2,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts",
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 830,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-runtime-pdp-parity-18fd465",
+"short": "~/Documents/projects/furniture-commerce-runtime-pdp-parity-18fd465",
+"branch": null,
+"detached": true,
+"head": "5683afa62890531f26b6e53b25800173c8efbb20",
+"dirty_n": 1,
+"dirty_sample": [
+"?? .woodright-runtime-switch/"
+],
+"ahead_main": 0,
+"behind_main": 783,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-security-closure-20260721",
+"short": "~/Documents/projects/furniture-commerce-security-closure-20260721",
+"branch": "security/http-headers-csp-20260721",
+"detached": false,
+"head": "e20d9ad358597237ac951da636292b93cfcc8d33",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 748,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-security-cookies-20260721",
+"short": "~/Documents/projects/furniture-commerce-security-cookies-20260721",
+"branch": "security/cookies-cors-secrets-20260721",
+"detached": false,
+"head": "896f799a29eeb27cd3aa7b461f2695dcac3d78c6",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 748,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-seedharden-fence-20260728",
+"short": "~/Documents/projects/furniture-commerce-seedharden-fence-20260728",
+"branch": "fix/staging-seed-lock-before-required-env",
+"detached": false,
+"head": "06e3f54889e6dfef52e4a5ea6e5692d5300368f0",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 653,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-seo-noindex-20260722",
+"short": "~/Documents/projects/furniture-commerce-seo-noindex-20260722",
+"branch": "main",
+"detached": false,
+"head": "20c8aed33f9c7bf27f08be8ad0dfebe7e3da5c07",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 731,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-staging-rc-20260716",
+"short": "~/Documents/projects/furniture-commerce-staging-rc-20260716",
+"branch": "chore/dokploy-staging-release-20260716",
+"detached": false,
+"head": "b8fa3d24970f54eda155659f338053970e9993d6",
+"dirty_n": 6,
+"dirty_sample": [
+" M apps/backend/src/api/store/products/catalog-browse-projection.fidelity.test.ts",
+" M apps/backend/src/api/store/products/catalog-browse-projection.ts",
+" M apps/backend/src/api/store/products/load-store-product-list.fidelity.test.ts",
+" M apps/backend/src/api/store/products/load-store-product-list.ts",
+" M apps/storefront/src/lib/catalog-browse-client-product.fidelity.test.ts",
+" M apps/storefront/src/lib/catalog-browse-client-product.ts"
+],
+"ahead_main": 11,
+"behind_main": 831,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-storefront-perf-20260716",
+"short": "~/Documents/projects/furniture-commerce-storefront-perf-20260716",
+"branch": "perf/storefront-catalog-loading-20260716",
+"detached": false,
+"head": "127d024f035dcc7e47f7960ead05da5cdb675174",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 843,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-storefront-perf-control-20260716",
+"short": "~/Documents/projects/furniture-commerce-storefront-perf-control-20260716",
+"branch": "qa/storefront-perf-control-20260716",
+"detached": false,
+"head": "12ff9a7d466cb734ca9c3bd5a8d7dfd65836ccff",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 845,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-admin-critical-defects-20260729",
+"short": "~/Documents/projects/furniture-commerce-wt-admin-critical-defects-20260729",
+"branch": "fix/admin-lifecycle-order-gate-sales-preview-20260729",
+"detached": false,
+"head": "ad6de4e28b2423296d6639be2f3b7e5861189362",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 647,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-backend-ci-install-resilience-v2-20260805",
+"short": "~/Documents/projects/furniture-commerce-wt-backend-ci-install-resilience-v2-20260805",
+"branch": "fix/backend-ci-install-resilience-v2-20260805",
+"detached": false,
+"head": "e67f4fe3edaf51a2fc3cd10622ee230e3c48275c",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 363,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-backend-ci-registry-hardening-20260805",
+"short": "~/Documents/projects/furniture-commerce-wt-backend-ci-registry-hardening-20260805",
+"branch": "fix/backend-ci-registry-hardening-20260805",
+"detached": false,
+"head": "c1f800122ef214268f5041a51eac445b24d8f75a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 365,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-backend-seed-packaging-20260728",
+"short": "~/Documents/projects/furniture-commerce-wt-backend-seed-packaging-20260728",
+"branch": "fix/backend-seed-runtime-packaging-20260728",
+"detached": false,
+"head": "f6f68d91a52b107cb6c8cafbefae277f768eefc2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 684,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-build-provenance-20260721",
+"short": "~/Documents/projects/furniture-commerce-wt-build-provenance-20260721",
+"branch": "chore/build-provenance-active-manifest-20260721",
+"detached": false,
+"head": "b69f4e7ab561950329cea6182e890eff7f0a8cbe",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 754,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-buyer-quality-20260807",
+"short": "~/Documents/projects/furniture-commerce-wt-buyer-quality-20260807",
+"branch": "fix/storefront-buyer-quality-pass",
+"detached": false,
+"head": "6f6e470095cc1cb986b1abcb3c99c0c9dfc979b4",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 243,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-buyer-quality-int-20260807",
+"short": "~/Documents/projects/furniture-commerce-wt-buyer-quality-int-20260807",
+"branch": "chore/integrate-buyer-quality-pass-20260807",
+"detached": false,
+"head": "1afc30416fbee340b4561cad8f3afd7f9bb02a1d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 3,
+"behind_main": 235,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-catalog-merchandising-integrate-20260721",
+"short": "~/Documents/projects/furniture-commerce-wt-catalog-merchandising-integrate-20260721",
+"branch": "fix/catalog-merchandising-integrate-20260721",
+"detached": false,
+"head": "9c569430f6f261dc24d091fc7ad6571b8261abad",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 784,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-catalog-merchandising-release-20260721",
+"short": "~/Documents/projects/furniture-commerce-wt-catalog-merchandising-release-20260721",
+"branch": null,
+"detached": true,
+"head": "5683afa62890531f26b6e53b25800173c8efbb20",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 783,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-catalog-owner-decisions-20260722",
+"short": "~/Documents/projects/furniture-commerce-wt-catalog-owner-decisions-20260722",
+"branch": "feat/catalog-owner-decision-workspace-20260722",
+"detached": false,
+"head": "a2083581e7fe3c85cb513e6ef740fa5c5394593f",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 730,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-catalog-search-placeholder-360-20260805",
+"short": "~/Documents/projects/furniture-commerce-wt-catalog-search-placeholder-360-20260805",
+"branch": null,
+"detached": true,
+"head": "2369405dcd2902d7878481cb4068a7a6fc31a14a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 343,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-ci-yarn-ansi-429-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-ci-yarn-ansi-429-20260806",
+"branch": "fix/ci-yarn-ansi-429-retry-classification-20260806",
+"detached": false,
+"head": "aa54392fb42500f8ddb3894139546b26ea99645d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 354,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-contacts-messenger-layout-polish-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-contacts-messenger-layout-polish-20260804",
+"branch": "fix/storefront-contacts-messenger-layout-polish-20260804",
+"detached": false,
+"head": "4920c0746f663450038c37e137b99081662222cb",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 367,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-contacts-messenger-ui-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-contacts-messenger-ui-20260804",
+"branch": "fix/storefront-contacts-messenger-ui-20260804",
+"detached": false,
+"head": "9230aa5667492e872be7324f3db837302b874ee9",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 428,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-contacts-postmerge-08731e0",
+"short": "~/Documents/projects/furniture-commerce-wt-contacts-postmerge-08731e0",
+"branch": null,
+"detached": true,
+"head": "08731e01ecf6905f700e822ff8b648a52ad2d21e",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/.yarn"
+],
+"ahead_main": 0,
+"behind_main": 366,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-control-plane-owner-review-20260722",
+"short": "~/Documents/projects/furniture-commerce-wt-control-plane-owner-review-20260722",
+"branch": "chore/control-plane-owner-review-governance-20260722",
+"detached": false,
+"head": "7d11e97b1070efa443fefd4db64f29d89239239b",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 737,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-cutover-db-label-rollback-hotfix-20260731",
+"short": "~/Documents/projects/furniture-commerce-wt-cutover-db-label-rollback-hotfix-20260731",
+"branch": "fix/public-demo-cutover-db-label-rollback-20260731",
+"detached": false,
+"head": "429b5392bf6985056e60dcf91dcdb4baa16dc98f",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 512,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-cutover-hotfix-verify-20260801",
+"short": "~/Documents/projects/furniture-commerce-wt-cutover-hotfix-verify-20260801",
+"branch": null,
+"detached": true,
+"head": "d128217dee9740479c1485e132dc161b40c65779",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 511,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-cutover-tooling-verify-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-cutover-tooling-verify-20260730",
+"branch": null,
+"detached": true,
+"head": "44898da9f93fb5b418a62e4044e2d915d76be588",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 568,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-cutover-transactions-20260721",
+"short": "~/Documents/projects/furniture-commerce-wt-cutover-transactions-20260721",
+"branch": "chore/cutover-transaction-governance-20260721",
+"detached": false,
+"head": "14675da8efdeec641374c98a3932824ed4c9e3f5",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 750,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-d9d2330-bake-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-d9d2330-bake-20260806",
+"branch": null,
+"detached": true,
+"head": "d9d2330dc64d45835f0f6a5eed05c9fccd8f74fe",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 338,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-demo-cutover-tooling-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-demo-cutover-tooling-20260730",
+"branch": "ops/public-demo-pair-cutover-20260730",
+"detached": false,
+"head": "cc433c3075c7cfb032fc2ecf5d7699338a099dce",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 575,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-demo-deploy-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-demo-deploy-20260730",
+"branch": null,
+"detached": true,
+"head": "7136573f05b97c8b92464be934c3d89dba8d9f16",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 588,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-digest-authority-20260805",
+"short": "~/Documents/projects/furniture-commerce-wt-digest-authority-20260805",
+"branch": null,
+"detached": true,
+"head": "8e749e4cd7aaa096fdb3729a3247ef016ffea2b8",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 349,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-dokploy-3000-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-dokploy-3000-20260806",
+"branch": "fix/dokploy-port-3000-private-exposure-20260806",
+"detached": false,
+"head": "510a610b1496aed7979e79083b446e0abc4b6d48",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 339,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-env-gov-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-env-gov-20260730",
+"branch": "fix/environment-scoped-release-governance-20260730",
+"detached": false,
+"head": "05275661267dc149105684b19d32fe568e27873c",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 578,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-environment-governance-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-environment-governance-20260730",
+"branch": "fix/environment-governance-20260730",
+"detached": false,
+"head": "287b2de2c667a309e54d27bb32cf5a06d7c4fcad",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 563,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-helper-provenance-fix-20260803",
+"short": "~/Documents/projects/furniture-commerce-wt-helper-provenance-fix-20260803",
+"branch": "fix/production-helper-provenance-metadata-20260803",
+"detached": false,
+"head": "946a64d577a26e100dd76615bbd331a6fc3c1b5b",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 462,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-host-publish-20260801",
+"short": "~/Documents/projects/furniture-commerce-wt-host-publish-20260801",
+"branch": "fix/host-publish-check-json-default-20260801",
+"detached": false,
+"head": "676342ec2b3653dfc88bab747f34f9a4609273ed",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 505,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-live-reconciliation-20260722",
+"short": "~/Documents/projects/furniture-commerce-wt-live-reconciliation-20260722",
+"branch": "chore/live-reconciliation-intent-governance-20260722",
+"detached": false,
+"head": "36b3cd4b1f036e236c802f1c67aab117c351b8e5",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 735,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-local-current-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-local-current-20260804",
+"branch": "local/current-main-20260804",
+"detached": false,
+"head": "600e30c434aa59b4220d7afec4260fa88c953458",
+"dirty_n": 3,
+"dirty_sample": [
+" D apps/backend/static/products/.gitignore",
+"?? apps/backend/node_modules",
+"?? apps/backend/static/products"
+],
+"ahead_main": 0,
+"behind_main": 429,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-main-after-pr170-20260805",
+"short": "~/Documents/projects/furniture-commerce-wt-main-after-pr170-20260805",
+"branch": null,
+"detached": true,
+"head": "e486fd203c63b1c64388121be47d948557f48531",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 360,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-main-canon-20260808",
+"short": "~/Documents/projects/furniture-commerce-wt-main-canon-20260808",
+"branch": null,
+"detached": true,
+"head": "740c005893bdb0f2a428803192b15187c535e8f8",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 202,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-main-conv-sim-20260808T093302Z",
+"short": "~/Documents/projects/furniture-commerce-wt-main-conv-sim-20260808T093302Z",
+"branch": "verify/main-convergence-20260808T093302Z",
+"detached": false,
+"head": "218439744da427d0b5652f2b3808545ebb1d9455",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 235,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-max-direct-link-20260803",
+"short": "~/Documents/projects/furniture-commerce-wt-max-direct-link-20260803",
+"branch": "fix/storefront-max-direct-link-20260803",
+"detached": false,
+"head": "600e30c434aa59b4220d7afec4260fa88c953458",
+"dirty_n": 11,
+"dirty_sample": [
+" D apps/backend/static/products/.gitignore",
+" M apps/storefront/src/app/globals.css",
+" M apps/storefront/src/app/layout.tsx",
+" M apps/storefront/src/components/contact-messenger-actions.tsx",
+" M apps/storefront/src/components/site-footer.tsx",
+" M apps/storefront/src/lib/security-headers.fidelity.test.ts",
+" M apps/storefront/src/lib/woodright-copy.ts",
+" M apps/storefront/src/proxy.ts",
+"?? apps/backend/static/products",
+"?? apps/storefront/src/components/footer-brand-logo.tsx",
+"?? apps/storefront/src/components/site-footer-chrome.tsx"
+],
+"ahead_main": 0,
+"behind_main": 429,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-media-gate-v2-20260729",
+"short": "~/Documents/projects/furniture-commerce-wt-media-gate-v2-20260729",
+"branch": "fix/backup-recovery-point-freshness-contract-20260730",
+"detached": false,
+"head": "e33404497082fe5098bf0ea16660fcb0edde82e2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 593,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-media-gate-v2-validate-20260729",
+"short": "~/Documents/projects/furniture-commerce-wt-media-gate-v2-validate-20260729",
+"branch": null,
+"detached": true,
+"head": "cd61325e915b9a89dec60527ffc75f1fec3f6ddb",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 626,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-media-promotion-hardening-20260724",
+"short": "~/Documents/projects/furniture-commerce-wt-media-promotion-hardening-20260724",
+"branch": "ops/media-promotion-hardening-20260724",
+"detached": false,
+"head": "2a1c5df29180d2ac799098590bc6229ac27f3f82",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 702,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-memlimits-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-memlimits-20260806",
+"branch": "fix/container-memory-limits-capacity-20260806",
+"detached": false,
+"head": "baefa700601ee5714c2250032e6d69138256ee31",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 337,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-mgv2-ff-a378201f561bc99d9e8715d66d25006b8a03a64f",
+"short": "~/Documents/projects/furniture-commerce-wt-mgv2-ff-a378201f561bc99d9e8715d66d25006b8a03a64f",
+"branch": null,
+"detached": true,
+"head": "a378201f561bc99d9e8715d66d25006b8a03a64f",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 603,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-mobile-audit-20260729",
+"short": "~/Documents/projects/furniture-commerce-wt-mobile-audit-20260729",
+"branch": "fix/mobile-layout-audit-20260729",
+"detached": false,
+"head": "d9e7c8e0d50b2c18e2b09cba16d4a8f588bbd29c",
+"dirty_n": 5,
+"dirty_sample": [
+"?? apps/storefront/scripts/owner-interactions.smoke.cjs",
+"?? apps/storefront/scripts/owner-pdp-capture.smoke.cjs",
+"?? apps/storefront/scripts/owner-visual-qa.smoke.cjs",
+"?? artifacts/",
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 595,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-mobile-layout-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-mobile-layout-20260806",
+"branch": "fix/storefront-mobile-layout-system",
+"detached": false,
+"head": "8c7c76ef443d51dcfe3eadca9a6426ca6c96f064",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 825,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-mobile-quality-20260812",
+"short": "~/Documents/projects/furniture-commerce-wt-mobile-quality-20260812",
+"branch": "fix/storefront-mobile-quality-pass",
+"detached": false,
+"head": "347fce98ebd5f1da8d9abbdbf41b088b2f37fd28",
+"dirty_n": 1,
+"dirty_sample": [
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 200,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-monitor-identity-20260805",
+"short": "~/Documents/projects/furniture-commerce-wt-monitor-identity-20260805",
+"branch": null,
+"detached": true,
+"head": "e486fd203c63b1c64388121be47d948557f48531",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 360,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-next-dev-overlays-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-next-dev-overlays-20260804",
+"branch": "fix/storefront-next-dev-overlay-errors-20260804",
+"detached": false,
+"head": "ad944b88f88b2e4c3d36a725b88ba60ca3db6563",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 429,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-oci-owner-label-20260723",
+"short": "~/Documents/projects/furniture-commerce-wt-oci-owner-label-20260723",
+"branch": "chore/storefront-deployment-owner-label-20260723",
+"detached": false,
+"head": "a1b7d1759a3294a32844bc972a1ef2f0edb42fb2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 2,
+"behind_main": 710,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-order-track-token-20260729",
+"short": "~/Documents/projects/furniture-commerce-wt-order-track-token-20260729",
+"branch": "fix/order-track-token-bootstrap-leak-20260729",
+"detached": false,
+"head": "36cae199b9fb12d5fc9241eb7f5508916872b1bd",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 632,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-owner-review-live-refresh-20260722",
+"short": "~/Documents/projects/furniture-commerce-wt-owner-review-live-refresh-20260722",
+"branch": "feat/owner-review-live-refresh-20260722",
+"detached": false,
+"head": "de81c0f4987b1d61d37fb13aa2880f19fa7653ee",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 727,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pair-monitor-verify-20260731",
+"short": "~/Documents/projects/furniture-commerce-wt-pair-monitor-verify-20260731",
+"branch": null,
+"detached": true,
+"head": "a0470347f60cc08eef09ff8626f745462993a256",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 549,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pass-b1-pdp-containment-20260803",
+"short": "~/Documents/projects/furniture-commerce-wt-pass-b1-pdp-containment-20260803",
+"branch": "fix/pass-b1-pdp-upholstery-containment-20260803",
+"detached": false,
+"head": "f7dbea9e890f5b9eaba0598f2537bd0b8a58000f",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 454,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pass-e-cart-forms-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-pass-e-cart-forms-20260804",
+"branch": "fix/pass-e-cart-forms-layout-20260804",
+"detached": false,
+"head": "c5b2fddd8d8b3606631b652f2aaf97c0e58169c2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 406,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pass-e-owner-review-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-pass-e-owner-review-20260804",
+"branch": null,
+"detached": true,
+"head": "c5b2fddd8d8b3606631b652f2aaf97c0e58169c2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 406,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pass-f-localization-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-pass-f-localization-20260804",
+"branch": "fix/pass-f-contextual-localization-20260804",
+"detached": false,
+"head": "232679e04a2aa50e79319bae2e39a52944bc8466",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 406,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pass-f-owner-review-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-pass-f-owner-review-20260804",
+"branch": null,
+"detached": true,
+"head": "232679e04a2aa50e79319bae2e39a52944bc8466",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 406,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pin-owner-hotfix-20260803",
+"short": "~/Documents/projects/furniture-commerce-wt-pin-owner-hotfix-20260803",
+"branch": "fix/public-demo-pin-owner-preserve-20260803",
+"detached": false,
+"head": "6ced8d64604db6196cf739a8a4fc3dd0af019b80",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 459,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pin-owner-hotfix-verify-20260803",
+"short": "~/Documents/projects/furniture-commerce-wt-pin-owner-hotfix-verify-20260803",
+"branch": null,
+"detached": true,
+"head": "c6728ff2e8c0d6b80f5d7e4e05dfdb3e3925d9c9",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 458,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-post-merge-main-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-post-merge-main-20260730",
+"branch": null,
+"detached": true,
+"head": "a5f7596561414eecdda3b69034b55d5aaa14f7a7",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 594,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr153-baseline-368-full",
+"short": "~/Documents/projects/furniture-commerce-wt-pr153-baseline-368-full",
+"branch": null,
+"detached": true,
+"head": "9b650856d6f4ac994bc1fe69a7eda06c418c69af",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 427,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr153-prod-candidate-bake-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-pr153-prod-candidate-bake-20260804",
+"branch": null,
+"detached": true,
+"head": "9b650856d6f4ac994bc1fe69a7eda06c418c69af",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 427,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr167-after-ci-hardening-20260805",
+"short": "~/Documents/projects/furniture-commerce-wt-pr167-after-ci-hardening-20260805",
+"branch": "integrate/pr167-after-ci-hardening-20260805",
+"detached": false,
+"head": "ade7540f1e38c13c88735620ae26efc261203818",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 362,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr167-after-resilience-v2-20260805",
+"short": "~/Documents/projects/furniture-commerce-wt-pr167-after-resilience-v2-20260805",
+"branch": "integrate/pr167-after-resilience-v2-20260805",
+"detached": false,
+"head": "6d95ff2e5dd90b91438670e5e866cc2db802172d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 357,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr167-merge-verify-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-pr167-merge-verify-20260806",
+"branch": null,
+"detached": true,
+"head": "6d95ff2e5dd90b91438670e5e866cc2db802172d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 357,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr167-post-merge-main-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-pr167-post-merge-main-20260806",
+"branch": null,
+"detached": true,
+"head": "ff2a3be365507cf8e3ce37ebc627a13b3946bf60",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 356,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr173-owner-review-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-pr173-owner-review-20260806",
+"branch": null,
+"detached": true,
+"head": "bdc009eaf8fbe0f95f7267843aa66504de9c236d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 359,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr173-postmerge-main-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-pr173-postmerge-main-20260806",
+"branch": null,
+"detached": true,
+"head": "bf9f68f4cc2ba687926e89681e32d8397cc8fd3e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 353,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr174-postmerge-a708500-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-pr174-postmerge-a708500-20260806",
+"branch": null,
+"detached": true,
+"head": "a70850083dc4a03e5e80c2cb00e599091e0a1499",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 334,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr175-hotfix-20260806T221748Z",
+"short": "~/Documents/projects/furniture-commerce-wt-pr175-hotfix-20260806T221748Z",
+"branch": null,
+"detached": true,
+"head": "3ebf51b66e7beda91298169f1647a16cf19b014a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 826,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr175-hotfix-int-20260806T221945Z",
+"short": "~/Documents/projects/furniture-commerce-wt-pr175-hotfix-int-20260806T221945Z",
+"branch": "integrate/pr175-mobile-hotfix-20260806T221945Z",
+"detached": false,
+"head": "6ed160814cb64a62df4754a163975b6d5f21c0d8",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 245,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr175-ti-20260806T112432Z",
+"short": "~/Documents/projects/furniture-commerce-wt-pr175-ti-20260806T112432Z",
+"branch": "integrate/pr175-public-demo-20260806T112432Z",
+"detached": false,
+"head": "ca9a2ea260e74addac8b0112b5fd0fbff8f2d6a7",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 258,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr176-merge-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-pr176-merge-20260806",
+"branch": null,
+"detached": true,
+"head": "46bdeed38a488ba78c93236d9c85ab5a882a87e2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 345,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr178-final-20260807",
+"short": "~/Documents/projects/furniture-commerce-wt-pr178-final-20260807",
+"branch": null,
+"detached": true,
+"head": "78842b2745b251fd35381e4289a731f3a8f46803",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 332,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr178-postmerge-main-20260807",
+"short": "~/Documents/projects/furniture-commerce-wt-pr178-postmerge-main-20260807",
+"branch": null,
+"detached": true,
+"head": "0b40369b810c456fb02bb7f4bebc50a91d0e22d2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 331,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr53-merge-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-pr53-merge-20260730",
+"branch": null,
+"detached": true,
+"head": "4529b0a8b44f47ba22082a1077e20d962869ecd5",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 606,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr94-admin-fetch-fix-20260728",
+"short": "~/Documents/projects/furniture-commerce-wt-pr94-admin-fetch-fix-20260728",
+"branch": "fix/pr94-admin-fetch-import-20260728",
+"detached": false,
+"head": "f3666dae26ad33474a27208ab6b3f7010ad0cff1",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 664,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pr94-staging-20260728",
+"short": "~/Documents/projects/furniture-commerce-wt-pr94-staging-20260728",
+"branch": null,
+"detached": true,
+"head": "41d932485958adf28afa92a12b125d8619102e94",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 670,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-premium-images",
+"short": "~/Documents/projects/furniture-commerce-wt-premium-images",
+"branch": "fix/premium-home-image-originals-20260723",
+"detached": false,
+"head": "3a060073a3ea30d143ec641d652d2b3f4492d0e6",
+"dirty_n": 1,
+"dirty_sample": [
+" M apps/storefront/tsconfig.production.json"
+],
+"ahead_main": 0,
+"behind_main": 717,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-prod-cand-demo-split-20260803",
+"short": "~/Documents/projects/furniture-commerce-wt-prod-cand-demo-split-20260803",
+"branch": "fix/storefront-prod-candidate-demo-url-split-20260803",
+"detached": false,
+"head": "8d56137f11c14941ff0be0dd18db9a7e1bd16641",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 430,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-prod-expected-readability-20260808",
+"short": "~/Documents/projects/furniture-commerce-wt-prod-expected-readability-20260808",
+"branch": "fix/production-expected-state-readability-20260808",
+"detached": false,
+"head": "a1ff20bfaaa45d68ab2121e9755551e77b0b8e5f",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 231,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-product-card-pass-a-20260801",
+"short": "~/Documents/projects/furniture-commerce-wt-product-card-pass-a-20260801",
+"branch": "fix/product-card-presentation-pass-a-20260801",
+"detached": false,
+"head": "017eb9f6fba1a3f3e04faa329f541beec9781adc",
+"dirty_n": 1,
+"dirty_sample": [
+" M apps/storefront/src/lib/catalog-card-presentation-pass-a.fidelity.test.ts"
+],
+"ahead_main": 0,
+"behind_main": 516,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-production-cutover-execute-20260801",
+"short": "~/Documents/projects/furniture-commerce-wt-production-cutover-execute-20260801",
+"branch": "fix/production-candidate-cutover-execute-20260801",
+"detached": false,
+"head": "ee2cec569ac7452c956f1ac7387fb2d6006eee1d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 499,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-production-image-bake-20260731",
+"short": "~/Documents/projects/furniture-commerce-wt-production-image-bake-20260731",
+"branch": "fix/production-candidate-image-bake-20260731",
+"detached": false,
+"head": "51fb6d836062b23905e98af1830e253114053e71",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 518,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-production-skew-recovery-20260802",
+"short": "~/Documents/projects/furniture-commerce-wt-production-skew-recovery-20260802",
+"branch": null,
+"detached": true,
+"head": "c30ed38d185209ee25141b284705a34e7c5dea92",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 472,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-public-demo-artifact-contam-baseline-ff2a3be",
+"short": "~/Documents/projects/furniture-commerce-wt-public-demo-artifact-contam-baseline-ff2a3be",
+"branch": null,
+"detached": true,
+"head": "ff2a3be365507cf8e3ce37ebc627a13b3946bf60",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 356,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-public-demo-artifact-contamination-v2-20260806",
+"short": "~/Documents/projects/furniture-commerce-wt-public-demo-artifact-contamination-v2-20260806",
+"branch": "fix/public-demo-artifact-contamination-v2-20260806",
+"detached": false,
+"head": "9df5928ebd8511ecdc32603bbe734e3c4ca18a28",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 335,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-public-demo-bake-gate-20260802",
+"short": "~/Documents/projects/furniture-commerce-wt-public-demo-bake-gate-20260802",
+"branch": "fix/public-demo-bake-gate-20260802",
+"detached": false,
+"head": "d22e2476b4a473f6b03ffed53729e59b6e6b00c6",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 494,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-public-demo-contamination-fix-20260802",
+"short": "~/Documents/projects/furniture-commerce-wt-public-demo-contamination-fix-20260802",
+"branch": "fix/public-demo-qa-board-contamination-20260802",
+"detached": false,
+"head": "8268cff73a6645da2a28c985a88e95385fc0aa87",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 492,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-public-demo-contamination-fix-20260805",
+"short": "~/Documents/projects/furniture-commerce-wt-public-demo-contamination-fix-20260805",
+"branch": "fix/public-demo-production-apex-contamination-20260805",
+"detached": false,
+"head": "fbdb68b87689fc99748c43607a749babb3d2e6aa",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 388,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-public-demo-deploy-20260731",
+"short": "~/Documents/projects/furniture-commerce-wt-public-demo-deploy-20260731",
+"branch": null,
+"detached": true,
+"head": "a0470347f60cc08eef09ff8626f745462993a256",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 549,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-public-demo-env-gov-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-public-demo-env-gov-20260730",
+"branch": "fix/pair-monitor-toctou-20260730",
+"detached": false,
+"head": "cd95b16e4c113c8897774d6b6205f601d2707a1e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 550,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-public-demo-freeze-hold-20260731",
+"short": "~/Documents/projects/furniture-commerce-wt-public-demo-freeze-hold-20260731",
+"branch": "fix/install-hold-validation-freeze-helper-20260731",
+"detached": false,
+"head": "dc833450cdc9377fb537a877868b97b41db95bb6",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 546,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-public-launch-blocker-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-public-launch-blocker-20260804",
+"branch": null,
+"detached": true,
+"head": "600e30c434aa59b4220d7afec4260fa88c953458",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 429,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-public-launch-blockers-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-public-launch-blockers-20260730",
+"branch": "fix/public-launch-blockers-20260730",
+"detached": false,
+"head": "c2455dcccaa8d9004f139cf850f526a93d949680",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 554,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-public-launch-prep-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-public-launch-prep-20260730",
+"branch": "report-main",
+"detached": false,
+"head": "9946b42e542071836b2b3e56a65e11a5afafe07f",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 558,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-pubrev-ui-polish-20260724",
+"short": "~/Documents/projects/furniture-commerce-wt-pubrev-ui-polish-20260724",
+"branch": "feat/pubrev-ui-compact-gallery-20260724",
+"detached": false,
+"head": "f0228c38b5225ae19c8255503bedc84ecf7a6158",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 689,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-redact-token-logs-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-redact-token-logs-20260730",
+"branch": "fix/redact-order-track-token-access-logs-20260730",
+"detached": false,
+"head": "6f9862b95c54819d04f6d9905afa05a176d319e6",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 580,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-release-governance-20260721",
+"short": "~/Documents/projects/furniture-commerce-wt-release-governance-20260721",
+"branch": "chore/release-runtime-governance-20260721",
+"detached": false,
+"head": "1cc85a23a8da24e76b43b0b97dc17cb833789721",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 780,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-rooms-production-seed-gate-20260728",
+"short": "~/Documents/projects/furniture-commerce-wt-rooms-production-seed-gate-20260728",
+"branch": "fix/rooms-v1-production-seed-gate-20260728",
+"detached": false,
+"head": "3fc55fad99b9b6ba04d0fb01d7974146efa21d43",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 662,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-rooms-scenario-b-20260725",
+"short": "~/Documents/projects/furniture-commerce-wt-rooms-scenario-b-20260725",
+"branch": "fix/rooms-scenario-b-seed-20260725",
+"detached": false,
+"head": "eff0ea8b9fcb3ad84c07049a5827d5f269b75929",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 682,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-rooms-thumbnail-media-path-20260728",
+"short": "~/Documents/projects/furniture-commerce-wt-rooms-thumbnail-media-path-20260728",
+"branch": "fix/rooms-v1-thumbnail-media-path-20260728",
+"detached": false,
+"head": "9a549dea867eba5559be142f0ed7b945a420929e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 650,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-rooms-v1-owner-20260725",
+"short": "~/Documents/projects/furniture-commerce-wt-rooms-v1-owner-20260725",
+"branch": "feat/rooms-v1-owner-approved-20260725",
+"detached": false,
+"head": "94e29b7f9660a1ff5c04a97155fa179a0c51fada",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 685,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-roomset-acceptance-notes-polish-20260729",
+"short": "~/Documents/projects/furniture-commerce-wt-roomset-acceptance-notes-polish-20260729",
+"branch": "fix/roomset-v1-acceptance-notes-polish-20260729",
+"detached": false,
+"head": "236b4d6d81a5dac81818402d2a7e303b10c35eba",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 629,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-sales-order-lifecycle-20260725",
+"short": "~/Documents/projects/furniture-commerce-wt-sales-order-lifecycle-20260725",
+"branch": "feat/sales-modes-order-lifecycle-20260725",
+"detached": false,
+"head": "430822b17e3eea15f1207a0e05f978f7c45851cb",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 681,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-sf-oci-20260730",
+"short": "~/Documents/projects/furniture-commerce-wt-sf-oci-20260730",
+"branch": "fix/staging-storefront-recreate-and-validation-freeze-hold-20260730",
+"detached": false,
+"head": "16936dd97bb6acc78e18cd5047c60d3f2bc7030e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 573,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-showroom-contacts",
+"short": "~/Documents/projects/furniture-commerce-wt-showroom-contacts",
+"branch": "fix/contacts-action-rows-rebalance-20260730",
+"detached": false,
+"head": "0d2e8eb3f592ccc21a956bed1d4e2a9343943f19",
+"dirty_n": 1,
+"dirty_sample": [
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 584,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-split-release-dq-20260721",
+"short": "~/Documents/projects/furniture-commerce-wt-split-release-dq-20260721",
+"branch": "chore/split-release-dokploy-dq-governance-20260721",
+"detached": false,
+"head": "57415c6d2b9e710c7c29cb373ca1ea47e7da040d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 748,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-unified-cutover-tooling-20260802",
+"short": "~/Documents/projects/furniture-commerce-wt-unified-cutover-tooling-20260802",
+"branch": "fix/unified-public-demo-cutover-tooling-20260802",
+"detached": false,
+"head": "0b29296aa842b706741176bc6593df2d5a0ae140",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 478,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-unified-cutover-verify-20260802",
+"short": "~/Documents/projects/furniture-commerce-wt-unified-cutover-verify-20260802",
+"branch": null,
+"detached": true,
+"head": "c30ed38d185209ee25141b284705a34e7c5dea92",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 472,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-upholstery-pass-b-20260803",
+"short": "~/Documents/projects/furniture-commerce-wt-upholstery-pass-b-20260803",
+"branch": "fix/upholstery-color-normalization-pass-b-20260803",
+"detached": false,
+"head": "2a6d0815a3deb05365d1271359675ca37f82c78e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 456,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-design-20260721",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-design-20260721",
+"branch": "feat/ww-motif-premium-design-20260721",
+"detached": false,
+"head": "4997bb79d03af6bceaa1c249d40088ea4c3ccfc4",
+"dirty_n": 1,
+"dirty_sample": [
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 764,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-integration-20260721",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-integration-20260721",
+"branch": "feat/ww-motif-premium-ui-integrate-20260721",
+"detached": false,
+"head": "9348a10b5f3145f9ba8758964e4596f9564d3f6f",
+"dirty_n": 3,
+"dirty_sample": [
+" D apps/backend/static/products/.gitignore",
+"?? apps/backend/static/products",
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 788,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-motion-polish-20260724",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-motion-polish-20260724",
+"branch": "fix/ww-motif-hover-smoother-20260724",
+"detached": false,
+"head": "2a1c5df29180d2ac799098590bc6229ac27f3f82",
+"dirty_n": 2,
+"dirty_sample": [
+" M apps/storefront/src/app/globals.css",
+" M apps/storefront/tsconfig.production.json"
+],
+"ahead_main": 0,
+"behind_main": 702,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-motion-polish-final-20260724",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-motion-polish-final-20260724",
+"branch": "fix/ww-motif-hover-smoother-final-20260724",
+"detached": false,
+"head": "1a8e7b3237cf6da1523f0216561e0402aef5523a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 693,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-owner-fixes-20260722",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-owner-fixes-20260722",
+"branch": "fix/ww-motif-owner-review-20260722",
+"detached": false,
+"head": "e01bc8f99c403dbf43efd041b96f417cf768f2de",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 725,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-owner-fixes-final-20260723",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-owner-fixes-final-20260723",
+"branch": "fix/ww-motif-owner-review-final-20260723",
+"detached": false,
+"head": "17c44bb3435775c9c715c6985d565fb1fef75bfc",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 718,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-owner-fixes-integration-20260722",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-owner-fixes-integration-20260722",
+"branch": "fix/ww-motif-owner-review-integrate-20260722",
+"detached": false,
+"head": "f73a81628dbf62bcbd4510bb8461c0763313fb9a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 725,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-owner-fixes-reintegrate-20260723",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-owner-fixes-reintegrate-20260723",
+"branch": "fix/ww-motif-owner-review-reintegrate-20260723",
+"detached": false,
+"head": "4a4584463b8c2f9d3dfe0e8c546cf923636af26e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 721,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-ui-20260721",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-ui-20260721",
+"branch": "feat/ww-motif-premium-ui-20260721",
+"detached": false,
+"head": "4e9d3ea111422a990d1e7744cb121c3035a57acb",
+"dirty_n": 18,
+"dirty_sample": [
+" M apps/backend/src/api/store/products/[id]/route.ts",
+" M apps/backend/src/api/store/products/load-store-product-list.ts",
+" M apps/backend/src/links/product-product-extension.ts",
+" M apps/backend/src/modules/bespoke-request/models/bespoke-request.ts",
+" M apps/backend/src/modules/lead/models/lead.ts",
+" M apps/backend/src/modules/payment-link/models/payment-link.ts",
+" M apps/backend/src/modules/product-extension/models/product-type.ts",
+" M apps/backend/src/modules/product-extension/service.ts",
+" M apps/backend/src/modules/room-set/models/room-set-item.ts",
+" M apps/backend/src/modules/room-set/models/room-set.ts",
+" D apps/backend/static/products/.gitignore",
+" M apps/storefront/tsconfig.json"
+],
+"ahead_main": 1,
+"behind_main": 864,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/furniture-commerce-media-append-wt",
+"short": "~/furniture-commerce-media-append-wt",
+"branch": "data/approved-legacy-site-media-supplement",
+"detached": false,
+"head": "f704ea4df657afdbcca7c639e688a35ce3998dd0",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 910,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/bespoke-nav-terminology-20260831",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/bespoke-nav-terminology-20260831",
+"branch": "feat/bespoke-nav-terminology-20260831",
+"detached": false,
+"head": "737dd23d92cccb71313fed587abf821b417eb8ee",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 115,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ced2510-release-20260821",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ced2510-release-20260821",
+"branch": null,
+"detached": true,
+"head": "ced25101f71f34caf98b62d1e7855be4f91ef977",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 175,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/fix-header-woodright-kids-20260817",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/fix-header-woodright-kids-20260817",
+"branch": "fix/storefront-header-woodright-kids-regression",
+"detached": false,
+"head": "8575393b68b1cb8fbda52815cf8999cdb8285541",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 183,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ops-apex-new-stack-failclosed-20260918",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ops-apex-new-stack-failclosed-20260918",
+"branch": "ops/apex-new-stack-a-failclosed-20260918",
+"detached": false,
+"head": "ae3eae2cd72f20684d973a9e21f820f0c02d8688",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 1,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ops-candidate-compose-runtime-20260907",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ops-candidate-compose-runtime-20260907",
+"branch": "ops/candidate-compose-runtime-privileged-20260907",
+"detached": false,
+"head": "e27152a997e9e644a6a071acd1982b6e5c855cfa",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 78,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ops-candidate-env-fingerprint-20260905",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ops-candidate-env-fingerprint-20260905",
+"branch": "ops/candidate-compose-env-privileged-fingerprint-20260905",
+"detached": false,
+"head": "3cd327dc6d3fa8c8bdc97f8054e129094f3c0267",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 91,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ops-candidate-env-pin-write-20260907",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ops-candidate-env-pin-write-20260907",
+"branch": "ops/candidate-compose-env-privileged-pin-write-20260907",
+"detached": false,
+"head": "01c027ccea5a89659ca776f58d1712496f2102b7",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 89,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ops-mutation-execution-serialization-20260812",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/ops-mutation-execution-serialization-20260812",
+"branch": "fix/ops-mutation-execution-serialization-20260812",
+"detached": false,
+"head": "59f3ba75b7fcbdff4ce12ee2cc14fd5c31e413f5",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 203,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/pr195-main-4533c53",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/pr195-main-4533c53",
+"branch": null,
+"detached": true,
+"head": "4533c5334b75eab8e353b69c14d894fed0d423ae",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 188,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/pr196-postmerge-main-b4fdd60",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/pr196-postmerge-main-b4fdd60",
+"branch": null,
+"detached": true,
+"head": "b4fdd60b3b982b2a8e169870ad813cf8aff87132",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 182,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/storefront-designers-page-20260815",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce/.woodright-worktrees/storefront-designers-page-20260815",
+"branch": "feat/storefront-designers-page",
+"detached": false,
+"head": "38e233f1ca5e45d6effda8a83c2bc3ff7926f2f3",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 0,
+"behind_main": 189,
+"head_in_main": true
+}
+],
+"dirty": [
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/partners-wordmarks-20260910",
+"short": "~/.woodright/worktrees/partners-wordmarks-20260910",
+"branch": "feat/partners-wordmarks-20260910",
+"detached": false,
+"head": "a7e7e91f2706c6ebf4827184e455e5a3a32ac33d",
+"dirty_n": 198,
+"dirty_sample": [
+"?? .cursor/rules/dash-typography.mdc",
+"?? .cursor/skills/",
+"?? .local/",
+"?? .vscode/",
+"?? apps/backend/node_modules",
+"?? apps/backend/src/admin/assets/",
+"?? apps/backend/src/lib/country-operator-gallery-order.ts",
+"?? apps/backend/src/lib/medusa-image-url.ts",
+"?? apps/backend/src/lib/medusa-product-media.test.ts",
+"?? apps/backend/src/lib/medusa-product-media.ts",
+"?? apps/backend/src/lib/missing-photo-placeholder.ts",
+"?? apps/backend/src/lib/oliver-fabric-from-media.ts"
+],
+"ahead_main": 0,
+"behind_main": 17,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-normalization",
+"short": "~/Documents/projects/furniture-commerce-catalog-normalization",
+"branch": "audit/catalog-normalization-20260712",
+"detached": false,
+"head": "e3e43b3f39d227daf63a9d1971a6ffb2dee74642",
+"dirty_n": 39,
+"dirty_sample": [
+" M apps/backend/src/api/admin/bespoke-requests/[id]/route.ts",
+" M apps/backend/src/api/middlewares.ts",
+" M apps/backend/src/api/store/products/[id]/route.ts",
+" M apps/backend/src/api/store/products/catalog-browse-projection.fidelity.test.ts",
+" M apps/backend/src/api/store/products/catalog-browse-projection.ts",
+" M apps/backend/src/api/store/products/load-store-product-list.ts",
+" M apps/backend/src/api/store/room-sets/[slug]/route.ts",
+" M apps/backend/src/links/product-product-extension.ts",
+" M apps/backend/src/modules/bespoke-request/models/bespoke-request.ts",
+" M apps/backend/src/modules/lead/models/lead.ts",
+" M apps/backend/src/modules/payment-link/models/payment-link.ts",
+" M apps/backend/src/modules/product-extension/models/product-type.ts"
+],
+"ahead_main": 0,
+"behind_main": 864,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/clean-boot-audit-50174ba",
+"short": "~/.woodright/worktrees/clean-boot-audit-50174ba",
+"branch": null,
+"detached": true,
+"head": "50174baf9bff2f76625fb8710103528ff030d940",
+"dirty_n": 31,
+"dirty_sample": [
+" M apps/backend/medusa-config.ts",
+" M apps/backend/src/api/admin/bespoke-requests/[id]/route.ts",
+" M apps/backend/src/api/admin/bespoke-requests/route.ts",
+" M apps/backend/src/api/admin/leads/[id]/route.ts",
+" M apps/backend/src/api/admin/leads/route.ts",
+" M apps/backend/src/api/admin/payment-links/[id]/route.ts",
+" M apps/backend/src/api/admin/payment-links/route.ts",
+" M apps/backend/src/api/admin/room-sets/[id]/route.ts",
+" M apps/backend/src/api/admin/room-sets/route.ts",
+" M apps/backend/src/api/store/bespoke-requests/route.ts",
+" M apps/backend/src/api/store/leads/route.ts",
+" M apps/backend/src/modules/bespoke-request/models/bespoke-request.ts"
+],
+"ahead_main": 0,
+"behind_main": 824,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-design-recovery-20260715",
+"short": "~/Documents/projects/furniture-commerce-design-recovery-20260715",
+"branch": "recovery/storefront-design-20260715",
+"detached": false,
+"head": "4c80c768fac865f226a8794690117fecb8d67756",
+"dirty_n": 30,
+"dirty_sample": [
+" M apps/storefront/src/app/globals.css",
+" M apps/storefront/src/app/loading.tsx",
+" M apps/storefront/src/app/product/[id]/page.tsx",
+" M apps/storefront/src/components/header-logo.tsx",
+" M apps/storefront/src/components/pdp-hero-affordance.tsx",
+" M apps/storefront/src/components/product-card-media-gallery-core.tsx",
+" M apps/storefront/src/components/site-footer.tsx",
+" M apps/storefront/src/components/site-header.tsx",
+" M apps/storefront/src/lib/card-color-media.ts",
+" M apps/storefront/src/lib/en-name-ru.ts",
+" M apps/storefront/src/lib/format-ru-copy.fidelity.test.ts",
+" M apps/storefront/src/lib/format-ru-copy.ts"
+],
+"ahead_main": 6,
+"behind_main": 836,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-50174ba",
+"short": "~/.woodright/worktrees/admin-workspace-50174ba",
+"branch": null,
+"detached": true,
+"head": "50174baf9bff2f76625fb8710103528ff030d940",
+"dirty_n": 23,
+"dirty_sample": [
+" M apps/backend/medusa-config.ts",
+" M apps/backend/src/api/admin/bespoke-requests/[id]/route.ts",
+" M apps/backend/src/api/admin/bespoke-requests/route.ts",
+" M apps/backend/src/api/admin/leads/[id]/route.ts",
+" M apps/backend/src/api/admin/leads/route.ts",
+" M apps/backend/src/api/admin/payment-links/[id]/route.ts",
+" M apps/backend/src/api/admin/payment-links/route.ts",
+" M apps/backend/src/api/admin/room-sets/[id]/route.ts",
+" M apps/backend/src/api/admin/room-sets/route.ts",
+" M apps/backend/src/api/store/bespoke-requests/route.ts",
+" M apps/backend/src/api/store/leads/route.ts",
+" M apps/backend/src/modules/bespoke-request/models/bespoke-request.ts"
+],
+"ahead_main": 0,
+"behind_main": 824,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce",
+"short": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce",
+"branch": "docs/timeweb-demo-cutover-20260917",
+"detached": false,
+"head": "2205a6aa3e5dc5c1503b0d21eec3273e2edf3be5",
+"dirty_n": 22,
+"dirty_sample": [
+" M apps/storefront/src/app/catalog/page.tsx",
+" M apps/storefront/src/app/globals.css",
+" M apps/storefront/src/app/page.tsx",
+" M apps/storefront/src/components/catalog-browse-client.tsx",
+" M apps/storefront/src/components/home/home-classics.tsx",
+" M apps/storefront/src/components/home/home-hero-slideshow.tsx",
+" M apps/storefront/src/components/home/home-hero.tsx",
+" M apps/storefront/src/components/home/home-img.tsx",
+" M apps/storefront/src/components/home/kids-hero.tsx",
+" M apps/storefront/src/components/oliver-card-media-switcher.tsx",
+" M apps/storefront/src/components/product-card-media-gallery-core.tsx",
+" M apps/storefront/src/components/product-card-media-switcher.tsx"
+],
+"ahead_main": 0,
+"behind_main": 36,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/runtime-candidate-main",
+"short": "~/.woodright/worktrees/runtime-candidate-main",
+"branch": null,
+"detached": true,
+"head": "66317570930a9e1b2f96b1d1f6c8e800b12f787e",
+"dirty_n": 18,
+"dirty_sample": [
+" M apps/backend/package.json",
+" M apps/backend/src/admin/routes/woodright/catalog-promo/page.tsx",
+" M apps/backend/src/admin/routes/woodright/contacts/page.tsx",
+" M apps/backend/src/admin/routes/woodright/page.tsx",
+" M apps/backend/src/admin/routes/woodright/partners/page.tsx",
+" M apps/backend/src/admin/routes/woodright/production/page.tsx",
+" M apps/backend/src/admin/routes/woodright/products/[id]/page.tsx",
+" M apps/backend/src/admin/routes/woodright/products/new/page.tsx",
+" M apps/backend/src/admin/routes/woodright/products/page.tsx",
+"?? apps/backend/src/admin/components/woodright/DeskNav.tsx",
+"?? apps/backend/src/admin/lib/use-desk-extras.ts",
+"?? apps/backend/src/admin/routes/woodright/media/"
+],
+"ahead_main": 0,
+"behind_main": 39,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-ui-20260721",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-ui-20260721",
+"branch": "feat/ww-motif-premium-ui-20260721",
+"detached": false,
+"head": "4e9d3ea111422a990d1e7744cb121c3035a57acb",
+"dirty_n": 18,
+"dirty_sample": [
+" M apps/backend/src/api/store/products/[id]/route.ts",
+" M apps/backend/src/api/store/products/load-store-product-list.ts",
+" M apps/backend/src/links/product-product-extension.ts",
+" M apps/backend/src/modules/bespoke-request/models/bespoke-request.ts",
+" M apps/backend/src/modules/lead/models/lead.ts",
+" M apps/backend/src/modules/payment-link/models/payment-link.ts",
+" M apps/backend/src/modules/product-extension/models/product-type.ts",
+" M apps/backend/src/modules/product-extension/service.ts",
+" M apps/backend/src/modules/room-set/models/room-set-item.ts",
+" M apps/backend/src/modules/room-set/models/room-set.ts",
+" D apps/backend/static/products/.gitignore",
+" M apps/storefront/tsconfig.json"
+],
+"ahead_main": 1,
+"behind_main": 864,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-design-mode-20260714",
+"short": "~/Documents/projects/furniture-commerce-design-mode-20260714",
+"branch": "feat/storefront-design-mode-local-20260714",
+"detached": false,
+"head": "b56d225afe54a342f849dda43ab33519829cec67",
+"dirty_n": 12,
+"dirty_sample": [
+" M .cursor/rules/woodright-model-routing.mdc",
+" M apps/backend/src/lib/gallery-content-dedupe.ts",
+" M apps/backend/src/lib/oliver-finish-execution-guard.ts",
+" M apps/storefront/next.config.js",
+" M apps/storefront/src/lib/greenwich-bed-media.ts",
+" M apps/storefront/src/lib/pdp-buyer-gallery-core.ts",
+"?? .cursor/rules/woodright-design-mode-safety.mdc",
+"?? .nosync",
+"?? apps/backend/src/lib/oliver-pdf-catalog-contamination.ts",
+"?? apps/storefront/next-env.d.ts",
+"?? apps/storefront/scripts/design-mode-storefront.sh",
+"?? docs/ai/woodright-design-mode-local-workflow.md"
+],
+"ahead_main": 1,
+"behind_main": 845,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-max-direct-link-20260803",
+"short": "~/Documents/projects/furniture-commerce-wt-max-direct-link-20260803",
+"branch": "fix/storefront-max-direct-link-20260803",
+"detached": false,
+"head": "600e30c434aa59b4220d7afec4260fa88c953458",
+"dirty_n": 11,
+"dirty_sample": [
+" D apps/backend/static/products/.gitignore",
+" M apps/storefront/src/app/globals.css",
+" M apps/storefront/src/app/layout.tsx",
+" M apps/storefront/src/components/contact-messenger-actions.tsx",
+" M apps/storefront/src/components/site-footer.tsx",
+" M apps/storefront/src/lib/security-headers.fidelity.test.ts",
+" M apps/storefront/src/lib/woodright-copy.ts",
+" M apps/storefront/src/proxy.ts",
+"?? apps/backend/static/products",
+"?? apps/storefront/src/components/footer-brand-logo.tsx",
+"?? apps/storefront/src/components/site-footer-chrome.tsx"
+],
+"ahead_main": 0,
+"behind_main": 429,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-staging-rc-20260716",
+"short": "~/Documents/projects/furniture-commerce-staging-rc-20260716",
+"branch": "chore/dokploy-staging-release-20260716",
+"detached": false,
+"head": "b8fa3d24970f54eda155659f338053970e9993d6",
+"dirty_n": 6,
+"dirty_sample": [
+" M apps/backend/src/api/store/products/catalog-browse-projection.fidelity.test.ts",
+" M apps/backend/src/api/store/products/catalog-browse-projection.ts",
+" M apps/backend/src/api/store/products/load-store-product-list.fidelity.test.ts",
+" M apps/backend/src/api/store/products/load-store-product-list.ts",
+" M apps/storefront/src/lib/catalog-browse-client-product.fidelity.test.ts",
+" M apps/storefront/src/lib/catalog-browse-client-product.ts"
+],
+"ahead_main": 11,
+"behind_main": 831,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-public-catalog-defects-20260721",
+"short": "~/Documents/projects/furniture-commerce-fix-public-catalog-defects-20260721",
+"branch": "fix/pricing-card-pdp-cart-parity-20260721",
+"detached": false,
+"head": "c675d8a6eb95148b6f3faf808491575f11c90ab6",
+"dirty_n": 5,
+"dirty_sample": [
+" D apps/backend/static/products/.gitignore",
+"?? apps/backend/.yarn",
+"?? apps/backend/node_modules",
+"?? apps/backend/static/products",
+"?? apps/backend/static/products.empty-bak-20260804/"
+],
+"ahead_main": 0,
+"behind_main": 767,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-mobile-audit-20260729",
+"short": "~/Documents/projects/furniture-commerce-wt-mobile-audit-20260729",
+"branch": "fix/mobile-layout-audit-20260729",
+"detached": false,
+"head": "d9e7c8e0d50b2c18e2b09cba16d4a8f588bbd29c",
+"dirty_n": 5,
+"dirty_sample": [
+"?? apps/storefront/scripts/owner-interactions.smoke.cjs",
+"?? apps/storefront/scripts/owner-pdp-capture.smoke.cjs",
+"?? apps/storefront/scripts/owner-visual-qa.smoke.cjs",
+"?? artifacts/",
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 595,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-app-boundary-20260910",
+"short": "~/.woodright/worktrees/admin-app-boundary-20260910",
+"branch": "wip/admin-app-boundary-20260910",
+"detached": false,
+"head": "c463efd21cca34623cc4a1ce61116d0ffbd04f6c",
+"dirty_n": 4,
+"dirty_sample": [
+"?? apps/backend/node_modules",
+"?? apps/backend/src/scripts/apply-ship-now-v2board.js",
+"?? apps/backend/src/scripts/apply-ship-now-v2board.ts",
+"?? docs/reports/tasks/admin-prod-cutover/"
+],
+"ahead_main": 1,
+"behind_main": 39,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-3b5a27d-accept",
+"short": "~/.woodright/worktrees/admin-workspace-3b5a27d-accept",
+"branch": null,
+"detached": true,
+"head": "3b5a27db5798abc2a20bbdde81f3e49e42bcca3e",
+"dirty_n": 4,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 1,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Developer/furniture-commerce-wt-first-load-veil",
+"short": "~/Developer/furniture-commerce-wt-first-load-veil",
+"branch": "perf/catalog-browse-html-lean-20260917",
+"detached": false,
+"head": "c1d86af61666806ade88943da0f4f28cf82bb834",
+"dirty_n": 4,
+"dirty_sample": [
+" M apps/backend/src/api/store/products/catalog-browse-projection.fidelity.test.ts",
+" M apps/backend/src/api/store/products/catalog-browse-projection.ts",
+" M apps/storefront/src/lib/catalog-browse-client-product.fidelity.test.ts",
+" M apps/storefront/src/lib/catalog-browse-client-product.ts"
+],
+"ahead_main": 0,
+"behind_main": 9,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/typescript7-after-yarn417",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/typescript7-after-yarn417",
+"branch": "experiment/typescript-7-0-2-after-yarn417-20260730",
+"detached": false,
+"head": "e17595ba9f892d4a07f36e222643c85fda8c3263",
+"dirty_n": 4,
+"dirty_sample": [
+" M apps/backend/package.json",
+" M apps/backend/yarn.lock",
+" M apps/storefront/package.json",
+" M apps/storefront/yarn.lock"
+],
+"ahead_main": 0,
+"behind_main": 602,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-cart-eval-20260715",
+"short": "~/Documents/projects/furniture-commerce-cart-eval-20260715",
+"branch": "audit/cart-fields-eval-20260715",
+"detached": false,
+"head": "4c80c768fac865f226a8794690117fecb8d67756",
+"dirty_n": 4,
+"dirty_sample": [
+" M apps/storefront/src/lib/api/cart.ts",
+" M apps/storefront/tsconfig.json",
+"?? apps/storefront/.next-cart-eval/",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 6,
+"behind_main": 836,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-performance-20260715",
+"short": "~/Documents/projects/furniture-commerce-catalog-performance-20260715",
+"branch": "perf/catalog-loading-20260715",
+"detached": false,
+"head": "a5d2f47a398243e9315f3cc9493f70ef414e0812",
+"dirty_n": 4,
+"dirty_sample": [
+"?? apps/backend/node_modules",
+"?? apps/storefront/next-env.d.ts",
+"?? apps/storefront/scripts/catalog-ssr-img-gate.mjs",
+"?? tmp/"
+],
+"ahead_main": 2,
+"behind_main": 856,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-281c445",
+"short": "~/.woodright/worktrees/admin-workspace-281c445",
+"branch": null,
+"detached": true,
+"head": "281c445c3af8978a6e4fd3210477f9ac99a8d654",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 3,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-3b5a27d",
+"short": "~/.woodright/worktrees/admin-workspace-3b5a27d",
+"branch": null,
+"detached": true,
+"head": "3b5a27db5798abc2a20bbdde81f3e49e42bcca3e",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 1,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-e6c355f",
+"short": "~/.woodright/worktrees/admin-workspace-e6c355f",
+"branch": null,
+"detached": true,
+"head": "e6c355fae56a235db3cc2b6f1a28b83fe32b0824",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 2,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/fix-admin-workspace-boot-hygiene",
+"short": "~/.woodright/worktrees/fix-admin-workspace-boot-hygiene",
+"branch": "fix/admin-workspace-boot-hygiene-50174ba",
+"detached": false,
+"head": "281c445c3af8978a6e4fd3210477f9ac99a8d654",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 3,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/main-backend-for-next16",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/main-backend-for-next16",
+"branch": null,
+"detached": true,
+"head": "1c7290ea9f0ca32912c50db4c284bc4a6f2bd183",
+"dirty_n": 3,
+"dirty_sample": [
+" D apps/backend/static/products/.gitignore",
+"?? apps/backend/static/products",
+"?? apps/backend/static/products.empty-local/"
+],
+"ahead_main": 0,
+"behind_main": 577,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-main-post-merge-20260715",
+"short": "~/Documents/projects/furniture-commerce-main-post-merge-20260715",
+"branch": "qa/main-post-design-merge-20260715",
+"detached": false,
+"head": "899695f44ebcd71c24ab99fe1b6c9b5118132e7b",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/storefront/.next-post-merge-dev/",
+"?? apps/storefront/.yarn",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 849,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-qa-runtime",
+"short": "~/Documents/projects/furniture-commerce-qa-runtime",
+"branch": null,
+"detached": true,
+"head": "a5d2f47a398243e9315f3cc9493f70ef414e0812",
+"dirty_n": 3,
+"dirty_sample": [
+"?? .woodright-qa-runtime-marker",
+"?? apps/backend/node_modules",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 2,
+"behind_main": 856,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-local-current-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-local-current-20260804",
+"branch": "local/current-main-20260804",
+"detached": false,
+"head": "600e30c434aa59b4220d7afec4260fa88c953458",
+"dirty_n": 3,
+"dirty_sample": [
+" D apps/backend/static/products/.gitignore",
+"?? apps/backend/node_modules",
+"?? apps/backend/static/products"
+],
+"ahead_main": 0,
+"behind_main": 429,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-integration-20260721",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-integration-20260721",
+"branch": "feat/ww-motif-premium-ui-integrate-20260721",
+"detached": false,
+"head": "9348a10b5f3145f9ba8758964e4596f9564d3f6f",
+"dirty_n": 3,
+"dirty_sample": [
+" D apps/backend/static/products/.gitignore",
+"?? apps/backend/static/products",
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 788,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/fix-kids-brand-header",
+"short": "~/.woodright/worktrees/fix-kids-brand-header",
+"branch": "fix/kids-brand-header-20260903",
+"detached": false,
+"head": "3f75975cdeb4cf39dae8c3920b6c51d4433e51e6",
+"dirty_n": 2,
+"dirty_sample": [
+"?? apps/storefront/.yarn",
+"?? docs/reports/tasks/"
+],
+"ahead_main": 0,
+"behind_main": 105,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/partners-contacts-finish-20260909",
+"short": "~/.woodright/worktrees/partners-contacts-finish-20260909",
+"branch": "feat/partners-legacy-index-20260909",
+"detached": false,
+"head": "3fffcb7106081801f7019d4e40e1785aa5f98c1a",
+"dirty_n": 2,
+"dirty_sample": [
+"?? apps/backend/node_modules",
+"?? docs/reports/tasks/media-sku-auto-triage/"
+],
+"ahead_main": 0,
+"behind_main": 59,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/partners-powerline-covers-20260910",
+"short": "~/.woodright/worktrees/partners-powerline-covers-20260910",
+"branch": "fix/partners-powerline-covers-20260910",
+"detached": false,
+"head": "2c6b83c12ab71ddea7ed4c5f83ec3c2a9f61a549",
+"dirty_n": 2,
+"dirty_sample": [
+" M apps/storefront/src/app/globals.css",
+" M apps/storefront/src/components/partners/partner-index.tsx"
+],
+"ahead_main": 0,
+"behind_main": 43,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/seller-console-20260911",
+"short": "~/.woodright/worktrees/seller-console-20260911",
+"branch": "wip/seller-console-qa-20260911",
+"detached": false,
+"head": "2c6b83c12ab71ddea7ed4c5f83ec3c2a9f61a549",
+"dirty_n": 2,
+"dirty_sample": [
+" M apps/storefront/src/app/checkout/page.tsx",
+"?? apps/storefront/src/app/qa/woodright-seller-console/"
+],
+"ahead_main": 0,
+"behind_main": 43,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/typescript-7-0-2",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/typescript-7-0-2",
+"branch": "experiment/typescript-7-0-2-20260729",
+"detached": false,
+"head": "6d2b279c211ab2225e8e26d1382c224116ab3b28",
+"dirty_n": 2,
+"dirty_sample": [
+" M apps/backend/package.json",
+" M apps/storefront/package.json"
+],
+"ahead_main": 0,
+"behind_main": 646,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-design-integration-20260715",
+"short": "~/Documents/projects/furniture-commerce-design-integration-20260715",
+"branch": "fix/storefront-design-recovery-integration-20260715",
+"detached": false,
+"head": "db483479c3aee70ffce3b04f7f6e28ac2c4f759f",
+"dirty_n": 2,
+"dirty_sample": [
+"?? apps/storefront/.next-integ-dev/",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 850,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-runtime-main-99b64c8",
+"short": "~/Documents/projects/furniture-commerce-runtime-main-99b64c8",
+"branch": null,
+"detached": true,
+"head": "5a5a6c92a45b4da939a18fb511b69714205d8ce3",
+"dirty_n": 2,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts",
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 830,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-motion-polish-20260724",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-motion-polish-20260724",
+"branch": "fix/ww-motif-hover-smoother-20260724",
+"detached": false,
+"head": "2a1c5df29180d2ac799098590bc6229ac27f3f82",
+"dirty_n": 2,
+"dirty_sample": [
+" M apps/storefront/src/app/globals.css",
+" M apps/storefront/tsconfig.production.json"
+],
+"ahead_main": 0,
+"behind_main": 702,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-ux-hardening-slice7",
+"short": "~/.woodright/worktrees/admin-workspace-ux-hardening-slice7",
+"branch": "feat/admin-workspace-ux-hardening-slice7",
+"detached": false,
+"head": "a9e4386ab52609f40e9297e97198f15d725df4bd",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/backend/src/lib/provence-pdf-catalog-contamination.ts"
+],
+"ahead_main": 0,
+"behind_main": 96,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/editorial-content-partners-20260908",
+"short": "~/.woodright/worktrees/editorial-content-partners-20260908",
+"branch": "feat/editorial-content-partners-20260908",
+"detached": false,
+"head": "15115e3ddc17d8946beeff284042baf5a10794d3",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/backend/node_modules"
+],
+"ahead_main": 0,
+"behind_main": 74,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/kids-pdp-cta-naming-20260908",
+"short": "~/.woodright/worktrees/kids-pdp-cta-naming-20260908",
+"branch": "fix/kids-pdp-cta-naming-layout-20260908",
+"detached": false,
+"head": "168aef0a4367259bad20351958b3f5edaf43e64b",
+"dirty_n": 1,
+"dirty_sample": [
+"?? docs/reports/tasks/"
+],
+"ahead_main": 0,
+"behind_main": 76,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-admin-pr194-20260813/admin-actualization-night-20260812",
+"short": "~/Developer/woodright-admin-pr194-20260813/admin-actualization-night-20260812",
+"branch": "feat/admin-actualization-night-20260812",
+"detached": false,
+"head": "0dee958768a223e5becdc666d98e21c92dfc8f80",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/backend/src/modules/product-extension/migrations/"
+],
+"ahead_main": 0,
+"behind_main": 191,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/next16-react19",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/next16-react19",
+"branch": "experiment/next16-react19-20260729",
+"detached": false,
+"head": "55c07f12c10616b5c55691c942bb2a322263c71c",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/undefined/"
+],
+"ahead_main": 0,
+"behind_main": 523,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-merchandising-order-20260721",
+"short": "~/Documents/projects/furniture-commerce-catalog-merchandising-order-20260721",
+"branch": "feat/catalog-default-merchandising-order-20260721",
+"detached": false,
+"head": "0d1520b303af34eb1f99bd38263912e86c0779fd",
+"dirty_n": 1,
+"dirty_sample": [
+"?? tmp/"
+],
+"ahead_main": 1,
+"behind_main": 792,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-normalization-night-20260812",
+"short": "~/Documents/projects/furniture-commerce-catalog-normalization-night-20260812",
+"branch": "feat/catalog-normalization-night-20260812",
+"detached": false,
+"head": "006d5f7c62f9b7b77f732f412519d9bde0412de8",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/backend/node_modules"
+],
+"ahead_main": 0,
+"behind_main": 195,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-clean-main-measure-20260715",
+"short": "~/Documents/projects/furniture-commerce-clean-main-measure-20260715",
+"branch": null,
+"detached": true,
+"head": "b7b9c60bd4effb3f86824285edc742380b77a77a",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 856,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-a11y-p2-dialogs-20260723",
+"short": "~/Documents/projects/furniture-commerce-fix-a11y-p2-dialogs-20260723",
+"branch": "fix/a11y-p2-dialog-inert-focus-20260723",
+"detached": false,
+"head": "2c2988cd89b7ebc9b1d9b8ece7b5b1afab0ac878",
+"dirty_n": 1,
+"dirty_sample": [
+" M apps/storefront/scripts/a11y-dialog-keyboard.smoke.cjs"
+],
+"ahead_main": 0,
+"behind_main": 711,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-greenwich-darkblue-matrix-20260716",
+"short": "~/Documents/projects/furniture-commerce-fix-greenwich-darkblue-matrix-20260716",
+"branch": "fix/greenwich-darkblue-matrix-split-20260716",
+"detached": false,
+"head": "0bd101ffbbb156581ad3edb3bc9b61204dce07d2",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 837,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-greenwich-paint-matrix-20260716",
+"short": "~/Documents/projects/furniture-commerce-fix-greenwich-paint-matrix-20260716",
+"branch": "fix/greenwich-paint-matrix-catalog-projection-20260716",
+"detached": false,
+"head": "ae1bccaa96f43dc0643952c577a20117db80bc3e",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 839,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-internal-backend-cutover-20260721",
+"short": "~/Documents/projects/furniture-commerce-internal-backend-cutover-20260721",
+"branch": "fix/staging-image-workflow-secret-contract-20260721",
+"detached": false,
+"head": "9e06369c03a643be8aaf57fef75e180321d426f1",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 804,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-kids-bespoke-fail-closed-20260716",
+"short": "~/Documents/projects/furniture-commerce-kids-bespoke-fail-closed-20260716",
+"branch": "fix/kids-cart-bespoke-fail-closed-20260716",
+"detached": false,
+"head": "388206ed552aa0de9286a86538c2fbce3efe15ca",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 841,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-main-after-perf-20260716",
+"short": "~/Documents/projects/furniture-commerce-main-after-perf-20260716",
+"branch": null,
+"detached": true,
+"head": "82b64bfe18b4b230fd5c2edaad7f9598dc583b40",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 842,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-pdp-parity-20260717",
+"short": "~/Documents/projects/furniture-commerce-pdp-parity-20260717",
+"branch": "fix/pdp-gallery-configurator-parity-20260717",
+"detached": false,
+"head": "e53ba434a7324c71d2da0f36443f54efa61cb23d",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 808,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-post-pr40-main-20260716",
+"short": "~/Documents/projects/furniture-commerce-post-pr40-main-20260716",
+"branch": null,
+"detached": true,
+"head": "99b64c898048e7bce6c874d389d2acfc23eea689",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 840,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-pr38-candidate-20260716",
+"short": "~/Documents/projects/furniture-commerce-pr38-candidate-20260716",
+"branch": null,
+"detached": true,
+"head": "12ff9a7d466cb734ca9c3bd5a8d7dfd65836ccff",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 845,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-release-ad6ab49",
+"short": "~/Documents/projects/furniture-commerce-release-ad6ab49",
+"branch": null,
+"detached": true,
+"head": "ad6ab49d6225c19c401aa951aee7e626a9a328ac",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/backend/node_modules"
+],
+"ahead_main": 0,
+"behind_main": 725,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-runtime-main-20260715",
+"short": "~/Documents/projects/furniture-commerce-runtime-main-20260715",
+"branch": "runtime/main-storefront-20260715",
+"detached": false,
+"head": "899695f44ebcd71c24ab99fe1b6c9b5118132e7b",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 849,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-runtime-main-34a400f",
+"short": "~/Documents/projects/furniture-commerce-runtime-main-34a400f",
+"branch": null,
+"detached": true,
+"head": "34a400f90ca887ae14267406a0ecb2c231dc1813",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 838,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-runtime-main-82b64bf",
+"short": "~/Documents/projects/furniture-commerce-runtime-main-82b64bf",
+"branch": null,
+"detached": true,
+"head": "82b64bfe18b4b230fd5c2edaad7f9598dc583b40",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 842,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-runtime-pdp-parity-18fd465",
+"short": "~/Documents/projects/furniture-commerce-runtime-pdp-parity-18fd465",
+"branch": null,
+"detached": true,
+"head": "5683afa62890531f26b6e53b25800173c8efbb20",
+"dirty_n": 1,
+"dirty_sample": [
+"?? .woodright-runtime-switch/"
+],
+"ahead_main": 0,
+"behind_main": 783,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-storefront-perf-20260716",
+"short": "~/Documents/projects/furniture-commerce-storefront-perf-20260716",
+"branch": "perf/storefront-catalog-loading-20260716",
+"detached": false,
+"head": "127d024f035dcc7e47f7960ead05da5cdb675174",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 843,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-storefront-perf-control-20260716",
+"short": "~/Documents/projects/furniture-commerce-storefront-perf-control-20260716",
+"branch": "qa/storefront-perf-control-20260716",
+"detached": false,
+"head": "12ff9a7d466cb734ca9c3bd5a8d7dfd65836ccff",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 0,
+"behind_main": 845,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-contacts-postmerge-08731e0",
+"short": "~/Documents/projects/furniture-commerce-wt-contacts-postmerge-08731e0",
+"branch": null,
+"detached": true,
+"head": "08731e01ecf6905f700e822ff8b648a52ad2d21e",
+"dirty_n": 1,
+"dirty_sample": [
+"?? apps/storefront/.yarn"
+],
+"ahead_main": 0,
+"behind_main": 366,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-mobile-quality-20260812",
+"short": "~/Documents/projects/furniture-commerce-wt-mobile-quality-20260812",
+"branch": "fix/storefront-mobile-quality-pass",
+"detached": false,
+"head": "347fce98ebd5f1da8d9abbdbf41b088b2f37fd28",
+"dirty_n": 1,
+"dirty_sample": [
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 200,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-premium-images",
+"short": "~/Documents/projects/furniture-commerce-wt-premium-images",
+"branch": "fix/premium-home-image-originals-20260723",
+"detached": false,
+"head": "3a060073a3ea30d143ec641d652d2b3f4492d0e6",
+"dirty_n": 1,
+"dirty_sample": [
+" M apps/storefront/tsconfig.production.json"
+],
+"ahead_main": 0,
+"behind_main": 717,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-product-card-pass-a-20260801",
+"short": "~/Documents/projects/furniture-commerce-wt-product-card-pass-a-20260801",
+"branch": "fix/product-card-presentation-pass-a-20260801",
+"detached": false,
+"head": "017eb9f6fba1a3f3e04faa329f541beec9781adc",
+"dirty_n": 1,
+"dirty_sample": [
+" M apps/storefront/src/lib/catalog-card-presentation-pass-a.fidelity.test.ts"
+],
+"ahead_main": 0,
+"behind_main": 516,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-showroom-contacts",
+"short": "~/Documents/projects/furniture-commerce-wt-showroom-contacts",
+"branch": "fix/contacts-action-rows-rebalance-20260730",
+"detached": false,
+"head": "0d2e8eb3f592ccc21a956bed1d4e2a9343943f19",
+"dirty_n": 1,
+"dirty_sample": [
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 584,
+"head_in_main": true
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-design-20260721",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-design-20260721",
+"branch": "feat/ww-motif-premium-design-20260721",
+"detached": false,
+"head": "4997bb79d03af6bceaa1c249d40088ea4c3ccfc4",
+"dirty_n": 1,
+"dirty_sample": [
+"?? tmp/"
+],
+"ahead_main": 0,
+"behind_main": 764,
+"head_in_main": true
+}
+],
+"unmerged": [
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-staging-rc-20260716",
+"short": "~/Documents/projects/furniture-commerce-staging-rc-20260716",
+"branch": "chore/dokploy-staging-release-20260716",
+"detached": false,
+"head": "b8fa3d24970f54eda155659f338053970e9993d6",
+"dirty_n": 6,
+"dirty_sample": [
+" M apps/backend/src/api/store/products/catalog-browse-projection.fidelity.test.ts",
+" M apps/backend/src/api/store/products/catalog-browse-projection.ts",
+" M apps/backend/src/api/store/products/load-store-product-list.fidelity.test.ts",
+" M apps/backend/src/api/store/products/load-store-product-list.ts",
+" M apps/storefront/src/lib/catalog-browse-client-product.fidelity.test.ts",
+" M apps/storefront/src/lib/catalog-browse-client-product.ts"
+],
+"ahead_main": 11,
+"behind_main": 831,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-legal-content-remediation-20260804",
+"short": "~/Developer/woodright-legal-content-remediation-20260804",
+"branch": "feat/legal-content-remediation-20260804",
+"detached": false,
+"head": "99a277c3121f6833cfaaf4b980e7dd51e9beef71",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 6,
+"behind_main": 407,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-cart-eval-20260715",
+"short": "~/Documents/projects/furniture-commerce-cart-eval-20260715",
+"branch": "audit/cart-fields-eval-20260715",
+"detached": false,
+"head": "4c80c768fac865f226a8794690117fecb8d67756",
+"dirty_n": 4,
+"dirty_sample": [
+" M apps/storefront/src/lib/api/cart.ts",
+" M apps/storefront/tsconfig.json",
+"?? apps/storefront/.next-cart-eval/",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 6,
+"behind_main": 836,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-design-recovery-20260715",
+"short": "~/Documents/projects/furniture-commerce-design-recovery-20260715",
+"branch": "recovery/storefront-design-20260715",
+"detached": false,
+"head": "4c80c768fac865f226a8794690117fecb8d67756",
+"dirty_n": 30,
+"dirty_sample": [
+" M apps/storefront/src/app/globals.css",
+" M apps/storefront/src/app/loading.tsx",
+" M apps/storefront/src/app/product/[id]/page.tsx",
+" M apps/storefront/src/components/header-logo.tsx",
+" M apps/storefront/src/components/pdp-hero-affordance.tsx",
+" M apps/storefront/src/components/product-card-media-gallery-core.tsx",
+" M apps/storefront/src/components/site-footer.tsx",
+" M apps/storefront/src/components/site-header.tsx",
+" M apps/storefront/src/lib/card-color-media.ts",
+" M apps/storefront/src/lib/en-name-ru.ts",
+" M apps/storefront/src/lib/format-ru-copy.fidelity.test.ts",
+" M apps/storefront/src/lib/format-ru-copy.ts"
+],
+"ahead_main": 6,
+"behind_main": 836,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-runtime-identity-public-candidate-guard-20260722",
+"short": "~/Documents/projects/furniture-commerce-fix-runtime-identity-public-candidate-guard-20260722",
+"branch": "fix/runtime-identity-public-candidate-guard-20260722",
+"detached": false,
+"head": "04b53ef8314a23b28828d0f33ecbddbf760fdea2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 5,
+"behind_main": 729,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-public-production-payment-notifications-20260804",
+"short": "~/Developer/woodright-public-production-payment-notifications-20260804",
+"branch": "feat/public-production-payment-notification-decisions-20260804",
+"detached": false,
+"head": "d8c02abbfebe9610a603ebca653349cf355b1bc1",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 4,
+"behind_main": 394,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-options-night-20260812",
+"short": "~/Documents/projects/furniture-commerce-catalog-options-night-20260812",
+"branch": "audit/catalog-options-variants-night-20260812",
+"detached": false,
+"head": "16ae0c19e73b9ef833572df57919180ea71bf481",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 4,
+"behind_main": 194,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-281c445",
+"short": "~/.woodright/worktrees/admin-workspace-281c445",
+"branch": null,
+"detached": true,
+"head": "281c445c3af8978a6e4fd3210477f9ac99a8d654",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 3,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/fix-admin-workspace-boot-hygiene",
+"short": "~/.woodright/worktrees/fix-admin-workspace-boot-hygiene",
+"branch": "fix/admin-workspace-boot-hygiene-50174ba",
+"detached": false,
+"head": "281c445c3af8978a6e4fd3210477f9ac99a8d654",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 3,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/media-sku-auto-triage-20260910",
+"short": "~/.woodright/worktrees/media-sku-auto-triage-20260910",
+"branch": "docs/media-sku-auto-triage-20260910",
+"detached": false,
+"head": "7cde05690e3e882ced83d9dab16bff01af25d8bb",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 3,
+"behind_main": 61,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Developer/woodright-nightly-upgrades-20260729/worktrees/safe-dependency-refresh",
+"short": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/safe-dependency-refresh",
+"branch": "chore/safe-dependency-refresh-20260729",
+"detached": false,
+"head": "9578623abb0aa15520cb0d26f1be005d1823f61a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 3,
+"behind_main": 646,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-buyer-quality-int-20260807",
+"short": "~/Documents/projects/furniture-commerce-wt-buyer-quality-int-20260807",
+"branch": "chore/integrate-buyer-quality-pass-20260807",
+"detached": false,
+"head": "1afc30416fbee340b4561cad8f3afd7f9bb02a1d",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 3,
+"behind_main": 235,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-e6c355f",
+"short": "~/.woodright/worktrees/admin-workspace-e6c355f",
+"branch": null,
+"detached": true,
+"head": "e6c355fae56a235db3cc2b6f1a28b83fe32b0824",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 2,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-performance-20260715",
+"short": "~/Documents/projects/furniture-commerce-catalog-performance-20260715",
+"branch": "perf/catalog-loading-20260715",
+"detached": false,
+"head": "a5d2f47a398243e9315f3cc9493f70ef414e0812",
+"dirty_n": 4,
+"dirty_sample": [
+"?? apps/backend/node_modules",
+"?? apps/storefront/next-env.d.ts",
+"?? apps/storefront/scripts/catalog-ssr-img-gate.mjs",
+"?? tmp/"
+],
+"ahead_main": 2,
+"behind_main": 856,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-qa-runtime",
+"short": "~/Documents/projects/furniture-commerce-qa-runtime",
+"branch": null,
+"detached": true,
+"head": "a5d2f47a398243e9315f3cc9493f70ef414e0812",
+"dirty_n": 3,
+"dirty_sample": [
+"?? .woodright-qa-runtime-marker",
+"?? apps/backend/node_modules",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 2,
+"behind_main": 856,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-oci-owner-label-20260723",
+"short": "~/Documents/projects/furniture-commerce-wt-oci-owner-label-20260723",
+"branch": "chore/storefront-deployment-owner-label-20260723",
+"detached": false,
+"head": "a1b7d1759a3294a32844bc972a1ef2f0edb42fb2",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 2,
+"behind_main": 710,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-app-boundary-20260910",
+"short": "~/.woodright/worktrees/admin-app-boundary-20260910",
+"branch": "wip/admin-app-boundary-20260910",
+"detached": false,
+"head": "c463efd21cca34623cc4a1ce61116d0ffbd04f6c",
+"dirty_n": 4,
+"dirty_sample": [
+"?? apps/backend/node_modules",
+"?? apps/backend/src/scripts/apply-ship-now-v2board.js",
+"?? apps/backend/src/scripts/apply-ship-now-v2board.ts",
+"?? docs/reports/tasks/admin-prod-cutover/"
+],
+"ahead_main": 1,
+"behind_main": 39,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-3b5a27d",
+"short": "~/.woodright/worktrees/admin-workspace-3b5a27d",
+"branch": null,
+"detached": true,
+"head": "3b5a27db5798abc2a20bbdde81f3e49e42bcca3e",
+"dirty_n": 3,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/"
+],
+"ahead_main": 1,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/admin-workspace-3b5a27d-accept",
+"short": "~/.woodright/worktrees/admin-workspace-3b5a27d-accept",
+"branch": null,
+"detached": true,
+"head": "3b5a27db5798abc2a20bbdde81f3e49e42bcca3e",
+"dirty_n": 4,
+"dirty_sample": [
+"?? apps/backend/.medusa/",
+"?? apps/backend/.yarn/",
+"?? apps/backend/dist/",
+"?? apps/storefront/next-env.d.ts"
+],
+"ahead_main": 1,
+"behind_main": 824,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/.woodright/worktrees/partners-wordmarks-on-main-20260911",
+"short": "~/.woodright/worktrees/partners-wordmarks-on-main-20260911",
+"branch": "feat/partners-wordmarks-on-main-20260911",
+"detached": false,
+"head": "38e6c1c7087a0c93098dc04b5cf36f13ff3b688f",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 39,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-catalog-merchandising-order-20260721",
+"short": "~/Documents/projects/furniture-commerce-catalog-merchandising-order-20260721",
+"branch": "feat/catalog-default-merchandising-order-20260721",
+"detached": false,
+"head": "0d1520b303af34eb1f99bd38263912e86c0779fd",
+"dirty_n": 1,
+"dirty_sample": [
+"?? tmp/"
+],
+"ahead_main": 1,
+"behind_main": 792,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-design-mode-20260714",
+"short": "~/Documents/projects/furniture-commerce-design-mode-20260714",
+"branch": "feat/storefront-design-mode-local-20260714",
+"detached": false,
+"head": "b56d225afe54a342f849dda43ab33519829cec67",
+"dirty_n": 12,
+"dirty_sample": [
+" M .cursor/rules/woodright-model-routing.mdc",
+" M apps/backend/src/lib/gallery-content-dedupe.ts",
+" M apps/backend/src/lib/oliver-finish-execution-guard.ts",
+" M apps/storefront/next.config.js",
+" M apps/storefront/src/lib/greenwich-bed-media.ts",
+" M apps/storefront/src/lib/pdp-buyer-gallery-core.ts",
+"?? .cursor/rules/woodright-design-mode-safety.mdc",
+"?? .nosync",
+"?? apps/backend/src/lib/oliver-pdf-catalog-contamination.ts",
+"?? apps/storefront/next-env.d.ts",
+"?? apps/storefront/scripts/design-mode-storefront.sh",
+"?? docs/ai/woodright-design-mode-local-workflow.md"
+],
+"ahead_main": 1,
+"behind_main": 845,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-catalog-product-type-closure-20260721",
+"short": "~/Documents/projects/furniture-commerce-fix-catalog-product-type-closure-20260721",
+"branch": "fix/catalog-product-type-closure-20260721",
+"detached": false,
+"head": "7a1bc3040fcc999b6294c0ddfe7c5ef6be3ea441",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 751,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-fix-runtime-identity-app-bake-20260722",
+"short": "~/Documents/projects/furniture-commerce-fix-runtime-identity-app-bake-20260722",
+"branch": "fix/runtime-identity-app-bake-20260722",
+"detached": false,
+"head": "f59fa6192563011310d400ad51b9f25f42d6e98a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 728,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-https-og-hardening-20260721",
+"short": "~/Documents/projects/furniture-commerce-https-og-hardening-20260721",
+"branch": "fix/https-og-metadata-hardening-20260721",
+"detached": false,
+"head": "2726678347bb9b435176b84f329d2c1647b2b36a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 801,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-main-conv-sim-20260808T093302Z",
+"short": "~/Documents/projects/furniture-commerce-wt-main-conv-sim-20260808T093302Z",
+"branch": "verify/main-convergence-20260808T093302Z",
+"detached": false,
+"head": "218439744da427d0b5652f2b3808545ebb1d9455",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 235,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-wt-next-dev-overlays-20260804",
+"short": "~/Documents/projects/furniture-commerce-wt-next-dev-overlays-20260804",
+"branch": "fix/storefront-next-dev-overlay-errors-20260804",
+"detached": false,
+"head": "ad944b88f88b2e4c3d36a725b88ba60ca3db6563",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 429,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-owner-fixes-20260722",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-owner-fixes-20260722",
+"branch": "fix/ww-motif-owner-review-20260722",
+"detached": false,
+"head": "e01bc8f99c403dbf43efd041b96f417cf768f2de",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 725,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-owner-fixes-integration-20260722",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-owner-fixes-integration-20260722",
+"branch": "fix/ww-motif-owner-review-integrate-20260722",
+"detached": false,
+"head": "f73a81628dbf62bcbd4510bb8461c0763313fb9a",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 725,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-owner-fixes-reintegrate-20260723",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-owner-fixes-reintegrate-20260723",
+"branch": "fix/ww-motif-owner-review-reintegrate-20260723",
+"detached": false,
+"head": "4a4584463b8c2f9d3dfe0e8c546cf923636af26e",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 721,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/Documents/projects/furniture-commerce-ww-motif-ui-20260721",
+"short": "~/Documents/projects/furniture-commerce-ww-motif-ui-20260721",
+"branch": "feat/ww-motif-premium-ui-20260721",
+"detached": false,
+"head": "4e9d3ea111422a990d1e7744cb121c3035a57acb",
+"dirty_n": 18,
+"dirty_sample": [
+" M apps/backend/src/api/store/products/[id]/route.ts",
+" M apps/backend/src/api/store/products/load-store-product-list.ts",
+" M apps/backend/src/links/product-product-extension.ts",
+" M apps/backend/src/modules/bespoke-request/models/bespoke-request.ts",
+" M apps/backend/src/modules/lead/models/lead.ts",
+" M apps/backend/src/modules/payment-link/models/payment-link.ts",
+" M apps/backend/src/modules/product-extension/models/product-type.ts",
+" M apps/backend/src/modules/product-extension/service.ts",
+" M apps/backend/src/modules/room-set/models/room-set-item.ts",
+" M apps/backend/src/modules/room-set/models/room-set.ts",
+" D apps/backend/static/products/.gitignore",
+" M apps/storefront/tsconfig.json"
+],
+"ahead_main": 1,
+"behind_main": 864,
+"head_in_main": false
+},
+{
+"path": "/Users/leonidmbp/furniture-commerce-media-append-wt",
+"short": "~/furniture-commerce-media-append-wt",
+"branch": "data/approved-legacy-site-media-supplement",
+"detached": false,
+"head": "f704ea4df657afdbcca7c639e688a35ce3998dd0",
+"dirty_n": 0,
+"dirty_sample": [],
+"ahead_main": 1,
+"behind_main": 910,
+"head_in_main": false
+}
+],
+"prune_cand_n": 208,
+"errors": []
+}

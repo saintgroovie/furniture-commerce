@@ -1,0 +1,762 @@
+{
+  "scanned": 292,
+  "dirty": 66,
+  "unmerged_n": 32,
+  "prune_cand_n": 208,
+  "dirty_paths": [
+    {
+      "n": 198,
+      "ahead": 0,
+      "behind": 17,
+      "in_main": true,
+      "branch": "feat/partners-wordmarks-20260910",
+      "path": "~/.woodright/worktrees/partners-wordmarks-20260910"
+    },
+    {
+      "n": 39,
+      "ahead": 0,
+      "behind": 864,
+      "in_main": true,
+      "branch": "audit/catalog-normalization-20260712",
+      "path": "~/Documents/projects/furniture-commerce-catalog-normalization"
+    },
+    {
+      "n": 31,
+      "ahead": 0,
+      "behind": 824,
+      "in_main": true,
+      "branch": null,
+      "path": "~/.woodright/worktrees/clean-boot-audit-50174ba"
+    },
+    {
+      "n": 30,
+      "ahead": 6,
+      "behind": 836,
+      "in_main": false,
+      "branch": "recovery/storefront-design-20260715",
+      "path": "~/Documents/projects/furniture-commerce-design-recovery-20260715"
+    },
+    {
+      "n": 23,
+      "ahead": 0,
+      "behind": 824,
+      "in_main": true,
+      "branch": null,
+      "path": "~/.woodright/worktrees/admin-workspace-50174ba"
+    },
+    {
+      "n": 22,
+      "ahead": 0,
+      "behind": 36,
+      "in_main": true,
+      "branch": "docs/timeweb-demo-cutover-20260917",
+      "path": "~/iCloud Drive (\u0430\u0440\u0445\u0438\u0432)/Documents/projects/furniture-commerce"
+    },
+    {
+      "n": 18,
+      "ahead": 0,
+      "behind": 39,
+      "in_main": true,
+      "branch": null,
+      "path": "~/.woodright/worktrees/runtime-candidate-main"
+    },
+    {
+      "n": 18,
+      "ahead": 1,
+      "behind": 864,
+      "in_main": false,
+      "branch": "feat/ww-motif-premium-ui-20260721",
+      "path": "~/Documents/projects/furniture-commerce-ww-motif-ui-20260721"
+    },
+    {
+      "n": 12,
+      "ahead": 1,
+      "behind": 845,
+      "in_main": false,
+      "branch": "feat/storefront-design-mode-local-20260714",
+      "path": "~/Documents/projects/furniture-commerce-design-mode-20260714"
+    },
+    {
+      "n": 11,
+      "ahead": 0,
+      "behind": 429,
+      "in_main": true,
+      "branch": "fix/storefront-max-direct-link-20260803",
+      "path": "~/Documents/projects/furniture-commerce-wt-max-direct-link-20260803"
+    },
+    {
+      "n": 6,
+      "ahead": 11,
+      "behind": 831,
+      "in_main": false,
+      "branch": "chore/dokploy-staging-release-20260716",
+      "path": "~/Documents/projects/furniture-commerce-staging-rc-20260716"
+    },
+    {
+      "n": 5,
+      "ahead": 0,
+      "behind": 767,
+      "in_main": true,
+      "branch": "fix/pricing-card-pdp-cart-parity-20260721",
+      "path": "~/Documents/projects/furniture-commerce-fix-public-catalog-defects-20260721"
+    },
+    {
+      "n": 5,
+      "ahead": 0,
+      "behind": 595,
+      "in_main": true,
+      "branch": "fix/mobile-layout-audit-20260729",
+      "path": "~/Documents/projects/furniture-commerce-wt-mobile-audit-20260729"
+    },
+    {
+      "n": 4,
+      "ahead": 1,
+      "behind": 39,
+      "in_main": false,
+      "branch": "wip/admin-app-boundary-20260910",
+      "path": "~/.woodright/worktrees/admin-app-boundary-20260910"
+    },
+    {
+      "n": 4,
+      "ahead": 1,
+      "behind": 824,
+      "in_main": false,
+      "branch": null,
+      "path": "~/.woodright/worktrees/admin-workspace-3b5a27d-accept"
+    },
+    {
+      "n": 4,
+      "ahead": 0,
+      "behind": 9,
+      "in_main": true,
+      "branch": "perf/catalog-browse-html-lean-20260917",
+      "path": "~/Developer/furniture-commerce-wt-first-load-veil"
+    },
+    {
+      "n": 4,
+      "ahead": 0,
+      "behind": 602,
+      "in_main": true,
+      "branch": "experiment/typescript-7-0-2-after-yarn417-20260730",
+      "path": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/typescript7-after-yarn417"
+    },
+    {
+      "n": 4,
+      "ahead": 6,
+      "behind": 836,
+      "in_main": false,
+      "branch": "audit/cart-fields-eval-20260715",
+      "path": "~/Documents/projects/furniture-commerce-cart-eval-20260715"
+    },
+    {
+      "n": 4,
+      "ahead": 2,
+      "behind": 856,
+      "in_main": false,
+      "branch": "perf/catalog-loading-20260715",
+      "path": "~/Documents/projects/furniture-commerce-catalog-performance-20260715"
+    },
+    {
+      "n": 3,
+      "ahead": 3,
+      "behind": 824,
+      "in_main": false,
+      "branch": null,
+      "path": "~/.woodright/worktrees/admin-workspace-281c445"
+    },
+    {
+      "n": 3,
+      "ahead": 1,
+      "behind": 824,
+      "in_main": false,
+      "branch": null,
+      "path": "~/.woodright/worktrees/admin-workspace-3b5a27d"
+    },
+    {
+      "n": 3,
+      "ahead": 2,
+      "behind": 824,
+      "in_main": false,
+      "branch": null,
+      "path": "~/.woodright/worktrees/admin-workspace-e6c355f"
+    },
+    {
+      "n": 3,
+      "ahead": 3,
+      "behind": 824,
+      "in_main": false,
+      "branch": "fix/admin-workspace-boot-hygiene-50174ba",
+      "path": "~/.woodright/worktrees/fix-admin-workspace-boot-hygiene"
+    },
+    {
+      "n": 3,
+      "ahead": 0,
+      "behind": 577,
+      "in_main": true,
+      "branch": null,
+      "path": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/main-backend-for-next16"
+    },
+    {
+      "n": 3,
+      "ahead": 0,
+      "behind": 849,
+      "in_main": true,
+      "branch": "qa/main-post-design-merge-20260715",
+      "path": "~/Documents/projects/furniture-commerce-main-post-merge-20260715"
+    },
+    {
+      "n": 3,
+      "ahead": 2,
+      "behind": 856,
+      "in_main": false,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-qa-runtime"
+    },
+    {
+      "n": 3,
+      "ahead": 0,
+      "behind": 429,
+      "in_main": true,
+      "branch": "local/current-main-20260804",
+      "path": "~/Documents/projects/furniture-commerce-wt-local-current-20260804"
+    },
+    {
+      "n": 3,
+      "ahead": 0,
+      "behind": 788,
+      "in_main": true,
+      "branch": "feat/ww-motif-premium-ui-integrate-20260721",
+      "path": "~/Documents/projects/furniture-commerce-ww-motif-integration-20260721"
+    },
+    {
+      "n": 2,
+      "ahead": 0,
+      "behind": 105,
+      "in_main": true,
+      "branch": "fix/kids-brand-header-20260903",
+      "path": "~/.woodright/worktrees/fix-kids-brand-header"
+    },
+    {
+      "n": 2,
+      "ahead": 0,
+      "behind": 59,
+      "in_main": true,
+      "branch": "feat/partners-legacy-index-20260909",
+      "path": "~/.woodright/worktrees/partners-contacts-finish-20260909"
+    },
+    {
+      "n": 2,
+      "ahead": 0,
+      "behind": 43,
+      "in_main": true,
+      "branch": "fix/partners-powerline-covers-20260910",
+      "path": "~/.woodright/worktrees/partners-powerline-covers-20260910"
+    },
+    {
+      "n": 2,
+      "ahead": 0,
+      "behind": 43,
+      "in_main": true,
+      "branch": "wip/seller-console-qa-20260911",
+      "path": "~/.woodright/worktrees/seller-console-20260911"
+    },
+    {
+      "n": 2,
+      "ahead": 0,
+      "behind": 646,
+      "in_main": true,
+      "branch": "experiment/typescript-7-0-2-20260729",
+      "path": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/typescript-7-0-2"
+    },
+    {
+      "n": 2,
+      "ahead": 0,
+      "behind": 850,
+      "in_main": true,
+      "branch": "fix/storefront-design-recovery-integration-20260715",
+      "path": "~/Documents/projects/furniture-commerce-design-integration-20260715"
+    },
+    {
+      "n": 2,
+      "ahead": 0,
+      "behind": 830,
+      "in_main": true,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-runtime-main-99b64c8"
+    },
+    {
+      "n": 2,
+      "ahead": 0,
+      "behind": 702,
+      "in_main": true,
+      "branch": "fix/ww-motif-hover-smoother-20260724",
+      "path": "~/Documents/projects/furniture-commerce-ww-motif-motion-polish-20260724"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 96,
+      "in_main": true,
+      "branch": "feat/admin-workspace-ux-hardening-slice7",
+      "path": "~/.woodright/worktrees/admin-workspace-ux-hardening-slice7"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 74,
+      "in_main": true,
+      "branch": "feat/editorial-content-partners-20260908",
+      "path": "~/.woodright/worktrees/editorial-content-partners-20260908"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 76,
+      "in_main": true,
+      "branch": "fix/kids-pdp-cta-naming-layout-20260908",
+      "path": "~/.woodright/worktrees/kids-pdp-cta-naming-20260908"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 191,
+      "in_main": true,
+      "branch": "feat/admin-actualization-night-20260812",
+      "path": "~/Developer/woodright-admin-pr194-20260813/admin-actualization-night-20260812"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 523,
+      "in_main": true,
+      "branch": "experiment/next16-react19-20260729",
+      "path": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/next16-react19"
+    },
+    {
+      "n": 1,
+      "ahead": 1,
+      "behind": 792,
+      "in_main": false,
+      "branch": "feat/catalog-default-merchandising-order-20260721",
+      "path": "~/Documents/projects/furniture-commerce-catalog-merchandising-order-20260721"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 195,
+      "in_main": true,
+      "branch": "feat/catalog-normalization-night-20260812",
+      "path": "~/Documents/projects/furniture-commerce-catalog-normalization-night-20260812"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 856,
+      "in_main": true,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-clean-main-measure-20260715"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 711,
+      "in_main": true,
+      "branch": "fix/a11y-p2-dialog-inert-focus-20260723",
+      "path": "~/Documents/projects/furniture-commerce-fix-a11y-p2-dialogs-20260723"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 837,
+      "in_main": true,
+      "branch": "fix/greenwich-darkblue-matrix-split-20260716",
+      "path": "~/Documents/projects/furniture-commerce-fix-greenwich-darkblue-matrix-20260716"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 839,
+      "in_main": true,
+      "branch": "fix/greenwich-paint-matrix-catalog-projection-20260716",
+      "path": "~/Documents/projects/furniture-commerce-fix-greenwich-paint-matrix-20260716"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 804,
+      "in_main": true,
+      "branch": "fix/staging-image-workflow-secret-contract-20260721",
+      "path": "~/Documents/projects/furniture-commerce-internal-backend-cutover-20260721"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 841,
+      "in_main": true,
+      "branch": "fix/kids-cart-bespoke-fail-closed-20260716",
+      "path": "~/Documents/projects/furniture-commerce-kids-bespoke-fail-closed-20260716"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 842,
+      "in_main": true,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-main-after-perf-20260716"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 808,
+      "in_main": true,
+      "branch": "fix/pdp-gallery-configurator-parity-20260717",
+      "path": "~/Documents/projects/furniture-commerce-pdp-parity-20260717"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 840,
+      "in_main": true,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-post-pr40-main-20260716"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 845,
+      "in_main": true,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-pr38-candidate-20260716"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 725,
+      "in_main": true,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-release-ad6ab49"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 849,
+      "in_main": true,
+      "branch": "runtime/main-storefront-20260715",
+      "path": "~/Documents/projects/furniture-commerce-runtime-main-20260715"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 838,
+      "in_main": true,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-runtime-main-34a400f"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 842,
+      "in_main": true,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-runtime-main-82b64bf"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 783,
+      "in_main": true,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-runtime-pdp-parity-18fd465"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 843,
+      "in_main": true,
+      "branch": "perf/storefront-catalog-loading-20260716",
+      "path": "~/Documents/projects/furniture-commerce-storefront-perf-20260716"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 845,
+      "in_main": true,
+      "branch": "qa/storefront-perf-control-20260716",
+      "path": "~/Documents/projects/furniture-commerce-storefront-perf-control-20260716"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 366,
+      "in_main": true,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-wt-contacts-postmerge-08731e0"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 200,
+      "in_main": true,
+      "branch": "fix/storefront-mobile-quality-pass",
+      "path": "~/Documents/projects/furniture-commerce-wt-mobile-quality-20260812"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 717,
+      "in_main": true,
+      "branch": "fix/premium-home-image-originals-20260723",
+      "path": "~/Documents/projects/furniture-commerce-wt-premium-images"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 516,
+      "in_main": true,
+      "branch": "fix/product-card-presentation-pass-a-20260801",
+      "path": "~/Documents/projects/furniture-commerce-wt-product-card-pass-a-20260801"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 584,
+      "in_main": true,
+      "branch": "fix/contacts-action-rows-rebalance-20260730",
+      "path": "~/Documents/projects/furniture-commerce-wt-showroom-contacts"
+    },
+    {
+      "n": 1,
+      "ahead": 0,
+      "behind": 764,
+      "in_main": true,
+      "branch": "feat/ww-motif-premium-design-20260721",
+      "path": "~/Documents/projects/furniture-commerce-ww-motif-design-20260721"
+    }
+  ],
+  "unmerged": [
+    {
+      "ahead": 11,
+      "behind": 831,
+      "dirty": 6,
+      "branch": "chore/dokploy-staging-release-20260716",
+      "path": "~/Documents/projects/furniture-commerce-staging-rc-20260716"
+    },
+    {
+      "ahead": 6,
+      "behind": 407,
+      "dirty": 0,
+      "branch": "feat/legal-content-remediation-20260804",
+      "path": "~/Developer/woodright-legal-content-remediation-20260804"
+    },
+    {
+      "ahead": 6,
+      "behind": 836,
+      "dirty": 4,
+      "branch": "audit/cart-fields-eval-20260715",
+      "path": "~/Documents/projects/furniture-commerce-cart-eval-20260715"
+    },
+    {
+      "ahead": 6,
+      "behind": 836,
+      "dirty": 30,
+      "branch": "recovery/storefront-design-20260715",
+      "path": "~/Documents/projects/furniture-commerce-design-recovery-20260715"
+    },
+    {
+      "ahead": 5,
+      "behind": 729,
+      "dirty": 0,
+      "branch": "fix/runtime-identity-public-candidate-guard-20260722",
+      "path": "~/Documents/projects/furniture-commerce-fix-runtime-identity-public-candidate-guard-20260722"
+    },
+    {
+      "ahead": 4,
+      "behind": 394,
+      "dirty": 0,
+      "branch": "feat/public-production-payment-notification-decisions-20260804",
+      "path": "~/Developer/woodright-public-production-payment-notifications-20260804"
+    },
+    {
+      "ahead": 4,
+      "behind": 194,
+      "dirty": 0,
+      "branch": "audit/catalog-options-variants-night-20260812",
+      "path": "~/Documents/projects/furniture-commerce-catalog-options-night-20260812"
+    },
+    {
+      "ahead": 3,
+      "behind": 824,
+      "dirty": 3,
+      "branch": null,
+      "path": "~/.woodright/worktrees/admin-workspace-281c445"
+    },
+    {
+      "ahead": 3,
+      "behind": 824,
+      "dirty": 3,
+      "branch": "fix/admin-workspace-boot-hygiene-50174ba",
+      "path": "~/.woodright/worktrees/fix-admin-workspace-boot-hygiene"
+    },
+    {
+      "ahead": 3,
+      "behind": 61,
+      "dirty": 0,
+      "branch": "docs/media-sku-auto-triage-20260910",
+      "path": "~/.woodright/worktrees/media-sku-auto-triage-20260910"
+    },
+    {
+      "ahead": 3,
+      "behind": 646,
+      "dirty": 0,
+      "branch": "chore/safe-dependency-refresh-20260729",
+      "path": "~/Developer/woodright-nightly-upgrades-20260729/worktrees/safe-dependency-refresh"
+    },
+    {
+      "ahead": 3,
+      "behind": 235,
+      "dirty": 0,
+      "branch": "chore/integrate-buyer-quality-pass-20260807",
+      "path": "~/Documents/projects/furniture-commerce-wt-buyer-quality-int-20260807"
+    },
+    {
+      "ahead": 2,
+      "behind": 824,
+      "dirty": 3,
+      "branch": null,
+      "path": "~/.woodright/worktrees/admin-workspace-e6c355f"
+    },
+    {
+      "ahead": 2,
+      "behind": 856,
+      "dirty": 4,
+      "branch": "perf/catalog-loading-20260715",
+      "path": "~/Documents/projects/furniture-commerce-catalog-performance-20260715"
+    },
+    {
+      "ahead": 2,
+      "behind": 856,
+      "dirty": 3,
+      "branch": null,
+      "path": "~/Documents/projects/furniture-commerce-qa-runtime"
+    },
+    {
+      "ahead": 2,
+      "behind": 710,
+      "dirty": 0,
+      "branch": "chore/storefront-deployment-owner-label-20260723",
+      "path": "~/Documents/projects/furniture-commerce-wt-oci-owner-label-20260723"
+    },
+    {
+      "ahead": 1,
+      "behind": 39,
+      "dirty": 4,
+      "branch": "wip/admin-app-boundary-20260910",
+      "path": "~/.woodright/worktrees/admin-app-boundary-20260910"
+    },
+    {
+      "ahead": 1,
+      "behind": 824,
+      "dirty": 3,
+      "branch": null,
+      "path": "~/.woodright/worktrees/admin-workspace-3b5a27d"
+    },
+    {
+      "ahead": 1,
+      "behind": 824,
+      "dirty": 4,
+      "branch": null,
+      "path": "~/.woodright/worktrees/admin-workspace-3b5a27d-accept"
+    },
+    {
+      "ahead": 1,
+      "behind": 39,
+      "dirty": 0,
+      "branch": "feat/partners-wordmarks-on-main-20260911",
+      "path": "~/.woodright/worktrees/partners-wordmarks-on-main-20260911"
+    },
+    {
+      "ahead": 1,
+      "behind": 792,
+      "dirty": 1,
+      "branch": "feat/catalog-default-merchandising-order-20260721",
+      "path": "~/Documents/projects/furniture-commerce-catalog-merchandising-order-20260721"
+    },
+    {
+      "ahead": 1,
+      "behind": 845,
+      "dirty": 12,
+      "branch": "feat/storefront-design-mode-local-20260714",
+      "path": "~/Documents/projects/furniture-commerce-design-mode-20260714"
+    },
+    {
+      "ahead": 1,
+      "behind": 751,
+      "dirty": 0,
+      "branch": "fix/catalog-product-type-closure-20260721",
+      "path": "~/Documents/projects/furniture-commerce-fix-catalog-product-type-closure-20260721"
+    },
+    {
+      "ahead": 1,
+      "behind": 728,
+      "dirty": 0,
+      "branch": "fix/runtime-identity-app-bake-20260722",
+      "path": "~/Documents/projects/furniture-commerce-fix-runtime-identity-app-bake-20260722"
+    },
+    {
+      "ahead": 1,
+      "behind": 801,
+      "dirty": 0,
+      "branch": "fix/https-og-metadata-hardening-20260721",
+      "path": "~/Documents/projects/furniture-commerce-https-og-hardening-20260721"
+    },
+    {
+      "ahead": 1,
+      "behind": 235,
+      "dirty": 0,
+      "branch": "verify/main-convergence-20260808T093302Z",
+      "path": "~/Documents/projects/furniture-commerce-wt-main-conv-sim-20260808T093302Z"
+    },
+    {
+      "ahead": 1,
+      "behind": 429,
+      "dirty": 0,
+      "branch": "fix/storefront-next-dev-overlay-errors-20260804",
+      "path": "~/Documents/projects/furniture-commerce-wt-next-dev-overlays-20260804"
+    },
+    {
+      "ahead": 1,
+      "behind": 725,
+      "dirty": 0,
+      "branch": "fix/ww-motif-owner-review-20260722",
+      "path": "~/Documents/projects/furniture-commerce-ww-motif-owner-fixes-20260722"
+    },
+    {
+      "ahead": 1,
+      "behind": 725,
+      "dirty": 0,
+      "branch": "fix/ww-motif-owner-review-integrate-20260722",
+      "path": "~/Documents/projects/furniture-commerce-ww-motif-owner-fixes-integration-20260722"
+    },
+    {
+      "ahead": 1,
+      "behind": 721,
+      "dirty": 0,
+      "branch": "fix/ww-motif-owner-review-reintegrate-20260723",
+      "path": "~/Documents/projects/furniture-commerce-ww-motif-owner-fixes-reintegrate-20260723"
+    },
+    {
+      "ahead": 1,
+      "behind": 864,
+      "dirty": 18,
+      "branch": "feat/ww-motif-premium-ui-20260721",
+      "path": "~/Documents/projects/furniture-commerce-ww-motif-ui-20260721"
+    },
+    {
+      "ahead": 1,
+      "behind": 910,
+      "dirty": 0,
+      "branch": "data/approved-legacy-site-media-supplement",
+      "path": "~/furniture-commerce-media-append-wt"
+    }
+  ]
+}
