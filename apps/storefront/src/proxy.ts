@@ -7,6 +7,7 @@ import {
 import { buildConnectSrcDirective } from "@/lib/csp-policy"
 import { storefrontRuntimeIdentityHeaders } from "@/lib/runtime-identity-headers"
 import { stripLegacyQueryTokenFromOrderTrackSearch } from "@/lib/order-track-token-handoff"
+import { resolveAdminAppRedirectUrl } from "@/lib/admin-app-boundary"
 
 /**
  * Buyer security headers + CSP with per-request nonce.
@@ -88,6 +89,17 @@ export function proxy(request: NextRequest) {
     "frame-ancestors 'none'",
     "upgrade-insecure-requests",
   ].join("; ")
+
+  const adminRedirect = resolveAdminAppRedirectUrl({
+    pathname: request.nextUrl.pathname,
+    search: request.nextUrl.search,
+    siteOrigin: request.nextUrl.origin,
+    adminOrigin: process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ?? "",
+  })
+  if (adminRedirect) {
+    const redirect = NextResponse.redirect(adminRedirect, 308)
+    return applySecurityHeaders(request, redirect, nonce, csp)
+  }
 
   // Option A: never consume query tokens into cookies/session. Strip only so
   // SSR/Flight cannot serialize them. First hop of a legacy bookmark may still
