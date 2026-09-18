@@ -52,6 +52,21 @@ CRITICAL_CODES = {
     "CART_VARIANT_MISMATCH",
 }
 
+# Axes where hex/image presentation is legitimate (color-like buyers).
+COLORISH_EXEC_KEYS = {
+    "fabric_upholstery_executions",
+    "upholstery_color_executions",
+    "paint_finish_executions",
+    "finish_color_executions",
+}
+# Axes that must never present as color/image swatches.
+# Note: frame_material_executions may legitimately use wood-tone swatch_color.
+NON_COLOR_EXEC_KEYS = {
+    "headboard_model_executions",
+    "construction_tier_executions",
+    "material_tier_executions",
+}
+
 
 def as_exec(meta: dict, key: str) -> list[dict]:
     raw = (meta or {}).get(key)
@@ -282,6 +297,128 @@ def run_audit(database_url: str) -> dict:
                 )
                 stats["material_option_mixed"] += 1
 
+        def check_presentation_row(axis_key: str, row: dict) -> None:
+            """Night III: catch false-positive presentations without inventing textures."""
+            label = (row.get("label") or "").strip()
+            key = (row.get("key") or "").strip()
+            hex_raw = row.get("swatch_hex")
+            has_hex = bool(
+                isinstance(hex_raw, str) and HEX_RE.match(hex_raw.strip())
+            )
+            img = row.get("swatch_image")
+            has_image_field = bool(isinstance(img, str) and img.strip())
+            declared = row.get("presentation")
+            if isinstance(declared, str):
+                declared = declared.strip().lower()
+            else:
+                declared = None
+
+            if has_image_field:
+                # Field present but empty string already excluded; broken URL checked lightly.
+                if img.strip().lower() in {"null", "undefined", "none"}:
+                    issues.append(
+                        {
+                            "code": "SWATCH_IMAGE_BROKEN",
+                            "handle": handle,
+                            "axis": axis_key,
+                            "key": key,
+                            "severity": "warning",
+                        }
+                    )
+                    stats["swatch_image_broken"] += 1
+            elif declared == "swatch_image":
+                issues.append(
+                    {
+                        "code": "SWATCH_IMAGE_MISSING",
+                        "handle": handle,
+                        "axis": axis_key,
+                        "key": key,
+                        "severity": "warning",
+                    }
+                )
+                stats["swatch_image_missing"] += 1
+
+            if hex_raw and not has_hex:
+                issues.append(
+                    {
+                        "code": "SWATCH_HEX_INVALID",
+                        "handle": handle,
+                        "axis": axis_key,
+                        "key": key,
+                        "swatch_hex": hex_raw,
+                        "severity": "warning",
+                    }
+                )
+                stats["swatch_hex_invalid"] += 1
+
+            if axis_key in NON_COLOR_EXEC_KEYS and declared in (
+                "swatch_color",
+                "swatch_image",
+            ):
+                issues.append(
+                    {
+                        "code": "PRESENTATION_TYPE_MISMATCH",
+                        "handle": handle,
+                        "axis": axis_key,
+                        "key": key,
+                        "presentation": declared,
+                        "severity": "warning",
+                        "note": "non-color axis must not use color/image presentation",
+                    }
+                )
+                stats["presentation_type_mismatch"] += 1
+
+            if axis_key.startswith("fabric") or "upholstery" in axis_key:
+                if not label:
+                    issues.append(
+                        {
+                            "code": "UPHOLSTERY_LABEL_EMPTY",
+                            "handle": handle,
+                            "axis": axis_key,
+                            "key": key,
+                            "severity": "warning",
+                        }
+                    )
+                    stats["upholstery_label_empty"] += 1
+
+            if TECHNICAL_VALUE_RE.match(label) or TECHNICAL_VALUE_RE.match(key):
+                # Metadata-only signal: warn, do not fail the critical gate until
+                # storefront exposure is proven (Default stub is tracked separately).
+                issues.append(
+                    {
+                        "code": "TECHNICAL_VALUE_EXPOSED",
+                        "handle": handle,
+                        "axis": axis_key,
+                        "key": key,
+                        "label": label,
+                        "severity": "warning",
+                        "note": "metadata label/key looks technical; confirm buyer exposure before treating as critical",
+                    }
+                )
+                stats["technical_value_exposed"] += 1
+
+        # Duplicate keys within one execution array only.
+        # Coexistence of fabric_upholstery_executions + upholstery_color_executions is a
+        # compatibility alias pair resolved by storefront fallback — not two buyer axes.
+        for axis_key, rows in axes.items():
+            seen_keys: set[str] = set()
+            for row in rows:
+                k = (row.get("key") or "").strip().lower()
+                if k and k in seen_keys:
+                    issues.append(
+                        {
+                            "code": "EXECUTION_AXIS_DUPLICATE",
+                            "handle": handle,
+                            "axis": axis_key,
+                            "key": k,
+                            "severity": "warning",
+                        }
+                    )
+                    stats["execution_axis_duplicate"] += 1
+                if k:
+                    seen_keys.add(k)
+                check_presentation_row(axis_key, row)
+
         for row in fabric:
             fabric_value_keys[row["key"]] += 1
             if row["key"].lower() in FAMILY_KEYS:
@@ -303,7 +440,6 @@ def run_audit(database_url: str) -> dict:
                 stats["upholstery_with_real_image_swatch"] += 1
             elif "fabric_closeup_candidate" in kinds:
                 status = "URL_LOOKS_LIKE_CLOSEUP"
-                stats["upholstery_url_closeup_candidate"] += 1
             elif has_hex:
                 status = "HEX_COLOR_SWATCH"
                 stats["upholstery_with_verified_color_fallback"] += 1
