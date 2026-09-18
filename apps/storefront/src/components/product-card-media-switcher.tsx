@@ -18,6 +18,8 @@ type Props = {
   href: string
   alt: string
   priorityHero?: boolean
+  /** Additional above-the-fold cards: eager decode without fetchpriority=high. */
+  atfHero?: boolean
   productHandle?: string
 }
 
@@ -34,6 +36,7 @@ export function ProductCardMediaSwitcher({
   href,
   alt,
   priorityHero = false,
+  atfHero = false,
   productHandle,
 }: Props) {
   return (
@@ -50,6 +53,7 @@ export function ProductCardMediaSwitcher({
       href={href}
       alt={alt}
       priorityHero={priorityHero}
+      atfHero={atfHero}
       productHandle={productHandle}
     />
   )

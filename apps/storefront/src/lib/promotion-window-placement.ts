@@ -9,8 +9,9 @@
  *
  * - Rendered once per catalog page, sticky next to the grid, never travelling
  *   below the last product row (same height-rail technique as the filters).
- * - Visible only where the gutter can hold a legible card (CSS: ≥ 1500px →
- *   rail ≥ 150px; a 14" MacBook at 1512px gets it). Narrower viewports have
+ * - Visible only where the gutter can hold a legible card (CSS: ≥ 1551px →
+ *   rail ≥ 150px after the page margin; same breakpoint where the filter
+ *   card leaves the content area). Narrower viewports have
  *   no usable "остаток" right of the grid → the window is not shown; it never
  *   falls back into the grid or into a horizontal banner.
  * - Shown on every browse view with a non-empty result set: it sits outside
@@ -21,7 +22,7 @@
 import type { PromotionSlotPayload } from "./api/promotion-slot"
 
 /** Min viewport width (px) at which the right gutter can hold the window. */
-export const PROMOTION_WINDOW_MIN_VIEWPORT = 1500
+export const PROMOTION_WINDOW_MIN_VIEWPORT = 1551
 
 export function shouldShowPromotionWindow(
   slot: PromotionSlotPayload | null | undefined,

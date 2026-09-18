@@ -62,6 +62,13 @@ export const catalogUiCopy = {
   searchPlaceholderCompact: "Название, коллекция или категория",
   searchClear: "Очистить поиск",
   searchSubmit: "Найти",
+  /** ≤768px: horizontal chip row that surfaces the «Тип изделия» facet
+   *  outside the collapsed filter drawer (test users could not find it). */
+  typeChipsLabel: "Тип мебели",
+  typeChipsAll: "Все",
+  /** sr-only state suffix on a selected chip (links cannot carry aria-pressed). */
+  typeChipSelected: ", выбрано",
+  filtersToggle: "Фильтры",
 }
 
 export const systemCopy = {
@@ -1069,6 +1076,10 @@ export const pdpCopy = {
   optionChooseValue: "Выберите",
   /** Material execution dropdown + cart line spec label. */
   materialTierLabel: "Исполнение",
+  /** Door-handing: left/right handle. Same product, not a SKU. */
+  hingeSideLabel: "Ручка",
+  hingeSideLeft: "Слева",
+  hingeSideRight: "Справа",
   serviceLines: [
     "Массив дерева и ручная отделка",
     "Шоурум в Химках - принимаем по договорённости",
@@ -1227,7 +1238,7 @@ export const contactsCopy = {
   messengerTelegramAria: "Написать в Telegram",
   messengerWhatsappAria: "Написать в WhatsApp",
   messengerMaxAria: "Написать в MAX",
-  ctaTitle: "Есть вопрос по мебели или индивидуальному проекту?",
+  ctaTitle: ["Есть вопрос по мебели", "или индивидуальному проекту?"],
   ctaBody:
     "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
   ctaPrimary: "Оставить заявку",
@@ -1250,6 +1261,7 @@ export const partnersCopy = {
   materialsTitle: "Материалы",
   presentationsTitle: "Презентации",
   viewPresentation: "Смотреть презентацию",
+  openCase: "Смотреть работу",
   openFile: "Открыть файл",
   downloadFile: "Скачать",
   pages: (count: number) => `${count} стр.`,

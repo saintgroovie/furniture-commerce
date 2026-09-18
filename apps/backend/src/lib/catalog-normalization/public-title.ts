@@ -169,6 +169,37 @@ function tidyStrippedTitle(s: string): string {
 }
 
 /**
+ * Door-handing / handle side is a PDP option, not a catalog-card title cue.
+ * Matches «(ручка слева/справа)» and the legacy abbrev «(руч.лев/пр)».
+ * Test regexes are not /g — shared /g lastIndex would skip the replace.
+ */
+const HINGE_SIDE_PAREN_TEST = /\(\s*ручка\s+слева\s*\/\s*справа\s*\)/iu
+const HINGE_SIDE_ABBR_TEST = /\(\s*руч\.?\s*лев(?:ая)?\s*\/\s*пр(?:авая)?\.?\s*\)/iu
+
+export function titleSignalsHingeSideOption(title: string | null | undefined): boolean {
+  const s = asString(title)
+  if (!s) return false
+  return HINGE_SIDE_PAREN_TEST.test(s) || HINGE_SIDE_ABBR_TEST.test(s)
+}
+
+export function productHasHingeSideOption(product: PublicTitleInput): boolean {
+  const meta = metaOf(product)
+  return (
+    titleSignalsHingeSideOption(product.title) ||
+    titleSignalsHingeSideOption(asString(meta.canonical_name)) ||
+    titleSignalsHingeSideOption(asString(meta.legacy_title)) ||
+    titleSignalsHingeSideOption(asString(meta.public_title))
+  )
+}
+
+export function stripHingeSideParenthetical(title: string): string {
+  const next = title
+    .replace(/\s*\(\s*ручка\s+слева\s*\/\s*справа\s*\)\s*/giu, " ")
+    .replace(/\s*\(\s*руч\.?\s*лев(?:ая)?\s*\/\s*пр(?:авая)?\.?\s*\)\s*/giu, " ")
+  return next === title ? title : tidyStrippedTitle(next)
+}
+
+/**
  * Deterministic Kids / Willie Winkie title cleanup:
  * - drop `(гл. 440)` / `(шир. N)` / `(выс. N)` when already represented as options/dims
  * - drop the selectable painting name so H1 is the furniture type, not the motif
@@ -285,12 +316,15 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
 
   if (stored) {
     const expanded = expandPedestalDeskCodeInTitle(stored)
+    const withoutHinge = stripHingeSideParenthetical(expanded.title)
+    const notesStored = expanded.changed ? ["expanded_pedestal_code_in_public_title"] : []
+    if (withoutHinge !== expanded.title) notesStored.push("stripped_hinge_side_parenthetical")
     return {
-      public_title: polishMeasureStars(normalizeWhitespace(expanded.title)),
+      public_title: polishMeasureStars(normalizeWhitespace(withoutHinge)),
       source: "metadata.public_title",
       legacy_title: legacy,
       pedestal_code: expanded.code,
-      notes: expanded.changed ? ["expanded_pedestal_code_in_public_title"] : [],
+      notes: notesStored,
     }
   }
 
@@ -344,6 +378,12 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
     }
   }
 
+  const withoutHinge = stripHingeSideParenthetical(publicTitle)
+  if (withoutHinge !== publicTitle) {
+    publicTitle = withoutHinge
+    notes.push("stripped_hinge_side_parenthetical")
+  }
+
   return {
     public_title: polishMeasureStars(normalizeWhitespace(publicTitle)),
     source,
@@ -353,4 +393,4 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
   }
 }
 
-export const PUBLIC_TITLE_TRANSFORM_VERSION = "catalog-normalization-public-title-v2"
+export const PUBLIC_TITLE_TRANSFORM_VERSION = "catalog-normalization-public-title-v3"

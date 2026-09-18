@@ -4,6 +4,7 @@ import { RoomSetCard } from "@/components/room-set-card"
 import { getRoomSets } from "@/lib/api/room-sets"
 import { KIDS_ROOM_TYPE } from "@/lib/kids"
 import { actions, roomsCopy, seo } from "@/lib/woodright-copy"
+import { CopyLines } from "@/components/copy-lines"
 
 export const metadata: Metadata = {
   title: seo.rooms.title,
@@ -81,7 +82,7 @@ export default async function RoomsPage() {
   return (
     <div data-state="success">
       <h1>{roomsCopy.h1}</h1>
-      <p className="info-text" style={{ marginTop: "0.5rem" }}>{roomsCopy.lead}</p>
+      <CopyLines className="info-text" style={{ marginTop: "0.5rem" }} lines={roomsCopy.lead} />
       <p className="page-caption">{roomsCopy.supporting}</p>
       <ul className="product-grid" style={{ marginTop: "1.5rem" }}>
         {list.map((rs: { id?: string }) => (

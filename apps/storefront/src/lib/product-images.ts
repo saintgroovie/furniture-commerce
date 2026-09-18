@@ -4,7 +4,9 @@
  * **Client-safe:** no imports from `apps/backend` (no fs/crypto). Oliver MD5 repair lives in
  * `pdp-buyer-gallery.server.ts` (server components / scripts only).
  *
- * Catalog cards: hero uses `product.thumbnail` only; extras use
+ * Catalog cards: hero uses `product.thumbnail`, except wardrobes whose
+ * `_main` shot is an open-door interior — then `gallery_01` (closed front).
+ * Extras use
  * {@link collectExtraProductImageUrls}, {@link collectDisplayGroupExtraImageUrls}, and
  * {@link mergeUniqueExtraUrls} (listing attaches `display_group_color_variants` in `display-group.ts`).
  */

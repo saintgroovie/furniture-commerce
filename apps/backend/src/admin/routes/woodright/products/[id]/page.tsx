@@ -2,6 +2,7 @@ import { Button, Container, Heading, Prompt, StatusBadge, Text } from "@medusajs
 import { useEffect, useRef, useState } from "react"
 import { Link, Navigate, useLocation, useParams } from "react-router-dom"
 import { BasicsSection } from "../../../../components/woodright/BasicsSection"
+import { DeskNav } from "../../../../components/woodright/DeskNav"
 import { DimensionsSection } from "../../../../components/woodright/DimensionsSection"
 import { MediaSection } from "../../../../components/woodright/MediaSection"
 import { PreviewActions } from "../../../../components/woodright/PreviewLink"
@@ -156,10 +157,11 @@ const WoodrightProductEditorPage = () => {
     <DirtyGuardProvider>
       <div className="flex flex-col gap-4">
         <Container className="divide-y p-0">
+          <DeskNav active="catalog" />
           <div className="bg-ui-bg-base sticky top-0 z-10">
           <div className="flex flex-col gap-3 px-6 py-4">
             <Link to="/woodright/products" className="text-ui-fg-subtle text-sm">
-              ← Товары
+              К каталогу
             </Link>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex items-start gap-3">

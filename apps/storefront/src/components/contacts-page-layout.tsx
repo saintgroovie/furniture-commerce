@@ -115,7 +115,7 @@ export function ContactsPageLayout() {
       <section className="contacts-page-cta" aria-labelledby="contacts-cta-heading">
         <div className="contacts-page-cta-copy">
           <h2 id="contacts-cta-heading" className="contacts-page-cta-title">
-            {formatRuInline(contactsCopy.ctaTitle)}
+            <CopyLines as="span" lines={contactsCopy.ctaTitle} />
           </h2>
           <p className="contacts-page-cta-body">
             {formatRuInline(contactsCopy.ctaBody)}

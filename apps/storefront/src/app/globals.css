@@ -902,8 +902,25 @@ html:not(.is-kids-chrome-snap) body:has([data-kids-product]) .logo-kids-slot .lo
   box-shadow: inset 0 -1.5px 0 currentColor;
 }
 
+/* Current section in the phone menu: a short pill-shaped rule beside a
+   bolder label. The old full-height inset 3px bar sat flush against the
+   text (rows have no left padding) and read as a rendering glitch. */
 .mobile-nav a[aria-current="page"] {
-  box-shadow: inset 3px 0 0 currentColor;
+  position: relative;
+  padding-left: 14px;
+  font-weight: 600;
+}
+
+.mobile-nav a[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 1.05em;
+  border-radius: 999px;
+  background: currentColor;
+  transform: translateY(-50%);
 }
 
 /* "Детская" is the one section entry point in the main nav that gets a
@@ -2351,7 +2368,8 @@ main:has(.contacts-page) {
   line-height: 1.3;
   letter-spacing: -0.01em;
   color: var(--color-fg);
-  text-wrap: pretty;
+  /* pretty still left «проекту?» alone on line 3 at 390px. */
+  text-wrap: balance;
   overflow-wrap: anywhere;
   word-break: normal;
 }
@@ -2670,9 +2688,9 @@ html.mobile-nav-open {
   }
 
   .mobile-nav-group-cart {
+    /* Links already carry border-bottom; an extra border-top here drew a
+       second rule with an empty band above «Корзина». Group gap separates. */
     margin-top: var(--space-sm);
-    padding-top: var(--space-sm);
-    border-top: 1px solid var(--color-border);
   }
 
   .mobile-nav a {
@@ -2832,9 +2850,26 @@ select:focus-visible {
   animation: loading-appear 0.35s ease 0.15s forwards;
 }
 
+/* First document load: cover is already in the HTML. No delayed fade-in,
+   or the assembling page shows through for ~500ms. */
+.route-veil-boot {
+  opacity: 1;
+  animation: none;
+  z-index: 60;
+}
+
 .route-veil-closing {
   pointer-events: none;
   animation: route-veil-out 0.48s ease forwards;
+}
+
+.route-veil-boot.route-veil-closing {
+  animation: route-veil-out 0.48s ease forwards;
+}
+
+/* JS never hydrated / commit never ran: inline layout timer reveals the page. */
+.route-veil[data-veil-failsafe="1"] {
+  display: none !important;
 }
 
 .route-veil-body {
@@ -3099,6 +3134,11 @@ select:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .route-veil {
+    opacity: 1;
+    animation: none;
+  }
+
+  .route-veil-boot {
     opacity: 1;
     animation: none;
   }
@@ -3621,6 +3661,13 @@ button,
   white-space: nowrap;
 }
 
+/* Link-styled CTAs must not pick up `a:hover { text-decoration: underline }`. */
+a.btn,
+a.btn:hover,
+a.btn:focus-visible {
+  text-decoration: none;
+}
+
 button:disabled,
 .btn:disabled {
   opacity: 0.5;
@@ -4028,7 +4075,8 @@ button:disabled,
 
 /* Micro-caps label - same voice as section titles, quiet next to swatches */
 .product-card-selector-label {
-  font-size: 0.5625rem;
+  /* 11px: 9px micro-caps were below the phone readability floor. */
+  font-size: 0.6875rem;
   font-weight: 500;
   color: var(--color-fg-muted);
   flex: 0 0 auto;
@@ -4787,7 +4835,7 @@ button.pdp-material-trigger:focus-visible {
 
 .product-card-model-chip {
   flex: 0 0 auto;
-  font-size: 0.625rem;
+  font-size: 0.75rem;
   line-height: 1.2;
   letter-spacing: 0.02em;
   padding: 2.5px 7px;
@@ -5505,9 +5553,24 @@ a.product-card-member-chip:hover {
   }
 }
 
-.catalog-filter-shell[data-pending="true"] {
+/* Pending navigation dims the *content* of the shell, not the shell itself:
+   the phone filter sheet + scrim are fixed descendants of the shell, and an
+   opacity < 1 on the shell would (a) dim them, (b) open a stacking context
+   that traps their z-index under the site header, (c) kill their clicks. */
+.catalog-filter-shell[data-pending="true"] > .catalog-controls,
+.catalog-filter-shell[data-pending="true"] > .catalog-type-chips,
+.catalog-filter-shell[data-pending="true"] > .catalog-filter-toolbar,
+.catalog-filter-shell[data-pending="true"] .catalog-product-area,
+.catalog-filter-shell[data-pending="true"] .catalog-promo-sidebar {
   opacity: 0.72;
   pointer-events: none;
+}
+
+@media (min-width: 769px) {
+  .catalog-filter-shell[data-pending="true"] .catalog-filter-sidebar {
+    opacity: 0.72;
+    pointer-events: none;
+  }
 }
 
 /* --catalog-toolbar-inset = this card's own padding (5px) + border (1px):
@@ -5959,7 +6022,10 @@ a.product-card-member-chip:hover {
 .catalog-filter-layout {
   --catalog-sidebar-gap: var(--space-lg);
   --catalog-gutter: max(var(--space-lg), calc((100vw - var(--max-width)) / 2 + var(--space-lg)));
-  --catalog-sidebar-w: clamp(0px, calc(var(--catalog-gutter) - var(--catalog-sidebar-gap)), 200px);
+  /* Rail width = gutter minus the gap to the grid AND the page margin on the
+     viewport side; with a single gap the rails touched the screen edge at
+     1500-1650px. */
+  --catalog-sidebar-w: clamp(0px, calc(var(--catalog-gutter) - 2 * var(--catalog-sidebar-gap)), 200px);
   position: relative;
   display: flex;
   align-items: start;
@@ -5997,16 +6063,16 @@ a.product-card-member-chip:hover {
    catalog column. Same width formula as the filter card, so both gutters
    read as one symmetric pair around the grid, and the grid itself keeps
    its columns / rows / sort untouched (the window is not a grid cell).
-   Shown only once the gutter can hold a legible card: from 1500px the
-   rail is ≥150px (photo + 2-line title + two price lines still read
-   comfortably; the 14" MacBook at 1512px gets the window). Below that
-   there is no usable leftover right of the grid, so the window is simply
-   absent (never folded into the grid or a horizontal banner). */
+   Shown only once the gutter can hold a legible card: from 1551px (same
+   breakpoint where the filter rail leaves the content area) the rail is
+   ≥150px (photo + 2-line title + two price lines still read comfortably).
+   Below that there is no usable leftover right of the grid, so the window
+   is simply absent (never folded into the grid or a horizontal banner). */
 .catalog-promo-sidebar {
   display: none;
 }
 
-@media (min-width: 1500px) {
+@media (min-width: 1551px) {
   .catalog-promo-sidebar {
     position: absolute;
     top: 0;
@@ -6551,27 +6617,92 @@ a.product-card-member-chip:hover {
      --catalog-filter-fit (set from CatalogFilterControls on scroll) keeps
      that bottom gap exact even before the drawer sticks, when it sits
      lower than 53px in the flow; calc() is the stuck-state fallback. */
+  /* Phones: the drawer is a fixed bottom sheet over a scrim, not an inline
+     sticky card. Inline, its height was whatever was left between its
+     in-flow top and the viewport bottom (often ~200px), so «Коллекции» /
+     «Тип изделия» collapsed into a two-row internal scroller and the type
+     facet was effectively invisible. The sheet always gets up to 82dvh;
+     only .catalog-filter-scroll scrolls, «Применить» / «Показать» stay
+     anchored. --catalog-filter-fit (inline-fit helper) is ignored here. */
+  .catalog-filter-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 64;
+    background: rgba(38, 28, 20, 0.42);
+    animation: catalog-filter-scrim-in 0.22s ease-out both;
+  }
+
   .catalog-filter-sidebar {
-    position: sticky;
-    top: 53px;
-    z-index: 40;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: auto;
+    z-index: 65;
     display: none;
     flex-direction: column;
     gap: var(--space-sm);
     width: auto;
-    margin-left: 0;
-    margin-right: 0;
-    max-height: var(--catalog-filter-fit, calc(100vh - 53px - var(--space-lg)));
+    margin: 0;
+    max-height: min(82dvh, calc(100dvh - 65px - var(--safe-top)));
     overflow: hidden;
-    margin-bottom: var(--space-md);
-    padding: var(--space-md);
+    padding: calc(var(--space-md) + 10px) var(--space-md)
+      max(var(--space-md), var(--safe-bottom));
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    border-bottom: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     background: var(--color-surface);
+    box-shadow: 0 -14px 40px rgba(38, 28, 20, 0.18);
+  }
+
+  /* Grab-handle cue: this is a sheet, it can be dismissed. */
+  .catalog-filter-sidebar::before {
+    content: "";
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-fg-muted) 45%, transparent);
+    transform: translateX(-50%);
   }
 
   .catalog-filter-sidebar-open {
     display: flex;
+    animation: catalog-filter-sheet-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes catalog-filter-sheet-up {
+    from {
+      transform: translateY(24px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  @keyframes catalog-filter-scrim-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .catalog-filter-sidebar-open,
+    .catalog-filter-backdrop {
+      animation: none;
+    }
+  }
+
+  html.catalog-filters-open,
+  body.catalog-filters-open {
+    overflow: hidden;
   }
 
   .catalog-filter-apply-mobile {
@@ -6586,6 +6717,156 @@ a.product-card-member-chip:hover {
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
+  }
+
+  /* Drawer on phones: «Тип изделия» before «Коллекции» (primary facet first;
+     it is also what the chip row above the toolbar exposes). Active chips
+     keep the very top. Desktop sidebar order is unchanged. */
+  .catalog-filter-scroll .catalog-active-chips {
+    order: -2;
+  }
+
+  .catalog-filter-group-category {
+    order: -1;
+  }
+
+  /* Count badge on the «Фильтры» toggle - the drawer is collapsed, so this
+     is the only cue that something is set inside it. */
+  .catalog-filter-mobile-toggle {
+    position: relative;
+  }
+
+  .catalog-filter-toggle-count {
+    position: absolute;
+    top: -7px;
+    right: -7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: var(--color-action);
+    color: #fff;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+}
+
+.catalog-filter-backdrop {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .catalog-filter-backdrop {
+    display: block;
+  }
+}
+
+/* ---- Catalog «Тип мебели» chip row (phones only) ----
+   Horizontally scrollable pills under the product-type tabs. On ≥769px the
+   sidebar list is always visible, so the row is hidden there. Bleeds to the
+   viewport edge (negative container gutter) so the row visibly continues
+   under the gutter - the cue that it scrolls. */
+.catalog-type-chips {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .catalog-type-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    margin-top: var(--space-sm);
+    margin-inline: calc(-1 * max(var(--page-gutter), var(--safe-left)))
+      calc(-1 * max(var(--page-gutter), var(--safe-right)));
+  }
+
+  .catalog-type-chips-label {
+    padding-inline: max(var(--page-gutter), var(--safe-left));
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+  }
+
+  .catalog-type-chips-track {
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-inline: max(var(--page-gutter), var(--safe-left))
+      max(var(--page-gutter), var(--safe-right));
+    padding-bottom: 2px;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: max(var(--page-gutter), var(--safe-left));
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .catalog-type-chips-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .catalog-type-chip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    padding: 0 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-surface);
+    color: var(--color-fg-secondary);
+    font-size: 0.8rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    scroll-snap-align: start;
+    transition:
+      background 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+  }
+
+  .catalog-type-chip:hover {
+    text-decoration: none;
+    border-color: color-mix(in srgb, var(--color-action) 45%, var(--color-border));
+    color: var(--color-fg);
+  }
+
+  .catalog-type-chip:hover {
+    text-decoration: none;
+    border-color: color-mix(in srgb, var(--color-action) 45%, var(--color-border));
+    color: var(--color-fg);
+  }
+
+  .catalog-type-chip-count {
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--color-fg-muted);
+  }
+
+  .catalog-type-chip-active {
+    border-color: var(--color-action);
+    background: var(--color-action);
+    color: #fff;
+  }
+
+  .catalog-type-chip-active .catalog-type-chip-count {
+    color: rgba(255, 255, 255, 0.72);
+  }
+
+  .catalog-type-chip:focus-visible {
+    outline: 2px solid var(--color-action);
+    outline-offset: 2px;
   }
 }
 
@@ -7105,6 +7386,17 @@ a.product-card-member-chip:hover {
   .product-detail-img {
     height: clamp(340px, 52vh, 560px);
     padding: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .product-detail-img {
+    /* Phones: let the frame follow the photo (most renders are 4:3) instead
+       of a fixed 440px box that left ~80px of empty mat above and below a
+       landscape image with the zoom affordance floating far under it. */
+    height: auto;
+    aspect-ratio: 4 / 3;
+    max-height: 52vh;
   }
 }
 
@@ -7632,6 +7924,16 @@ a.product-card-member-chip:hover {
 a.pdp-size-chip:hover {
   border-color: var(--color-fg-muted);
   text-decoration: none;
+}
+
+button.pdp-size-chip {
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+button.pdp-size-chip:hover {
+  border-color: var(--color-fg-muted);
 }
 
 .pdp-size-chip.is-active {
@@ -9890,7 +10192,7 @@ a.pdp-size-chip:hover {
   background: var(--hp-kids-accent);
 }
 
-.hp-kids-cta .btn-primary:hover {
+.hp-kids-cta .btn-primary:hover:not(:disabled) {
   background: #3f5c44;
 }
 
@@ -10107,7 +10409,10 @@ a.pdp-size-chip:hover {
   line-height: 1.6;
 }
 
-.hp-final-btn {
+/* Cream-on-photo plate. Compound selectors must beat `.btn-primary:hover:not(:disabled)`
+   (action-hover brown on the dark scrim + brand-hover text = invisible label). */
+a.btn.hp-final-btn,
+.hp-final-btn.btn-primary {
   margin-top: var(--space-lg);
   background: #f6f1ea;
   color: var(--color-brand);
@@ -10117,11 +10422,14 @@ a.pdp-size-chip:hover {
   font-size: 1.0625rem;
   box-sizing: border-box;
   max-width: 100%;
+  text-decoration: none;
 }
 
-.hp-final-btn:hover {
+a.btn.hp-final-btn:hover:not(:disabled),
+.hp-final-btn.btn-primary:hover:not(:disabled) {
   background: #fff;
   color: var(--color-brand-hover);
+  text-decoration: none;
 }
 
 /* ---- Responsive --------------------------------------------------------- */
@@ -10433,15 +10741,21 @@ a.pdp-size-chip:hover {
   line-height: 1.3;
 }
 
-.hp-kfinal-btn {
+/* Cream-on-olive band. Kids `--color-action-hover` (#446249) is the same family
+   as this plate, so `.btn-primary:hover:not(:disabled)` makes the chip vanish. */
+a.btn.hp-kfinal-btn,
+.hp-kfinal-btn.btn-primary {
   margin-top: var(--space-lg);
   background: #f2f6ef;
   color: #3c5642;
+  text-decoration: none;
 }
 
-.hp-kfinal-btn:hover {
+a.btn.hp-kfinal-btn:hover:not(:disabled),
+.hp-kfinal-btn.btn-primary:hover:not(:disabled) {
   background: #fff;
   color: #2f4534;
+  text-decoration: none;
 }
 
 @media (max-width: 1024px) {
@@ -11460,15 +11774,19 @@ a.pdp-size-chip:hover {
   color: rgba(238, 241, 238, 0.82);
 }
 
+a.btn.bsp-final-btn,
 .bsp-final-btn {
   margin-top: 26px;
   background: #f3f1ea;
   color: var(--bespoke-teal, #305866);
+  text-decoration: none;
 }
 
+a.btn.bsp-final-btn:hover:not(:disabled),
 .bsp-final-btn:hover:not(:disabled) {
   background: #fff;
   color: var(--bespoke-teal, #305866);
+  text-decoration: none;
 }
 
 /* Responsive */
@@ -12668,17 +12986,59 @@ a.pdp-size-chip:hover {
   }
 
   .mobile-nav-overlay {
+    /* Full-viewport sheet with its own top row (.mobile-nav-top). It used to
+       start under the sticky header (top: 64px), which in in-app browsers
+       (Telegram / VK webview) left a band of page content above the menu
+       once the header had scrolled away. Sits above the header (z 50) and
+       the header burger (z 52). */
     position: fixed;
-    top: calc(64px + var(--safe-top));
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: var(--color-surface);
-    z-index: 51;
+    z-index: 60;
     overflow-y: auto;
     overflow-x: hidden;
+    padding-top: var(--safe-top);
     padding-bottom: max(var(--space-lg), var(--safe-bottom));
     min-width: 0;
+  }
+
+  .mobile-nav-top {
+    /* Same three-slot geometry as .header-top-inner: spacer | wordmark | close. */
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    height: 64px;
+    padding: 0 max(var(--page-gutter), var(--safe-right)) 0
+      max(var(--page-gutter), var(--safe-left));
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .mobile-nav-brand {
+    grid-column: 2;
+    justify-self: center;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .mobile-nav-close {
+    grid-column: 3;
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+
+  .mobile-nav-close:focus-visible {
+    outline: 2px solid var(--color-action);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
   }
 
   .mobile-nav {
@@ -12697,9 +13057,9 @@ a.pdp-size-chip:hover {
   }
 
   .mobile-nav-group-cart {
+    /* Links already carry border-bottom; an extra border-top here drew a
+       second rule with an empty band above «Корзина». Group gap separates. */
     margin-top: var(--space-sm);
-    padding-top: var(--space-sm);
-    border-top: 1px solid var(--color-border);
   }
 
   .mobile-nav a {
@@ -13297,6 +13657,9 @@ a.pdp-size-chip:hover {
   position: absolute;
   inset: 0;
   margin: 0;
+  /* Phone .ed-hero is 72vh while the img keeps min-height 86vh: clip the
+     photo to the figure so it cannot spill over the next section heading. */
+  overflow: hidden;
 }
 
 .ed-hero-media img {
@@ -13314,7 +13677,9 @@ a.pdp-size-chip:hover {
   z-index: 1;
   padding: clamp(1.5rem, 5vw, 4rem);
   color: var(--ed-dark-fg);
-  max-width: 42rem;
+  /* 48rem: at 1280px «складывается в дом» fits on one line (42rem left
+     «в дом» alone on line 3). */
+  max-width: 48rem;
 }
 
 .ed-hero-panel .ed-eyebrow {
@@ -13323,6 +13688,8 @@ a.pdp-size-chip:hover {
 
 .ed-hero-panel h1 {
   margin: 0;
+  /* No one-word last line («в дом») inside the 42rem panel. */
+  text-wrap: balance;
   font-size: clamp(2.2rem, 6vw, 4.4rem);
   font-weight: 400;
   letter-spacing: -0.04em;
@@ -13754,26 +14121,68 @@ a.pdp-size-chip:hover {
 .ed-logo-card {
   height: 100%;
   display: grid;
-  grid-template-rows: minmax(10rem, 1fr) auto;
+  grid-template-rows: minmax(11rem, 1fr) auto;
   overflow: clip;
   background: var(--color-surface, #f4efe8);
 }
 
 .ed-logo-cell.is-regular .ed-logo-card {
-  grid-template-rows: minmax(8rem, 0.7fr) auto;
+  grid-template-rows: minmax(9rem, 0.85fr) auto;
 }
 
-.ed-logo-media {
-  margin: 0;
+.ed-logo-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 9.5rem;
+  padding: 1.4rem 1.2rem 0.4rem;
+  color: var(--color-logo-ink, #5a4234);
+}
+
+.ed-logo-cell.is-featured .ed-logo-mark {
+  min-height: 13rem;
+  padding-top: 2rem;
+}
+
+.ed-logo-mark svg {
+  width: 100%;
+  max-width: 22rem;
+  height: auto;
+}
+
+.ed-logo-mark img {
+  width: auto;
+  max-width: 14rem;
+  max-height: 7.5rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.ed-logo-cell.is-featured .ed-logo-mark img {
+  max-height: 9.5rem;
+  max-width: 18rem;
+}
+
+.ed-logo-photo {
+  min-height: 11rem;
   overflow: clip;
+  background: #1c1814;
 }
 
-.ed-logo-media img {
+.ed-logo-cell.is-featured .ed-logo-photo {
+  min-height: 16rem;
+}
+
+.ed-logo-cell.is-large .ed-logo-photo {
+  min-height: 13rem;
+}
+
+.ed-logo-photo img {
+  display: block;
   width: 100%;
   height: 100%;
-  min-height: 10rem;
+  min-height: 11rem;
   object-fit: cover;
-  transform: scale(1.04);
 }
 
 .ed-logo-copy {
@@ -13883,13 +14292,27 @@ a.pdp-size-chip:hover {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .ed-logo-media img {
-    transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1);
+  .ed-logo-mark svg,
+  .ed-logo-mark img {
+    transform: translateY(0);
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  .ed-logo-card:hover .ed-logo-media img,
-  .ed-logo-card:focus-within .ed-logo-media img {
+  .ed-logo-photo img {
     transform: scale(1);
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .ed-logo-card:hover .ed-logo-mark svg,
+  .ed-logo-card:focus-within .ed-logo-mark svg,
+  .ed-logo-card:hover .ed-logo-mark img,
+  .ed-logo-card:focus-within .ed-logo-mark img {
+    transform: translateY(-0.35rem);
+  }
+
+  .ed-logo-card:hover .ed-logo-photo img,
+  .ed-logo-card:focus-within .ed-logo-photo img {
+    transform: scale(1.035);
   }
 
   .ed-logo-name a {
@@ -13930,6 +14353,16 @@ a.pdp-size-chip:hover {
 .ed-partner-logo {
   max-height: 4rem;
   width: auto;
+}
+
+.ed-partner-logo-mark {
+  max-width: 22rem;
+  color: var(--color-logo-ink, #5a4234);
+}
+
+.ed-partner-logo-mark svg {
+  width: 100%;
+  height: auto;
 }
 
 .ed-partner-gallery {

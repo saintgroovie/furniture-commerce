@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { EditorialFigure } from "@/components/editorial/editorial-figure"
 import { EditorialShell } from "@/components/editorial/editorial-shell"
+import { PartnerMark, hasPartnerMark } from "@/components/partners/partner-mark"
 import { getPublicPartnerBySlug } from "@/lib/api/partners"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { partnersCopy, seo } from "@/lib/woodright-copy"
@@ -44,7 +45,11 @@ export default async function PartnerPage({ params }: { params: Promise<Params> 
           <Link href="/partners">{partnersCopy.backToIndex}</Link>
         </p>
         {partner.logo_url ? (
-          <img className="ed-partner-logo" src={partner.logo_url} alt={partner.name} />
+          <img className="ed-partner-logo" src={partner.logo_url} alt="" />
+        ) : hasPartnerMark(partner.slug) ? (
+          <div className="ed-partner-logo-mark">
+            <PartnerMark slug={partner.slug} name={partner.name} />
+          </div>
         ) : null}
         <h1>{partner.name}</h1>
         {partner.description ? <p className="ed-body">{formatRuInline(partner.description)}</p> : null}

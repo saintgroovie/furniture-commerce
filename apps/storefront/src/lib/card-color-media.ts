@@ -38,6 +38,7 @@ import {
   resolveUpholsteryAxisPresentation,
   type OptionPresentation,
 } from "../../../backend/src/lib/option-presentation-contract"
+import { preferClosedFrontCatalogHero } from "./catalog-closed-front-hero"
 
 export type { OptionPresentation }
 export { resolveUpholsteryAxisPresentation }
@@ -522,16 +523,17 @@ export function cardThumbnailSrcFromProduct(
   product: Record<string, unknown>
 ): string {
   const t = product.thumbnail
-  if (typeof t === "string") {
-    const s = t.trim()
-    if (s.length > 0) return resolveStorefrontProductImageSrc(s)
+  let stored = ""
+  if (typeof t === "string" && t.trim()) stored = t.trim()
+  if (!stored) {
+    const images = product.images
+    if (Array.isArray(images) && images.length > 0) {
+      stored = normalizeImageEntryUrl(images[0]) ?? ""
+    }
   }
-  const images = product.images
-  if (Array.isArray(images) && images.length > 0) {
-    const u = normalizeImageEntryUrl(images[0])
-    if (u) return resolveStorefrontProductImageSrc(u)
-  }
-  return ""
+  if (!stored) return ""
+  const preferred = preferClosedFrontCatalogHero(product, stored)
+  return resolveStorefrontProductImageSrc(preferred)
 }
 
 function metaExecutionSignature(product: Record<string, unknown>): string | null {
