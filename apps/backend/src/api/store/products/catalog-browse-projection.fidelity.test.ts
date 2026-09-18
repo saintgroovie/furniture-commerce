@@ -214,4 +214,41 @@ assert.equal(CATALOG_METADATA_ALLOW.has("workbook_row_key"), false)
   assert.equal(meta.shared_scene_media, undefined)
 }
 
+{
+  // Hygiene leftover C4 must not slim browse metadata: promotion slot and
+  // catalog cards read material_execution_code; cards may show tier copy;
+  // dimensions fallback is dimensions ?? dimensions_normalized.
+  const cfg = {
+    min_unit_price: 54355,
+    original_min_unit_price: 62000,
+    material_execution_code: "solid_front_ldsp_body",
+    material_execution_label: "Фасады из массива, корпус ЛДСП",
+    material_price_multiplier: 0.7,
+    variant_id: "var_1",
+    color_multiplier: 1 as const,
+  }
+  const tiers = {
+    solid_full: {
+      key: "solid_full",
+      label_ru: "Полностью из массива",
+      description_ru: "Текст для покупателя",
+      price_multiplier: 1,
+      position: 1,
+    },
+  }
+  const projected = projectCatalogMetadataAllowlist({
+    dimensions: { width_mm: 1030 },
+    dimensions_normalized: { width_mm: 1030, extra: true },
+    buyer_default_configuration: cfg,
+    material_tiers: tiers,
+  })!
+  assert.deepEqual(projected.buyer_default_configuration, cfg)
+  assert.deepEqual(projected.material_tiers, tiers)
+  assert.deepEqual(projected.dimensions, { width_mm: 1030 })
+  assert.deepEqual(projected.dimensions_normalized, {
+    width_mm: 1030,
+    extra: true,
+  })
+}
+
 console.log("catalog-browse-projection.fidelity.test.ts: ok")

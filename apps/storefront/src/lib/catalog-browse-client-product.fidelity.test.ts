@@ -71,4 +71,42 @@ import { toCatalogBrowseClientProduct } from "./catalog-browse-client-product"
   assert.equal(meta.workbook_row_key, undefined)
 }
 
+{
+  // Mirror of backend browse pass-through (hygiene leftover C4).
+  const cfg = {
+    min_unit_price: 54355,
+    original_min_unit_price: 62000,
+    material_execution_code: "solid_front_ldsp_body",
+    material_execution_label: "Фасады из массива, корпус ЛДСП",
+    material_price_multiplier: 0.7,
+    variant_id: "var_1",
+    color_multiplier: 1,
+  }
+  const tiers = {
+    solid_front_ldsp_body: {
+      key: "solid_front_ldsp_body",
+      label_ru: "Фасады из массива, корпус ЛДСП",
+      description_ru: "Текст для покупателя",
+      price_multiplier: 0.7,
+      position: 0,
+    },
+  }
+  const out = toCatalogBrowseClientProduct({
+    id: "p-lock",
+    handle: "gr-bed",
+    title: "Кровать",
+    metadata: {
+      collection: "greenwich",
+      dimensions: { width_mm: 1030, depth_mm: 2207, height_mm: 1050 },
+      dimensions_normalized: { width_mm: 1030, extra: true },
+      buyer_default_configuration: cfg,
+      material_tiers: tiers,
+    },
+  })
+  const meta = out.metadata as Record<string, unknown>
+  assert.deepEqual(meta.buyer_default_configuration, cfg)
+  assert.deepEqual(meta.material_tiers, tiers)
+  assert.deepEqual(meta.dimensions_normalized, { width_mm: 1030, extra: true })
+}
+
 console.log("catalog-browse-client-product.fidelity.test.ts: ok")

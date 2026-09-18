@@ -1,5 +1,7 @@
 # hygiene-trees-20260918 - latest
 
-Run: `runs/20260918T123500Z`
+Runs:
+- `20260918T123500Z` - isolate + gitignore + park patches
+- `20260918T124800Z` - leftover analysis; no-apply; contract locks
 
-Isolated worktree from `origin/main`; unique leftover diffs parked; only `.gitignore` hygiene applied. Canonical iCloud tree and QA runtime clone were not mutated.
+C2 / C3 / C4 stay parked. Canonical and runtime not mutated.
