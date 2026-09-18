@@ -1,5 +1,7 @@
 # Public demo pair cutover (digest)
 
+Live public demo host (2026-09-17): Timeweb `200.169.188.39`. SSH: `docs/operator/timeweb-demo-runtime.md`.
+
 ## Purpose
 
 Official, lock-safe tooling to cut over **public_demo** (`--environment public_demo`) to a verified backend + storefront **immutable digest pair**.

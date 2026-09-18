@@ -31,6 +31,8 @@ Browser  https://127.0.0.1:9200/app
 ssh -i <IdentityFile> -L 19200:127.0.0.1:9200 -N leonid@<vm-host>
 ```
 
+Live **demo** SSH identity (Timeweb): `woodright-demo-vm` / key path in `docs/operator/timeweb-demo-runtime.md`. Public-production Admin is **not** on that VM yet (Yandex pair is dumps-only). Do not assume `:9200` exists on Timeweb.
+
 2. Local TLS terminator listening on `:9200`, proxying to `http://127.0.0.1:19200` (operator-managed cert; example tooling is local preference).
 
 3. Browser:

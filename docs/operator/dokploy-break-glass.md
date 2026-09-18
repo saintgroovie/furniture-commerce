@@ -11,7 +11,7 @@
 
 ## Break-glass
 
-- SSH host access for `leonid`
+- SSH host access for `leonid` on live Timeweb (`woodright-demo-vm`). Key path: `docs/operator/timeweb-demo-runtime.md`
 - ACTIVE_RELEASE / ACTIVE_OWNER backups under `/srv/woodright/backups/active-release/`
 - Never store passwords/tokens in Git or policy JSON
 - Recovery must remain after any role tightening
