@@ -20,7 +20,7 @@ Private key **is not** in the repository. Do not commit it. Do not paste it into
 | Stale path (do not use) | `/Users/leonidmbp/Downloads/woodright-demo-mac/woodright-demo-mac` (missing) |
 | User on VM | `leonid` |
 | Mode | `0600`, owner `leonidmbp` |
-| `~/.ssh/config` aliases | `woodright-demo-vm` → `200.169.188.39` (Timeweb, live); `woodright-yandex-vm` → `89.169.188.29` (Yandex, leftover until billing stop) |
+| `~/.ssh/config` aliases | `woodright-demo-vm` → `200.169.188.39` (Timeweb, live). Yandex alias removed 2026-09-18 after operator power-off. |
 
 Expected `~/.ssh/config` fragment (key path only, no key material):
 
@@ -32,21 +32,13 @@ Host woodright-demo-vm
   IdentitiesOnly yes
   IdentityAgent none
   StrictHostKeyChecking yes
-
-Host woodright-yandex-vm
-  HostName 89.169.188.29
-  User leonid
-  IdentityFile /Users/leonidmbp/Desktop/woodright-demo-mac/woodright-demo-mac
-  IdentitiesOnly yes
-  IdentityAgent none
-  StrictHostKeyChecking yes
 ```
 
 ```sh
 ssh woodright-demo-vm 'hostname; hostname -I'
 ```
 
-After the Yandex VM is gone: delete `Host woodright-yandex-vm`. Keep the Desktop key until a replacement key is installed on Timeweb.
+Do **not** keep `Host woodright-yandex-vm`. Operator powered off the Yandex VM on 2026-09-18 (SSH banner timeout; HTTPS SSL timeout on `89.169.188.29`). Keep the Desktop key: it is the live Timeweb identity.
 
 ## What runs here
 
@@ -58,7 +50,9 @@ Backup root: `/srv/woodright/backups/automated/` (root `0700`).
 
 ## Yandex Cloud evacuation (2026-09-17)
 
-Former demo host `89.169.188.29` (Yandex Cloud `ru-central1-b`) was still running three stacks. Unique data was copied **before** billing stop:
+Former demo host `89.169.188.29` (Yandex Cloud `ru-central1-b`) ran three stacks. Unique data was copied **before** power-off.
+
+**2026-09-18:** operator powered off that VM. Probes from the operator Mac: SSH banner timeout, HTTPS SSL timeout. Do not treat `89.169.188.29` as a rollback host.
 
 | Path | Contents |
 |---|---|
