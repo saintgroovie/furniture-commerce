@@ -1,6 +1,7 @@
 import { Container, Text } from "@medusajs/ui"
 import { useSearchParams } from "react-router-dom"
 import type { AttentionFilter } from "../../../../lib/woodright-admin/seller-product-types"
+import { DeskFrame } from "../../../components/woodright/DeskNav"
 import { SellerProductsList } from "../../../components/woodright/SellerProductsList"
 import { useWoodrightProducts } from "../../../lib/use-woodright-products"
 
@@ -34,6 +35,7 @@ const WoodrightProductsPage = () => {
 
   return (
     <Container className="divide-y p-0">
+      <DeskFrame title="Каталог" lead="Цена, фото и видимость в одном списке" active="catalog">
       <SellerProductsList
         products={data?.products ?? []}
         loading={loading}
@@ -52,6 +54,7 @@ const WoodrightProductsPage = () => {
           setSearchParams(next)
         }}
       />
+      </DeskFrame>
     </Container>
   )
 }

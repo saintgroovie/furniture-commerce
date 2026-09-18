@@ -1,6 +1,7 @@
-import { Button, Container, Heading, Input, Label, Text } from "@medusajs/ui"
+import { Button, Container, Input, Label, Text } from "@medusajs/ui"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import { DeskFrame } from "../../../components/woodright/DeskNav"
 import { adminJson, sellerErrorMessage } from "../../../lib/admin-fetch"
 import type {
   WoodrightPartner,
@@ -105,14 +106,15 @@ const WoodrightPartnersPage = () => {
 
   return (
     <Container className="divide-y p-0">
+      <DeskFrame
+        title="Партнёры"
+        lead="Публичный индекс. Без подтверждения и прав на логотип не добавляйте"
+        active="site"
+      >
       <div className="px-6 py-4">
-        <Link to="/woodright" className="text-ui-fg-subtle text-sm">
-          Woodright
+        <Link to="/woodright/contacts" className="text-ui-fg-subtle text-sm">
+          К контактам
         </Link>
-        <Heading className="mt-2">Партнёры</Heading>
-        <Text size="small" className="text-ui-fg-subtle">
-          Публичный индекс. Не добавляйте компании без подтверждения и прав на логотип
-        </Text>
       </div>
       {loading && (
         <div className="px-6 py-4">
@@ -335,6 +337,7 @@ const WoodrightPartnersPage = () => {
           </Button>
         </div>
       </div>
+      </DeskFrame>
     </Container>
   )
 }

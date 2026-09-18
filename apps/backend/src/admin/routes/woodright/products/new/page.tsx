@@ -1,6 +1,7 @@
-import { Button, Container, Heading, Input, Label, Text } from "@medusajs/ui"
+import { Button, Container, Input, Label, Text } from "@medusajs/ui"
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { DeskFrame } from "../../../../components/woodright/DeskNav"
 import { adminJson, sellerErrorMessage } from "../../../../lib/admin-fetch"
 import {
   SELLER_CLASSIFICATION_CHOICES,
@@ -58,14 +59,15 @@ const WoodrightCreateProductPage = () => {
 
   return (
     <Container className="divide-y p-0">
+      <DeskFrame
+        title="Добавить товар"
+        lead="Создаётся черновик. Покупатели его не увидят, пока вы не опубликуете"
+        active="catalog"
+      >
       <div className="px-6 py-4">
         <Link to="/woodright/products" className="text-ui-fg-subtle text-sm">
-          К списку товаров
+          К каталогу
         </Link>
-        <Heading className="mt-2">Добавить товар</Heading>
-        <Text size="small" className="text-ui-fg-subtle">
-          Создаётся черновик. Покупатели его не увидят, пока вы не опубликуете
-        </Text>
       </div>
       <form
         noValidate
@@ -176,6 +178,7 @@ const WoodrightCreateProductPage = () => {
           </Button>
         </div>
       </form>
+      </DeskFrame>
     </Container>
   )
 }
