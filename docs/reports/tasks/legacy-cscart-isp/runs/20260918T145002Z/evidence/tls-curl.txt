@@ -1,0 +1,24 @@
+# Live woodright.ru 2026-09-18T14:51:58Z
+
+Commands:
+```
+echo | openssl s_client -connect woodright.ru:443 -servername woodright.ru 2>/dev/null | openssl x509 -noout -issuer -dates -subject -ext subjectAltName
+# exit 0
+echo | openssl s_client -connect woodright.ru:443 -servername woodright.ru 2>/dev/null | openssl x509 -noout -checkend 86400
+# exit 0; "Certificate will not expire"
+curl -sI --max-time 15 --http2 https://www.woodright.ru/
+# exit 0; HTTP/2 200 (same stack)
+```
+
+Result:
+```
+issuer=C=US, O=Let's Encrypt, CN=YR1
+notBefore=Sep 18 11:55:09 2026 GMT
+notAfter=Dec 17 11:55:08 2026 GMT
+subject=CN=woodright.ru
+X509v3 Subject Alternative Name:
+    DNS:woodright.ru, DNS:www.woodright.ru
+HTTP/2 200
+server: nginx/1.30.2
+x-powered-by: PHP/7.4.33
+```
