@@ -37,3 +37,9 @@ package-lock.json
 # Generated catalog-normalization runtime dumps (keep scripts/docs)
 artifacts/catalog-normalization/
 tmp/
+
+# Local Mac / Cursor agent hygiene (never commit)
+.nosync
+**/.nosync
+.woodright-worktrees/
+.github/context-mode/sessions/
