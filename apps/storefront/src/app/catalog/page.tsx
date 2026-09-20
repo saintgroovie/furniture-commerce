@@ -16,6 +16,12 @@ import {
   toClientPromotionSlot,
 } from "@/lib/catalog-browse-client-product"
 import {
+  catalogBrowseDisplayEntries,
+  collectAtfBrowseProducts,
+  scopeCatalogBrowsePool,
+} from "@/lib/catalog-browse-pool"
+import { CatalogItemListJsonLd } from "@/components/catalog-item-list-json-ld"
+import {
   fetchKidsRoomSetMembership,
   resolveKidsProducts,
 } from "@/lib/kids"
@@ -106,15 +112,8 @@ export default async function CatalogPage({
     )
   }
 
-  const scopedMain = allRaw.filter((p: Record<string, unknown>) => {
-    if (kidsIds.has(p.id as string)) return false
-    if (!isProductInMainCatalogScope(p)) return false
-    if (isMedusaCanonicalSeedDemoProduct(p)) return false
-    const classification = (
-      p.product_classification as { product_type?: string } | undefined
-    )?.product_type
-    return classification !== BESPOKE_PRODUCT_TYPE
-  }) as Record<string, unknown>[]
+  const kidsProductIds = Array.from(kidsIds)
+  const scopedMain = scopeCatalogBrowsePool(allRaw, "main", kidsProductIds)
 
   // Rare URL `?type=BESPOKE`: keep fail-closed SSR path (pool ≠ main browse pool).
   if (bespokeOnly) {
@@ -186,6 +185,10 @@ export default async function CatalogPage({
     )
   }
 
+  const browseProducts = toCatalogBrowseClientProducts(scopedMain)
+  const siteUrl = getSiteUrl()
+  const jsonLdEntries = catalogBrowseDisplayEntries(browseProducts, filterState)
+
   return (
     <div>
       <div className="catalog-hero">
@@ -198,13 +201,15 @@ export default async function CatalogPage({
         </p>
       </div>
 
+      <CatalogItemListJsonLd siteUrl={siteUrl} entries={jsonLdEntries} />
       <CatalogBrowseClient
         basePath="/catalog"
         initialState={filterState}
-        products={toCatalogBrowseClientProducts(scopedMain)}
+        atfProducts={collectAtfBrowseProducts(browseProducts, filterState)}
+        poolScope="main"
+        kidsProductIds={kidsProductIds}
         promotionSlot={toClientPromotionSlot(promotionSlot)}
         showBespokeCta
-        siteUrl={getSiteUrl()}
         emptyCopy={{
           emptyFilteredTitle: catalogCopy.emptyFilteredTitle,
           emptyFilteredBody: catalogCopy.emptyFilteredBody,
