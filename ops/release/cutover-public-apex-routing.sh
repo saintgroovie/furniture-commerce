@@ -57,10 +57,17 @@ DOKPLOY_NET="dokploy-network"
 SF_NAME="woodright-public-production-storefront"
 BE_NAME="woodright-public-production-backend"
 LEGACY_APEX_A="79.133.175.43"
-# Never default a public A target. Obsolete Yandex demo and Timeweb public demo
-# are refused even when passed explicitly.
+# Never default a public A target. Obsolete Yandex demo IP is refused.
+# Timeweb public IPv4 200.169.188.39 is the colocated host: demo stack and
+# public_production stack share the VM; isolation is stack/data/ports, not IP.
 OBSOLETE_YANDEX_DEMO_A="89.169.188.29"
-TIMEWEB_PUBLIC_DEMO_A="200.169.188.39"
+TIMEWEB_PUBLIC_HOST_A="200.169.188.39"
+DEMO_SF_NAME="woodright-staging-storefront"
+DEMO_BE_NAME="woodright-staging-backend"
+DEMO_PG_NAME="woodright-staging-postgres"
+DEMO_REDIS_NAME="woodright-staging-redis"
+PROD_PG_NAME="woodright-public-production-postgres"
+PROD_REDIS_NAME="woodright-public-production-redis"
 NEW_STACK_A=""
 REQUIRED_BUILD_PROFILE="public_production"
 REQUIRED_RUNTIME_ROLE="public_production"
@@ -121,9 +128,10 @@ Usage:
     [--approval-path PATH]
 
 dry-run and execute require an explicit public IPv4 via --new-stack-a or
-WOODRIGHT_PUBLIC_APEX_NEW_STACK_A. Hardcoded Yandex 89.169.188.29 and Timeweb
-demo 200.169.188.39 are refused. This helper does not treat demo/staging as
-public_production. Rollback may omit --new-stack-a.
+WOODRIGHT_PUBLIC_APEX_NEW_STACK_A. Hardcoded Yandex 89.169.188.29 and legacy
+CS-Cart 79.133.175.43 are refused. Timeweb 200.169.188.39 is the colocated
+host and is allowed once the public_production STACK (not the demo stack) is
+proven on that VM. Rollback may omit --new-stack-a.
 
 execute requires owner approval JSON + confirm token.
 Accepted SHA/digests are derived from OWNER_APPROVED_RELEASE + EXPECTED_RELEASE +
@@ -210,8 +218,6 @@ validate_new_stack_a() {
   require_ipv4 "$ip"
   [[ "$ip" != "$OBSOLETE_YANDEX_DEMO_A" ]] \
     || die "new-stack-a refused: obsolete Yandex demo $OBSOLETE_YANDEX_DEMO_A is not a public_production target"
-  [[ "$ip" != "$TIMEWEB_PUBLIC_DEMO_A" ]] \
-    || die "new-stack-a refused: Timeweb public demo $TIMEWEB_PUBLIC_DEMO_A is not a public_production target"
   [[ "$ip" != "$LEGACY_APEX_A" ]] \
     || die "new-stack-a refused: legacy CS-Cart $LEGACY_APEX_A is not a public_production target"
 }
@@ -227,7 +233,7 @@ resolve_new_stack_a() {
     return 0
   fi
   [[ -n "$NEW_STACK_A" ]] \
-    || die "NEW_STACK_A_REQUIRED: pass --new-stack-a <IPv4> or WOODRIGHT_PUBLIC_APEX_NEW_STACK_A before dry-run/execute. Hardcoded Yandex $OBSOLETE_YANDEX_DEMO_A and Timeweb demo $TIMEWEB_PUBLIC_DEMO_A are refused."
+    || die "NEW_STACK_A_REQUIRED: pass --new-stack-a <IPv4> or WOODRIGHT_PUBLIC_APEX_NEW_STACK_A before dry-run/execute. Hardcoded Yandex $OBSOLETE_YANDEX_DEMO_A and legacy CS-Cart $LEGACY_APEX_A are refused. Timeweb $TIMEWEB_PUBLIC_HOST_A is the colocated host and is allowed."
   validate_new_stack_a "$NEW_STACK_A"
 }
 
@@ -528,7 +534,97 @@ cas_pair() {
   [[ "$be_h" == "healthy" ]] || die "backend not healthy: $be_h"
   [[ "$sf_r" == "0" ]] || die "storefront RestartCount=$sf_r (require 0)"
   [[ "$be_r" == "0" ]] || die "backend RestartCount=$be_r (require 0)"
+  cas_loopback_binds
+  cas_production_datastore
+  cas_demo_stack_separate
   log "CAS pair OK sha=${SOURCE_SHA:0:7} sf_id=${LIVE_SF_ID:0:12} be_id=${LIVE_BE_ID:0:12} profile=$REQUIRED_BUILD_PROFILE"
+}
+
+container_loopback_binds() {
+  local name="$1"
+  docker inspect --format '{{range $p, $binds := .HostConfig.PortBindings}}{{range $binds}}{{println .HostIp ":" .HostPort}}{{end}}{{end}}' "$name" 2>/dev/null \
+    | awk '{gsub(/ /,"",$0); print}'
+}
+
+cas_loopback_binds() {
+  local sf_binds be_binds b
+  sf_binds="$(container_loopback_binds "$SF_NAME")"
+  be_binds="$(container_loopback_binds "$BE_NAME")"
+  [[ -n "$sf_binds" ]] || die "storefront has no host port bindings"
+  [[ -n "$be_binds" ]] || die "backend has no host port bindings"
+  while IFS= read -r b; do
+    [[ -z "$b" ]] && continue
+    [[ "$b" == "127.0.0.1:3300" ]] \
+      || die "storefront extra/non-loopback bind refused: $b"
+  done <<< "$sf_binds"
+  while IFS= read -r b; do
+    [[ -z "$b" ]] && continue
+    [[ "$b" == "127.0.0.1:9300" ]] \
+      || die "backend extra/non-loopback bind refused: $b"
+  done <<< "$be_binds"
+  printf '%s\n' "$sf_binds" | grep -Fx '127.0.0.1:3300' >/dev/null \
+    || die "storefront must bind 127.0.0.1:3300 (got: $(echo "$sf_binds" | tr '\n' ' '))"
+  printf '%s\n' "$be_binds" | grep -Fx '127.0.0.1:9300' >/dev/null \
+    || die "backend must bind 127.0.0.1:9300 (got: $(echo "$be_binds" | tr '\n' ' '))"
+}
+
+cas_production_datastore() {
+  local pg_id redis_id dburl redisurl
+  pg_id="$(container_id "$PROD_PG_NAME")"
+  redis_id="$(container_id "$PROD_REDIS_NAME")"
+  [[ -n "$pg_id" ]] || die "production postgres missing: $PROD_PG_NAME"
+  [[ -n "$redis_id" ]] || die "production redis missing: $PROD_REDIS_NAME"
+  [[ "$(container_health "$PROD_PG_NAME")" == "healthy" ]] \
+    || die "production postgres not healthy"
+  [[ "$(container_health "$PROD_REDIS_NAME")" == "healthy" ]] \
+    || die "production redis not healthy"
+  dburl="$(container_env "$BE_NAME" DATABASE_URL)"
+  redisurl="$(container_env "$BE_NAME" REDIS_URL)"
+  [[ -n "$dburl" ]] || die "production backend DATABASE_URL missing"
+  [[ -n "$redisurl" ]] || die "production backend REDIS_URL missing"
+  case "$dburl" in
+    *staging*|*woodright_staging*)
+      die "production DATABASE_URL points at staging/demo"
+      ;;
+  esac
+  case "$redisurl" in
+    *staging*)
+      die "production REDIS_URL points at staging/demo"
+      ;;
+  esac
+  [[ "$dburl" == *woodright_public_production* ]] \
+    || die "production DATABASE_URL must name woodright_public_production"
+}
+
+cas_demo_stack_separate() {
+  local demo_sf_id demo_be_id demo_pg_id demo_redis_id prod_pg_id prod_redis_id
+  demo_sf_id="$(container_id "$DEMO_SF_NAME")"
+  demo_be_id="$(container_id "$DEMO_BE_NAME")"
+  demo_pg_id="$(container_id "$DEMO_PG_NAME")"
+  demo_redis_id="$(container_id "$DEMO_REDIS_NAME")"
+  prod_pg_id="$(container_id "$PROD_PG_NAME")"
+  prod_redis_id="$(container_id "$PROD_REDIS_NAME")"
+  [[ -n "$demo_sf_id" ]] || die "colocated demo storefront missing: $DEMO_SF_NAME"
+  [[ -n "$demo_be_id" ]] || die "colocated demo backend missing: $DEMO_BE_NAME"
+  [[ -n "$demo_pg_id" ]] || die "colocated demo postgres missing: $DEMO_PG_NAME"
+  [[ -n "$demo_redis_id" ]] || die "colocated demo redis missing: $DEMO_REDIS_NAME"
+  [[ "$(container_health "$DEMO_SF_NAME")" == "healthy" ]] \
+    || die "colocated demo storefront not healthy"
+  [[ "$(container_health "$DEMO_BE_NAME")" == "healthy" ]] \
+    || die "colocated demo backend not healthy"
+  [[ "$(container_health "$DEMO_PG_NAME")" == "healthy" ]] \
+    || die "colocated demo postgres not healthy"
+  [[ "$(container_health "$DEMO_REDIS_NAME")" == "healthy" ]] \
+    || die "colocated demo redis not healthy"
+  [[ "$demo_sf_id" != "$LIVE_SF_ID" ]] || die "production storefront id collides with demo stack"
+  [[ "$demo_be_id" != "$LIVE_BE_ID" ]] || die "production backend id collides with demo stack"
+  [[ -n "$prod_pg_id" && "$demo_pg_id" != "$prod_pg_id" ]] \
+    || die "production postgres id collides with demo postgres"
+  [[ -n "$prod_redis_id" && "$demo_redis_id" != "$prod_redis_id" ]] \
+    || die "production redis id collides with demo redis"
+  [[ "$SF_NAME" != "$DEMO_SF_NAME" && "$BE_NAME" != "$DEMO_BE_NAME" ]] \
+    || die "production container names must not equal demo staging names"
+  log "CAS colocated demo stack separate OK demo_sf=${demo_sf_id:0:12} demo_be=${demo_be_id:0:12}"
 }
 
 assert_container_id_unchanged() {
@@ -1131,7 +1227,8 @@ print_dns_operator_steps() {
     cat <<EOF
 # DNS is NOT mutated by this helper.
 # Do not retarget A records until an explicit --new-stack-a IPv4 is supplied.
-# Refused defaults: ${OBSOLETE_YANDEX_DEMO_A} (obsolete Yandex demo), ${TIMEWEB_PUBLIC_DEMO_A} (Timeweb public demo).
+# Refused defaults: ${OBSOLETE_YANDEX_DEMO_A} (obsolete Yandex), ${LEGACY_APEX_A} (legacy CS-Cart).
+# Colocated Timeweb host ${TIMEWEB_PUBLIC_HOST_A} is allowed as --new-stack-a when the public_production stack is proven on that VM.
 # Keep MX / TXT / NS unchanged. Rollback DNS: restore web A to ${LEGACY_APEX_A}; delete api A.
 EOF
     return 0

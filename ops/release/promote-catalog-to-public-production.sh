@@ -93,6 +93,25 @@ done
 
 [[ "$CONFIRM" == "1" ]] || die "refusing without --confirm-catalog-promote"
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/woodright-restore-target-guard.sh
+source "$SCRIPT_DIR/../lib/woodright-restore-target-guard.sh"
+
+TARGET_VOLUME=""
+COMPOSE_PROJECT=""
+TARGET_NETWORK=""
+TARGET_NETWORKS=()
+if command -v docker >/dev/null && docker inspect "$TARGET_CONTAINER" >/dev/null 2>&1; then
+  TARGET_VOLUME="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Name}}{{end}}{{end}}' "$TARGET_CONTAINER" 2>/dev/null || true)"
+  COMPOSE_PROJECT="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' "$TARGET_CONTAINER" 2>/dev/null || true)"
+  while IFS= read -r _wr_net; do
+    [[ -n "$_wr_net" ]] && TARGET_NETWORKS+=("$_wr_net")
+  done < <(docker inspect --format '{{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}' "$TARGET_CONTAINER" 2>/dev/null || true)
+  TARGET_NETWORK="${TARGET_NETWORKS[0]:-}"
+fi
+wr_assert_public_production_restore_target "$TARGET_CONTAINER" "$TARGET_DB" "$TARGET_VOLUME" "$COMPOSE_PROJECT" "$TARGET_NETWORK" \
+  || die "restore target refused"
+
 case "$TARGET_DB" in
   woodright_public_production) ;;
   *) die "refusing unexpected target DB=$TARGET_DB" ;;
@@ -107,6 +126,15 @@ esac
 command -v docker >/dev/null || die "docker required"
 docker inspect "$SOURCE_CONTAINER" >/dev/null 2>&1 || die "source container missing: $SOURCE_CONTAINER"
 docker inspect "$TARGET_CONTAINER" >/dev/null 2>&1 || die "target container missing: $TARGET_CONTAINER"
+TARGET_VOLUME="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Name}}{{end}}{{end}}' "$TARGET_CONTAINER" 2>/dev/null || true)"
+[[ -n "$TARGET_VOLUME" ]] || die "target postgres data volume missing on $TARGET_CONTAINER"
+wr_assert_public_production_restore_target "$TARGET_CONTAINER" "$TARGET_DB" "$TARGET_VOLUME" "$COMPOSE_PROJECT" "$TARGET_NETWORK" \
+  || die "restore target refused after volume inspect"
+[[ -n "$COMPOSE_PROJECT" && "$COMPOSE_PROJECT" != "<no value>" ]] \
+  || die "RESTORE_TARGET_COMPOSE_PROJECT_MISSING"
+[[ "${#TARGET_NETWORKS[@]}" -ge 1 ]] || die "RESTORE_TARGET_NETWORKS_EMPTY"
+wr_assert_public_production_restore_networks "${TARGET_NETWORKS[@]}" \
+  || die "restore networks refused"
 
 mkdir -p "$WORK_DIR"
 chmod 700 "$WORK_DIR"

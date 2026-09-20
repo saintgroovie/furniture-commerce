@@ -42,7 +42,12 @@ Do **not** keep `Host woodright-yandex-vm`. Operator powered off the Yandex VM o
 
 ## What runs here
 
-One public demo pair: `woodright-staging-*` + Dokploy `v0.29.12` + Traefik.
+Canonical Timeweb host for **two** colocated stacks (not a second VPS):
+
+- demo / staging: `woodright-staging-*` on `woodright-demo.ru`
+- future public production: `woodright-public-production-*` on loopback `127.0.0.1:3300` / `:9300`
+
+SSH alias `woodright-demo-vm` is historical. The VM is the shared host.
 
 Daily backup timer: `woodright-backup.timer` (02:17 UTC). Postgres container pin: `WOODRIGHT_PG_CONTAINER=woodright-staging-postgres` via `/usr/local/sbin/woodright-backup-run`.
 
@@ -74,9 +79,11 @@ Do **not** restore these dumps onto live `woodright_staging` without a separate 
 
 Apex cutover helper `ops/release/cutover-public-apex-routing.sh` does **not**
 hardcode `NEW_STACK_A`. dry-run/execute require `--new-stack-a` /
-`WOODRIGHT_PUBLIC_APEX_NEW_STACK_A` and refuse `89.169.188.29` and
-`200.169.188.39`. Public_production is **not** running on Timeweb. Do not
-retarget `woodright.ru` DNS until that pair is stood up on an intended host.
+`WOODRIGHT_PUBLIC_APEX_NEW_STACK_A`. Timeweb `200.169.188.39` is allowed as
+the colocated future A. Still refused: obsolete Yandex `89.169.188.29` and
+legacy CS-Cart `79.133.175.43`. Safety invariant is **production stack must
+differ from demo stack** (containers, volumes, DB, ports), not a second IP.
+Do not retarget `woodright.ru` DNS until that isolated pair CAS on this host.
 
 ## Evacuation inventory (2026-09-18)
 

@@ -138,6 +138,9 @@ if args[:1] == ["inspect"]:
         print(c.get("id", "id-" + name))
     elif "Health.Status" in fmt:
         print(c["health"])
+    elif "PortBindings" in fmt or "HostPort" in fmt:
+        for b in c.get("port_bindings") or []:
+            print(b)
     elif "Networks" in fmt:
         for n in c.get("networks", []):
             print(n)
@@ -297,6 +300,7 @@ json.dump({
         "WOODRIGHT_RUNTIME_ROLE": "public_production",
         "WOODRIGHT_DATABASE_IDENTITY": "public_production_db",
       },
+      "port_bindings": ["127.0.0.1:3300"],
     },
     "woodright-public-production-backend": {
       "id": "beid" + "b"*56,
@@ -309,8 +313,55 @@ json.dump({
         "WOODRIGHT_RELEASE_SHA": sha,
         "WOODRIGHT_RUNTIME_ROLE": "public_production",
         "WOODRIGHT_DATABASE_IDENTITY": "public_production_db",
+        "DATABASE_URL": "postgres://woodright@woodright-public-production-postgres:5432/woodright_public_production",
+        "REDIS_URL": "redis://woodright-public-production-redis:6379",
       },
-    }
+      "port_bindings": ["127.0.0.1:9300"],
+    },
+    "woodright-public-production-postgres": {
+      "id": "pppg" + "1"*56,
+      "image": "postgres:15-alpine",
+      "sha": "n/a", "health": "healthy", "restarts": 0, "networks": [],
+      "env": {},
+    },
+    "woodright-public-production-redis": {
+      "id": "pprd" + "2"*56,
+      "image": "redis:7-alpine",
+      "sha": "n/a", "health": "healthy", "restarts": 0, "networks": [],
+      "env": {},
+    },
+    "woodright-staging-storefront": {
+      "id": "dssf" + "c"*56,
+      "image": "ghcr.io/saintgroovie/woodright-storefront@sha256:" + "d"*64,
+      "sha": "c1d86af61666806ade88943da0f4f28cf82bb834",
+      "health": "healthy", "restarts": 0, "networks": [],
+      "profile": "public_demo",
+      "role": "public_demo",
+      "db": "staging_db",
+      "env": {"WOODRIGHT_RUNTIME_ROLE": "public_demo"},
+    },
+    "woodright-staging-backend": {
+      "id": "dsbe" + "d"*56,
+      "image": "ghcr.io/saintgroovie/woodright-backend@sha256:" + "e"*64,
+      "sha": "f9ea8f8fb7137dcd378fa38b578e3dada02c5992",
+      "health": "healthy", "restarts": 0, "networks": [],
+      "profile": "public_demo",
+      "role": "public_demo",
+      "db": "staging_db",
+      "env": {"WOODRIGHT_RUNTIME_ROLE": "public_demo"},
+    },
+    "woodright-staging-postgres": {
+      "id": "dspg" + "e"*56,
+      "image": "postgres:15-alpine",
+      "sha": "n/a", "health": "healthy", "restarts": 0, "networks": [],
+      "env": {},
+    },
+    "woodright-staging-redis": {
+      "id": "dsrd" + "f"*56,
+      "image": "redis:7-alpine",
+      "sha": "n/a", "health": "healthy", "restarts": 0, "networks": [],
+      "env": {},
+    },
   }
 }, open(path, "w"), indent=2)
 PY
@@ -1309,11 +1360,17 @@ export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-new-stack-timeweb"
 if WOODRIGHT_PUBLIC_APEX_NEW_STACK_A=200.169.188.39 \
   run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
     >/dev/null 2>"$TMP/new-stack-timeweb.txt"; then
-  fail "Timeweb public demo IP should be refused as new-stack-a"
+  python3 - "$TMP/evidence-new-stack-timeweb/preflight.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+assert d.get("new_stack_a")=="200.169.188.39", d.get("new_stack_a")
+assert d.get("dns_mutation")=="NO"
+print("ok")
+PY
+  pass "Timeweb colocated host IP allowed as new-stack-a"
 else
-  grep -q 'Timeweb public demo' "$TMP/new-stack-timeweb.txt" \
-    && pass "Timeweb public demo IP refused" \
-    || fail "Timeweb refuse message missing"
+  fail "Timeweb colocated host 200.169.188.39 should be allowed as new-stack-a"
+  cat "$TMP/new-stack-timeweb.txt"
 fi
 
 export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-new-stack-cscart"
@@ -1342,6 +1399,79 @@ PY
 else
   fail "explicit TEST-NET-1 new-stack-a should pass dry-run"
   cat "$TMP/new-stack-ok.txt"
+fi
+
+export WOODRIGHT_PUBLIC_APEX_NEW_STACK_A=200.169.188.39
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-missing-demo-stack"
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+for name in list(d["containers"]):
+    if name.startswith("woodright-staging-"):
+        del d["containers"][name]
+json.dump(d, open(sys.argv[1],"w"))
+PY
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/missing-demo-stack.txt"; then
+  fail "colocated Timeweb target without demo stack should fail"
+else
+  grep -q 'colocated demo storefront missing' "$TMP/missing-demo-stack.txt" \
+    && pass "missing demo stack refused on colocated host" \
+    || fail "missing demo stack refuse message missing"
+fi
+
+init_state
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-missing-loopback-bind"
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+d["containers"]["woodright-public-production-storefront"]["port_bindings"] = ["0.0.0.0:3300"]
+json.dump(d, open(sys.argv[1],"w"))
+PY
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/missing-loopback-bind.txt"; then
+  fail "production storefront bind other than 127.0.0.1:3300 should fail"
+else
+  grep -qE 'storefront extra/non-loopback bind refused|storefront must bind 127.0.0.1:3300' "$TMP/missing-loopback-bind.txt" \
+    && pass "non-loopback production storefront bind refused" \
+    || fail "loopback bind refuse message missing"
+fi
+
+init_state
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-extra-public-bind"
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+d["containers"]["woodright-public-production-storefront"]["port_bindings"] = [
+  "127.0.0.1:3300", "0.0.0.0:3300"
+]
+json.dump(d, open(sys.argv[1],"w"))
+PY
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/extra-public-bind.txt"; then
+  fail "loopback plus extra public storefront bind should fail"
+else
+  grep -q 'storefront extra/non-loopback bind refused' "$TMP/extra-public-bind.txt" \
+    && pass "extra public storefront bind refused" \
+    || fail "extra public bind refuse message missing"
+fi
+
+init_state
+export WOODRIGHT_APEX_EVIDENCE_DIR="$TMP/evidence-staging-dburl"
+python3 - "$STATE/docker.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1]))
+d["containers"]["woodright-public-production-backend"]["env"]["DATABASE_URL"] = \
+  "postgres://woodright@woodright-staging-postgres:5432/woodright_staging"
+json.dump(d, open(sys.argv[1],"w"))
+PY
+if run --mode dry-run --source-sha "$SHA" --storefront-digest "$SF_DIG" --backend-digest "$BE_DIG" \
+    >/dev/null 2>"$TMP/staging-dburl.txt"; then
+  fail "production DATABASE_URL pointing at staging should fail"
+else
+  grep -q 'DATABASE_URL points at staging' "$TMP/staging-dburl.txt" \
+    && pass "staging DATABASE_URL on production backend refused" \
+    || fail "staging DATABASE_URL refuse message missing"
 fi
 
 if [[ "$FAILED" -ne 0 ]]; then

@@ -32,6 +32,10 @@ owner technical-provisioning token (not buyer DNS cutover).
 Catalog promotion is DB-only. Media is a separate read-source → new volume copy
 into `woodright-public-production_woodright_public_media`.
 
+Canonical restore of an immutable `/server/static` tar (daily media backup) is
+`ops/backup/woodright-public-production-restore-media.sh`. Destination volume
+must be the production media volume. Staging media mounts are refused.
+
 ## Not implied
 
 - Public DNS / Traefik buyer cutover

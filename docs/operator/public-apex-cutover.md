@@ -125,10 +125,14 @@ Do **not** publish raw `:3300` / `:9300` on `0.0.0.0`. Do **not** add `admin.woo
 6. ITB panel DNS (authorized launch mutation, not this readiness cycle).
    Helper `ops/release/cutover-public-apex-routing.sh` no longer hardcodes a
    destination A. dry-run/execute require `--new-stack-a <IPv4>` or
-   `WOODRIGHT_PUBLIC_APEX_NEW_STACK_A`. Refused even if passed:
-   `89.169.188.29` (obsolete Yandex demo) and `200.169.188.39` (Timeweb public
-   demo, not public_production). Do not point `woodright.ru` at either IP until
-   that pair is running on the intended VM (`docs/operator/timeweb-demo-runtime.md`).
+   `WOODRIGHT_PUBLIC_APEX_NEW_STACK_A`. Isolation is stack, not IP: Timeweb
+   `200.169.188.39` is the colocated host and is an allowed future A target
+   once the isolated `woodright-public-production-*` pair is proven on that VM.
+   Still refused even if passed: `89.169.188.29` (obsolete Yandex demo) and
+   `79.133.175.43` (legacy CS-Cart). Do not point `woodright.ru` at Timeweb
+   until that pair, loopback binds `127.0.0.1:3300`/`9300`, health, SHA/digests,
+   recovery point, and a still-separate healthy demo stack all CAS
+   (`docs/operator/timeweb-demo-runtime.md`).
    - create A `api.woodright.ru` → the explicit `--new-stack-a` IPv4
    - retarget A `woodright.ru` and `www.woodright.ru` → same
    - leave MX/TXT/NS unchanged
