@@ -69,7 +69,7 @@ assert.match(layout, /CspNonceProvider/, "layout must provide CSP nonce to clien
 
 for (const rel of [
   "src/components/catalog-filter-controls.tsx",
-  "src/components/catalog-browse-client.tsx",
+  "src/components/catalog-item-list-json-ld.tsx",
   "src/app/product/[id]/page.tsx",
 ]) {
   const src = read(rel)
