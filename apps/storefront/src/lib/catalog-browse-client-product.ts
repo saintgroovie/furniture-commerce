@@ -74,6 +74,40 @@ const EXECUTION_URL_KEYS = new Set([
   "greenwich_paint_execution_matrix",
 ])
 
+const BUYER_DEFAULT_KEEP = new Set([
+  "min_unit_price",
+  "original_min_unit_price",
+  "material_execution_code",
+  "material_execution_label",
+  "material_price_multiplier",
+  "variant_id",
+  "color_multiplier",
+])
+
+const MATERIAL_TIER_KEEP = new Set([
+  "key",
+  "label_ru",
+  "description_ru",
+  "price_multiplier",
+  "position",
+])
+
+const EXECUTION_ROW_KEEP = new Set([
+  "key",
+  "label",
+  "urls",
+  "swatch_hex",
+  "swatch_image",
+  "swatch_url",
+  "swatch_type",
+  "presentation",
+  "frame_material",
+  "paint_finish",
+  "headboard_model",
+  "fabric_upholstery",
+  "combo_key",
+])
+
 function slimUrlList(urls: unknown): string[] | undefined {
   if (!Array.isArray(urls)) return undefined
   const out: string[] = []
@@ -92,14 +126,51 @@ function slimExecutionEntries(value: unknown): unknown {
   return value.map((entry) => {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) return entry
     const o = entry as Record<string, unknown>
-    if (!("urls" in o)) return entry
-    const urls = slimUrlList(o.urls)
-    if (urls === undefined) {
-      const { urls: _drop, ...rest } = o
-      return rest
+    const picked: Record<string, unknown> = {}
+    for (const k of EXECUTION_ROW_KEEP) {
+      if (k in o) picked[k] = o[k]
     }
-    return { ...o, urls }
+    if ("urls" in picked) {
+      const urls = slimUrlList(picked.urls)
+      if (urls === undefined) delete picked.urls
+      else picked.urls = urls
+    }
+    return picked
   })
+}
+
+/** Catalog/promo contract: keep BuyerDefaultConfiguration, drop unknown extras. */
+function slimBuyerDefaultConfiguration(value: unknown): unknown {
+  if (value == null || typeof value !== "object" || Array.isArray(value)) {
+    return value
+  }
+  const e = value as Record<string, unknown>
+  const slim: Record<string, unknown> = {}
+  for (const k of BUYER_DEFAULT_KEEP) {
+    if (k in e) slim[k] = e[k]
+  }
+  return slim
+}
+
+/** Keep card/PDP-fallback tier fields, including optional description_ru. */
+function slimMaterialTiers(value: unknown): unknown {
+  if (value == null || typeof value !== "object" || Array.isArray(value)) {
+    return value
+  }
+  const out: Record<string, unknown> = {}
+  for (const [code, entry] of Object.entries(value as Record<string, unknown>)) {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      out[code] = entry
+      continue
+    }
+    const e = entry as Record<string, unknown>
+    const slim: Record<string, unknown> = {}
+    for (const k of MATERIAL_TIER_KEEP) {
+      if (k in e) slim[k] = e[k]
+    }
+    out[code] = slim
+  }
+  return out
 }
 
 function projectMetadata(metadata: unknown): Record<string, unknown> | undefined {
@@ -109,6 +180,14 @@ function projectMetadata(metadata: unknown): Record<string, unknown> | undefined
   const out: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(metadata as Record<string, unknown>)) {
     if (!META_ALLOW.has(k)) continue
+    if (k === "material_tiers") {
+      out[k] = slimMaterialTiers(v)
+      continue
+    }
+    if (k === "buyer_default_configuration") {
+      out[k] = slimBuyerDefaultConfiguration(v)
+      continue
+    }
     if (k === "greenwich_paint_execution_matrix") {
       out[k] = slimExecutionEntries(sanitizeGreenwichPaintMatrix(v))
       continue

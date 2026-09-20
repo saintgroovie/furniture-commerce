@@ -109,4 +109,69 @@ import { toCatalogBrowseClientProduct } from "./catalog-browse-client-product"
   assert.deepEqual(meta.dimensions_normalized, { width_mm: 1030, extra: true })
 }
 
+{
+  const out = toCatalogBrowseClientProduct({
+    id: "p-extras",
+    handle: "gr-bed",
+    title: "Кровать",
+    metadata: {
+      collection: "greenwich",
+      buyer_default_configuration: {
+        min_unit_price: 54355,
+        material_execution_code: "solid_front_ldsp_body",
+        notes: "drop",
+        finish_color_key: "natural",
+      },
+      material_tiers: {
+        solid_full: {
+          key: "solid_full",
+          label_ru: "Полностью из массива",
+          description_ru: "Текст для покупателя",
+          price_multiplier: 1,
+          position: 1,
+          extra_blob: { drop: true },
+        },
+      },
+      finish_color_executions: [
+        {
+          key: "w",
+          label: "White",
+          urls: ["/1.jpg"],
+          rank: 9,
+          id: "imgx",
+          swatch_hex: "#fff",
+          swatch_url: "/swatch.jpg",
+          swatch_type: "image",
+          presentation: "swatch_image",
+        },
+      ],
+    },
+  })
+  const meta = out.metadata as Record<string, unknown>
+  assert.deepEqual(meta.buyer_default_configuration, {
+    min_unit_price: 54355,
+    material_execution_code: "solid_front_ldsp_body",
+  })
+  assert.deepEqual(meta.material_tiers, {
+    solid_full: {
+      key: "solid_full",
+      label_ru: "Полностью из массива",
+      description_ru: "Текст для покупателя",
+      price_multiplier: 1,
+      position: 1,
+    },
+  })
+  assert.deepEqual(meta.finish_color_executions, [
+    {
+      key: "w",
+      label: "White",
+      urls: ["/1.jpg"],
+      swatch_hex: "#fff",
+      swatch_url: "/swatch.jpg",
+      swatch_type: "image",
+      presentation: "swatch_image",
+    },
+  ])
+}
+
 console.log("catalog-browse-client-product.fidelity.test.ts: ok")
