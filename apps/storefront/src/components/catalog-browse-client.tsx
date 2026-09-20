@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useState, useTransition, type ReactNode } from "react"
 import { ProductCard } from "@/components/product-card"
 import { PromotionCard } from "@/components/promotion-card"
 import { CatalogFilterControls } from "@/components/catalog-filter-controls"
@@ -101,7 +101,6 @@ export function CatalogBrowseClient({
 
   useEffect(() => {
     let cancelled = false
-    setPoolStatus("atf")
     ;(async () => {
       try {
         const raw = await fetchStoreCatalogProducts()
@@ -154,13 +153,9 @@ export function CatalogBrowseClient({
     </aside>
   ) : null
 
-  const dataState = !poolReady
-    ? poolStatus === "error"
-      ? "error"
-      : "loading"
-    : displayEntries.length === 0
-      ? "empty"
-      : "success"
+  let dataState: "error" | "loading" | "empty" | "success" = "success"
+  if (!poolReady) dataState = poolStatus === "error" ? "error" : "loading"
+  else if (displayEntries.length === 0) dataState = "empty"
 
   const poolBanner =
     poolStatus === "error" ? (
@@ -173,7 +168,10 @@ export function CatalogBrowseClient({
           <button
             type="button"
             className="catalog-search-btn"
-            onClick={() => setRetryTick((n) => n + 1)}
+            onClick={() => {
+              setPoolStatus("atf")
+              setRetryTick((n) => n + 1)
+            }}
           >
             {catalogUiCopy.poolRetry}
           </button>
@@ -181,26 +179,31 @@ export function CatalogBrowseClient({
       </div>
     ) : null
 
-  return (
-    <div
-      data-state={dataState}
-      data-catalog-browse="client"
-      data-catalog-pool={poolStatus}
-      aria-busy={poolStatus === "atf"}
-    >
-      <CatalogFilterControls
-        basePath={basePath}
-        state={state}
-        facets={facets}
-        resultCount={displayEntries.length}
-        resultCountPending={!poolReady}
-        showBespokeCta={showBespokeCta}
-        onClientNavigate={onClientNavigate}
-        sideRail={promotionWindow}
-      >
-        {poolBanner}
-        {displayEntries.length === 0 ? (
-          poolReady ? (
+  let grid: ReactNode
+  if (displayEntries.length > 0) {
+    grid = (
+          <ul className="product-grid catalog-product-grid">
+            {displayEntries.map((entry, index) => {
+              const atf = catalogCardAtfFlags(index)
+              return (
+              <li key={(entry.product as Record<string, unknown>).id as string}>
+                <ProductCard
+                  product={entry.product as never}
+                  displayGroup={entry.displayGroup}
+                  priorityHero={atf.priorityHero}
+                  atfHero={atf.atfHero}
+                />
+              </li>
+              )
+            })}
+          </ul>
+    )
+  } else if (!poolReady && poolStatus === "error") {
+    grid = null
+  } else if (!poolReady) {
+    grid = <p className="info-text">{states.loadingCatalog}</p>
+  } else {
+    grid = (
           <div className="status-message catalog-empty-state">
             <p style={{ fontWeight: 500 }}>{emptyCopy.emptyFilteredTitle}</p>
             <CopyLines lines={emptyCopy.emptyFilteredBody} />
@@ -223,26 +226,28 @@ export function CatalogBrowseClient({
               ) : null}
             </div>
           </div>
-          ) : poolStatus === "error" ? null : (
-            <p className="info-text">{states.loadingCatalog}</p>
-          )
-        ) : (
-          <ul className="product-grid catalog-product-grid">
-            {displayEntries.map((entry, index) => {
-              const atf = catalogCardAtfFlags(index)
-              return (
-              <li key={(entry.product as Record<string, unknown>).id as string}>
-                <ProductCard
-                  product={entry.product as never}
-                  displayGroup={entry.displayGroup}
-                  priorityHero={atf.priorityHero}
-                  atfHero={atf.atfHero}
-                />
-              </li>
-              )
-            })}
-          </ul>
-        )}
+    )
+  }
+
+  return (
+    <div
+      data-state={dataState}
+      data-catalog-browse="client"
+      data-catalog-pool={poolStatus}
+      aria-busy={poolStatus === "atf"}
+    >
+      <CatalogFilterControls
+        basePath={basePath}
+        state={state}
+        facets={facets}
+        resultCount={displayEntries.length}
+        resultCountPending={!poolReady}
+        showBespokeCta={showBespokeCta}
+        onClientNavigate={onClientNavigate}
+        sideRail={promotionWindow}
+      >
+        {poolBanner}
+        {grid}
       </CatalogFilterControls>
     </div>
   )
