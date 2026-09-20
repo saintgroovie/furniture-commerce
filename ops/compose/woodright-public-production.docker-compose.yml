@@ -151,7 +151,9 @@ services:
 
 volumes:
   woodright-public-production_postgres_data:
+    name: woodright-public-production_postgres_data
   woodright-public-production_redis_data:
+    name: woodright-public-production_redis_data
   woodright_public_media:
     external: true
     name: woodright-public-production_woodright_public_media
