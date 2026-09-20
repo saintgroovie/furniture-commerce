@@ -69,6 +69,8 @@ export const catalogUiCopy = {
   /** sr-only state suffix on a selected chip (links cannot carry aria-pressed). */
   typeChipSelected: ", выбрано",
   filtersToggle: "Фильтры",
+  poolRetry: "Повторить",
+  poolIncomplete: "Каталог загрузился не полностью",
 }
 
 export const systemCopy = {

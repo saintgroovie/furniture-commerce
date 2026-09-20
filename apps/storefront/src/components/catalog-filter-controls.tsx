@@ -36,7 +36,7 @@ import {
   type BuyerClosePeerDetail,
 } from "@/lib/buyer-dialog-a11y"
 import { useCspNonce } from "@/lib/csp-nonce"
-import { a11yCopy, catalogUiCopy, nav as navCopy } from "@/lib/woodright-copy"
+import { a11yCopy, catalogUiCopy, nav as navCopy, states } from "@/lib/woodright-copy"
 
 function subscribeBuyerMobileMq(onChange: () => void) {
   const mq = window.matchMedia(BUYER_MOBILE_MQ)
@@ -70,6 +70,8 @@ type Props = {
    * sidebar on the left; the caller owns the `<aside>` markup.
    */
   sideRail?: ReactNode
+  /** Full browse pool not yet authoritative (ATF slice or fetch error). */
+  resultCountPending?: boolean
 }
 
 function toggleMulti(values: string[], value: string): string[] {
@@ -139,6 +141,7 @@ export function CatalogFilterControls({
   onClientNavigate,
   children,
   sideRail = null,
+  resultCountPending = false,
 }: Props) {
   const router = useRouter()
   const cspNonce = useCspNonce()
@@ -884,7 +887,9 @@ export function CatalogFilterControls({
             )}
           </div>
           <p className="catalog-result-count" aria-live="polite">
-            Найдено {resultCount}
+            {resultCountPending
+              ? states.loadingCatalog
+              : `Найдено ${resultCount}`}
           </p>
           <button type="submit" className="catalog-search-btn">
             {catalogUiCopy.searchSubmit}

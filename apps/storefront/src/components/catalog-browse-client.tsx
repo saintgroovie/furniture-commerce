@@ -1,12 +1,18 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react"
+import { useCallback, useEffect, useMemo, useState, useTransition, type ReactNode } from "react"
 import { ProductCard } from "@/components/product-card"
 import { PromotionCard } from "@/components/promotion-card"
 import { CatalogFilterControls } from "@/components/catalog-filter-controls"
 import { CopyLines } from "@/components/copy-lines"
+import { fetchStoreCatalogProducts } from "@/lib/api/catalog-browse-pool-client"
 import type { PromotionSlotPayload } from "@/lib/api/promotion-slot"
+import { toCatalogBrowseClientProducts } from "@/lib/catalog-browse-client-product"
+import {
+  scopeCatalogBrowsePool,
+  type CatalogBrowsePoolScope,
+} from "@/lib/catalog-browse-pool"
 import { shouldShowPromotionWindow } from "@/lib/promotion-window-placement"
 import {
   buildCatalogHref,
@@ -20,8 +26,7 @@ import {
 } from "@/lib/catalog-filters"
 import { groupProductsForDisplay } from "@/lib/display-group"
 import { isUnmodifiedPrimaryClick } from "@/lib/client/is-unmodified-primary-click"
-import { actions, promotionCopy } from "@/lib/woodright-copy"
-import { useCspNonce } from "@/lib/csp-nonce"
+import { actions, catalogUiCopy, promotionCopy, states } from "@/lib/woodright-copy"
 import { catalogCardAtfFlags } from "@/lib/catalog-atf"
 
 export type CatalogBrowseCopy = {
@@ -32,14 +37,17 @@ export type CatalogBrowseCopy = {
 type Props = {
   basePath: "/catalog" | "/kids/catalog"
   initialState: CatalogFilterState
-  /** Scoped pool (main without kids / kids-only). Serializable Medusa products. */
-  products: Array<Record<string, unknown>>
+  /**
+   * First-screen representatives only. Full scoped pool is fetched after
+   * hydration so RSC HTML does not serialize every browse product.
+   */
+  atfProducts: Array<Record<string, unknown>>
+  poolScope: CatalogBrowsePoolScope
+  kidsProductIds: string[]
   showBespokeCta?: boolean
   emptyCopy: CatalogBrowseCopy
   emptySecondaryHref?: string
   emptySecondaryLabel?: string
-  /** Absolute site origin for ItemList JSON-LD (e.g. getSiteUrl()). */
-  siteUrl?: string
   /**
    * Resolved Promotion Window payload (server-fetched). Rendered once as a
    * separate sticky window in the right gutter next to the grid (see
@@ -58,23 +66,30 @@ function stateFromLocation(): CatalogFilterState {
 }
 
 /**
- * First SSR ships scoped products + initial filter state.
- * Subsequent filter clicks update URL via history and recompute locally
- * (no Medusa / RSC refetch).
+ * SSR ships ATF representatives + kids membership ids (small).
+ * After hydration the client loads `/store/catalog-products` and scopes
+ * the full pool. Filter clicks then recompute locally (no RSC refetch).
  */
 export function CatalogBrowseClient({
   basePath,
   initialState,
-  products,
+  atfProducts,
+  poolScope,
+  kidsProductIds,
   showBespokeCta = false,
   emptyCopy,
   emptySecondaryHref,
   emptySecondaryLabel,
-  siteUrl,
   promotionSlot = null,
 }: Props) {
   const [state, setState] = useState<CatalogFilterState>(initialState)
+  const [pool, setPool] = useState<Array<Record<string, unknown>> | null>(null)
+  const [poolStatus, setPoolStatus] = useState<"atf" | "full" | "error">("atf")
+  const [retryTick, setRetryTick] = useState(0)
   const [, startTransition] = useTransition()
+  const products = pool ?? atfProducts
+  const poolReady = poolStatus === "full"
+  const kidsKey = kidsProductIds.join(",")
 
   useEffect(() => {
     const onPopState = () => {
@@ -83,6 +98,28 @@ export function CatalogBrowseClient({
     window.addEventListener("popstate", onPopState)
     return () => window.removeEventListener("popstate", onPopState)
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const raw = await fetchStoreCatalogProducts()
+        const ids = kidsKey ? kidsKey.split(",") : []
+        const scoped = toCatalogBrowseClientProducts(
+          scopeCatalogBrowsePool(raw, poolScope, ids)
+        )
+        if (!cancelled) {
+          setPool(scoped)
+          setPoolStatus("full")
+        }
+      } catch {
+        if (!cancelled) setPoolStatus("error")
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [poolScope, kidsKey, retryTick])
 
   const onClientNavigate = useCallback(
     (next: CatalogFilterState) => {
@@ -106,8 +143,8 @@ export function CatalogBrowseClient({
     [filtered, state.sort]
   )
 
-  /* Promotion Window lives outside the grid (right gutter rail); JSON-LD
-     ItemList below stays products-only. */
+  /* Promotion Window lives outside the grid (right gutter rail).
+     ItemList JSON-LD is server-rendered (slim id/title), not in this client. */
   const promotionWindow = shouldShowPromotionWindow(promotionSlot, displayEntries.length) ? (
     <aside className="catalog-promo-sidebar" aria-label={promotionCopy.windowLabel}>
       <div className="catalog-promo-panel">
@@ -116,46 +153,57 @@ export function CatalogBrowseClient({
     </aside>
   ) : null
 
-  const itemListJsonLd = useMemo(() => {
-    if (!siteUrl || displayEntries.length === 0) return null
-    const base = siteUrl.replace(/\/$/, "")
-    return {
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      numberOfItems: displayEntries.length,
-      itemListElement: displayEntries.map((entry, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        url: `${base}/product/${(entry.product as Record<string, unknown>).id}`,
-        name:
-          ((entry.product as Record<string, unknown>).title as string) ??
-          undefined,
-      })),
-    }
-  }, [siteUrl, displayEntries])
+  let dataState: "error" | "loading" | "empty" | "success" = "success"
+  if (!poolReady) dataState = poolStatus === "error" ? "error" : "loading"
+  else if (displayEntries.length === 0) dataState = "empty"
 
-  const dataState = displayEntries.length === 0 ? "empty" : "success"
-  const cspNonce = useCspNonce()
+  const poolBanner =
+    poolStatus === "error" ? (
+      <div className="status-message" data-catalog-pool-error="">
+        <p style={{ fontWeight: 500 }}>{catalogUiCopy.poolIncomplete}</p>
+        <div
+          className="nav-links nav-links-center"
+          style={{ marginTop: "1rem" }}
+        >
+          <button
+            type="button"
+            className="catalog-search-btn"
+            onClick={() => {
+              setPoolStatus("atf")
+              setRetryTick((n) => n + 1)
+            }}
+          >
+            {catalogUiCopy.poolRetry}
+          </button>
+        </div>
+      </div>
+    ) : null
 
-  return (
-    <div data-state={dataState} data-catalog-browse="client">
-      {itemListJsonLd && (
-        <script
-          type="application/ld+json"
-          nonce={cspNonce}
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
-        />
-      )}
-      <CatalogFilterControls
-        basePath={basePath}
-        state={state}
-        facets={facets}
-        resultCount={displayEntries.length}
-        showBespokeCta={showBespokeCta}
-        onClientNavigate={onClientNavigate}
-        sideRail={promotionWindow}
-      >
-        {displayEntries.length === 0 ? (
+  let grid: ReactNode
+  if (displayEntries.length > 0) {
+    grid = (
+          <ul className="product-grid catalog-product-grid">
+            {displayEntries.map((entry, index) => {
+              const atf = catalogCardAtfFlags(index)
+              return (
+              <li key={(entry.product as Record<string, unknown>).id as string}>
+                <ProductCard
+                  product={entry.product as never}
+                  displayGroup={entry.displayGroup}
+                  priorityHero={atf.priorityHero}
+                  atfHero={atf.atfHero}
+                />
+              </li>
+              )
+            })}
+          </ul>
+    )
+  } else if (!poolReady && poolStatus === "error") {
+    grid = null
+  } else if (!poolReady) {
+    grid = <p className="info-text">{states.loadingCatalog}</p>
+  } else {
+    grid = (
           <div className="status-message catalog-empty-state">
             <p style={{ fontWeight: 500 }}>{emptyCopy.emptyFilteredTitle}</p>
             <CopyLines lines={emptyCopy.emptyFilteredBody} />
@@ -178,23 +226,28 @@ export function CatalogBrowseClient({
               ) : null}
             </div>
           </div>
-        ) : (
-          <ul className="product-grid catalog-product-grid">
-            {displayEntries.map((entry, index) => {
-              const atf = catalogCardAtfFlags(index)
-              return (
-              <li key={(entry.product as Record<string, unknown>).id as string}>
-                <ProductCard
-                  product={entry.product as never}
-                  displayGroup={entry.displayGroup}
-                  priorityHero={atf.priorityHero}
-                  atfHero={atf.atfHero}
-                />
-              </li>
-              )
-            })}
-          </ul>
-        )}
+    )
+  }
+
+  return (
+    <div
+      data-state={dataState}
+      data-catalog-browse="client"
+      data-catalog-pool={poolStatus}
+      aria-busy={poolStatus === "atf"}
+    >
+      <CatalogFilterControls
+        basePath={basePath}
+        state={state}
+        facets={facets}
+        resultCount={displayEntries.length}
+        resultCountPending={!poolReady}
+        showBespokeCta={showBespokeCta}
+        onClientNavigate={onClientNavigate}
+        sideRail={promotionWindow}
+      >
+        {poolBanner}
+        {grid}
       </CatalogFilterControls>
     </div>
   )

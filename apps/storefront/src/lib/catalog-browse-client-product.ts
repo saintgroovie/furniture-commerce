@@ -1,10 +1,10 @@
 /**
- * W3e: compact browse view-model for RSC → CatalogBrowseClient props.
+ * W3e: compact browse view-model for CatalogBrowseClient / pool fetch.
  *
- * `/store/catalog-products` already allowlists fields (G2/W3c). This pass
- * mirrors the browse caps so client serialization stays lean even when the
- * running Medusa process is older than the storefront build, and drops
- * fields the browse client never reads (`status`).
+ * RSC ships ATF representatives only (`collectAtfBrowseProducts`). The full
+ * pool is fetched in the browser from `/store/catalog-products`, then slimmed
+ * here so a older Medusa process still drops fields the browse client never
+ * reads (`status`).
  *
  * Caps must leave room for the card gallery strip
  * (`CARD_STRIP_IMAGE_PROBE_LIMIT` = 4) — hero-only (1) hid all extras.
@@ -265,7 +265,7 @@ function projectVariants(variants: unknown): Array<Record<string, unknown>> {
   })
 }
 
-/** Compact product for CatalogBrowseClient serialization. */
+/** Compact product for CatalogBrowseClient (ATF RSC props + client pool). */
 export function toCatalogBrowseClientProduct(
   product: Record<string, unknown>
 ): Record<string, unknown> {
