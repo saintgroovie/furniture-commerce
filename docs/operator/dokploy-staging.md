@@ -117,6 +117,11 @@ Rules:
 
 - Alias exists only on the shared app network (`woodright_staging` /
   project-prefixed `*_woodright_staging`), never as public DNS.
+- **Never** export alias `backend` on `dokploy-network`. Production and demo
+  storefronts both attach there; a leaked alias makes production SSR / `/store`
+  hit demo Medusa. `docker create --network-alias backend` can copy onto a later
+  `docker network connect dokploy-network` - recreate/rollback helpers must
+  strip it and keep the Traefik IPv4 pin.
 - Exactly one **running** public backend may hold alias `backend`.
 - Candidate / private containers must not hold this alias on the public shared network.
 - Manual `docker network connect --alias backend` is emergency-only; after

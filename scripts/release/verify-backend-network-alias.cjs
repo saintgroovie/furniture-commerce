@@ -178,6 +178,22 @@ function evaluateInventory(doc) {
     )
   }
 
+  // Stack-local alias must not appear on the shared Traefik network.
+  // Production and demo storefronts both attach to dokploy-network; exporting
+  // `backend` there makes production SF SSR/`/store` hit demo Medusa.
+  const dokployNet = "dokploy-network"
+  for (const c of containers) {
+    if (c.running !== true) continue
+    const n = (c.networks || {})[dokployNet]
+    if (!n) continue
+    const names = [...(n.aliases || []), ...(n.dns_names || [])]
+    if (names.includes(alias)) {
+      errors.push(
+        `${c.name} holds stack-local alias '${alias}' on ${dokployNet}`
+      )
+    }
+  }
+
   // Candidate must not hold public alias while running on shared net.
   for (const c of containers) {
     if (c.running !== true) continue
@@ -481,6 +497,33 @@ function selfTest() {
     ],
   })
   if (collision.ok) fail("self-test collision should fail")
+
+  const dokployLeak = evaluateInventory({
+    shared_network: "woodright_staging",
+    containers: [
+      {
+        name: "woodright-staging-backend",
+        running: true,
+        role: "public_demo",
+        exposure: "public",
+        networks: {
+          woodright_staging: { aliases: ["backend"], ipv4: "172.19.0.4" },
+          "dokploy-network": { aliases: ["backend"], ipv4: "10.0.1.8" },
+        },
+      },
+      {
+        name: "woodright-staging-storefront",
+        running: true,
+        role: "public_demo",
+        exposure: "public",
+        networks: {
+          woodright_staging: { aliases: ["storefront"], ipv4: "172.19.0.7" },
+        },
+      },
+    ],
+    dns_from_storefront: { backend: "10.0.1.8" },
+  })
+  if (dokployLeak.ok) fail("self-test dokploy backend alias should fail")
   ok({ mode: "self-test" })
 }
 
