@@ -77,6 +77,22 @@ fi
 wr_cutover_docker rename "$KEEP_NAME" "$NAME"
 wr_cutover_docker network connect "$NET_STACK" "$NAME" 2>/dev/null || true
 wr_cutover_docker network connect "$NET_DOKPLOY" "$NAME" 2>/dev/null || true
+if ! _dok_ip="$(wr_cutover_docker inspect -f "{{(index .NetworkSettings.Networks \"$NET_DOKPLOY\").IPAddress}}" "$NAME")"; then
+  die "dokploy-network inspect IP failed after connect (refusing start)"
+fi
+if ! _dok_names="$(wr_cutover_docker inspect -f "{{json (index .NetworkSettings.Networks \"$NET_DOKPLOY\").Aliases}} {{json (index .NetworkSettings.Networks \"$NET_DOKPLOY\").DNSNames}}" "$NAME")"; then
+  die "dokploy-network inspect aliases failed after connect (refusing start)"
+fi
+if printf '%s' "$_dok_names" | grep -q '"backend"'; then
+  wr_cutover_docker network disconnect "$NET_DOKPLOY" "$NAME" || true
+  if [[ -n "$_dok_ip" && "$_dok_ip" != "<no value>" ]]; then
+    wr_cutover_docker network connect --ip "$_dok_ip" --alias "$NAME" "$NET_DOKPLOY" "$NAME"
+  else
+    wr_cutover_docker network connect --alias "$NAME" "$NET_DOKPLOY" "$NAME"
+  fi
+  log "stripped leaked alias backend from $NET_DOKPLOY (kept ip=${_dok_ip:-dynamic})"
+fi
+unset _dok_ip _dok_names
 if [[ -n "${VOLUME:-}" ]]; then
   mounts="$(wr_cutover_docker inspect "$NAME" --format '{{json .Mounts}}')"
   echo "$mounts" | grep -q "$VOLUME" || log "WARN media volume not visible on restored backend"

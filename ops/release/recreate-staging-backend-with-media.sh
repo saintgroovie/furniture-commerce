@@ -334,6 +334,24 @@ wr_public_demo_docker_create_sealed_env backend \
   "${WOODRIGHT_DOCKER_BIN:-docker}" create --env-file '{SEALED}' "${CREATE_ARGS[@]}"
 
 docker network connect "$NET_DOKPLOY" "$NAME"
+# `docker create --network-alias backend` can leak that stack-local alias onto
+# every later `docker network connect`. Traefik net must not export `backend`.
+if ! _dok_ip="$(docker inspect -f "{{(index .NetworkSettings.Networks \"$NET_DOKPLOY\").IPAddress}}" "$NAME")"; then
+  die "dokploy-network inspect IP failed after connect"
+fi
+if ! _dok_names="$(docker inspect -f "{{json (index .NetworkSettings.Networks \"$NET_DOKPLOY\").Aliases}} {{json (index .NetworkSettings.Networks \"$NET_DOKPLOY\").DNSNames}}" "$NAME")"; then
+  die "dokploy-network inspect aliases failed after connect"
+fi
+if printf '%s' "$_dok_names" | grep -q '"backend"'; then
+  docker network disconnect "$NET_DOKPLOY" "$NAME"
+  if [[ -n "$_dok_ip" && "$_dok_ip" != "<no value>" ]]; then
+    docker network connect --ip "$_dok_ip" --alias "$NAME" "$NET_DOKPLOY" "$NAME"
+  else
+    docker network connect --alias "$NAME" "$NET_DOKPLOY" "$NAME"
+  fi
+  log "stripped leaked alias backend from $NET_DOKPLOY (kept ip=${_dok_ip:-dynamic})"
+fi
+unset _dok_ip _dok_names
 docker start "$NAME"
 
 NEW_IMG="$(docker inspect "$NAME" --format '{{.Image}}')"

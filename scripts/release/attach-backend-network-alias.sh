@@ -28,6 +28,12 @@ if [[ -z "$SHARED_NET" ]]; then
   exit 2
 fi
 
+if [[ "$SHARED_NET" == "dokploy-network" || "$SHARED_NET" == *dokploy* ]]; then
+  echo "refused: alias '$ALIAS' must not be attached to Traefik/dokploy shared network ($SHARED_NET)" >&2
+  echo "use the stack app network (woodright_staging / *_woodright_staging) only" >&2
+  exit 2
+fi
+
 wr_staging_mutation_lock_acquire \
   "actor=attach-backend-network-alias" \
   "command=$0" \

@@ -39,14 +39,55 @@ const docs = readFileSync(join(root, "docs/operator/dokploy-staging.md"), "utf8"
 assert.match(docs, /aliases:\s*\n\s+-\s+backend/)
 assert.match(docs, /ENOTFOUND backend|product-static/)
 
-assert.match(
-  readFileSync(join(root, "scripts/release/attach-backend-network-alias.sh"), "utf8"),
-  /EMERGENCY_BACKEND_ALIAS=1/
+const attach = readFileSync(
+  join(root, "scripts/release/attach-backend-network-alias.sh"),
+  "utf8"
 )
-assert.match(
-  readFileSync(join(root, "scripts/release/attach-backend-network-alias.sh"), "utf8"),
-  /NOT durable|non-durable|EMERGENCY ONLY/
+assert.match(attach, /EMERGENCY_BACKEND_ALIAS=1/)
+assert.match(attach, /NOT durable|non-durable|EMERGENCY ONLY/)
+assert.match(attach, /must not be attached to Traefik\/dokploy/)
+
+const recreate = readFileSync(
+  join(root, "ops/release/recreate-staging-backend-with-media.sh"),
+  "utf8"
 )
+assert.match(recreate, /stripped leaked alias backend from \$NET_DOKPLOY/)
+assert.doesNotMatch(
+  recreate,
+  /docker network connect --alias backend "\$NET_DOKPLOY"/
+)
+
+const rollback = readFileSync(
+  join(root, "ops/release/rollback-staging-backend-from-keeper.sh"),
+  "utf8"
+)
+assert.match(rollback, /stripped leaked alias backend from \$NET_DOKPLOY/)
+assert.match(
+  rollback,
+  /die "dokploy-network inspect (IP|aliases) failed after connect \(refusing start\)"/
+)
+
+{
+  const script = `
+set -euo pipefail
+die() { echo "ERROR: $*" >&2; exit 2; }
+wr_cutover_docker() {
+  if [[ "$1" == inspect ]]; then return 1; fi
+  if [[ "$1" == start ]]; then echo STARTED; return 0; fi
+  return 0
+}
+NAME=woodright-staging-backend
+NET_DOKPLOY=dokploy-network
+if ! _dok_ip="$(wr_cutover_docker inspect -f unused "$NAME")"; then
+  die "dokploy-network inspect IP failed after connect (refusing start)"
+fi
+wr_cutover_docker start "$NAME"
+`
+  const probe = spawnSync("bash", ["-c", script], { encoding: "utf8" })
+  assert.equal(probe.status, 2, probe.stdout + probe.stderr)
+  assert.match(probe.stderr, /refusing start/)
+  assert.doesNotMatch(`${probe.stdout}${probe.stderr}`, /STARTED/)
+}
 
 const self = spawnSync(
   process.execPath,
