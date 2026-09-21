@@ -99,6 +99,13 @@ Do not treat this template’s ₽/% tariffs or §5.10 returns wording as new-si
 
 ## H. Not used / out of scope
 
-- Catalog SKU pricing, media boards, Docker/ops evidence (except noting launch gate)
+- Media boards, Docker/ops evidence (except noting launch gate)
 - Invented tariffs from «industry norms»
 - Third-party SEO blogs as legal truth
+- Publishing the 2026-09-18 retail grid or special-order lead time onto the storefront without a separate owner apply task
+
+## I. Retail price workbook 2026-09-18
+
+| ID | Source | Role |
+| --- | --- | --- |
+| PRICE-RETAIL-20260918 | Owner xlsx `Розничный Прайс 18.09.2026.xlsx` (SHA-256 `55f37ab0a987e271e63f0784bfe2457a7b4e0bcbd4083745b93b07b2838d957c`). Git-safe ingest: `docs/operator/retail-price-list-2026-09-18.md`. Binary stays outside git. | Internal factory retail grid. **Not** website SoT. **Not** Medusa apply. Special-order «45 рабочих дней» is **not** a public lead time. Workbook `PR-*` = Princess Rose; live `PV-*` = Provence; **no global `PR→PV`**. Usable identity vs current 117: 115 rows. |
