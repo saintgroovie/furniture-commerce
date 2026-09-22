@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { canonicalAlternates } from "@/lib/page-canonical"
 import { seo } from "@/lib/woodright-copy"
 import { BespokeHero } from "@/components/home/bespoke-hero"
 import { BespokeBoundary } from "@/components/home/bespoke-boundary"
@@ -10,13 +11,14 @@ import { BespokeFinal } from "@/components/home/bespoke-final"
 import { HomeRevealObserver } from "@/components/home/home-reveal-observer"
 
 export const metadata: Metadata = {
-  title: seo.bespoke.title,
+  title: { absolute: seo.bespoke.title },
   description: seo.bespoke.description,
   openGraph: {
     title: seo.bespoke.title,
     description: seo.bespoke.description,
     url: "/bespoke",
   },
+  ...canonicalAlternates("/bespoke"),
 }
 
 export default function BespokePage() {

@@ -3,6 +3,7 @@ import { Suspense } from "react"
 import { BespokeForm } from "@/components/bespoke-form"
 import { ChecklistIcon, MeasureIcon } from "@/components/bespoke-help-icons"
 import { CopyLines } from "@/components/copy-lines"
+import { canonicalAlternates } from "@/lib/page-canonical"
 import { bespokeRequestCopy, seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
     description: seo.bespokeRequest.description,
     url: "/bespoke/request",
   },
+  ...canonicalAlternates("/bespoke/request"),
 }
 
 export default function BespokeRequestPage() {

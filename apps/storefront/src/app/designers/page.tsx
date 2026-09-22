@@ -5,6 +5,7 @@ import { EditorialFigure } from "@/components/editorial/editorial-figure"
 import { EditorialShell } from "@/components/editorial/editorial-shell"
 import { editorialMedia } from "@/lib/editorial-media"
 import { formatRuInline } from "@/lib/format-ru-copy"
+import { canonicalAlternates } from "@/lib/page-canonical"
 import { designersLandingCopy, seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
     description: seo.designersLanding.description,
     url: "/designers",
   },
+  ...canonicalAlternates("/designers"),
 }
 
 export default function DesignersPage() {

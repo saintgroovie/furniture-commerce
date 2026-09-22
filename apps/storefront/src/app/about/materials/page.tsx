@@ -4,6 +4,7 @@ import { CopyLines } from "@/components/copy-lines"
 import { EditorialFigure } from "@/components/editorial/editorial-figure"
 import { EditorialShell } from "@/components/editorial/editorial-shell"
 import { editorialMedia } from "@/lib/editorial-media"
+import { canonicalAlternates } from "@/lib/page-canonical"
 import { aboutMaterialsCopy, seo } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
     title: seo.aboutMaterials.title,
     url: "/about/materials",
   },
+  ...canonicalAlternates("/about/materials"),
 }
 
 export default function MaterialsPage() {

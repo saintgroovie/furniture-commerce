@@ -6,7 +6,7 @@ import { checkoutCopy } from "@/lib/woodright-copy"
 export const metadata: Metadata = {
   title: checkoutCopy.title,
   description: "Оформление заказа Woodright.",
-  robots: { index: false, follow: false },
+  robots: { index: false, follow: false, noarchive: true },
 }
 
 export default function CheckoutPage() {

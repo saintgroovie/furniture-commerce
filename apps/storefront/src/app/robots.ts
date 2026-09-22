@@ -3,6 +3,7 @@ import {
   isIndexingAllowed,
   robotsTxtBody,
 } from "@/lib/indexing-policy"
+import { PRODUCTION_SITE_APEX_HOST } from "@/lib/production-hosts"
 import { resolvePublicIndexableOrigin } from "@/lib/seo-mode"
 
 /**
@@ -19,6 +20,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
       },
+      host: PRODUCTION_SITE_APEX_HOST,
       sitemap: `${origin}/sitemap.xml`,
     }
   }

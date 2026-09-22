@@ -14,6 +14,7 @@ import { KidsFinal } from "@/components/home/kids-final"
 import { HomeRevealObserver } from "@/components/home/home-reveal-observer"
 import { pickByHandles, toHomeProduct, type HomeProduct } from "@/components/home/home-data"
 import { kidsMedia } from "@/components/home/kids-media"
+import { canonicalAlternates } from "@/lib/page-canonical"
 
 export const metadata: Metadata = {
   title: seo.kids.title,
@@ -23,6 +24,7 @@ export const metadata: Metadata = {
     description: seo.kids.description,
     url: "/kids",
   },
+  ...canonicalAlternates("/kids"),
 }
 
 /** Oliver Kids first (white + olive palette), backfilled from the kids pool. */

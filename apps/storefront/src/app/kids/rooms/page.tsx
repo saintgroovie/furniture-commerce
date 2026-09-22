@@ -5,6 +5,7 @@ import { getRoomSets } from "@/lib/api/room-sets"
 import { KIDS_ROOM_TYPE } from "@/lib/kids"
 import { kidsRoomsCopy, seo } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
+import { canonicalAlternates } from "@/lib/page-canonical"
 
 export const metadata: Metadata = {
   title: seo.kidsRooms.title,
@@ -14,6 +15,7 @@ export const metadata: Metadata = {
     description: seo.kidsRooms.description,
     url: "/kids/rooms",
   },
+  ...canonicalAlternates("/kids/rooms"),
 }
 
 export default async function KidsRoomsPage() {
