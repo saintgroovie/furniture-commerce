@@ -16,13 +16,16 @@ It is **not** an apex launch.
 
 `woodright.ru` remains the legacy CS-Cart apex until a **separate** owner-authorized apex migration. Do not treat this helper as "launch apex". Apex routing (Traefik + documented ITB DNS, no pair recreate) is `docs/operator/public-apex-cutover.md` / `ops/release/cutover-public-apex-routing.sh`.
 
-## Topology (unchanged by this helper)
+## Topology
 
 - Compose: `/etc/dokploy/compose/woodright-public-production`
 - Storefront loopback: `127.0.0.1:3300`
 - Backend loopback: `127.0.0.1:9300`
 - Lock: `/srv/woodright/locks/public_production/live-cutover.lock`
 - Containers: `woodright-public-production-storefront` / `woodright-public-production-backend`
+- Networks after recreate: the compose project network, plus `dokploy-network`
+
+`docker compose up --force-recreate` keeps only the network declared in that compose file. Traefik publishes `woodright.ru` through `dokploy-network` using the unique container names. The helper reattaches both containers to `dokploy-network` with that unique name as the only alias. It does not add the generic alias `backend` on the shared network. Storefront still resolves `backend` on the stack-local network. This helper does not edit DNS or Traefik hostnames.
 
 ## SHA layers (do not conflate)
 

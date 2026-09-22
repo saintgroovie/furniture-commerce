@@ -315,6 +315,93 @@ PY
     require_mutation "rm ${args[*]}"
     for a in "${args[@]}"; do rm -f "$STATE/containers/${a#/}.json" "$STATE/containers/${a#/}.props"; done
     ;;
+  network)
+    sub="${1:-}"
+    shift || true
+    case "$sub" in
+      connect)
+        alias=""
+        ip=""
+        while [[ $# -gt 0 ]]; do
+          case "$1" in
+            --alias) alias="${2:-}"; shift 2 ;;
+            --alias=*) alias="${1#--alias=}"; shift ;;
+            --ip) ip="${2:-}"; shift 2 ;;
+            --ip=*) ip="${1#--ip=}"; shift ;;
+            *) break ;;
+          esac
+        done
+        net="${1:-}"
+        target="${2:-}"
+        require_mutation "network connect alias=${alias:-<none>} net=$net target=$target"
+        python3 - "$STATE" "$net" "$target" "$alias" "$ip" <<'PY'
+import json, os, sys
+state, net, target, alias, ip = sys.argv[1:6]
+target = target.lstrip("/")
+root = os.path.join(state, "containers")
+path = ""
+for name in os.listdir(root):
+    if not name.endswith(".json"):
+        continue
+    cand = os.path.join(root, name)
+    try:
+        raw = json.load(open(cand))
+    except Exception:
+        continue
+    obj = raw[0] if isinstance(raw, list) else raw
+    cid = str(obj.get("Id", "")).lstrip("/")
+    cname = str(obj.get("Name", "")).lstrip("/")
+    if target in (cid, cname) or cid.startswith(target):
+        path = cand
+        break
+if not path:
+    sys.exit(1)
+raw = json.load(open(path))
+obj = raw[0] if isinstance(raw, list) else raw
+nets = obj.setdefault("NetworkSettings", {}).setdefault("Networks", {})
+cname = str(obj.get("Name", "")).lstrip("/")
+aliases = [alias] if alias else [cname]
+nets[net] = {
+    "Aliases": aliases,
+    "DNSNames": [cname, cid[:12]] if (cid := str(obj.get("Id", ""))) else [cname],
+    "IPAddress": ip or "10.0.1.50",
+}
+json.dump(raw, open(path, "w"))
+PY
+        ;;
+      disconnect)
+        net="${1:-}"
+        target="${2:-}"
+        require_mutation "network disconnect net=$net target=$target"
+        python3 - "$STATE" "$net" "$target" <<'PY'
+import json, os, sys
+state, net, target = sys.argv[1:4]
+target = target.lstrip("/")
+root = os.path.join(state, "containers")
+for name in os.listdir(root):
+    if not name.endswith(".json"):
+        continue
+    cand = os.path.join(root, name)
+    raw = json.load(open(cand))
+    obj = raw[0] if isinstance(raw, list) else raw
+    cid = str(obj.get("Id", "")).lstrip("/")
+    cname = str(obj.get("Name", "")).lstrip("/")
+    if target not in (cid, cname) and not cid.startswith(target):
+        continue
+    nets = obj.setdefault("NetworkSettings", {}).setdefault("Networks", {})
+    nets.pop(net, None)
+    json.dump(raw, open(cand, "w"))
+    break
+PY
+        ;;
+      inspect)
+        exit 0
+        ;;
+      *)
+        exit 0
+        ;;
+    esac
+    ;;
   *)
     exit 0
     ;;
@@ -458,6 +545,35 @@ labels = {
 if defect("WOODRIGHT_FAKE_COMPOSE_PUBLIC_TRAEFIK"):
     labels["traefik.enable"] = "true"
     labels["traefik.http.routers.wr.rule"] = "Host(`woodright.ru`)"
+stack_net = os.environ.get(
+    "WOODRIGHT_FAKE_STACK_NETWORK",
+    "woodright-public-production_woodright_public",
+)
+stack_alias = "backend" if service == "backend" else "storefront"
+stack_endpoint = {"Aliases": [stack_alias], "DNSNames": [name]}
+unique_endpoint = {"Aliases": [name], "DNSNames": [name]}
+if os.environ.get("WOODRIGHT_FAKE_COMPOSE_DROP_DOKPLOY") == "1":
+    networks = {stack_net: stack_endpoint}
+elif os.environ.get("WOODRIGHT_FAKE_COMPOSE_LEAK_BACKEND_ALIAS") == "1":
+    networks = {
+        stack_net: stack_endpoint,
+        "dokploy-network": {
+            "Aliases": [stack_alias],
+            "DNSNames": [stack_alias, name],
+        },
+    }
+elif os.environ.get("WOODRIGHT_FAKE_COMPOSE_DOKPLOY_EXTRA_ALIAS") == "1":
+    networks = {
+        stack_net: stack_endpoint,
+        "dokploy-network": {"Aliases": [name, "traefik-extra"], "DNSNames": [name]},
+    }
+elif os.environ.get("WOODRIGHT_FAKE_COMPOSE_DOKPLOY_ALIAS_MISSING") == "1":
+    networks = {
+        stack_net: stack_endpoint,
+        "dokploy-network": {"Aliases": [], "DNSNames": [name]},
+    }
+else:
+    networks = {"dokploy-network": unique_endpoint}
 doc = [{
     "Id": f"id-{service}-new-{int(time.time()*1000)}",
     "Name": f"/{name}",
@@ -496,7 +612,7 @@ doc = [{
         "StartedAt": time.strftime("%Y-%m-%dT%H:%M:%S.000000000Z", time.gmtime()),
         "Health": {"Status": health},
     },
-    "NetworkSettings": {"Networks": {"dokploy-network": {}}, "Ports": {}},
+    "NetworkSettings": {"Networks": networks, "Ports": {}},
 }]
 json.dump(doc, open(os.path.join(state, "containers", f"{name}.json"), "w"))
 props = os.path.join(state, "containers", f"{name}.props")

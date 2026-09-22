@@ -1187,6 +1187,118 @@ run_exec "$EV" "$TMP/out-alias-approval.txt"
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "alias_approval: zero mutation" || fail "alias_approval: pins mutated"
 
 # ==========================================================================
+# 26b) force-recreate drops dokploy-network; helper must reattach uniquely
+# ==========================================================================
+assert_dokploy_unique() {
+  local label="$1"
+  python3 - "$STATE" "$label" <<'PY'
+import json, os, sys
+state, label = sys.argv[1], sys.argv[2]
+stack = "woodright-public-production_woodright_public"
+generic = {"backend", "storefront"}
+names = (
+    "woodright-public-production-backend",
+    "woodright-public-production-storefront",
+)
+errors = []
+for name in names:
+    raw = json.load(open(os.path.join(state, "containers", f"{name}.json")))
+    obj = raw[0] if isinstance(raw, list) else raw
+    nets = (obj.get("NetworkSettings") or {}).get("Networks") or {}
+    shared = nets.get("dokploy-network")
+    if not shared:
+        errors.append(f"{name} missing dokploy-network")
+        continue
+    aliases = list(shared.get("Aliases") or [])
+    dns = list(shared.get("DNSNames") or [])
+    if aliases != [name]:
+        errors.append(f"{name} dokploy aliases={aliases}")
+    if any(token in generic for token in aliases + dns):
+        errors.append(f"{name} generic token on dokploy")
+    local = nets.get(stack) or {}
+    local_aliases = list(local.get("Aliases") or [])
+    want = "backend" if name.endswith("-backend") else "storefront"
+    if want not in local_aliases:
+        errors.append(f"{name} stack alias missing {want}: {local_aliases}")
+demo = json.load(open(os.path.join(state, "containers", "woodright-staging-backend.json")))
+demo_obj = demo[0] if isinstance(demo, list) else demo
+demo_nets = (demo_obj.get("NetworkSettings") or {}).get("Networks") or {}
+demo_aliases = list((demo_nets.get("dokploy-network") or {}).get("Aliases") or [])
+if "backend" in demo_aliases:
+    errors.append(f"demo exported backend on dokploy: {demo_aliases}")
+if errors:
+    print(label + ": " + "; ".join(errors))
+    raise SystemExit(1)
+PY
+}
+
+reset_harness
+EV="$TMP/ev-dokploy-drop"
+cp "$STATE/containers/woodright-staging-backend.json" "$TMP/demo-be-before.json"
+cp "$STATE/containers/woodright-staging-storefront.json" "$TMP/demo-sf-before.json"
+run_exec "$EV" "$TMP/out-dokploy-drop.txt" WOODRIGHT_FAKE_COMPOSE_DROP_DOKPLOY=1
+[[ "$RC" -eq 0 ]] && pass "dokploy_drop: exit 0" || { fail "dokploy_drop: rc=$RC"; sed -n '1,80p' "$TMP/out-dokploy-drop.txt"; }
+assert_dokploy_unique "dokploy_drop" && pass "dokploy_drop: unique dokploy alias and stack-local backend" || fail "dokploy_drop: network shape"
+grep -q 'network connect alias=woodright-public-production-backend ' "$STATE/log/journal.log" \
+  && pass "dokploy_drop: backend reattached" || fail "dokploy_drop: backend connect missing"
+grep -q 'network connect alias=woodright-public-production-storefront ' "$STATE/log/journal.log" \
+  && pass "dokploy_drop: storefront reattached" || fail "dokploy_drop: storefront connect missing"
+if grep -qE 'network connect alias=(backend|storefront) ' "$STATE/log/journal.log"; then
+  fail "dokploy_drop: generic shared alias was published"
+else
+  pass "dokploy_drop: no generic shared alias"
+fi
+cmp -s "$STATE/containers/woodright-staging-backend.json" "$TMP/demo-be-before.json" \
+  && pass "dokploy_drop: demo backend untouched" || fail "dokploy_drop: demo backend mutated"
+cmp -s "$STATE/containers/woodright-staging-storefront.json" "$TMP/demo-sf-before.json" \
+  && pass "dokploy_drop: demo storefront untouched" || fail "dokploy_drop: demo storefront mutated"
+assert_public_demo_untouched "dokploy_drop"
+
+reset_harness
+EV="$TMP/ev-dokploy-leak"
+run_exec "$EV" "$TMP/out-dokploy-leak.txt" WOODRIGHT_FAKE_COMPOSE_LEAK_BACKEND_ALIAS=1
+[[ "$RC" -eq 0 ]] && pass "dokploy_leak: exit 0" || { fail "dokploy_leak: rc=$RC"; sed -n '1,80p' "$TMP/out-dokploy-leak.txt"; }
+assert_dokploy_unique "dokploy_leak" && pass "dokploy_leak: generic alias stripped, stack backend kept" || fail "dokploy_leak: network shape"
+grep -q 'network disconnect net=dokploy-network ' "$STATE/log/journal.log" \
+  && pass "dokploy_leak: leaked attachment was replaced" || fail "dokploy_leak: no disconnect"
+if grep -qE 'network connect alias=(backend|storefront) ' "$STATE/log/journal.log"; then
+  fail "dokploy_leak: generic shared alias was republished"
+else
+  pass "dokploy_leak: reconnect used unique names only"
+fi
+
+reset_harness
+EV="$TMP/ev-dokploy-extra"
+run_exec "$EV" "$TMP/out-dokploy-extra.txt" WOODRIGHT_FAKE_COMPOSE_DOKPLOY_EXTRA_ALIAS=1
+[[ "$RC" -eq 0 ]] && pass "dokploy_extra: exit 0" || { fail "dokploy_extra: rc=$RC"; sed -n '1,80p' "$TMP/out-dokploy-extra.txt"; }
+assert_dokploy_unique "dokploy_extra" && pass "dokploy_extra: extra alias removed" || fail "dokploy_extra: network shape"
+grep -q 'network disconnect net=dokploy-network ' "$STATE/log/journal.log" \
+  && pass "dokploy_extra: extra alias was replaced" || fail "dokploy_extra: no disconnect"
+
+reset_harness
+EV="$TMP/ev-dokploy-missing-alias"
+run_exec "$EV" "$TMP/out-dokploy-missing-alias.txt" WOODRIGHT_FAKE_COMPOSE_DOKPLOY_ALIAS_MISSING=1
+[[ "$RC" -eq 0 ]] && pass "dokploy_missing_alias: exit 0" || { fail "dokploy_missing_alias: rc=$RC"; sed -n '1,80p' "$TMP/out-dokploy-missing-alias.txt"; }
+assert_dokploy_unique "dokploy_missing_alias" && pass "dokploy_missing_alias: unique alias restored" || fail "dokploy_missing_alias: network shape"
+grep -q 'network disconnect net=dokploy-network ' "$STATE/log/journal.log" \
+  && pass "dokploy_missing_alias: empty alias list was replaced" || fail "dokploy_missing_alias: no disconnect"
+
+reset_harness
+EV="$TMP/ev-dokploy-rollback"
+run_exec "$EV" "$TMP/out-dokploy-rollback.txt" \
+  WOODRIGHT_FAKE_COMPOSE_DROP_DOKPLOY=1 \
+  WOODRIGHT_FAKE_HTTP_FAIL=3300
+[[ "$RC" -eq 10 ]] && pass "dokploy_rollback: rollback_ok exit 10" || { fail "dokploy_rollback: rc=$RC"; sed -n '1,80p' "$TMP/out-dokploy-rollback.txt"; }
+[[ "$(digest_of woodright-public-production-backend)" == "$OLD_BE_DIG" ]] && pass "dokploy_rollback: backend restored" || fail "dokploy_rollback: backend digest"
+[[ "$(digest_of woodright-public-production-storefront)" == "$OLD_SF_DIG" ]] && pass "dokploy_rollback: storefront restored" || fail "dokploy_rollback: storefront digest"
+assert_dokploy_unique "dokploy_rollback" && pass "dokploy_rollback: both containers reattached after rollback recreate" || fail "dokploy_rollback: network shape"
+if grep -qE 'network connect alias=(backend|storefront) ' "$STATE/log/journal.log"; then
+  fail "dokploy_rollback: generic shared alias was published"
+else
+  pass "dokploy_rollback: rollback reattach used unique names only"
+fi
+
+# ==========================================================================
 # 27) static contract checks
 # ==========================================================================
 grep -q '^# LIVE_MUTATING=true' "$SCRIPT" && pass "static: header declares LIVE_MUTATING=true" || fail "static: LIVE_MUTATING header"
@@ -1204,6 +1316,13 @@ else
   pass "static: no keeper references at all"
 fi
 grep -q 'wait_component_ready' "$SCRIPT" && pass "static: readiness is a polling helper" || fail "static: no wait_component_ready"
+grep -q 'ensure_dokploy_attachment' "$SCRIPT" && pass "static: recreate reattaches dokploy-network" || fail "static: no dokploy reattach"
+grep -q 'network connect --alias "$name"' "$SCRIPT" && pass "static: dokploy alias is the unique container name" || fail "static: unique alias connect missing"
+if grep -qE 'network connect --alias ("?)(backend|storefront)\1' "$SCRIPT"; then
+  fail "static: helper can publish a generic shared alias"
+else
+  pass "static: helper does not publish alias backend or storefront"
+fi
 if grep -qE '^[[:space:]]*docker_health_ok[[:space:]]*(\(\)|")' "$SCRIPT"; then
   fail "static: one-shot docker_health_ok is still defined or called"
 else

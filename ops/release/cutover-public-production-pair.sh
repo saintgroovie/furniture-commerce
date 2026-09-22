@@ -1576,6 +1576,70 @@ host_port_for() {
   esac
 }
 
+# Compose `up --force-recreate` rebuilds the container from the stack network
+# only. Traefik reaches these containers on dokploy-network by their unique
+# names. Reattach that network here, with the unique container name as the
+# only alias. Never publish the generic alias `backend` or `storefront` on
+# the shared network: production storefront resolves `backend` on the
+# stack-local network, and a shared `backend` alias would steal that name.
+dokploy_alias_state() {
+  local name="$1" net="$2"
+  prod_docker inspect "$name" | python3 -c '
+import json, sys
+name, net = sys.argv[1], sys.argv[2]
+raw = json.load(sys.stdin)
+obj = raw[0] if isinstance(raw, list) else raw
+endpoint = ((obj.get("NetworkSettings") or {}).get("Networks") or {}).get(net)
+if not endpoint:
+    print("MISSING")
+    raise SystemExit(0)
+aliases = list(endpoint.get("Aliases") or [])
+dns = list(endpoint.get("DNSNames") or [])
+generic = {"backend", "storefront"}
+if any(token in generic for token in aliases + dns) or aliases != [name]:
+    print("BAD")
+else:
+    print("OK")
+' "$name" "$net"
+}
+
+ensure_dokploy_attachment() {
+  local name="$1"
+  local net id state
+  net="${WOODRIGHT_NET_DOKPLOY:-dokploy-network}"
+  id="$(prod_docker inspect --format '{{.Id}}' "$name" 2>/dev/null || true)"
+  if [[ -z "$id" ]]; then
+    log "ERROR dokploy attach: container missing name=$name"
+    return 1
+  fi
+  state="$(dokploy_alias_state "$name" "$net" 2>/dev/null || true)"
+  if [[ "$state" == "MISSING" ]]; then
+    prod_docker network connect --alias "$name" "$net" "$id" || {
+      log "ERROR dokploy connect failed name=$name net=$net"
+      return 1
+    }
+    state="$(dokploy_alias_state "$name" "$net" 2>/dev/null || true)"
+  fi
+  if [[ "$state" == "BAD" ]]; then
+    log "stripping generic alias from $net on $name"
+    prod_docker network disconnect "$net" "$id" || {
+      log "ERROR dokploy disconnect failed name=$name net=$net"
+      return 1
+    }
+    prod_docker network connect --alias "$name" "$net" "$id" || {
+      log "ERROR dokploy reconnect failed name=$name net=$net"
+      return 1
+    }
+    state="$(dokploy_alias_state "$name" "$net" 2>/dev/null || true)"
+  fi
+  if [[ "$state" != "OK" ]]; then
+    log "ERROR dokploy attachment not ok name=$name state=${state:-empty}"
+    return 1
+  fi
+  log "dokploy attachment ok name=$name net=$net alias=$name"
+  return 0
+}
+
 # Bring one component back onto the ref the restored pin file now names.
 # --force-recreate because the container currently runs the candidate image
 # while the pin file already says otherwise: without it Compose may consider a
@@ -1598,6 +1662,10 @@ rollback_recreate_component() {
     return 1
   }
   log "ROLLBACK $kind: recreated on $want_ref"
+  ensure_dokploy_attachment "$name" || {
+    log "ROLLBACK $kind: dokploy-network reattach failed"
+    return 1
+  }
   return 0
 }
 
@@ -2162,6 +2230,10 @@ recreate_component() {
     return 1
   fi
   COMPONENTS_RECREATED="${COMPONENTS_RECREATED} ${kind}"
+  if ! ensure_dokploy_attachment "$name"; then
+    log "$kind: dokploy-network reattach failed"
+    return 1
+  fi
   log "$kind: recreated at $want_digest (force_recreate=1, no keeper container created)"
   return 0
 }
