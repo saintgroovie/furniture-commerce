@@ -1106,13 +1106,14 @@ PY
 [[ ! -f "$STATE/log/mutations.log" ]] && pass "existing_skew: dry-run stayed read-only" || fail "existing_skew: dry-run mutated"
 
 # ==========================================================================
-# 26b) pair-only: refuse single-component and caller spoof of a split cutover
+# 26b) fail closed: backend-only, storefront without approval, pair approval
+# reused as a storefront cutover
 # ==========================================================================
 reset_harness
 EV="$TMP/ev-sf-only"
 run_exec_component "$EV" "$TMP/out-sf-only.txt" storefront
-[[ "$RC" -ne 0 ]] && pass "sf_only: pair-only refused" || fail "sf_only: unexpected success"
-grep -q 'pair-only' "$TMP/out-sf-only.txt" && pass "sf_only: pair-only message" || fail "sf_only: error text"
+[[ "$RC" -ne 0 ]] && pass "sf_only: refused without retained backend ref" || fail "sf_only: unexpected success"
+grep -q 'requires both' "$TMP/out-sf-only.txt" && pass "sf_only: both refs required" || fail "sf_only: error text"
 [[ "$(digest_of woodright-public-production-backend)" == "$OLD_BE_DIG" ]] && pass "sf_only: backend untouched" || fail "sf_only: backend moved"
 [[ "$(digest_of woodright-public-production-storefront)" == "$OLD_SF_DIG" ]] && pass "sf_only: storefront untouched" || fail "sf_only: storefront moved"
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "sf_only: pins untouched" || fail "sf_only: pins mutated"
@@ -1120,8 +1121,8 @@ grep -q 'pair-only' "$TMP/out-sf-only.txt" && pass "sf_only: pair-only message" 
 reset_harness
 EV="$TMP/ev-be-only"
 run_exec_component "$EV" "$TMP/out-be-only.txt" backend
-[[ "$RC" -ne 0 ]] && pass "be_only: pair-only refused" || fail "be_only: unexpected success"
-grep -q 'pair-only' "$TMP/out-be-only.txt" && pass "be_only: pair-only message" || fail "be_only: error text"
+[[ "$RC" -ne 0 ]] && pass "be_only: backend-only refused" || fail "be_only: unexpected success"
+grep -q 'accepts pair or storefront' "$TMP/out-be-only.txt" && pass "be_only: component enum message" || fail "be_only: error text"
 
 reset_harness
 EV="$TMP/ev-sf-spoof"
@@ -1135,8 +1136,118 @@ env "${ENVS[@]}" bash "$SCRIPT" \
   --mode execute --confirm-mutation "$CONFIRM" >"$TMP/out-sf-spoof.txt" 2>&1
 RC=$?
 set -e
-[[ "$RC" -ne 0 ]] && pass "sf_spoof: refused non-pair component" || fail "sf_spoof: rc=$RC"
+[[ "$RC" -ne 0 ]] && pass "sf_spoof: pair approval cannot authorize storefront" || fail "sf_spoof: rc=$RC"
+grep -q 'OWNER_APPROVAL_MISMATCH' "$TMP/out-sf-spoof.txt" && pass "sf_spoof: component mismatch" || fail "sf_spoof: error text"
 [[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] && pass "sf_spoof: no pin write" || fail "sf_spoof: pins mutated"
+
+write_storefront_approval() {
+  local expect_sf="${1:-$OLD_SF_DIG}" retained="${2:-$OLD_BE_DIG}"
+  python3 - "$SRV/meta/public_production/OWNER_APPROVED_RELEASE.json" \
+    "$APP_SHA" "$NEW_SF_DIG" "$retained" "$OLD_PEER_SHA" "$expect_sf" <<'PY'
+import json, sys
+path, sha, sf, be, retained_rev, expect_sf = sys.argv[1:7]
+json.dump({
+  "schema_version": 1,
+  "environment": "public_production",
+  "component": "storefront",
+  "application_sha": sha,
+  "backend_digest": be,
+  "storefront_digest": sf,
+  "retained_backend_revision": retained_rev,
+  "expected_current_storefront_digest": expect_sf,
+  "expected_current_backend_digest": be,
+  "owner_decision": "approved",
+  "owner_authorization_id": "OWNER-PASS-test-storefront-component",
+  "issued_at": "2026-09-22T00:00:00Z",
+  "evidence_reference": "/tmp/fixture",
+  "tooling_schema_version": "owner-approved-release-v1",
+}, open(path, "w"), indent=2)
+PY
+  chmod 0644 "$SRV/meta/public_production/OWNER_APPROVED_RELEASE.json"
+}
+
+run_storefront_exec() {
+  local ev="$1" out="$2" be_ref="${3:-$OLD_BE_REF}"
+  local -a envs=()
+  while IFS= read -r line; do envs+=("$line"); done < <(base_env)
+  envs+=("WOODRIGHT_EVIDENCE_DIR=$ev" "WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=1")
+  set +e
+  env "${envs[@]}" bash "$SCRIPT" \
+    --environment public_production --component storefront --source-sha "$APP_SHA" \
+    --storefront-ref "$SF_REF" --backend-ref "$be_ref" \
+    --mode execute --confirm-mutation "$CONFIRM" >"$out" 2>&1
+  RC=$?
+  set -e
+}
+
+# ==========================================================================
+# 26c) storefront-only success, drifts, and pair revision mismatch
+# ==========================================================================
+reset_harness
+write_storefront_approval
+BE_BEFORE="$(id_of woodright-public-production-backend)"
+STARTED_BEFORE="$(WOODRIGHT_FAKE_DOCKER_STATE="$STATE" "$BIN/docker" inspect woodright-public-production-backend --format '{{.State.StartedAt}}')"
+EV="$TMP/ev-sf-component"
+run_storefront_exec "$EV" "$TMP/out-sf-component.txt"
+[[ "$RC" -eq 0 ]] && pass "sf_component: exit 0" || { fail "sf_component: rc=$RC"; sed -n '1,80p' "$TMP/out-sf-component.txt"; }
+[[ "$(digest_of woodright-public-production-storefront)" == "$NEW_SF_DIG" ]] && pass "sf_component: storefront advanced" || fail "sf_component: storefront digest"
+[[ "$(digest_of woodright-public-production-backend)" == "$OLD_BE_DIG" ]] && pass "sf_component: backend digest unchanged" || fail "sf_component: backend digest"
+[[ "$(id_of woodright-public-production-backend)" == "$BE_BEFORE" ]] && pass "sf_component: backend container id unchanged" || fail "sf_component: backend id"
+STARTED_AFTER="$(WOODRIGHT_FAKE_DOCKER_STATE="$STATE" "$BIN/docker" inspect woodright-public-production-backend --format '{{.State.StartedAt}}')"
+[[ "$STARTED_AFTER" == "$STARTED_BEFORE" ]] && pass "sf_component: backend StartedAt unchanged" || fail "sf_component: StartedAt"
+[[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "sf_component: backend pin unchanged" || fail "sf_component: backend pin"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$SF_REF" ]] && pass "sf_component: storefront pin advanced" || fail "sf_component: storefront pin"
+[[ "$(pin_of WOODRIGHT_RELEASE_SHA)" != "$APP_SHA" ]] && pass "sf_component: shared RELEASE_SHA not rewritten to the new sha" || fail "sf_component: RELEASE_SHA moved"
+grep -q 'compose_up storefront' "$STATE/log/journal.log" && pass "sf_component: storefront recreate planned" || fail "sf_component: no storefront up"
+if grep -q 'compose_up backend' "$STATE/log/journal.log"; then
+  fail "sf_component: backend was recreated"
+else
+  pass "sf_component: backend compose up absent"
+fi
+
+reset_harness
+write_storefront_approval "sha256:$(printf '9%.0s' {1..64})"
+EV="$TMP/ev-sf-drift"
+run_storefront_exec "$EV" "$TMP/out-sf-drift.txt"
+[[ "$RC" -ne 0 ]] && pass "sf_drift: current storefront CAS rejected" || fail "sf_drift: unexpected success"
+grep -q 'current storefront digest' "$TMP/out-sf-drift.txt" && pass "sf_drift: message" || fail "sf_drift: error text"
+[[ "$(digest_of woodright-public-production-storefront)" == "$OLD_SF_DIG" ]] && pass "sf_drift: storefront untouched" || fail "sf_drift: storefront moved"
+[[ "$(digest_of woodright-public-production-backend)" == "$OLD_BE_DIG" ]] && pass "sf_drift: backend untouched" || fail "sf_drift: backend moved"
+
+reset_harness
+DRIFT_BE="sha256:$(printf '8%.0s' {1..64})"
+write_image "ghcr.io/saintgroovie/woodright-backend@${DRIFT_BE}" woodright-backend public_production "$OLD_PEER_SHA"
+write_storefront_approval "$OLD_SF_DIG" "$DRIFT_BE"
+EV="$TMP/ev-be-drift"
+run_storefront_exec "$EV" "$TMP/out-be-drift.txt" "ghcr.io/saintgroovie/woodright-backend@${DRIFT_BE}"
+[[ "$RC" -ne 0 ]] && pass "be_drift: retained backend CAS rejected" || fail "be_drift: unexpected success"
+grep -q 'retained backend digest' "$TMP/out-be-drift.txt" && pass "be_drift: message" || fail "be_drift: error text"
+[[ "$(digest_of woodright-public-production-backend)" == "$OLD_BE_DIG" ]] && pass "be_drift: backend untouched" || fail "be_drift: backend moved"
+
+reset_harness
+write_storefront_approval
+write_image "$SF_REF" woodright-storefront public_production "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+EV="$TMP/ev-sf-rev"
+run_storefront_exec "$EV" "$TMP/out-sf-rev.txt"
+[[ "$RC" -ne 0 ]] && pass "sf_rev: candidate revision mismatch rejected" || fail "sf_rev: unexpected success"
+grep -q 'oci_revision' "$TMP/out-sf-rev.txt" && pass "sf_rev: message" || fail "sf_rev: error text"
+[[ "$(digest_of woodright-public-production-storefront)" == "$OLD_SF_DIG" ]] && pass "sf_rev: storefront untouched" || fail "sf_rev: storefront moved"
+
+reset_harness
+write_image "$BE_REF" woodright-backend public_production "$OLD_PEER_SHA"
+EV="$TMP/ev-pair-rev"
+run_exec "$EV" "$TMP/out-pair-rev.txt"
+[[ "$RC" -ne 0 ]] && pass "pair_rev: old backend revision rejected" || fail "pair_rev: unexpected success"
+grep -q 'oci_revision' "$TMP/out-pair-rev.txt" && pass "pair_rev: message" || fail "pair_rev: error text"
+[[ "$(digest_of woodright-public-production-backend)" == "$OLD_BE_DIG" ]] && pass "pair_rev: backend untouched" || fail "pair_rev: backend moved"
+
+reset_harness
+write_storefront_approval
+EV="$TMP/ev-pair-vs-sf"
+run_exec "$EV" "$TMP/out-pair-vs-sf.txt"
+[[ "$RC" -ne 0 ]] && pass "pair_vs_sf: storefront approval cannot authorize pair" || fail "pair_vs_sf: unexpected success"
+grep -q 'OWNER_APPROVAL_MISMATCH' "$TMP/out-pair-vs-sf.txt" && pass "pair_vs_sf: component mismatch" || fail "pair_vs_sf: error text"
+[[ "$(pin_of WOODRIGHT_STOREFRONT_IMAGE)" == "$OLD_SF_REF" ]] && pass "pair_vs_sf: pins untouched" || fail "pair_vs_sf: pins mutated"
 
 reset_harness
 # Approval mismatch vs planned pair: Gate A fail, zero mutation.
