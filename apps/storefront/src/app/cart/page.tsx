@@ -8,7 +8,7 @@ import { CopyLines } from "@/components/copy-lines"
 export const metadata: Metadata = {
   title: cartCopy.title,
   description: "Ваша корзина Woodright",
-  robots: { index: false, follow: false },
+  robots: { index: false, follow: false, noarchive: true },
 }
 
 export default async function CartPage() {
