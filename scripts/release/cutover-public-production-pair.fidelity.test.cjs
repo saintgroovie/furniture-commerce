@@ -97,8 +97,9 @@ function run(args, extraEnv = {}) {
 
 {
   const r = run(["--environment", "public_production", "--component", "storefront", "--source-sha", SHA, "--storefront-ref", SF_REF, "--backend-ref", BE_REF])
-  check(r.status !== 0, "single-component storefront refused", r.stderr)
-  check(/pair-only/.test(r.stderr), "pair-only message")
+  check(r.status !== 0, "storefront without a storefront approval refused", r.stderr)
+  check(!/pair-only/.test(r.stderr), "storefront is no longer a blanket pair-only ban")
+  check(/OWNER_APPROVAL_MISMATCH|requires both/.test(r.stderr), "storefront fails closed on approval or refs")
 }
 
 {

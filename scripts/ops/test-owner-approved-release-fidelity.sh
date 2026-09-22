@@ -324,6 +324,133 @@ fi
 unset WOODRIGHT_OWNER_APPROVAL_STRICT_ENVIRONMENT
 write_approval "$APPROVAL"
 
+# component=absent stays pair. Explicit storefront is a different contract.
+export WOODRIGHT_OWNER_APPROVAL_COMPONENT=storefront
+if wr_require_owner_approved_release public_demo "$APPROVED_SHA" "$APPROVED_BE" "$APPROVED_SF" "$TMP/ev" gate_a; then
+  fail "pair approval authorized a storefront request"
+else
+  pass "pair approval rejected for storefront request result=$WR_OWNER_APPROVAL_RESULT"
+fi
+unset WOODRIGHT_OWNER_APPROVAL_COMPONENT
+SF_APP="a5265609c7adc8a5ca0fe6e37db8a4bbdaad6bb6"
+SF_NEW="sha256:$(printf '1%.0s' {1..64})"
+SF_OLD="sha256:$(printf '2%.0s' {1..64})"
+BE_OLD="sha256:$(printf '3%.0s' {1..64})"
+BE_REV="931140158756b921100e4f97cf1f27cd3ba61bc2"
+cat >"$APPROVAL" <<EOF
+{
+  "schema_version": 1,
+  "environment": "public_demo",
+  "component": "storefront",
+  "application_sha": "$SF_APP",
+  "backend_digest": "$BE_OLD",
+  "storefront_digest": "$SF_NEW",
+  "retained_backend_revision": "$BE_REV",
+  "expected_current_storefront_digest": "$SF_OLD",
+  "expected_current_backend_digest": "$BE_OLD",
+  "owner_decision": "approved",
+  "owner_authorization_id": "OWNER-PASS-test-storefront-component",
+  "issued_at": "2026-09-22T00:00:00Z",
+  "evidence_reference": "fixture",
+  "tooling_schema_version": "owner-approved-release-v1"
+}
+EOF
+chmod 0644 "$APPROVAL"
+export WOODRIGHT_OWNER_APPROVAL_COMPONENT=storefront
+if wr_require_owner_approved_release public_demo "$SF_APP" "$BE_OLD" "$SF_NEW" "$TMP/ev" gate_a; then
+  pass "storefront approval ALLOW"
+  [[ "$WR_OA_RETAINED_BACKEND_REVISION" == "$BE_REV" ]] && pass "storefront retained revision loaded" || fail "retained revision"
+  [[ "$WR_OA_EXPECTED_CURRENT_SF_DIGEST" == "$SF_OLD" ]] && pass "storefront current digest loaded" || fail "current digest"
+else
+  fail "storefront approval denied result=$WR_OWNER_APPROVAL_RESULT"
+fi
+export WOODRIGHT_OWNER_APPROVAL_COMPONENT=pair
+if wr_require_owner_approved_release public_demo "$SF_APP" "$BE_OLD" "$SF_NEW" "$TMP/ev" gate_a; then
+  fail "storefront approval authorized a pair request"
+else
+  pass "storefront approval rejected for pair request result=$WR_OWNER_APPROVAL_RESULT"
+fi
+unset WOODRIGHT_OWNER_APPROVAL_COMPONENT
+python3 - "$APPROVAL" <<'PY' || fail "storefront approval missing a required field still loaded"
+import json, sys
+p = sys.argv[1]
+d = json.load(open(p))
+del d["retained_backend_revision"]
+json.dump(d, open(p, "w"))
+PY
+chmod 0644 "$APPROVAL"
+export WOODRIGHT_OWNER_APPROVAL_COMPONENT=storefront
+if wr_require_owner_approved_release public_demo "$SF_APP" "$BE_OLD" "$SF_NEW" "$TMP/ev" gate_a; then
+  fail "malformed storefront approval accepted"
+else
+  pass "malformed storefront approval rejected result=$WR_OWNER_APPROVAL_RESULT"
+fi
+unset WOODRIGHT_OWNER_APPROVAL_COMPONENT
+
+WRITE_SF="$ROOT/ops/release/reconcile-owner-approved-release.sh"
+if bash "$WRITE_SF" --environment public_demo --component storefront \
+  --application-sha "$SF_APP" --backend-digest "$BE_OLD" --storefront-digest "$SF_NEW" \
+  --retained-backend-revision "$BE_REV" \
+  --expected-current-storefront-digest "$SF_OLD" \
+  --expected-current-backend-digest "$BE_OLD" \
+  --owner-authorization-id OWNER-PASS-test-storefront-component \
+  --evidence-reference "$TMP" --evidence-dir "$TMP/ev-sf-dry" >/dev/null; then
+  pass "storefront approval dry-run ok"
+else
+  fail "storefront approval dry-run failed"
+fi
+python3 - "$TMP/ev-sf-dry/json/OWNER_APPROVED_RELEASE.staged.json" <<'PY' || fail "staged storefront approval shape"
+import json, sys
+d = json.load(open(sys.argv[1]))
+assert d["component"] == "storefront", d
+assert d["retained_backend_revision"]
+assert d["backend_digest"] == d["expected_current_backend_digest"]
+assert d["expected_current_storefront_digest"] != d["storefront_digest"] 
+PY
+pass "staged storefront approval has component fields"
+# Pair staging must not grow a component key (historical files stay pair).
+if bash "$WRITE_SF" --environment public_demo \
+  --application-sha "$APPROVED_SHA" --backend-digest "$APPROVED_BE" --storefront-digest "$APPROVED_SF" \
+  --owner-authorization-id OWNER-PASS-test-owner-auth \
+  --evidence-reference "$TMP" --evidence-dir "$TMP/ev-pair-dry" >/dev/null; then
+  python3 - "$TMP/ev-pair-dry/json/OWNER_APPROVED_RELEASE.staged.json" <<'PY' || fail "pair staging grew a component key"
+import json, sys
+d = json.load(open(sys.argv[1]))
+assert "component" not in d, d
+PY
+  pass "pair staging omits component"
+else
+  fail "pair approval dry-run failed"
+fi
+
+python3 - "$APPROVAL" <<'PY'
+import json, sys
+path = sys.argv[1]
+doc = {
+  "schema_version": 1,
+  "environment": "public_demo",
+  "application_sha": "e485230b024fa533a674876133ff978c0bb5e120",
+  "backend_digest": "sha256:29bd8c76a1cc8ef47a9c0ee5db9ff16bbdaabd61d7bc3e40f5db842636914a71",
+  "storefront_digest": "sha256:33d5ce698edc3482c96b7dff9430cadeb13429c52db80ecac08b1a565128e1ad",
+  "owner_decision": "approved",
+  "owner_authorization_id": "OWNER-PASS-ok\nstorefront\n931140158756b921100e4f97cf1f27cd3ba61bc2\nsha256:" + ("2" * 64) + "\nsha256:" + ("3" * 64),
+  "issued_at": "2026-09-22T00:00:00Z",
+  "evidence_reference": "fixture",
+  "tooling_schema_version": "owner-approved-release-v1",
+}
+json.dump(doc, open(path, "w"))
+PY
+chmod 0644 "$APPROVAL"
+export WOODRIGHT_OWNER_APPROVAL_COMPONENT=storefront
+if wr_require_owner_approved_release public_demo "$APPROVED_SHA" "$APPROVED_BE" "$APPROVED_SF" "$TMP/ev" gate_a; then
+  fail "newline in authorization id was accepted"
+else
+  [[ "$WR_OWNER_APPROVAL_RESULT" == "OWNER_APPROVAL_MALFORMED" ]] \
+    && pass "newline in authorization id rejected" \
+    || fail "newline injection result=$WR_OWNER_APPROVAL_RESULT"
+fi
+unset WOODRIGHT_OWNER_APPROVAL_COMPONENT
+
 if [[ "$FAILED" -eq 0 ]]; then
   echo "ALL OWNER-APPROVED RELEASE FIDELITY TESTS PASSED"
   exit 0
