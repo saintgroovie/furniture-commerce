@@ -6,7 +6,9 @@ import {
 } from "@/lib/indexing-policy"
 import { buildConnectSrcDirective } from "@/lib/csp-policy"
 import { storefrontRuntimeIdentityHeaders } from "@/lib/runtime-identity-headers"
+import { legacyBuyerRedirectDestination } from "@/lib/legacy-buyer-redirects"
 import { stripLegacyQueryTokenFromOrderTrackSearch } from "@/lib/order-track-token-handoff"
+import { isProductionQaPathBlocked } from "@/lib/production-qa-exposure"
 
 /**
  * Buyer security headers + CSP with per-request nonce.
@@ -68,6 +70,20 @@ function applySecurityHeaders(
   return response
 }
 
+function redirectTo(request: NextRequest, destination: string, nonce: string, csp: string) {
+  const url = request.nextUrl.clone()
+  const q = destination.indexOf("?")
+  if (q === -1) {
+    url.pathname = destination
+    url.search = ""
+  } else {
+    url.pathname = destination.slice(0, q)
+    url.search = destination.slice(q)
+  }
+  const redirect = NextResponse.redirect(url, 308)
+  return applySecurityHeaders(request, redirect, nonce, csp)
+}
+
 export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
 
@@ -88,6 +104,23 @@ export function proxy(request: NextRequest) {
     "frame-ancestors 'none'",
     "upgrade-insecure-requests",
   ].join("; ")
+
+  if (
+    isProductionQaPathBlocked({
+      pathname: request.nextUrl.pathname,
+      host: request.headers.get("host"),
+      runtimeRole: process.env.WOODRIGHT_RUNTIME_ROLE,
+    })
+  ) {
+    const missing = new NextResponse("Not Found", {
+      status: 404,
+      headers: { "content-type": "text/plain; charset=utf-8" },
+    })
+    return applySecurityHeaders(request, missing, nonce, csp)
+  }
+
+  const legacyDest = legacyBuyerRedirectDestination(request.nextUrl.pathname)
+  if (legacyDest) return redirectTo(request, legacyDest, nonce, csp)
 
   // Option A: never consume query tokens into cookies/session. Strip only so
   // SSR/Flight cannot serialize them. First hop of a legacy bookmark may still
