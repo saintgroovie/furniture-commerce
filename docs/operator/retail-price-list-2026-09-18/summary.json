@@ -1,0 +1,43 @@
+{
+  "source_filename": "Розничный Прайс 18.09.2026.xlsx",
+  "source_bytes": 179062,
+  "sha256": "55f37ab0a987e271e63f0784bfe2457a7b4e0bcbd4083745b93b07b2838d957c",
+  "workbook_header_date_oliver": "2026-09-19",
+  "filename_date": "2026-09-18",
+  "parsed_at": "2026-09-21T16:04:50.847738+00:00",
+  "sheets": 11,
+  "product_rows": 402,
+  "product_rows_with_solid_price": 381,
+  "unique_sku_normalized": 400,
+  "duplicate_normalized_sku": [
+    "OL-08-1",
+    "GR-09-1"
+  ],
+  "by_collection": {
+    "Oliver": 69,
+    "Greenwich": 15,
+    "Monchelsea": 63,
+    "Willie Winkie": 59,
+    "Oxford": 23,
+    "Provence": 35,
+    "Princess Rose": 34,
+    "Country / London / Paris": 30,
+    "Parts": 66,
+    "Accessories": 8
+  },
+  "special_order_rows": 34,
+  "live_demo_sku_count": 117,
+  "price_rows_on_live_demo": 115,
+  "demo_ww_suffix_hits": [
+    "BA-05-3",
+    "FA-05-3",
+    "PA-05-3",
+    "RL-67-1",
+    "RS-05-3",
+    "TE-05-3"
+  ],
+  "role": "INTERNAL operator retail workbook. Not website SoT. Not Medusa apply. Mapping is identity only.",
+  "price_rows_usable_identity": 115,
+  "princess_rose_cross_collection_do_not_map": 19,
+  "hard_rule": "Workbook PR-* = Princess Rose. Live PV-* = Provence. No global PR->PV."
+}

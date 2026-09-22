@@ -1,0 +1,118 @@
+catalog_sku,catalog_handle,catalog_title,media_folder,price_verdict,price_rows,price_sku_normalized,price_solid,note
+BA-05-3,ba-05-3,Комод высокий,willie-winkie,MATCH_WW_MOTIF_BODY,1,WW-BODY-05-3,113080.0,"One workbook body, motif category prices 1/2/3. Live SKUs: FA-05-3→cat2, BA-05-3→cat3, TE-05-3→cat3, RS-05-3→cat3, PA-05-3→cat3"
+CO-02-1,co-02-1,Шкаф для одежды 2-дв,country-london-paris,MATCH_EXACT,1,CO-02-1,84600.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-05-1,co-05-1,Комод,country-london-paris,MATCH_EXACT,1,CO-05-1,39200.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-08-1,co-08-1,Тумбочка прикроватная,country-london-paris,MATCH_EXACT,1,CO-08-1,16900.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-14-2,co-14-2,Кровать 1-сп. (90×190) с подъёмным механизмом,country-london-paris,MATCH_EXACT,1,CO-14-2,50100.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-15-2,co-15-2,"Кровать 1,5-сп. (120×190) с подъёмным механизмом",country-london-paris,MATCH_EXACT,1,CO-15-2,62000.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-61-1,co-61-1,Шкаф книжный со стеклом,country-london-paris,MATCH_EXACT,1,CO-61-1,82000.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-62-1,co-62-1,Стеллаж широкий,country-london-paris,MATCH_EXACT,1,CO-62-1,64300.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-62-2,co-62-2,Стеллаж узкий с дверью,country-london-paris,MATCH_EXACT,1,CO-62-2,28300.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-62-3,co-62-3,Стеллаж узкий с ящиком,country-london-paris,MATCH_EXACT,1,CO-62-3,32100.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-65-1,co-65-1,Стол письменный 1-тумб. 0П,country-london-paris,MATCH_EXACT,1,CO-65-1,37500.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-65-2,co-65-2,Стол письменный 1-тумб. П0,country-london-paris,MATCH_EXACT,1,CO-65-2,37500.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-66-1,co-66-1,Стол письменный двухтумбовый Кантри (ящики с обеих сторон),country-london-paris,MATCH_EXACT,1,CO-66-1,52600.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+CO-69-1,co-69-1,Полка книжная малая,country-london-paris,MATCH_EXACT,1,CO-69-1,4300.0,"Exact CO SKU. London/Paris columns are finish overlays on this SKU, not extra catalog products. Live PDP has color_* media."
+FA-05-3,fa-05-3,Комод высокий,willie-winkie,MATCH_WW_MOTIF_BODY,1,WW-BODY-05-3,113080.0,"One workbook body, motif category prices 1/2/3. Live SKUs: FA-05-3→cat2, BA-05-3→cat3, TE-05-3→cat3, RS-05-3→cat3, PA-05-3→cat3"
+GR-02-1,greenwich-gr-02-1,Гардероб 2-дв. с ящиками Левел,greenwich,MATCH_EXACT,1,GR-02-1,169200.0,Exact SKU on live demo
+GR-02-2,greenwich-gr-02-2,Гардероб 2-дв. Тотал,greenwich,MATCH_EXACT,1,GR-02-2,167450.0,Exact SKU on live demo
+GR-05-1,greenwich-gr-05-1,Комод Скейл,greenwich,MATCH_EXACT,1,GR-05-1,109500.0,Exact SKU on live demo
+GR-08-1,greenwich-gr-08-1,Прикроватная тумба с 2 ящиками Хоул,greenwich,MATCH_EXACT,1,GR-08-1,36500.0,Exact SKU on live demo
+GR-08-2,greenwich-gr-08-2,Прикроватная тумба с 1 ящиком Стоун,greenwich,MATCH_EXACT,1,GR-08-2,31200.0,Exact SKU on live demo
+GR-09-1,greenwich-gr-09-1,Страница не найдена | Woodright,,SPLIT_ON_CATALOG,2,GR-09-1,28400.0;71900.0,Bare /product/greenwich-gr-09-1 is 404. Live products are greenwich-gr-09-1-mirror and greenwich-gr-09-1-bed-90.
+GR-12-1,greenwich-gr-12-1,"Кровать 1,5-сп. (120×200)",greenwich,MATCH_EXACT,1,GR-12-1,81100.0,Exact SKU on live demo
+GR-14-1,greenwich-gr-14-1,"Кровать 1,5-сп. (140×200)",greenwich,MATCH_EXACT,1,GR-14-1,89700.0,Exact SKU on live demo
+GR-16-1,greenwich-gr-16-1,Кровать 2-сп. (160×200),greenwich,MATCH_EXACT,1,GR-16-1,94000.0,Exact SKU on live demo
+GR-18-1,greenwich-gr-18-1,Кровать 2-сп. (180×200),greenwich,MATCH_EXACT,1,GR-18-1,110400.0,Exact SKU on live demo
+GR-26-1,greenwich-gr-26-1,Шкаф-витрина Кристалл,greenwich,MATCH_EXACT,1,GR-26-1,146650.0,Exact SKU on live demo
+GR-42-1,greenwich-gr-42-1,Тумба ТВ Уайд,greenwich,MATCH_EXACT,1,GR-42-1,68800.0,Exact SKU on live demo
+GR-44-1,greenwich-gr-44-1,Консоль Степ,greenwich,MATCH_EXACT,1,GR-44-1,45900.0,Exact SKU on live demo
+GR-67-1,greenwich-gr-67-1,Рабочий стол Бейс,greenwich,MATCH_EXACT,1,GR-67-1,77650.0,Exact SKU on live demo
+OL-00-1,ol-00-1,Шкаф угловой,oliver,MATCH_EXACT,1,OL-00-1,119900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-01-2,ol-01-2,Шкаф для одежды 1-дв. с зеркалом,oliver,MATCH_EXACT,1,OL-01-2,111900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-02-1,ol-02-1,Шкаф для одежды 2-дв,oliver,MATCH_EXACT,1,OL-02-1,157900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-03-1,ol-03-1,Шкаф для одежды 3-дв,oliver,MATCH_EXACT,1,OL-03-1,258900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-05-1,ol-05-1,Комод стандартный,oliver,MATCH_EXACT,1,OL-05-1,89900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-05-2,ol-05-2,Комод широкий,oliver,MATCH_EXACT,1,OL-05-2,123500.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-05-3,ol-05-3,Комод высокий,oliver,MATCH_EXACT,1,OL-05-3,119500.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-06-1,ol-06-1,Столик туалетный с зеркалом,oliver,MATCH_EXACT,1,OL-06-1,81950.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-07-1,ol-07-1,Сундук,oliver,MATCH_EXACT,1,OL-07-1,39900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-08-1,ol-08-1,Тумбочка прикроватная,oliver,SPLIT_ON_CATALOG,2,OL-08-1,19950.0;34950.0,See split handles; do not apply one price to both.
+OL-08-2,ol-08-2,Тумбочка прикроватная с дверкой,oliver,MATCH_EXACT,1,OL-08-2,39950.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-09-2,ol-09-2,Зеркало напольное,oliver,MATCH_EXACT,1,OL-09-2,38900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-14-1,ol-14-1,Кровать 1-сп. (90×190),oliver,MATCH_EXACT,1,OL-14-1,72900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-14-2,ol-14-2,Кровать 1-сп. (90×190) без изножья,oliver,MATCH_EXACT,1,OL-14-2,69900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-15-1,ol-15-1,"Кровать 1,5-сп. (120×190)",oliver,MATCH_EXACT,1,OL-15-1,98900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-15-2,ol-15-2,"Кровать 1,5-сп. (120×190) без изножья",oliver,MATCH_EXACT,1,OL-15-2,93600.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-16-1,ol-16-1,"Кровать 1,5-сп. (140×190)",oliver,MATCH_EXACT,1,OL-16-1,113400.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-16-2,ol-16-2,"Кровать 1,5-сп. (140×190) без изножья",oliver,MATCH_EXACT,1,OL-16-2,109200.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-17-1,ol-17-1,Кровать 2-сп. (160×200),oliver,MATCH_EXACT,1,OL-17-1,134900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-17-2,ol-17-2,Кровать 2-сп. (160×200) без изножья,oliver,MATCH_EXACT,1,OL-17-2,124800.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-17-3,ol-17-3,Кровать 2-сп. (160×200) с подъёмным механизмом,oliver,MATCH_EXACT,1,OL-17-3,160000.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-18-1,ol-18-1,Кровать 2-сп. (180×200),oliver,MATCH_EXACT,1,OL-18-1,149900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-18-2,ol-18-2,Кровать 2-сп. (180×200) без изножья,oliver,MATCH_EXACT,1,OL-18-2,140400.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-21-1,ol-21-1,Стол обеденный раздвижной,oliver,MATCH_EXACT,1,OL-21-1,212000.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-23-1,ol-23-1,Стул,oliver,MATCH_EXACT,1,OL-23-1,27900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-25-1,ol-25-1,Комод столовый,oliver,MATCH_EXACT,1,OL-25-1,142900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-26-1,ol-26-1,Шкаф буфетный со стеклом и филенками,oliver,MATCH_EXACT,1,OL-26-1,150650.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-26-2,ol-26-2,Шкаф-витрина,oliver,MATCH_EXACT,1,OL-26-2,159900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-30-1,ol-30-1,Часы,oliver,MATCH_EXACT,1,OL-30-1,9950.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-42-1,ol-42-1,Тумба для телевизора,oliver,MATCH_EXACT,1,OL-42-1,55950.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-43-1,ol-43-1,Столик чайный круглый,oliver,MATCH_EXACT,1,OL-43-1,19950.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-44-1,ol-44-1,Консоль,oliver,MATCH_EXACT,1,OL-44-1,45900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-44-2,ol-44-2,Консоль с полками,oliver,MATCH_EXACT,1,OL-44-2,70950.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-55-1,ol-55-1,Банкетка малая,oliver,MATCH_EXACT,1,OL-55-1,14500.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-55-2,ol-55-2,Банкетка большая,oliver,MATCH_EXACT,1,OL-55-2,19900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-56-1,ol-56-1,Кресло,oliver,MATCH_EXACT,1,OL-56-1,58900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-57-1,ol-57-1,Диван малый,oliver,MATCH_EXACT,1,OL-57-1,118000.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-57-2,ol-57-2,Диван большой,oliver,MATCH_EXACT,1,OL-57-2,145000.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-57-3,ol-57-3,Диван-кровать малый (140×190),oliver,MATCH_EXACT,1,OL-57-3,125000.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-61-1,ol-61-1,Шкаф книжный со стеклом,oliver,MATCH_EXACT,1,OL-61-1,137900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-61-2,ol-61-2,Шкаф кабинетный,oliver,MATCH_EXACT,1,OL-61-2,121900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-62-1,ol-62-1,Стеллаж для книг,oliver,MATCH_EXACT,1,OL-62-1,103900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-62-2,ol-62-2,Стеллаж широкий,oliver,MATCH_EXACT,1,OL-62-2,72900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-64-1,ol-64-1,Стол-бюро,oliver,MATCH_EXACT,1,OL-64-1,188900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-66-1,ol-66-1,Стол письменный двухтумбовый Оливер (полки с обеих сторон),oliver,MATCH_EXACT,1,OL-66-1,131900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-66-4,ol-66-4,Стол кабинетный письменный двухтумбовый Оливер (полки с обеих сторон),oliver,MATCH_EXACT,1,OL-66-4,152600.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-67-1,ol-67-1,Стол рабочий,oliver,MATCH_EXACT,1,OL-67-1,69900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-68-1,ol-68-1,Этажерка малая 3 полки,oliver,MATCH_EXACT,1,OL-68-1,24900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-68-2,ol-68-2,Этажерка большая 6 полок,oliver,MATCH_EXACT,1,OL-68-2,48900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-69-1,ol-69-1,Полка книжная 1-ярусная,oliver,MATCH_EXACT,1,OL-69-1,14900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-69-2,ol-69-2,Полка книжная 2-ярусная,oliver,MATCH_EXACT,1,OL-69-2,18000.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-69-3,ol-69-3,Полка книжная 3-ярусная,oliver,MATCH_EXACT,1,OL-69-3,22900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-69-4,ol-69-4,Полка книжная угловая,oliver,MATCH_EXACT,1,OL-69-4,13900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-81-1,ol-81-1,Столик детский,oliver,MATCH_EXACT,1,OL-81-1,39900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-82-1,ol-82-1,Стульчик детский,oliver,MATCH_EXACT,1,OL-82-1,14300.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-85-1,ol-85-1,Кроватка для новорожденного (60 × 120),oliver,MATCH_EXACT,1,OL-85-1,72700.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-85-2,ol-85-2,Кроватка приставная + матрас,oliver,MATCH_EXACT,1,OL-85-2,33900.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+OL-95-1,ol-95-1,Кровать-трансформер (80×150) с рисунком,oliver,MATCH_EXACT,1,OL-95-1,118000.0,Exact SKU on live demo Oliver also has BI +15% and optional LDSP on the same SKU.
+PA-05-3,pa-05-3,Комод высокий,willie-winkie,MATCH_WW_MOTIF_BODY,1,WW-BODY-05-3,113080.0,"One workbook body, motif category prices 1/2/3. Live SKUs: FA-05-3→cat2, BA-05-3→cat3, TE-05-3→cat3, RS-05-3→cat3, PA-05-3→cat3"
+PV-02-1,pv-02-1,Шкаф для одежды 2-дв,provence,MATCH_EXACT,1,PV-02-1,141300.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-03-1,pv-03-1,Шкаф для одежды 3-дв,provence,MATCH_EXACT,1,PV-03-1,205700.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-05-2,pv-05-2,Комод стандартный,provence,MATCH_EXACT,1,PV-05-2,66600.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-06-2,pv-06-2,Столик туалетный,provence,MATCH_EXACT,1,PV-06-2,47300.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-08-2,pv-08-2,Тумбочка прикроватная,provence,MATCH_EXACT,1,PV-08-2,23300.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-09-1,pv-09-1,Зеркало навесное,provence,MATCH_EXACT,1,PV-09-1,13600.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-09-2,pv-09-2,Зеркало напольное,provence,MATCH_EXACT,1,PV-09-2,48900.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-14-1,pv-14-1,Кровать 1-сп. (90×190) без изножья,provence,MATCH_EXACT,1,PV-14-1,57600.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-17-1,pv-17-1,Кровать 2-сп. (160×200) без изножья,provence,MATCH_EXACT,1,PV-17-1,79700.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-18-1,pv-18-1,Кровать 2-сп. (180×200) без изножья,provence,MATCH_EXACT,1,PV-18-1,82900.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-23-1,pv-23-1,Стул,provence,MATCH_EXACT,1,PV-23-1,24900.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-42-2,pv-42-2,Тумба для телевизора,provence,MATCH_EXACT,1,PV-42-2,47800.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-43-1,pv-43-1,Столик чайный,provence,MATCH_EXACT,1,PV-43-1,20500.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-55-1,pv-55-1,Банкетка малая,provence,MATCH_EXACT,1,PV-55-1,19900.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-55-2,pv-55-2,Банкетка большая,provence,MATCH_EXACT,1,PV-55-2,26700.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-61-1,pv-61-1,Шкаф книжный,provence,MATCH_EXACT,1,PV-61-1,122100.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-62-1,pv-62-1,Стеллаж для книг,provence,MATCH_EXACT,1,PV-62-1,82100.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-65-5,pv-65-5,Стол письменный 1-тумб. 0П,provence,MATCH_EXACT,1,PV-65-5,68300.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-65-6,pv-65-6,Стол письменный 1-тумб. П0,provence,MATCH_EXACT,1,PV-65-6,68300.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-65-7,pv-65-7,Стол письменный 1-тумб. 0Я,provence,MATCH_EXACT,1,PV-65-7,83000.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-65-8,pv-65-8,Стол письменный 1-тумб. Я0,provence,MATCH_EXACT,1,PV-65-8,83000.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-66-6,pv-66-6,"Стол письменный двухтумбовый Прованс (полки слева, ящики справа)",provence,MATCH_EXACT,1,PV-66-6,103700.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-66-7,pv-66-7,"Стол письменный двухтумбовый Прованс (ящики слева, полки справа)",provence,MATCH_EXACT,1,PV-66-7,103700.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-68-1,pv-68-1,Этажерка малая 3 полки,provence,MATCH_EXACT,1,PV-68-1,17700.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-68-2,pv-68-2,Этажерка большая 6 полок,provence,MATCH_EXACT,1,PV-68-2,58600.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+PV-69-1,pv-69-1,Полка книжная,provence,MATCH_EXACT,1,PV-69-1,7600.0,Exact PV SKU. Workbook has Provence white + dark finish prices on one row.
+RL-67-1,rl-67-1,Стол рабочий,willie-winkie,MATCH_WW_MOTIF_BODY,1,WW-BODY-67-1,85250.0,"One workbook body, motif category prices 1/2/3. Live SKUs: RL-67-1→cat1"
+RS-05-3,rs-05-3,Комод высокий,willie-winkie,MATCH_WW_MOTIF_BODY,1,WW-BODY-05-3,113080.0,"One workbook body, motif category prices 1/2/3. Live SKUs: FA-05-3→cat2, BA-05-3→cat3, TE-05-3→cat3, RS-05-3→cat3, PA-05-3→cat3"
+TE-05-3,te-05-3,Комод высокий,willie-winkie,MATCH_WW_MOTIF_BODY,1,WW-BODY-05-3,113080.0,"One workbook body, motif category prices 1/2/3. Live SKUs: FA-05-3→cat2, BA-05-3→cat3, TE-05-3→cat3, RS-05-3→cat3, PA-05-3→cat3"

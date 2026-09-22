@@ -1,0 +1,4 @@
+catalog_sku,catalog_handle,catalog_title,media_folder,price_verdict,price_rows,price_sku_normalized,price_solid,note
+OL-08-1,ol-08-1-mirror,Зеркало навесное овальное,,MATCH_SPLIT_HANDLE,1,OL-08-1,19950.0,Split handle present in catalog listing. Workbook reused the SKU for two products. Live catalog already split the handle.
+GR-09-1,greenwich-gr-09-1-mirror,Зеркало навесное,,MATCH_SPLIT_HANDLE,1,GR-09-1,28400.0,Split handle present in catalog listing. Workbook reused the SKU for two products. Live catalog already split the handle.
+GR-09-1,greenwich-gr-09-1-bed-90,Кровать 1-сп. (90×200),,MATCH_SPLIT_HANDLE,1,GR-09-1,71900.0,Split handle present in catalog listing. Workbook reused the SKU for two products. Live catalog already split the handle.
