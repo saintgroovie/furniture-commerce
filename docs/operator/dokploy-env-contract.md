@@ -29,6 +29,11 @@
 | `WOODRIGHT_ADMIN_EXPOSURE` | `private` (approved) \| `restricted` \| `public` (not approved) |
 | `WOODRIGHT_PAYMENT_LAUNCH_MODE` | `manager_payment_link` (approved launch) \| `request_only` \| `online_psp` (fail-closed without PSP credentials) |
 | `WOODRIGHT_LEGAL_*` | Owner legal fields for privacy/offer/delivery/payment/returns/warranty - required before DNS cutover; never invent |
+| `YANDEX_METRIKA_ID` | Digits only, storefront Node runtime. Empty = no Metrika, no consent banner, cookies page says analytics is off. Not `NEXT_PUBLIC_*` |
+| `GOOGLE_SITE_VERIFICATION` | Optional Search Console HTML token. Empty = no meta |
+| `YANDEX_WEBMASTER_VERIFICATION` | Optional Yandex Webmaster HTML token (`YANDEX_VERIFICATION` alias). Empty = no meta |
+
+Do not commit real counter IDs or verification tokens. Demo/staging should keep Metrika unset unless explicitly testing the banner.
 
 ### SEO policy (demo / staging)
 

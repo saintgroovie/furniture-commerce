@@ -15955,3 +15955,69 @@ a.wp-bnav-item:hover .wp-bnav-arrow {
     transform: none;
   }
 }
+
+/* Analytics consent: only rendered when Yandex Metrika ID is configured. */
+.analytics-consent {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  padding: var(--space-md);
+  padding-bottom: max(var(--space-md), env(safe-area-inset-bottom, 0px));
+  background: var(--color-bg, #faf8f5);
+  border-top: 1px solid var(--color-border);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 0.06);
+}
+
+.analytics-consent-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.analytics-consent-lead {
+  margin: 0;
+  flex: 1 1 16rem;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--color-fg);
+}
+
+.analytics-consent-more {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.analytics-consent-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.analytics-consent-revoke {
+  position: fixed;
+  right: var(--space-md);
+  bottom: max(var(--space-sm), env(safe-area-inset-bottom, 0px));
+  z-index: 50;
+  margin: 0;
+}
+
+.analytics-consent-revoke-btn {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--color-fg-muted, #6b645c);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+}
+
+.analytics-consent-revoke-btn:hover:not(:disabled) {
+  color: var(--color-fg);
+}
