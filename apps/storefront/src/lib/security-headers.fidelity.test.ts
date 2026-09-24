@@ -38,6 +38,11 @@ assert.match(
   /buildConnectSrcDirective/,
   "proxy must build connect-src via csp-policy helper"
 )
+assert.match(
+  proxySrc,
+  /buildImgSrcDirective/,
+  "proxy must build img-src via analytics helper"
+)
 assert.match(proxySrc, /Strict-Transport-Security/, "proxy must set HSTS on HTTPS")
 assert.match(proxySrc, /X-Content-Type-Options/, "proxy must set nosniff")
 assert.match(proxySrc, /frame-ancestors 'none'/, "CSP frame-ancestors none")
@@ -63,7 +68,10 @@ const session = read("src/lib/cart/session.ts")
 assert.match(session, /Secure/, "cart_id cookie must set Secure on HTTPS")
 
 const layout = read("src/app/layout.tsx")
+assert.match(layout, /generateMetadata/, "layout must generate metadata (verification tokens)")
 assert.match(layout, /headers\(\)/, "layout must read nonce from headers()")
+assert.match(layout, /cookies\(\)/, "layout must read analytics consent cookie")
+assert.match(layout, /StorefrontAnalytics/, "layout must mount analytics only via StorefrontAnalytics")
 assert.match(layout, /nonce=\{nonce\}/, "JSON-LD script must carry CSP nonce")
 assert.match(layout, /CspNonceProvider/, "layout must provide CSP nonce to clients")
 

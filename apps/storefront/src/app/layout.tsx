@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from "next"
 import Link from "next/link"
-import { headers } from "next/headers"
+import { cookies, headers } from "next/headers"
+import { StorefrontAnalytics } from "@/components/storefront-analytics"
 import { getSiteUrl } from "@/lib/api/base"
+import {
+  loadAnalyticsPublicConfig,
+  parseYmConsent,
+  webmasterVerificationMetadata,
+  YM_CONSENT_COOKIE,
+} from "@/lib/analytics-config"
 import {
   HeaderHoverDropdown,
   HeaderHoverDropdownProvider,
@@ -32,26 +39,30 @@ import "./globals.css"
 // Cursor Browser / Design Mode. System stack keeps UI responsive offline.
 const localSansClass = "wr-local-sans"
 
-export const metadata: Metadata = {
-  metadataBase: new URL(getSiteUrl()),
-  title: { default: "Woodright", template: "%s | Woodright" },
-  description: seo.home.description,
-  // Demo/staging fail-closed: noindex/nofollow/noarchive (WOODRIGHT_INDEXING_MODE).
-  robots: indexingRobotsMetadata(),
-  openGraph: {
-    siteName: "Woodright",
-    locale: "ru_RU",
-  },
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
-  },
+export async function generateMetadata(): Promise<Metadata> {
+  const verification = webmasterVerificationMetadata()
+  return {
+    metadataBase: new URL(getSiteUrl()),
+    title: { default: "Woodright", template: "%s | Woodright" },
+    description: seo.home.description,
+    // Demo/staging fail-closed: noindex/nofollow/noarchive (WOODRIGHT_INDEXING_MODE).
+    robots: indexingRobotsMetadata(),
+    openGraph: {
+      siteName: "Woodright",
+      locale: "ru_RU",
+    },
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+        { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+        { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      ],
+      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    },
+    ...(verification ? { verification } : {}),
+  }
 }
 
 export const viewport: Viewport = {
@@ -77,6 +88,10 @@ export default async function RootLayout({
 }) {
   // CSP nonce from middleware (x-nonce). Required for JSON-LD + Next bootstrap.
   const nonce = (await headers()).get("x-nonce") ?? undefined
+  const analytics = loadAnalyticsPublicConfig()
+  const ymConsent = parseYmConsent(
+    (await cookies()).get(YM_CONSENT_COOKIE)?.value
+  )
   return (
     <html lang="ru" className={localSansClass}>
       <body>
@@ -251,6 +266,12 @@ export default async function RootLayout({
         />
         </RouteVeilProvider>
         </SiteSectionProvider>
+        {analytics.yandexMetrikaId ? (
+          <StorefrontAnalytics
+            counterId={analytics.yandexMetrikaId}
+            initialConsent={ymConsent}
+          />
+        ) : null}
         </CspNonceProvider>
       </body>
     </html>
