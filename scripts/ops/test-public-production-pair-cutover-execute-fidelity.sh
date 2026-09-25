@@ -15,6 +15,60 @@ FAILED=0
 pass() { echo "PASS $*"; }
 fail() { echo "FAIL $*"; FAILED=$((FAILED + 1)); }
 
+# macOS keeps chown in /usr/sbin; Linux keeps it in /usr/bin. The cutover
+# script calls bare `chown` while sealing ownership. A caller PATH that omits
+# that directory used to fail mid-scenario, and the EXIT trap then recorded
+# rollback_incomplete (exit 13) even when HTTP readiness had already passed.
+# Resolve the binary portably and refuse to start scenarios when it is absent.
+wr_fidelity_resolve_chown() {
+  local search_path="$1"
+  shift
+  local -a candidates=("$@")
+  if [[ "${#candidates[@]}" -eq 0 ]]; then
+    candidates=(/usr/bin/chown /bin/chown /usr/sbin/chown)
+  fi
+  local resolved="" candidate
+  if resolved="$(PATH="$search_path" command -v chown 2>/dev/null)" \
+    && [[ -n "$resolved" && -x "$resolved" ]]; then
+    printf '%s\n' "$resolved"
+    return 0
+  fi
+  for candidate in "${candidates[@]}"; do
+    if [[ -n "$candidate" && -x "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return 0
+    fi
+  done
+  return 1
+}
+
+GUARD_EMPTY="$(mktemp -d "${TMPDIR:-/tmp}/wr-fidelity-chown-guard-XXXXXX")"
+if wr_fidelity_resolve_chown "$GUARD_EMPTY" "$GUARD_EMPTY/chown" >/dev/null; then
+  rm -rf "$GUARD_EMPTY"
+  echo "FAIL preflight: missing chown was accepted"
+  exit 1
+fi
+rm -rf "$GUARD_EMPTY"
+if [[ -e "$GUARD_EMPTY" ]]; then
+  echo "FAIL preflight: missing-chown guard left a directory"
+  exit 1
+fi
+pass "preflight: missing chown fails closed before any cutover scenario"
+pass "preflight: missing chown created no rollback_incomplete state"
+
+if ! CHOWN_BIN="$(wr_fidelity_resolve_chown "${PATH}")"; then
+  echo "FIDELITY_PREFLIGHT_MISSING_CHOWN: chown is not executable via PATH or /usr/bin/chown, /bin/chown, /usr/sbin/chown" >&2
+  echo "Refusing to start cutover scenarios. A missing chown fails ownership mid-scenario and the cutover trap records rollback_incomplete." >&2
+  exit 78
+fi
+CHOWN_DIR="$(cd "$(dirname "$CHOWN_BIN")" && pwd -P)"
+case ":${PATH}:" in
+  *":${CHOWN_DIR}:"*) ;;
+  *) PATH="${CHOWN_DIR}:${PATH}" ;;
+esac
+export PATH
+pass "preflight: chown resolved to ${CHOWN_BIN}"
+
 # Real path (macOS /tmp -> /private/tmp): the profile loader resolves the
 # profile with realpath and requires it to stay inside WOODRIGHT_ENV_PROFILE_DIR.
 TMP="$(cd "$(mktemp -d /tmp/wr-pubprod-cutover-exec-XXXXXX)" && pwd -P)"
