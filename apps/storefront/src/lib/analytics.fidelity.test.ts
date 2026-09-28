@@ -62,9 +62,24 @@ assert.equal(
 )
 assert.equal(
   loadAnalyticsPublicConfig({
-    NEXT_PUBLIC_YANDEX_METRIKA_ID: "12345678",
+    YANDEX_METRIKA_ID: "12345678",
+    WOODRIGHT_RUNTIME_ROLE: "public_demo",
   }).yandexMetrikaId,
   null
+)
+assert.deepEqual(
+  analyticsCspConnectExtras({
+    YANDEX_METRIKA_ID: "12345678",
+    WOODRIGHT_RUNTIME_ROLE: "public_demo",
+  }),
+  []
+)
+assert.equal(
+  loadAnalyticsPublicConfig({
+    YANDEX_METRIKA_ID: "12345678",
+    WOODRIGHT_RUNTIME_ROLE: "public_production",
+  }).yandexMetrikaId,
+  "12345678"
 )
 assert.deepEqual(
   analyticsCspConnectExtras({ NEXT_PUBLIC_YANDEX_METRIKA_ID: "12345678" }),
@@ -110,7 +125,16 @@ assert.match(
 
 assert.match(layout, /loadAnalyticsPublicConfig/)
 assert.match(layout, /StorefrontAnalytics/)
+assert.match(layout, /analytics\.yandexMetrikaId/)
 assert.match(proxy, /buildImgSrcDirective/)
+assert.match(analyticsUi, /metrikaBootstrappedFor/)
+assert.match(analyticsUi, /script\.onerror/)
+const compose = readFileSync(
+  join(root, "../../ops/compose/woodright-public-production.docker-compose.yml"),
+  "utf8"
+)
+assert.match(compose, /YANDEX_METRIKA_ID: \$\{YANDEX_METRIKA_ID:-\}/)
+assert.doesNotMatch(compose, /YANDEX_METRIKA_ID=\d/)
 assert.match(cookiesOnText, /Выключить статистику/)
 assert.match(cookiesOnText, /wr_ym_consent/)
 assert.match(analyticsUi, /mc\.yandex\.ru\/metrika\/tag\.js/)

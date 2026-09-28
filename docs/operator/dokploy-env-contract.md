@@ -29,11 +29,13 @@
 | `WOODRIGHT_ADMIN_EXPOSURE` | `private` (approved) \| `restricted` \| `public` (not approved) |
 | `WOODRIGHT_PAYMENT_LAUNCH_MODE` | `manager_payment_link` (approved launch) \| `request_only` \| `online_psp` (fail-closed without PSP credentials) |
 | `WOODRIGHT_LEGAL_*` | Owner legal fields for privacy/offer/delivery/payment/returns/warranty - required before DNS cutover; never invent |
-| `YANDEX_METRIKA_ID` | Digits only, storefront Node runtime. Empty = no Metrika, no consent banner, cookies page says analytics is off. Not `NEXT_PUBLIC_*` |
-| `GOOGLE_SITE_VERIFICATION` | Optional Search Console HTML token. Empty = no meta |
-| `YANDEX_WEBMASTER_VERIFICATION` | Optional Yandex Webmaster HTML token (`YANDEX_VERIFICATION` alias). Empty = no meta |
+| `YANDEX_METRIKA_ID` | Digits only. **Runtime** on the storefront Node process (compose `environment`, not a Docker build-arg, not `NEXT_PUBLIC_*`). Empty = no Metrika, no consent banner, `/cookies` says analytics is off. `public_demo` / candidate roles ignore the ID even if set. After setting the ID: recreate/restart **storefront only** - do not rebuild the image |
+| `GOOGLE_SITE_VERIFICATION` | Optional Search Console HTML token. Runtime, same compose passthrough. Empty = no meta |
+| `YANDEX_WEBMASTER_VERIFICATION` | Optional Yandex Webmaster HTML token (`YANDEX_VERIFICATION` alias). Runtime. Empty = no meta |
 
-Do not commit real counter IDs or verification tokens. Demo/staging should keep Metrika unset unless explicitly testing the banner.
+**Metrika env sequence (proven):** bake the storefront image **without** the counter ID. Pass `YANDEX_METRIKA_ID` at container start via `ops/compose/woodright-public-production.docker-compose.yml`. The layout Server Component and `proxy.ts` CSP extras read `process.env` per request the same way as `WOODRIGHT_RUNTIME_ROLE`. Changing the ID later is a storefront restart/recreate, not a new bake.
+
+Do not commit real counter IDs or verification tokens. Demo/staging must keep Metrika unset; the code also refuses `WOODRIGHT_RUNTIME_ROLE=public_demo`.
 
 ### SEO policy (demo / staging)
 

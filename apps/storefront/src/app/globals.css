@@ -15957,6 +15957,10 @@ a.wp-bnav-item:hover .wp-bnav-arrow {
 }
 
 /* Analytics consent: only rendered when Yandex Metrika ID is configured. */
+body:has(.analytics-consent) {
+  padding-bottom: 8rem;
+}
+
 .analytics-consent {
   position: fixed;
   left: 0;

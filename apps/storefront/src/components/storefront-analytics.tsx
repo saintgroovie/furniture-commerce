@@ -25,33 +25,45 @@ declare global {
   }
 }
 
+let metrikaBootstrappedFor: string | null = null
+
 function ensureMetrika(counterId: string): void {
   const id = Number(counterId)
   if (!Number.isInteger(id) || id <= 0) return
   if (typeof window === "undefined") return
+  if (metrikaBootstrappedFor === counterId) return
 
-  if (typeof window.ym !== "function") {
-    const stub: YmStub = (...args: unknown[]) => {
-      stub.a = stub.a || []
-      stub.a.push(args)
+  try {
+    if (typeof window.ym !== "function") {
+      const stub: YmStub = (...args: unknown[]) => {
+        stub.a = stub.a || []
+        stub.a.push(args)
+      }
+      stub.l = Date.now()
+      window.ym = stub
+      const script = document.createElement("script")
+      script.async = true
+      script.src = "https://mc.yandex.ru/metrika/tag.js"
+      script.onerror = () => {
+        /* Ad blocker / CSP / network: storefront stays usable. */
+      }
+      document.head.appendChild(script)
+      window.ym(id, "init", {
+        clickmap: false,
+        trackLinks: true,
+        accurateTrackBounce: true,
+        webvisor: false,
+        ecommerce: false,
+      })
     }
-    stub.l = Date.now()
-    window.ym = stub
-    const script = document.createElement("script")
-    script.async = true
-    script.src = "https://mc.yandex.ru/metrika/tag.js"
-    document.head.appendChild(script)
-    window.ym(id, "init", {
-      clickmap: false,
-      trackLinks: true,
-      accurateTrackBounce: true,
-      webvisor: false,
-      ecommerce: false,
-    })
-    return
+    metrikaBootstrappedFor = counterId
+  } catch {
+    /* Never let analytics break checkout or navigation. */
   }
+}
 
-  window.ym(id, "hit", window.location.href)
+export function resetMetrikaBootstrapForTests(): void {
+  metrikaBootstrappedFor = null
 }
 
 export function StorefrontAnalytics({
@@ -89,6 +101,7 @@ export function StorefrontAnalytics({
     writeYmConsentToDocument(next)
     if (next === "0") {
       teardownYandexMetrika(counterId, window, document)
+      resetMetrikaBootstrapForTests()
       loaded.current = false
       lastHit.current = null
     }

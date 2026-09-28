@@ -44,11 +44,35 @@ export function parseYmConsent(
   return null
 }
 
+/**
+ * Demo and private-candidate runtimes must not load Metrika even if an ID
+ * is accidentally present in env. Local/unset role stays allowed so wiring
+ * tests can pass a syntactic ID without a production role.
+ */
+export function isMetrikaRuntimeAllowed(
+  env: NodeJS.ProcessEnv = process.env
+): boolean {
+  const role = String(env.WOODRIGHT_RUNTIME_ROLE ?? "")
+    .trim()
+    .toLowerCase()
+  if (
+    role === "public_demo" ||
+    role === "production_candidate" ||
+    role === "non_public_candidate"
+  ) {
+    return false
+  }
+  return true
+}
+
 export function loadAnalyticsPublicConfig(
   env: NodeJS.ProcessEnv = process.env
 ): AnalyticsPublicConfig {
+  const rawId = isMetrikaRuntimeAllowed(env)
+    ? parseMetrikaId(env.YANDEX_METRIKA_ID)
+    : null
   return {
-    yandexMetrikaId: parseMetrikaId(env.YANDEX_METRIKA_ID),
+    yandexMetrikaId: rawId,
     googleSiteVerification: parseVerificationToken(
       env.GOOGLE_SITE_VERIFICATION
     ),

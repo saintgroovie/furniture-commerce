@@ -89,9 +89,9 @@ export default async function RootLayout({
   // CSP nonce from middleware (x-nonce). Required for JSON-LD + Next bootstrap.
   const nonce = (await headers()).get("x-nonce") ?? undefined
   const analytics = loadAnalyticsPublicConfig()
-  const ymConsent = parseYmConsent(
-    (await cookies()).get(YM_CONSENT_COOKIE)?.value
-  )
+  const ymConsent = analytics.yandexMetrikaId
+    ? parseYmConsent((await cookies()).get(YM_CONSENT_COOKIE)?.value)
+    : null
   return (
     <html lang="ru" className={localSansClass}>
       <body>
