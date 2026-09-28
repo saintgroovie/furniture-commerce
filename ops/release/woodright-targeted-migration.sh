@@ -2,9 +2,15 @@
 # Apply exactly Migration20260908120000 through Medusa's Migrations.run wrapper.
 # That wrapper calls MikroORM migrator.up({ migrations: [name] }) inside the
 # framework transaction and writes mikro_orm_migrations. It does not call
-# medusa db:migrate and does not load other modules' migration directories.
+# the unfiltered module migrator and does not load other migration directories.
 #
-# LIVE_MUTATING=true only for --mode execute. Dry-run is the default.
+# LIVE_MUTATING=true
+# requires_global_lock=true
+# flock: public_production live-cutover.lock via wr_staging_mutation_lock_acquire
+# Canonical lock: /srv/woodright/locks/public_production/live-cutover.lock
+#
+# Dry-run does not take the lock and does not open a migration connection.
+# Execute takes the public_production lock before the framework call.
 # Rehearsal refuses the live production/staging Postgres containers.
 # Live scope requires a separate confirmation and is not used by rehearsal.
 set -Eeuo pipefail
@@ -17,7 +23,9 @@ EXECUTE_TOKEN="I_UNDERSTAND_TARGETED_MIGRATION_EXECUTE"
 LIVE_TOKEN="I_UNDERSTAND_LIVE_PUBLIC_PRODUCTION_TARGETED_MIGRATION"
 REHEARSAL_TOKEN="I_UNDERSTAND_REHEARSAL_TARGETED_MIGRATION"
 MIGRATIONS_DIR="/server/src/modules/promotion-slot/migrations"
+LOCK_PATH="/srv/woodright/locks/public_production/live-cutover.lock"
 MARKER_DEFAULT="/srv/woodright/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 ENVIRONMENT=""
 MIGRATION=""
@@ -29,25 +37,30 @@ APPLICATION_SHA=""
 GOVERNANCE_SHA=""
 BACKUP_MANIFEST=""
 BACKEND_IMAGE=""
-DATABASE_URL="${DATABASE_URL:-}"
+DATABASE_URL=""
 MARKER_PATH="${WOODRIGHT_GOVERNANCE_MARKER:-$MARKER_DEFAULT}"
-RUNNER="${WOODRIGHT_TARGETED_MIGRATION_RUNNER:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/woodright-targeted-migration.cjs}"
+RUNNER="${WOODRIGHT_TARGETED_MIGRATION_RUNNER:-$ROOT/ops/release/woodright-targeted-migration.cjs}"
+LOCK_HELPER="${WOODRIGHT_MUTATION_LOCK_HELPER:-$ROOT/ops/lib/woodright-staging-mutation-lock.sh}"
 
 log() { printf '%s woodright-targeted-migration %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >&2; }
 die() { log "ERROR: $*"; exit 1; }
 
+require_value() {
+  [[ $# -ge 2 && -n "${2:-}" ]] || die "missing value for $1"
+}
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --environment) ENVIRONMENT="$2"; shift 2 ;;
-    --migration) MIGRATION="$2"; shift 2 ;;
-    --mode) MODE="$2"; shift 2 ;;
-    --confirm) CONFIRM="$2"; shift 2 ;;
-    --runtime-scope) RUNTIME_SCOPE="$2"; shift 2 ;;
-    --postgres-container) PG_CONTAINER="$2"; shift 2 ;;
-    --application-sha) APPLICATION_SHA="$2"; shift 2 ;;
-    --governance-sha) GOVERNANCE_SHA="$2"; shift 2 ;;
-    --backup-manifest) BACKUP_MANIFEST="$2"; shift 2 ;;
-    --backend-image) BACKEND_IMAGE="$2"; shift 2 ;;
+    --environment) require_value "$@"; ENVIRONMENT="$2"; shift 2 ;;
+    --migration) require_value "$@"; MIGRATION="$2"; shift 2 ;;
+    --mode) require_value "$@"; MODE="$2"; shift 2 ;;
+    --confirm) require_value "$@"; CONFIRM="$2"; shift 2 ;;
+    --runtime-scope) require_value "$@"; RUNTIME_SCOPE="$2"; shift 2 ;;
+    --postgres-container) require_value "$@"; PG_CONTAINER="$2"; shift 2 ;;
+    --application-sha) require_value "$@"; APPLICATION_SHA="$2"; shift 2 ;;
+    --governance-sha) require_value "$@"; GOVERNANCE_SHA="$2"; shift 2 ;;
+    --backup-manifest) require_value "$@"; BACKUP_MANIFEST="$2"; shift 2 ;;
+    --backend-image) require_value "$@"; BACKEND_IMAGE="$2"; shift 2 ;;
     *) die "unknown arg $1" ;;
   esac
 done
@@ -58,11 +71,12 @@ done
 [[ "$RUNTIME_SCOPE" == "rehearsal" || "$RUNTIME_SCOPE" == "live" ]] || die "runtime-scope must be rehearsal or live"
 [[ "$APPLICATION_SHA" == "$EXPECTED_APP_SHA" ]] || die "application SHA refused"
 [[ "$GOVERNANCE_SHA" =~ ^[0-9a-f]{40}$ ]] || die "governance SHA must be 40 hex"
-[[ -n "$PG_CONTAINER" ]] || die "postgres container required"
+[[ "$PG_CONTAINER" =~ ^[A-Za-z0-9][A-Za-z0-9_.-]{0,120}$ ]] || die "container name refused"
 [[ -n "$BACKEND_IMAGE" ]] || die "backend image required"
 [[ -f "$BACKUP_MANIFEST" ]] || die "backup manifest missing"
 [[ -f "$MARKER_PATH" ]] || die "governance marker missing"
 [[ -f "$RUNNER" ]] || die "runner missing"
+[[ "$MIGRATIONS_DIR" == "/server/src/modules/promotion-slot/migrations" ]] || die "migrations directory drifted"
 
 case "$PG_CONTAINER" in
   *staging*|*demo*|*candidate*) die "refusing container name $PG_CONTAINER" ;;
@@ -91,17 +105,34 @@ fi
 marker="$(tr -d '[:space:]' <"$MARKER_PATH")"
 [[ "$marker" == "$GOVERNANCE_SHA" ]] || die "governance marker does not match --governance-sha"
 
-python3 - "$BACKUP_MANIFEST" <<'PY'
-import json, sys
+WOODRIGHT_TARGETED_MIGRATION_TEST="${WOODRIGHT_TARGETED_MIGRATION_TEST:-0}" \
+  python3 - "$BACKUP_MANIFEST" "$EXPECTED_APP_SHA" <<'PY'
+import hashlib, json, os, sys
 doc = json.load(open(sys.argv[1]))
+expected_app = sys.argv[2]
 if doc.get("environment") != "public_production":
     raise SystemExit("backup environment mismatch")
+if doc.get("schema") != "woodright_recovery_point_v2":
+    raise SystemExit("backup schema mismatch")
+if doc.get("application_sha") != expected_app:
+    raise SystemExit("backup application SHA mismatch")
 db = doc.get("db") or {}
-sha = db.get("sha256") or ""
-if len(sha) != 64:
-    raise SystemExit("backup db checksum missing")
-if db.get("name") not in ("", "woodright_public_production"):
+if db.get("name") != "woodright_public_production":
     raise SystemExit("backup db name mismatch")
+sha = db.get("sha256") or ""
+if len(sha) != 64 or any(ch not in "0123456789abcdef" for ch in sha):
+    raise SystemExit("backup db checksum missing")
+if os.environ.get("WOODRIGHT_TARGETED_MIGRATION_TEST") == "1":
+    raise SystemExit(0)
+path = db.get("path") or ""
+if not path or not os.path.isfile(path):
+    raise SystemExit("backup dump missing")
+digest = hashlib.sha256()
+with open(path, "rb") as handle:
+    for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+        digest.update(chunk)
+if digest.hexdigest() != sha:
+    raise SystemExit("backup checksum mismatch")
 PY
 
 query() {
@@ -132,7 +163,10 @@ db_name="$(query "select current_database();")"
 [[ "$db_name" == "$EXPECTED_DB" ]] || die "database identity refused: ${db_name:-empty}"
 
 regclass="$(query "select coalesce(to_regclass('public.promotion_slot')::text, '');")"
-applied="$(query "select name from mikro_orm_migrations where name = '$ALLOWED_MIGRATION';")"
+applied="$(query "select name from mikro_orm_migrations where name = '${ALLOWED_MIGRATION}';")"
+if [[ -n "$applied" && -z "$regclass" ]]; then
+  die "BOOKKEEPING_WITHOUT_TABLE $ALLOWED_MIGRATION"
+fi
 if [[ -n "$applied" ]]; then
   die "ALREADY_APPLIED $ALLOWED_MIGRATION"
 fi
@@ -158,6 +192,14 @@ if [[ "$MODE" == "dry-run" ]]; then
 fi
 
 if [[ "${WOODRIGHT_TARGETED_MIGRATION_TEST:-}" != "1" ]]; then
+  export WR_STAGING_MUTATION_LOCK_PATH="$LOCK_PATH"
+  # shellcheck source=../lib/woodright-staging-mutation-lock.sh
+  source "$LOCK_HELPER"
+  wr_staging_mutation_lock_acquire \
+    "actor=woodright-targeted-migration" \
+    "command=$0" \
+    "target=$PG_CONTAINER" \
+    || die "public_production live-cutover.lock busy/unavailable"
   pg_user="$(docker exec "$PG_CONTAINER" printenv POSTGRES_USER)"
   pg_pass="$(docker exec "$PG_CONTAINER" printenv POSTGRES_PASSWORD)"
   [[ -n "$pg_user" && -n "$pg_pass" ]] || die "postgres credentials missing on $PG_CONTAINER"
@@ -171,8 +213,9 @@ else
   plan="$(docker run --rm --entrypoint node -v "$RUNNER:/tmp/woodright-targeted-migration.cjs:ro" "$BACKEND_IMAGE" /tmp/woodright-targeted-migration.cjs --migration "$ALLOWED_MIGRATION")"
 fi
 [[ "$plan" == *'"migrations":["'"$ALLOWED_MIGRATION"'"]'* ]] || die "runner plan did not select only $ALLOWED_MIGRATION"
-if [[ "$plan" == *"Migration20250505101505"* ]]; then
-  die "runner plan included the workflow primary-key migration"
+[[ "$plan" == *'/server/src/modules/promotion-slot/migrations'* ]] || die "runner plan left the promotion-slot directory"
+if [[ "$plan" == *"Migration20250505101505"* || "$plan" == *"workflow-engine-redis"* || "$plan" == *"/translation/"* || "$plan" == *"/rbac/"* || "$plan" == *"/index/"* ]]; then
+  die "runner plan included a migration outside promotion-slot"
 fi
 
 if [[ "${WOODRIGHT_TARGETED_MIGRATION_TEST:-}" == "1" ]]; then
@@ -194,8 +237,8 @@ docker run --rm \
   --migration "$ALLOWED_MIGRATION" \
   --migrations-dir "$MIGRATIONS_DIR"
 
-applied_after="$(query "select name from mikro_orm_migrations where name = '$ALLOWED_MIGRATION';")"
-[[ "$applied_after" == "$ALLOWED_MIGRATION" ]] || die "bookkeeping missing after execute"
+applied_after="$(query "select name from mikro_orm_migrations where name = '${ALLOWED_MIGRATION}';")"
+[[ -n "$applied_after" ]] || die "bookkeeping missing after execute"
 regclass_after="$(query "select coalesce(to_regclass('public.promotion_slot')::text, '');")"
 [[ "$regclass_after" == "promotion_slot" ]] || die "promotion_slot missing after execute"
 workflow_still="$(query "select name from mikro_orm_migrations where name = 'Migration20250505101505';")"

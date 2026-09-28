@@ -1,6 +1,7 @@
 "use strict"
 
 const ALLOWED_MIGRATION = "Migration20260908120000"
+const ALLOWED_MIGRATIONS_DIR = "/server/src/modules/promotion-slot/migrations"
 
 function buildUpOptions(name) {
   if (name !== ALLOWED_MIGRATION) {
@@ -9,6 +10,37 @@ function buildUpOptions(name) {
     throw error
   }
   return { migrations: [ALLOWED_MIGRATION] }
+}
+
+function assertMigrationsDir(dir) {
+  if (dir !== ALLOWED_MIGRATIONS_DIR) {
+    const error = new Error("REFUSED_MIGRATIONS_DIR")
+    error.code = "REFUSED_MIGRATIONS_DIR"
+    throw error
+  }
+  return ALLOWED_MIGRATIONS_DIR
+}
+
+function assertMigrationResult(names, seen) {
+  const executed = Array.isArray(names) ? names : []
+  const events = Array.isArray(seen) ? seen : []
+  if (executed.length !== 1 || executed[0] !== ALLOWED_MIGRATION) {
+    throw new Error("UNEXPECTED_RESULT " + executed.join(","))
+  }
+  if (events.length === 0 || events.some((item) => item !== ALLOWED_MIGRATION)) {
+    throw new Error("UNEXPECTED_MIGRATION " + events.join(","))
+  }
+  return executed
+}
+
+function isBenignCloseError(error) {
+  const message = String(error && error.message ? error.message : error).toLowerCase()
+  return (
+    message.includes("already closed") ||
+    message.includes("connection closed") ||
+    message.includes("connection is closed") ||
+    message.includes("driver is closed")
+  )
 }
 
 function parseArgs(argv) {
@@ -29,8 +61,21 @@ function parseArgs(argv) {
   return out
 }
 
+async function closeOrm(orm) {
+  if (!orm || typeof orm.close !== "function") return
+  try {
+    await orm.close(true)
+  } catch (error) {
+    if (isBenignCloseError(error)) return
+    process.stderr.write(
+      "ORM_CLOSE_ERROR " + String(error && error.message ? error.message : error) + "\n"
+    )
+  }
+}
+
 async function runFramework(name, migrationsDir, databaseUrl) {
   const options = buildUpOptions(name)
+  assertMigrationsDir(migrationsDir)
   const { mikroOrmCreateConnection } = require("/server/node_modules/@medusajs/utils/dist/dal/mikro-orm/mikro-orm-create-connection.js")
   const { Migrations } = require("/server/node_modules/@medusajs/utils/dist/migrations/index.js")
   const orm = await mikroOrmCreateConnection(
@@ -58,21 +103,9 @@ async function runFramework(name, migrationsDir, databaseUrl) {
     const result = process.env.WOODRIGHT_TARGETED_MIGRATION_DIRECTION === "down"
       ? await migrations.revert(options)
       : await migrations.run(options)
-    const names = (result || []).map((row) => row.name)
-    if (names.length !== 1 || names[0] !== ALLOWED_MIGRATION || seen.some((item) => item !== ALLOWED_MIGRATION)) {
-      throw new Error("UNEXPECTED_RESULT " + names.join(","))
-    }
-    return names
+    return assertMigrationResult((result || []).map((row) => row.name), seen)
   } finally {
-    // Migrations.run/revert already close the connection. Close again so a
-    // failure before that still releases the pool and the process can exit.
-    try {
-      if (orm && typeof orm.close === "function") {
-        await orm.close(true)
-      }
-    } catch (_error) {
-      // Already closed by the framework wrapper.
-    }
+    await closeOrm(orm)
   }
 }
 
@@ -81,7 +114,7 @@ async function main() {
   const name = args.migration
   const options = buildUpOptions(name)
   if (process.env.WOODRIGHT_TARGETED_MIGRATION_FRAMEWORK !== "1") {
-    process.stdout.write(JSON.stringify({ mode: "plan", options }) + "\n")
+    process.stdout.write(JSON.stringify({ mode: "plan", options, migrationsDir: ALLOWED_MIGRATIONS_DIR }) + "\n")
     return
   }
   if (!process.env.DATABASE_URL) {
@@ -94,7 +127,14 @@ async function main() {
   process.stdout.write(JSON.stringify({ mode: "executed", names }) + "\n")
 }
 
-module.exports = { ALLOWED_MIGRATION, buildUpOptions }
+module.exports = {
+  ALLOWED_MIGRATION,
+  ALLOWED_MIGRATIONS_DIR,
+  buildUpOptions,
+  assertMigrationsDir,
+  assertMigrationResult,
+  isBenignCloseError,
+}
 
 if (require.main === module) {
   main().catch((error) => {
