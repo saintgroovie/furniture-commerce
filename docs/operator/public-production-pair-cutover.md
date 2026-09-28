@@ -64,6 +64,21 @@ bash ops/release/reconcile-owner-approved-release.sh \
 
 `--environment production` is refused. A manifest whose `environment` field is `production` cannot satisfy a `public_production` cutover gate.
 
+## Storefront-only cutover
+
+`--component storefront` recreates only `woodright-public-production-storefront`.
+
+- `--source-sha` must equal the new storefront OCI revision.
+- `--storefront-ref` is that new digest.
+- `--backend-ref` is the already-live backend digest. Its OCI revision may be older. It must equal `retained_backend_revision` in a `component=storefront` approval.
+- The live storefront digest must equal `expected_current_storefront_digest` before any write.
+- After recreate, the backend container id, image, `Created`, `StartedAt`, `RestartCount`, and OCI revision must be unchanged. If any of them move, the cutover fails.
+- `WOODRIGHT_BACKEND_IMAGE` and `WOODRIGHT_RELEASE_SHA` are not rewritten.
+- `--component pair` is unchanged: both images must still match `--source-sha`, and a storefront approval cannot satisfy it.
+- `--component backend` is refused.
+
+Dry-run (`--mode dry-run`, the default) runs approval, image, CAS, and the planned mutation check, then exits without a Docker write. Image or CAS mismatch exits 4.
+
 ## Canonical merge required
 
 Do **not** run a branch-local copy of this helper against the VM. Production mutation is allowed only after this helper is merged into canonical ops.

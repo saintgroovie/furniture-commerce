@@ -129,14 +129,16 @@ die() { log "ERROR: $*"; exit 2; }
 
 usage() {
   cat <<'EOF'
-Usage: cutover-public-production-pair.sh --environment public_production --component pair --source-sha <40hex> [options]
+Usage: cutover-public-production-pair.sh --environment public_production --component pair|storefront --source-sha <40hex> [options]
 
 Required:
   --environment public_production (only public_production; demo/candidate/staging refused)
-  --component pair
-  --source-sha <40hex>            (application OCI revision - NOT the helper install SHA)
+  --component pair|storefront
+  --source-sha <40hex>            (pair: OCI revision of BOTH images; storefront: OCI revision of the NEW storefront only)
   --storefront-ref ghcr.io/...@sha256:<64hex>
   --backend-ref ghcr.io/...@sha256:<64hex>
+                  pair: new backend image whose OCI revision equals --source-sha
+                  storefront: RETAINED live backend image (digest + OCI revision come from the storefront approval, not --source-sha)
 
 Optional:
   --mode dry-run|execute      (default dry-run; --dry-run/--execute also accepted)
@@ -262,9 +264,16 @@ wr_require_environment_from_args "${FULL_ARGV[@]}" || exit 1
 if [[ "${WOODRIGHT_ENVIRONMENT}" != "public_production" ]]; then
   die "refused --environment '${WOODRIGHT_ENVIRONMENT}' (only 'public_production' accepted here - isolated new-stack pair, never public_demo/staging/production-candidate; use cutover-public-demo-pair.sh or cutover-production-candidate.sh)"
 fi
-wr_require_component_from_args "${FULL_ARGV[@]}" || die "missing required --component pair"
+wr_require_component_from_args "${FULL_ARGV[@]}" || die "missing required --component pair|storefront"
 COMPONENT="${WOODRIGHT_COMPONENT_SCOPE}"
-[[ "$COMPONENT" == "pair" ]] || die "public_production cutover is pair-only (refused --component $COMPONENT)"
+case "$COMPONENT" in
+  pair|storefront) ;;
+  *) die "public_production cutover accepts pair or storefront (refused --component $COMPONENT)" ;;
+esac
+# Historical approvals omit component and load as pair. A pair approval must
+# not authorize a storefront cutover, and a storefront approval must not
+# authorize a pair cutover.
+export WOODRIGHT_OWNER_APPROVAL_COMPONENT="$COMPONENT"
 
 parse_args "${FULL_ARGV[@]}"
 
@@ -326,7 +335,7 @@ esac
 
 OA_BE_DIGEST="${BE_REF##*@}"
 OA_SF_DIGEST="${SF_REF##*@}"
-[[ -n "$BE_REF" && -n "$SF_REF" ]] || die "pair requires both --backend-ref and --storefront-ref"
+[[ -n "$BE_REF" && -n "$SF_REF" ]] || die "cutover requires both --backend-ref and --storefront-ref"
 if ! wr_require_owner_approved_release public_production "$SOURCE_SHA" "$OA_BE_DIGEST" "$OA_SF_DIGEST" "${WOODRIGHT_EVIDENCE_DIR:-}" "gate_a"; then
   die "Gate A owner approval failed result=${WR_OWNER_APPROVAL_RESULT}"
 fi
@@ -477,16 +486,23 @@ check_lock_status() {
 # Read-only image candidate inspection - never pulls.
 inspect_image_candidate() {
   local kind="$1" ref="$2"
+  local expected_revision="$SOURCE_SHA"
+  if [[ $# -ge 3 ]]; then
+    expected_revision="$3"
+  fi
   local present="false" revision="" profile_label=""
   if prod_docker image inspect "$ref" >/dev/null 2>&1; then
     present="true"
     revision="$(prod_docker image inspect "$ref" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' 2>/dev/null || true)"
     profile_label="$(prod_docker image inspect "$ref" --format '{{index .Config.Labels "woodright.image.build_profile"}}' 2>/dev/null || true)"
-    if [[ -z "$revision" ]]; then
+    if [[ -z "$expected_revision" ]]; then
+      log "MISMATCH $kind ref=$ref expected OCI revision is empty"
+      MISMATCH=1
+    elif [[ -z "$revision" ]]; then
       log "MISMATCH $kind ref=$ref oci_revision missing (fail-closed when image is present)"
       MISMATCH=1
-    elif [[ "$revision" != "$SOURCE_SHA" ]]; then
-      log "MISMATCH $kind ref=$ref oci_revision=$revision expected=$SOURCE_SHA"
+    elif [[ "$revision" != "$expected_revision" ]]; then
+      log "MISMATCH $kind ref=$ref oci_revision=$revision expected=$expected_revision"
       MISMATCH=1
     fi
     if [[ -z "$profile_label" ]]; then
@@ -728,6 +744,9 @@ json.dump(doc, open(path, "w"))
 if os.path.exists(props):
     os.remove(props)
 PY
+  fi
+  if ! assert_backend_notouch; then
+    die "storefront-only release changed the backend container before metadata commit"
   fi
   if ! need_be; then
     name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
@@ -1080,13 +1099,65 @@ assert_loopback_host "storefront probe" "$SF_PROBE"
 [[ "$BE_PORT" == "9300" ]] || die "backend loopback port must be 9300 (got $BE_PORT)"
 [[ "$SF_PORT" == "3300" ]] || die "storefront loopback port must be 3300 (got $SF_PORT)"
 
-if need_sf; then inspect_image_candidate SF "$SF_REF"; else WR_SF_PRESENT=n_a; WR_SF_REVISION=""; WR_SF_BUILD_PROFILE=""; WR_SF_REF=""; fi
-if need_be; then inspect_image_candidate BE "$BE_REF"; else WR_BE_PRESENT=n_a; WR_BE_REVISION=""; WR_BE_BUILD_PROFILE=""; WR_BE_REF=""; fi
+if need_sf; then inspect_image_candidate SF "$SF_REF" "$SOURCE_SHA"; else WR_SF_PRESENT=n_a; WR_SF_REVISION=""; WR_SF_BUILD_PROFILE=""; WR_SF_REF=""; fi
+if [[ "$COMPONENT" == "storefront" ]]; then
+  # Retained backend is inspected against the approval revision, not SOURCE_SHA.
+  inspect_image_candidate BE "$BE_REF" "${WR_OA_RETAINED_BACKEND_REVISION:-}"
+elif need_be; then
+  inspect_image_candidate BE "$BE_REF" "$SOURCE_SHA"
+else
+  WR_BE_PRESENT=n_a; WR_BE_REVISION=""; WR_BE_BUILD_PROFILE=""; WR_BE_REF=""
+fi
 
 inspect_container BE "${WOODRIGHT_BE_CONTAINER_DEFAULT}"
 inspect_container SF "${WOODRIGHT_SF_CONTAINER_DEFAULT}"
 
+# Storefront-only CAS. Sets MISMATCH (dry-run exits 4, execute refuses) and
+# never mutates. A pair approval cannot satisfy this, and the retained backend
+# identity is the live container, not a rebuilt image at SOURCE_SHA.
+assert_storefront_component_cas() {
+  [[ "$COMPONENT" == "storefront" ]] || return 0
+  if [[ "${WR_OA_COMPONENT:-}" != "storefront" ]]; then
+    log "MISMATCH storefront cutover requires component=storefront approval (got ${WR_OA_COMPONENT:-empty})"
+    MISMATCH=1
+    return 0
+  fi
+  if [[ "${WR_BE_CONTAINER_PRESENT:-false}" != "true" || "${WR_SF_CONTAINER_PRESENT:-false}" != "true" ]]; then
+    log "MISMATCH storefront-only requires the live backend and storefront containers"
+    MISMATCH=1
+    return 0
+  fi
+  local be_name sf_name live_be_dig live_sf_dig live_be_rev
+  be_name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
+  sf_name="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
+  live_be_dig="$(container_digest "$be_name")"
+  live_sf_dig="$(container_digest "$sf_name")"
+  live_be_rev="$(live_oci_revision "$be_name")"
+  if [[ "$live_be_dig" != "$WR_OA_BACKEND_DIGEST" || "$live_be_dig" != "${WR_OA_EXPECTED_CURRENT_BE_DIGEST:-}" ]]; then
+    log "MISMATCH retained backend digest live=$live_be_dig approval=$WR_OA_BACKEND_DIGEST expected_current=${WR_OA_EXPECTED_CURRENT_BE_DIGEST:-empty}"
+    MISMATCH=1
+  fi
+  if [[ "$live_sf_dig" != "${WR_OA_EXPECTED_CURRENT_SF_DIGEST:-}" ]]; then
+    log "MISMATCH current storefront digest live=$live_sf_dig expected=${WR_OA_EXPECTED_CURRENT_SF_DIGEST:-empty}"
+    MISMATCH=1
+  fi
+  if [[ "$live_be_rev" != "${WR_OA_RETAINED_BACKEND_REVISION:-}" ]]; then
+    log "MISMATCH retained backend revision live=$live_be_rev approval=${WR_OA_RETAINED_BACKEND_REVISION:-empty}"
+    MISMATCH=1
+  fi
+  if [[ "$OA_BE_DIGEST" != "$WR_OA_BACKEND_DIGEST" || "$OA_SF_DIGEST" != "$WR_OA_STOREFRONT_DIGEST" ]]; then
+    log "MISMATCH cli refs do not match the storefront approval"
+    MISMATCH=1
+  fi
+  if [[ "$live_sf_dig" == "$OA_SF_DIGEST" ]]; then
+    log "MISMATCH candidate storefront digest is already live (not a cutover)"
+    MISMATCH=1
+  fi
+  log "storefront-only plan: recreate storefront only; backend container is not in the mutation set"
+}
+
 detect_existing_skew
+assert_storefront_component_cas
 
 # Would a rollback have images to recreate on? Reported in the dry-run packet so
 # the operator learns about a missing anchor image before execute refuses.
@@ -1753,7 +1824,7 @@ run_rollback() {
   fi
   ROLLBACK_DONE=1
   log "ROLLBACK begin phase=$PHASE recreated=[${COMPONENTS_RECREATED# }] method=restore_pins_then_compose_recreate (no keepers)"
-  local pin_ok=1 runtime_ok=1 verify_ok=1 release_ok=1 exposure_ok=1 http_ok=1 meta_ok=1
+  local pin_ok=1 runtime_ok=1 verify_ok=1 release_ok=1 exposure_ok=1 http_ok=1 meta_ok=1 backend_ok=1
   local kind name want deadline
 
   restore_pins || pin_ok=0
@@ -1797,15 +1868,22 @@ run_rollback() {
   verify_rollback_release_sha || release_ok=0
   verify_rollback_exposure || exposure_ok=0
   verify_rollback_http || http_ok=0
+  # Storefront rollback must not recreate the backend. If its container
+  # identity moved, this is not a successful rollback.
+  if [[ "$COMPONENT" == "storefront" ]] && ! assert_backend_notouch; then
+    log "ROLLBACK_VERIFY backend identity moved - NOT reporting ROLLBACK_OK"
+    backend_ok=0
+  fi
 
   if [[ -n "$EVIDENCE_DIR" && -d "$EVIDENCE_DIR/json" ]]; then
-    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"release_sha":%s,"exposure":%s,"http":%s,"metadata":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s","pre_release_sha":"%s"}\n' \
-      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$release_ok" "$exposure_ok" "$http_ok" "$meta_ok" \
+    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"release_sha":%s,"exposure":%s,"http":%s,"metadata":%s,"backend_notouch":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s","pre_release_sha":"%s"}\n' \
+      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$release_ok" "$exposure_ok" "$http_ok" "$meta_ok" "$backend_ok" \
       "$PRE_BE_REF" "$PRE_SF_REF" "${PRE_RELEASE_SHA}" >"$EVIDENCE_DIR/json/rollback-result.json" 2>/dev/null || true
   fi
 
   if [[ "$pin_ok" == "1" && "$runtime_ok" == "1" && "$verify_ok" == "1" \
-     && "$release_ok" == "1" && "$exposure_ok" == "1" && "$http_ok" == "1" && "$meta_ok" == "1" ]]; then
+     && "$release_ok" == "1" && "$exposure_ok" == "1" && "$http_ok" == "1" \
+     && "$meta_ok" == "1" && "$backend_ok" == "1" ]]; then
     ROLLBACK_RC=10
     record_state rolled_back
     log "ROLLBACK_OK (pins restored, runtime digests == pins, RELEASE_SHA restored, private binds, media volume, no public Traefik, HTTP gates)"
@@ -1821,7 +1899,7 @@ run_rollback() {
 
   ROLLBACK_RC=13
   record_state rollback_incomplete
-  log "ROLLBACK_INCOMPLETE pins=$pin_ok runtime_recreate=$runtime_ok pins_equal_runtime=$verify_ok release_sha=$release_ok exposure=$exposure_ok http=$http_ok metadata=$meta_ok - NOT reporting ROLLBACK_OK"
+  log "ROLLBACK_INCOMPLETE pins=$pin_ok runtime_recreate=$runtime_ok pins_equal_runtime=$verify_ok release_sha=$release_ok exposure=$exposure_ok http=$http_ok metadata=$meta_ok backend_notouch=$backend_ok - NOT reporting ROLLBACK_OK"
   return "$ROLLBACK_RC"
 }
 
@@ -1859,8 +1937,8 @@ prod_on_signal() {
   || die "compose file missing: ${WOODRIGHT_COMPOSE_FILE:-<unset>}"
 [[ -n "${WOODRIGHT_COMPOSE_PROJECT:-}" ]] || die "profile is missing WOODRIGHT_COMPOSE_PROJECT"
 
-if need_be; then
-  [[ "$WR_BE_PRESENT" == "true" ]] || die "backend candidate image not present locally (execute never pulls): $BE_REF"
+if need_be || [[ "$COMPONENT" == "storefront" ]]; then
+  [[ "$WR_BE_PRESENT" == "true" ]] || die "backend image not present locally (execute never pulls): $BE_REF"
   [[ "$WR_BE_CONTAINER_PRESENT" == "true" ]] || die "backend container missing: ${WOODRIGHT_BE_CONTAINER_DEFAULT}"
 fi
 if need_sf; then
@@ -1953,6 +2031,16 @@ if ! wr_require_owner_approved_release_under_lock public_production "$SOURCE_SHA
 fi
 [[ "${WR_OA_ENVIRONMENT:-}" == "public_production" ]] || die "Gate B environment must stay exact public_production"
 log "owner_approval_gate_b_ok checksum=$WR_OA_CHECKSUM"
+# Re-bind the storefront approval to the live containers after the lock.
+# The pre-lock CAS is not sufficient: a swap that lands before PRELOCK_*
+# would otherwise be frozen in as the new baseline.
+if [[ "$COMPONENT" == "storefront" ]]; then
+  inspect_container BE "${WOODRIGHT_BE_CONTAINER_DEFAULT}"
+  inspect_container SF "${WOODRIGHT_SF_CONTAINER_DEFAULT}"
+  cas_before="$MISMATCH"
+  assert_storefront_component_cas
+  [[ "$MISMATCH" -eq "$cas_before" ]] || die "storefront approval CAS failed under lock"
+fi
 mkdir -p "$EVIDENCE_DIR/pin-backup"
 printf '%s\n' "$SOURCE_SHA" >"$EVIDENCE_DIR/json/application-source-sha.txt"
 printf '%s\n' "${HELPER_INSTALL_SHA}" >"$EVIDENCE_DIR/json/helper-install-sha.txt"
@@ -2180,6 +2268,46 @@ write_required_pins_atomic() {
   return 0
 }
 
+capture_backend_notouch_snapshot() {
+  [[ "$COMPONENT" == "storefront" ]] || return 0
+  local name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
+  BE_KEEP_ID="$(prod_docker inspect "$name" --format '{{.Id}}' 2>/dev/null || true)"
+  BE_KEEP_IMAGE="$(prod_docker inspect "$name" --format '{{.Config.Image}}' 2>/dev/null || true)"
+  BE_KEEP_STARTED="$(prod_docker inspect "$name" --format '{{.State.StartedAt}}' 2>/dev/null || true)"
+  BE_KEEP_CREATED="$(prod_docker inspect "$name" --format '{{.Created}}' 2>/dev/null || true)"
+  BE_KEEP_RESTARTS="$(prod_docker inspect "$name" --format '{{.RestartCount}}' 2>/dev/null || true)"
+  BE_KEEP_REV="$(live_oci_revision "$name")"
+  [[ -n "$BE_KEEP_ID" && "$BE_KEEP_ID" != "<no value>" ]] || return 1
+  [[ -n "$BE_KEEP_IMAGE" && "$BE_KEEP_IMAGE" != "<no value>" ]] || return 1
+  [[ -n "$BE_KEEP_STARTED" && "$BE_KEEP_STARTED" != "<no value>" ]] || return 1
+  [[ "$BE_KEEP_RESTARTS" =~ ^[0-9]+$ ]] || return 1
+  [[ "$BE_KEEP_REV" =~ ^[0-9a-f]{40}$ ]] || return 1
+  log "backend no-touch snapshot id=$BE_KEEP_ID image=$BE_KEEP_IMAGE started=$BE_KEEP_STARTED restarts=$BE_KEEP_RESTARTS revision=$BE_KEEP_REV created=${BE_KEEP_CREATED:-<unset>}"
+}
+
+assert_backend_notouch() {
+  [[ "$COMPONENT" == "storefront" ]] || return 0
+  local name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
+  local id image started created restarts rev
+  id="$(prod_docker inspect "$name" --format '{{.Id}}' 2>/dev/null || true)"
+  image="$(prod_docker inspect "$name" --format '{{.Config.Image}}' 2>/dev/null || true)"
+  started="$(prod_docker inspect "$name" --format '{{.State.StartedAt}}' 2>/dev/null || true)"
+  created="$(prod_docker inspect "$name" --format '{{.Created}}' 2>/dev/null || true)"
+  restarts="$(prod_docker inspect "$name" --format '{{.RestartCount}}' 2>/dev/null || true)"
+  rev="$(live_oci_revision "$name")"
+  [[ "$id" == "$BE_KEEP_ID" ]] || { log "backend container id changed have=$id want=$BE_KEEP_ID"; return 1; }
+  [[ "$image" == "$BE_KEEP_IMAGE" ]] || { log "backend image changed have=$image want=$BE_KEEP_IMAGE"; return 1; }
+  [[ "$started" == "$BE_KEEP_STARTED" ]] || { log "backend StartedAt changed have=$started want=$BE_KEEP_STARTED"; return 1; }
+  [[ "$created" == "$BE_KEEP_CREATED" ]] || { log "backend Created changed have=$created want=$BE_KEEP_CREATED"; return 1; }
+  [[ "$restarts" == "$BE_KEEP_RESTARTS" ]] || { log "backend RestartCount changed have=$restarts want=$BE_KEEP_RESTARTS"; return 1; }
+  [[ "$rev" == "$BE_KEEP_REV" ]] || { log "backend OCI revision changed have=$rev want=$BE_KEEP_REV"; return 1; }
+  log "backend no-touch ok id=$id revision=$rev restarts=$restarts"
+}
+
+if ! capture_backend_notouch_snapshot; then
+  die "backend no-touch snapshot failed before pin write"
+fi
+
 if ! write_required_pins_atomic; then
   # If we armed pins_written then failed the install, EXIT trap rolls back.
   # If we failed before arming, die leaves PHASE=prepared (no rollback needed).
@@ -2247,6 +2375,9 @@ if need_sf; then
   if ! recreate_component storefront; then
     die "storefront recreate failed"
   fi
+fi
+if ! assert_backend_notouch; then
+  die "storefront-only release changed the backend container"
 fi
 record_state containers_recreated
 
@@ -2473,6 +2604,14 @@ if [[ "$COMPONENT" == "pair" ]]; then
   wr_compose_env_assert_no_duplicate_governed_keys "$COMPOSE_ENV_FILE" \
     || die "authority postcondition failed: duplicate governed compose keys"
 fi
+if [[ "$COMPONENT" == "storefront" ]]; then
+  [[ "$(pin_value_of WOODRIGHT_RELEASE_SHA)" == "$PRE_RELEASE_SHA" ]] \
+    || die "storefront-only must not rewrite shared WOODRIGHT_RELEASE_SHA"
+  [[ "$(pin_value_of WOODRIGHT_BACKEND_IMAGE)" == "${PRE_BE_REF}" ]] \
+    || die "storefront-only must not rewrite WOODRIGHT_BACKEND_IMAGE"
+  wr_compose_env_assert_no_duplicate_governed_keys "$COMPOSE_ENV_FILE" \
+    || die "authority postcondition failed: duplicate governed compose keys"
+fi
 
 # --- commit -----------------------------------------------------------------
 LIVE_BE_DIGEST_FINAL="$(container_digest "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
@@ -2480,7 +2619,12 @@ LIVE_SF_DIGEST_FINAL="$(container_digest "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
 if ! wr_require_owner_approved_matches_live public_production "$SOURCE_SHA" "$LIVE_BE_DIGEST_FINAL" "$LIVE_SF_DIGEST_FINAL" "$EVIDENCE_DIR"; then
   die "Gate C owner approval vs live pair failed result=${WR_OWNER_APPROVAL_RESULT}"
 fi
-log "owner_approval_gate_c_ok live_be=$LIVE_BE_DIGEST_FINAL live_sf=$LIVE_SF_DIGEST_FINAL"
+[[ "${WR_OA_CHECKSUM:-}" == "$GATE_A_CHECKSUM" ]] \
+  || die "Gate C approval checksum drifted since Gate A (retained fields are part of the file hash)"
+if ! assert_backend_notouch; then
+  die "backend identity moved before commit"
+fi
+log "owner_approval_gate_c_ok live_be=$LIVE_BE_DIGEST_FINAL live_sf=$LIVE_SF_DIGEST_FINAL checksum=$WR_OA_CHECKSUM"
 COMMITTED=1
 record_state committed
 {

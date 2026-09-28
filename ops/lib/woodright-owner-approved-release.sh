@@ -147,6 +147,10 @@ wr_owner_approved_load() {
   WR_OA_BACKEND_DIGEST=""
   WR_OA_STOREFRONT_DIGEST=""
   WR_OA_OWNER_AUTHORIZATION_ID=""
+  WR_OA_COMPONENT=""
+  WR_OA_RETAINED_BACKEND_REVISION=""
+  WR_OA_EXPECTED_CURRENT_SF_DIGEST=""
+  WR_OA_EXPECTED_CURRENT_BE_DIGEST=""
   if ! path="$(wr_owner_approved_resolve_path "$environment")"; then
     WR_OWNER_APPROVAL_RESULT="OWNER_APPROVAL_PATH_UNSAFE"
     return 1
@@ -188,6 +192,11 @@ app_sha = data.get("application_sha")
 be_dig = data.get("backend_digest")
 sf_dig = data.get("storefront_digest")
 auth_id = data.get("owner_authorization_id") or ""
+# Absent component stays pair. Explicit storefront is a different contract.
+component = data.get("component") or "pair"
+retained_rev = data.get("retained_backend_revision") or ""
+expect_sf = data.get("expected_current_storefront_digest") or ""
+expect_be = data.get("expected_current_backend_digest") or ""
 
 def norm(e):
     if e in ("staging",):
@@ -214,8 +223,29 @@ if not isinstance(be_dig, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", be_di
     print("MALFORMED"); sys.exit(2)
 if not isinstance(sf_dig, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", sf_dig):
     print("MALFORMED"); sys.exit(2)
+# Line protocol: a newline inside authorization id would shift later fields
+# and could make a pair file load as storefront. Reject anything but one token.
+if not isinstance(auth_id, str) or not re.fullmatch(r"[A-Za-z0-9._:-]{0,160}", auth_id):
+    print("MALFORMED"); sys.exit(2)
+if not isinstance(file_norm, str) or re.search(r"[\r\n]", file_norm):
+    print("MALFORMED"); sys.exit(2)
 if file_norm != env_norm:
     print("ENV_MISMATCH"); sys.exit(3)
+if component not in ("pair", "storefront"):
+    print("MALFORMED"); sys.exit(2)
+if component == "storefront":
+    if not isinstance(retained_rev, str) or not re.fullmatch(r"[0-9a-f]{40}", retained_rev):
+        print("MALFORMED"); sys.exit(2)
+    if not isinstance(expect_sf, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", expect_sf):
+        print("MALFORMED"); sys.exit(2)
+    if not isinstance(expect_be, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", expect_be):
+        print("MALFORMED"); sys.exit(2)
+    if expect_be != be_dig:
+        print("MALFORMED"); sys.exit(2)
+    if expect_sf == sf_dig or retained_rev == app_sha:
+        print("MALFORMED"); sys.exit(2)
+elif data.get("component") not in (None, "pair"):
+    print("MALFORMED"); sys.exit(2)
 
 print(checksum)
 print(file_norm)
@@ -223,6 +253,10 @@ print(app_sha)
 print(be_dig)
 print(sf_dig)
 print(auth_id)
+print(component)
+print(retained_rev)
+print(expect_sf)
+print(expect_be)
 PY
 )"
   rc=$?
@@ -241,6 +275,11 @@ PY
   WR_OA_BACKEND_DIGEST="$(printf '%s\n' "$out" | sed -n '4p')"
   WR_OA_STOREFRONT_DIGEST="$(printf '%s\n' "$out" | sed -n '5p')"
   WR_OA_OWNER_AUTHORIZATION_ID="$(printf '%s\n' "$out" | sed -n '6p')"
+  WR_OA_COMPONENT="$(printf '%s\n' "$out" | sed -n '7p')"
+  WR_OA_RETAINED_BACKEND_REVISION="$(printf '%s\n' "$out" | sed -n '8p')"
+  WR_OA_EXPECTED_CURRENT_SF_DIGEST="$(printf '%s\n' "$out" | sed -n '9p')"
+  WR_OA_EXPECTED_CURRENT_BE_DIGEST="$(printf '%s\n' "$out" | sed -n '10p')"
+  [[ -n "$WR_OA_COMPONENT" ]] || WR_OA_COMPONENT="pair"
   WR_OWNER_APPROVAL_RESULT="OWNER_APPROVAL_OK"
   return 0
 }
@@ -423,6 +462,13 @@ wr_require_owner_approved_release() {
         ok=0
       fi
     fi
+    # Historical files have no component key and load as pair.
+    # An explicit storefront approval must not satisfy a pair request, and a
+    # pair approval must not satisfy a storefront request.
+    local req_component="${WOODRIGHT_OWNER_APPROVAL_COMPONENT:-}"
+    if [[ -n "$req_component" && "$req_component" != "$WR_OA_COMPONENT" ]]; then
+      ok=0
+    fi
     if [[ "$ok" -eq 1 ]]; then
       WR_OWNER_APPROVAL_RESULT="OWNER_APPROVAL_OK"
       if [[ -n "$evidence_dir" ]]; then
@@ -479,6 +525,12 @@ wr_require_owner_approved_matches_live() {
   local evidence_dir="${5:-}"
   if ! wr_owner_approved_load "$environment"; then
     wr_owner_approved_audit_denial "$evidence_dir" "${WR_OWNER_APPROVAL_RESULT}" "gate_c load failed"
+    return 1
+  fi
+  local req_component="${WOODRIGHT_OWNER_APPROVAL_COMPONENT:-}"
+  if [[ -n "$req_component" && "$req_component" != "${WR_OA_COMPONENT:-pair}" ]]; then
+    WR_OWNER_APPROVAL_RESULT="OWNER_APPROVAL_MISMATCH"
+    wr_owner_approved_audit_denial "$evidence_dir" "OWNER_APPROVAL_MISMATCH" "gate_c approval component != requested component"
     return 1
   fi
   if [[ "$live_sha" != "$WR_OA_APPLICATION_SHA" || "$live_be" != "$WR_OA_BACKEND_DIGEST" || "$live_sf" != "$WR_OA_STOREFRONT_DIGEST" ]]; then
