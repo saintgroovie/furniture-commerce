@@ -20,6 +20,7 @@
  */
 import { DEMO_HOSTS, LOOPBACK_HOST_RE } from "./demo-hosts"
 import { parseLaunchModeLenient } from "./launch-mode"
+import { PRODUCTION_SITE_APEX_HOST } from "./production-hosts"
 import {
   resolvePublicIndexableOrigin,
   resolveSeoMode,
@@ -144,9 +145,13 @@ export function launchCanonical(absoluteUrl: string): { canonical: string } | un
 export function robotsTxtBody(raw?: string | null): string {
   if (isIndexingAllowed(raw)) {
     const origin = resolvePublicIndexableOrigin()
-    return ["User-agent: *", "Allow: /", `Sitemap: ${origin}/sitemap.xml`, ""].join(
-      "\n"
-    )
+    return [
+      "User-agent: *",
+      "Allow: /",
+      `Host: ${PRODUCTION_SITE_APEX_HOST}`,
+      `Sitemap: ${origin}/sitemap.xml`,
+      "",
+    ].join("\n")
   }
   return ["User-agent: *", "Disallow: /", ""].join("\n")
 }

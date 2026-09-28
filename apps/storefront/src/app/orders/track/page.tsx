@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 
 export const metadata = {
   title: orderTrackCopy.title,
-  robots: { index: false, follow: false },
+  robots: { index: false, follow: false, noarchive: true },
 }
 
 export default function OrderTrackPage() {

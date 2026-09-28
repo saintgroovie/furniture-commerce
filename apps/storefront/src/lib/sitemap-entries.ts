@@ -11,6 +11,8 @@ const STATIC_PATHS = [
   "/catalog",
   "/rooms",
   "/kids",
+  "/kids/catalog",
+  "/kids/rooms",
   "/kids/willie-winkie",
   "/bespoke",
   "/bespoke/wall-panels",

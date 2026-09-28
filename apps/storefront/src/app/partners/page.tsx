@@ -5,6 +5,7 @@ import { EditorialFigure } from "@/components/editorial/editorial-figure"
 import { EditorialShell } from "@/components/editorial/editorial-shell"
 import { PartnerIndex } from "@/components/partners/partner-index"
 import { getPublicPartners } from "@/lib/api/partners"
+import { canonicalAlternates } from "@/lib/page-canonical"
 import { partnersCopy, seo } from "@/lib/woodright-copy"
 
 export const dynamic = "force-dynamic"
@@ -17,6 +18,7 @@ export const metadata: Metadata = {
     description: seo.partners.description,
     url: "/partners",
   },
+  ...canonicalAlternates("/partners"),
 }
 
 export default async function PartnersPage() {
