@@ -206,6 +206,7 @@ if [[ "${WOODRIGHT_TARGETED_MIGRATION_TEST:-}" != "1" ]]; then
   enc_pass="$(PG_PASS="$pg_pass" python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["PG_PASS"], safe=""))')"
   # --network container:<postgres> makes 127.0.0.1 this database, not another host.
   DATABASE_URL="postgres://${pg_user}:${enc_pass}@127.0.0.1:5432/${EXPECTED_DB}"
+  export DATABASE_URL
 fi
 if [[ "${WOODRIGHT_TARGETED_MIGRATION_TEST:-}" == "1" ]]; then
   plan="$(node "$RUNNER" --migration "$ALLOWED_MIGRATION")"
@@ -236,6 +237,7 @@ docker run --rm \
   /tmp/woodright-targeted-migration.cjs \
   --migration "$ALLOWED_MIGRATION" \
   --migrations-dir "$MIGRATIONS_DIR"
+unset DATABASE_URL
 
 applied_after="$(query "select name from mikro_orm_migrations where name = '${ALLOWED_MIGRATION}';")"
 [[ -n "$applied_after" ]] || die "bookkeeping missing after execute"
