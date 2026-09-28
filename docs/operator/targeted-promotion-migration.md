@@ -15,7 +15,7 @@ Execute holds `/srv/woodright/locks/public_production/live-cutover.lock` through
 - Application SHA is `931140158756b921100e4f97cf1f27cd3ba61bc2`, and the backend image label matches it.
 - Migration file SHA-256 is `e5e3ecdfa91af6680f848585c94e93599d9cd7d6f6671ff4b2bc90d0d2f0fdb1`.
 - Governance marker `/srv/woodright/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt` equals `--governance-sha`.
-- Backup manifest is schema `woodright_recovery_point_v2`, environment `public_production`, the same application SHA, database `woodright_public_production`, and a 64-hex `db.sha256`. On a real run the dump file at `db.path` must match that checksum.
+- Backup manifest is schema `woodright_recovery_point_v2`, environment `public_production`, database `woodright_public_production`, a 40-hex `application_sha`, and a 64-hex `db.sha256`. On a real run the dump file at `db.path` must match that checksum. The manifest `application_sha` is the storefront image label recorded by the backup helper. The runner still pins the backend image to `931140158756b921100e4f97cf1f27cd3ba61bc2`.
 - `promotion_slot` is absent and `Migration20260908120000` is absent from `mikro_orm_migrations`.
 - Rehearsal container name is exactly `woodright-rehearsal-promotion-slot`.
 - Live container name is exactly `woodright-public-production-postgres`.

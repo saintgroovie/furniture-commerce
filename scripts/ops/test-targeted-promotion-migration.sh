@@ -160,6 +160,19 @@ PY
 invoke "${BASE[@]}" --mode dry-run
 grep -q 'backup db checksum missing' "$TMP/err" && pass "bad backup checksum refused" || fail "checksum rc=$RC"
 
+reset_fixture
+python3 - <<PY
+import json
+json.dump({
+  "schema": "woodright_recovery_point_v2",
+  "environment": "public_production",
+  "application_sha": "not-a-sha",
+  "db": {"name": "woodright_public_production", "sha256": "$MIG_SHA"},
+}, open("$TMP/backup.json", "w"))
+PY
+invoke "${BASE[@]}" --mode dry-run
+grep -q 'backup application SHA missing' "$TMP/err" && pass "bad backup application SHA refused" || fail "backup app sha rc=$RC"
+
 run "${BASE[@]}" --mode execute --confirm "$TOKEN"
 [[ "$RC" -eq 0 ]] && grep -q Migration20260908120000 "$TMP/fix/plan.json" \
   && grep -q '/server/src/modules/promotion-slot/migrations' "$TMP/fix/plan.json" \

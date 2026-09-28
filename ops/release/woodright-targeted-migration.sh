@@ -106,16 +106,16 @@ marker="$(tr -d '[:space:]' <"$MARKER_PATH")"
 [[ "$marker" == "$GOVERNANCE_SHA" ]] || die "governance marker does not match --governance-sha"
 
 WOODRIGHT_TARGETED_MIGRATION_TEST="${WOODRIGHT_TARGETED_MIGRATION_TEST:-0}" \
-  python3 - "$BACKUP_MANIFEST" "$EXPECTED_APP_SHA" <<'PY'
+  python3 - "$BACKUP_MANIFEST" <<'PY'
 import hashlib, json, os, sys
 doc = json.load(open(sys.argv[1]))
-expected_app = sys.argv[2]
 if doc.get("environment") != "public_production":
     raise SystemExit("backup environment mismatch")
 if doc.get("schema") != "woodright_recovery_point_v2":
     raise SystemExit("backup schema mismatch")
-if doc.get("application_sha") != expected_app:
-    raise SystemExit("backup application SHA mismatch")
+app = doc.get("application_sha") or ""
+if len(app) != 40 or any(ch not in "0123456789abcdef" for ch in app):
+    raise SystemExit("backup application SHA missing")
 db = doc.get("db") or {}
 if db.get("name") != "woodright_public_production":
     raise SystemExit("backup db name mismatch")
