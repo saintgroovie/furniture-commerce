@@ -196,7 +196,7 @@ export function MobileNav() {
               </button>
             </div>
             <nav className="mobile-nav" aria-label={a11yCopy.mobileNavLabel}>
-              <div className="mobile-nav-group">
+              <div className="mobile-nav-group mobile-nav-group-primary">
                 {PRIMARY.map((item) => (
                   <Link
                     key={item.href}
@@ -211,26 +211,40 @@ export function MobileNav() {
                   </Link>
                 ))}
               </div>
-              <div className="mobile-nav-group">
+              <div className="mobile-nav-group mobile-nav-group-secondary">
                 {SECONDARY.map((item) => (
                   <Link key={item.href} href={item.href} onClick={() => close(false)}>
                     {item.label}
                   </Link>
                 ))}
+                <Link href="/contacts" onClick={() => close(false)}>
+                  {navCopy.contacts}
+                </Link>
+              </div>
+              <div className="mobile-nav-group mobile-nav-group-cart">
+                <Link
+                  href="/cart"
+                  className="mobile-nav-cart-btn"
+                  onClick={() => close(false)}
+                >
+                  <span>{navCopy.cart}</span>
+                  <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+                    <path
+                      d="M3 8h9M8.5 4l4 4-4 4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </Link>
                 <Link
                   href="/contacts"
                   className="mobile-nav-showroom-link"
                   onClick={() => close(false)}
                 >
                   {navCopy.showroom}
-                </Link>
-                <Link href="/contacts" onClick={() => close(false)}>
-                  {navCopy.contacts}
-                </Link>
-              </div>
-              <div className="mobile-nav-group mobile-nav-group-cart">
-                <Link href="/cart" onClick={() => close(false)}>
-                  {navCopy.cart}
                 </Link>
               </div>
             </nav>
