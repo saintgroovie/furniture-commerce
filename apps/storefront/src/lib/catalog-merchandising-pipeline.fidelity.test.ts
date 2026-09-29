@@ -16,6 +16,7 @@ function product(
 ): Record<string, unknown> {
   return {
     handle: partial.handle ?? partial.id,
+    status: "published",
     thumbnail: null,
     images: [],
     variants: [{ id: "v1", prices: [{ amount: 10000 }] }],

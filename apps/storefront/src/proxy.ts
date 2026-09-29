@@ -140,6 +140,7 @@ export function proxy(request: NextRequest) {
   // Next reads CSP from the *request* to stamp nonce on bootstrap scripts.
   requestHeaders.set("Content-Security-Policy", csp)
   requestHeaders.set("x-nonce", nonce)
+  requestHeaders.set("x-woodright-pathname", request.nextUrl.pathname)
 
   const response = NextResponse.next({
     request: { headers: requestHeaders },

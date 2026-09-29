@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next"
 import Link from "next/link"
 import { headers } from "next/headers"
+import { notFound } from "next/navigation"
+import { getProduct, NOT_FOUND } from "@/lib/api/products"
 import { getSiteUrl } from "@/lib/api/base"
 import {
   HeaderHoverDropdown,
@@ -75,13 +77,38 @@ const organizationJsonLd = {
   ...getShowroomOrganizationContactLd(),
 }
 
+/**
+ * Root `loading.tsx` flushes a 200 shell before a nested page can call
+ * `notFound()`. Draft and unknown products are rejected here, outside that
+ * boundary, so the buyer response is a real HTTP 404.
+ */
+async function rejectUnpublishedProduct(headerList: Headers) {
+  const path = headerList.get("x-woodright-pathname") ?? ""
+  const match = path.match(/^\/product\/([^/]+)\/?$/)
+  if (!match?.[1]) return
+  let id = match[1]
+  try {
+    id = decodeURIComponent(id)
+  } catch {
+    notFound()
+  }
+  try {
+    await getProduct(id)
+  } catch (e) {
+    if (e instanceof Error && e.message === NOT_FOUND) notFound()
+    throw e
+  }
+}
+
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   // CSP nonce from middleware (x-nonce). Required for JSON-LD + Next bootstrap.
-  const nonce = (await headers()).get("x-nonce") ?? undefined
+  const headerList = await headers()
+  await rejectUnpublishedProduct(headerList)
+  const nonce = headerList.get("x-nonce") ?? undefined
   return (
     <html lang="ru" className={localSansClass}>
       <body>

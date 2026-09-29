@@ -1,3 +1,5 @@
+import { cache } from "react"
+import { isBuyerPublicProductStatus } from "../buyer-publication"
 import { getBaseUrl, medusaCatalogFetch, medusaFetch } from "./base"
 
 export async function getProducts(params?: {
@@ -56,7 +58,16 @@ export async function getCatalogProducts() {
     }
     throw new Error(message)
   }
-  return res.json()
+  const data = (await res.json()) as { products?: unknown }
+  if (Array.isArray(data.products)) {
+    data.products = data.products.filter(
+      (product) =>
+        !!product &&
+        typeof product === "object" &&
+        isBuyerPublicProductStatus((product as { status?: unknown }).status)
+    )
+  }
+  return data
 }
 
 export const NOT_FOUND = "NOT_FOUND"
@@ -75,17 +86,31 @@ async function listStoreProductByHandle(
   return data.products?.[0] ?? null
 }
 
-/** Resolve by Medusa product id or by `handle` when the direct id route 404s. */
-export async function getProduct(idOrHandle: string) {
+function publicProductOrThrow(product: Record<string, unknown> | null | undefined) {
+  if (!product || !isBuyerPublicProductStatus(product.status)) {
+    throw new Error(NOT_FOUND)
+  }
+  return product
+}
+
+/**
+ * Resolve by Medusa product id or by `handle` when the direct id route 404s.
+ * Cached per RSC request so the root layout status gate and the page share
+ * one backend read.
+ */
+export const getProduct = cache(async function getProduct(idOrHandle: string) {
   const base = getBaseUrl()
   const key = idOrHandle.trim()
   const res = await medusaFetch(`${base}/store/products/${encodeURIComponent(key)}`)
-  if (res.ok) return res.json()
+  if (res.ok) {
+    const body = (await res.json()) as { product?: Record<string, unknown> }
+    return { product: publicProductOrThrow(body.product) }
+  }
   if (res.status === 404) {
     const byHandle = await listStoreProductByHandle(base, key)
-    if (byHandle) return { product: byHandle }
+    if (byHandle) return { product: publicProductOrThrow(byHandle) }
     throw new Error(NOT_FOUND)
   }
   const data = await res.json().catch(() => ({}))
   throw new Error((data as { message?: string }).message ?? (await res.text()))
-}
+})
