@@ -52,21 +52,29 @@ MIGRATION_NAME=""
 # BEGIN MIGRATION_CONTAINER_GUARD
 migration_container_confirmed_stopped() {
   [[ -z "${MIGRATION_NAME:-}" ]] && return 0
-  if ! docker info >/dev/null 2>&1; then
+  local state inspect_err
+  if ! inspect_err="$(docker inspect -f '{{.State.Status}}' "$MIGRATION_NAME" 2>&1)"; then
+    if [[ "$inspect_err" == *"No such container"* || "$inspect_err" == *"No such object"* ]]; then
+      return 0
+    fi
     return 1
   fi
-  local state
-  if ! state="$(docker inspect -f '{{.State.Status}}' "$MIGRATION_NAME" 2>/dev/null)"; then
-    return 0
-  fi
+  state="$inspect_err"
   if [[ "$state" != "exited" && "$state" != "dead" ]]; then
     return 1
   fi
-  docker rm -f "$MIGRATION_NAME" >/dev/null 2>&1 || return 1
-  if docker inspect "$MIGRATION_NAME" >/dev/null 2>&1; then
-    return 1
+  local rm_err
+  if ! rm_err="$(docker rm -f "$MIGRATION_NAME" 2>&1)"; then
+    if [[ "$rm_err" != *"No such container"* && "$rm_err" != *"No such object"* ]]; then
+      return 1
+    fi
   fi
-  return 0
+  if ! inspect_err="$(docker inspect "$MIGRATION_NAME" 2>&1)"; then
+    if [[ "$inspect_err" == *"No such container"* || "$inspect_err" == *"No such object"* ]]; then
+      return 0
+    fi
+  fi
+  return 1
 }
 stop_migration_container() {
   [[ -z "${MIGRATION_NAME:-}" ]] && return 0

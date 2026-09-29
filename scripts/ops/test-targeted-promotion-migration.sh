@@ -303,10 +303,18 @@ if [[ "$1" == "info" ]]; then
 fi
 if [[ "$1" == "inspect" ]]; then
   if [[ "$mode" == "absent" ]]; then
+    echo "Error: No such container: test" >&2
+    exit 1
+  fi
+  if [[ "$mode" == "blip" ]]; then
+    echo "Error: request returned Internal Server Error" >&2
     exit 1
   fi
   printf '%s\n' "$mode"
   exit 0
+fi
+if [[ "$1" == "kill" && "$mode" == "blip" ]]; then
+  exit 1
 fi
 if [[ "$1" == "rm" ]]; then
   printf '%s\n' absent >"$DOCKER_MODE"
@@ -336,6 +344,42 @@ stop_migration_container
 [[ "$(cat "$DOCKER_MODE")" == "absent" ]]
 ' bash "$TMP/guard.sh"
 pass "lock cleanup refuses to succeed while docker cannot confirm stop"
+
+DOCKER_MODE="$TMP/docker-mode" PATH="$TMP/bin:$PATH" bash -c '
+set -euo pipefail
+log() { :; }
+source "$1"
+MIGRATION_NAME="woodright-targeted-migration-test"
+printf "%s\n" blip >"$DOCKER_MODE"
+if stop_migration_container; then
+  echo RELEASED_ON_AMBIGUOUS_INSPECT
+  exit 1
+fi
+[[ "$MIGRATION_NAME" == "woodright-targeted-migration-test" ]]
+' bash "$TMP/guard.sh"
+pass "ambiguous docker inspect does not count as container absence"
+
+printf '%s\n' blip >"$TMP/docker-mode"
+rm -f "$TMP/released"
+RELEASE_FILE="$TMP/released" DOCKER_MODE="$TMP/docker-mode" PATH="$TMP/bin:$PATH" WOODRIGHT_MIGRATION_STOP_WAIT_SEC=0 \
+  bash -c '
+log() { :; }
+source "$1"
+wr_staging_mutation_lock_release() { printf released >"$RELEASE_FILE"; }
+MIGRATION_NAME="woodright-targeted-migration-test"
+on_migration_exit
+' bash "$TMP/guard.sh" &
+blip_pid=$!
+sleep 1
+if [[ -f "$TMP/released" ]]; then
+  kill "$blip_pid" 2>/dev/null || true
+  wait "$blip_pid" 2>/dev/null || true
+  fail "lock was released on an ambiguous inspect"
+else
+  kill "$blip_pid" 2>/dev/null || true
+  wait "$blip_pid" 2>/dev/null || true
+  pass "exit handler holds the lock on an ambiguous inspect"
+fi
 
 printf '%s\n' down >"$TMP/docker-mode"
 RELEASE_FILE="$TMP/released" DOCKER_MODE="$TMP/docker-mode" PATH="$TMP/bin:$PATH" WOODRIGHT_MIGRATION_STOP_WAIT_SEC=0 \
