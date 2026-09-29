@@ -43,6 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const verification = webmasterVerificationMetadata()
   return {
     metadataBase: new URL(getSiteUrl()),
+    applicationName: "Woodright",
     title: { default: "Woodright", template: "%s | Woodright" },
     description: seo.home.description,
     // Demo/staging fail-closed: noindex/nofollow/noarchive (WOODRIGHT_INDEXING_MODE).
@@ -50,6 +51,10 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       siteName: "Woodright",
       locale: "ru_RU",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
     },
     icons: {
       icon: [

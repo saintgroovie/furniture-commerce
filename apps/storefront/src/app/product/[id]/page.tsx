@@ -8,6 +8,14 @@ import { getMotifContext } from "@/lib/api/motif-themes"
 import { formatRub, getPrice } from "@/lib/format"
 import { indexingCanonical } from "@/lib/indexing-policy"
 import {
+  buildBreadcrumbJsonLd,
+  buildProductJsonLd,
+  productCanonicalPath,
+  jsonLdHtml,
+  readUniformRubAmounts,
+  singleOfferPriceRub,
+} from "@/lib/product-json-ld"
+import {
   formatRequestQuotePriceLabel,
   isRequestQuoteProduct,
 } from "@/lib/request-quote"
@@ -125,7 +133,8 @@ export async function generateMetadata({
     if (!product) {
       notFound()
     }
-    const selfCanonical = indexingCanonical(`${base}/product/${id}`)
+    const canonicalPath = productCanonicalPath(product, id)
+    const selfCanonical = indexingCanonical(`${base}${canonicalPath}`)
     const title = getBuyerFacingProductTitle(product)
     const desc = product.description ? truncate(String(product.description), 160) : "Товар из каталога Woodright."
     const imageUrl = primaryImageForMeta(product)
@@ -135,7 +144,7 @@ export async function generateMetadata({
       openGraph: {
         title,
         description: desc,
-        url: `/product/${id}`,
+        url: canonicalPath,
         ...(imageUrl && { images: [imageUrl] }),
       },
       ...(selfCanonical ? { alternates: selfCanonical } : {}),
@@ -461,21 +470,39 @@ export default async function ProductPage({
       : []
   const displayGroupSelector = displayGroupSelectorLabel(displayGroupAxis)
 
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: titleStr || "Товар",
-    description: description ?? undefined,
-    url: `${base}/product/${id}`,
-    ...(mainImage && { image: mainImage }),
-  }
-
   const isKidsProduct = isKidsStorefrontProduct(product)
   const collectionFilterKey = getCollectionFilterKey(product)
   const catalogHref = isKidsProduct ? "/kids/catalog" : "/catalog"
   const collectionHref = collectionFilterKey
     ? `${catalogHref}?collection=${encodeURIComponent(collectionFilterKey)}`
     : null
+
+  const canonicalPath = productCanonicalPath(product, id)
+  const canonicalUrl = `${base}${canonicalPath}`
+  const offerPriceRub = singleOfferPriceRub({
+    productType,
+    requestQuote: isRequestQuoteProduct(product),
+    materialTierCount: materialTiers?.length ?? 0,
+    displayGroupCount: displayGroupMembers.length,
+    variantAmounts: readUniformRubAmounts(product),
+    displayedPriceRub: openingPrice,
+  })
+  const productJsonLd = buildProductJsonLd({
+    name: titleStr || "Товар",
+    description,
+    url: canonicalUrl,
+    image: mainImage,
+    sku: article,
+    offerPriceRub,
+  })
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd(base, [
+    ...(isKidsProduct ? [{ name: "Детская", path: "/kids" }] : []),
+    { name: "Каталог", path: catalogHref },
+    ...(collectionLabel
+      ? [{ name: collectionLabel, path: collectionHref ?? undefined }]
+      : []),
+    { name: titleStr || "Товар", path: canonicalPath },
+  ])
 
   const cspNonce = (await headers()).get("x-nonce") ?? undefined
 
@@ -498,7 +525,12 @@ export default async function ProductPage({
       <script
         type="application/ld+json"
         nonce={cspNonce}
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        nonce={cspNonce}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(breadcrumbJsonLd) }}
       />
 
       {/* First screen: full-bleed media + sticky buy panel */}

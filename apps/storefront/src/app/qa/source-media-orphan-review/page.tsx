@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { SourceMediaOrphanReviewClient } from "./SourceMediaOrphanReviewClient"
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: false, noarchive: true },
   title: "Source Media Orphan Review (QA)",
   description:
     "Dev-only review queue for unmapped_orphan and needs_manual_mapping source rows from full-cache audit.",

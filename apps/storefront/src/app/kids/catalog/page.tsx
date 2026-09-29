@@ -17,6 +17,7 @@ import {
 import { parseCatalogFilterState } from "@/lib/catalog-filter-params"
 import { actions, kidsCatalogCopy, seo } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
+import { canonicalAlternates } from "@/lib/page-canonical"
 
 export const metadata: Metadata = {
   title: seo.kidsCatalog.title,
@@ -26,6 +27,7 @@ export const metadata: Metadata = {
     description: seo.kidsCatalog.description,
     url: "/kids/catalog",
   },
+  ...canonicalAlternates("/kids/catalog"),
 }
 
 export default async function KidsCatalogPage({

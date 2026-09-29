@@ -27,7 +27,7 @@ import { resolveHomeImageSrc } from "@/components/home/home-image"
 const homeCanonical = indexingCanonical(`${getSiteUrl()}/`)
 
 export const metadata: Metadata = {
-  title: seo.home.title,
+  title: { absolute: seo.home.title },
   description: seo.home.description,
   openGraph: {
     title: seo.home.title,

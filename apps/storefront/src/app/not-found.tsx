@@ -4,7 +4,7 @@ import { systemCopy } from "@/lib/woodright-copy"
 
 export const metadata: Metadata = {
   title: systemCopy.notFound.title,
-  robots: { index: false, follow: false },
+  robots: { index: false, follow: false, noarchive: true },
 }
 
 export default function NotFound() {
