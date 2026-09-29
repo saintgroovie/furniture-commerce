@@ -39,8 +39,11 @@ BACKUP_MANIFEST=""
 BACKEND_IMAGE=""
 DATABASE_URL=""
 MARKER_PATH="${WOODRIGHT_GOVERNANCE_MARKER:-$MARKER_DEFAULT}"
-RUNNER="${WOODRIGHT_TARGETED_MIGRATION_RUNNER:-$ROOT/ops/release/woodright-targeted-migration.cjs}"
-LOCK_HELPER="${WOODRIGHT_MUTATION_LOCK_HELPER:-$ROOT/ops/lib/woodright-staging-mutation-lock.sh}"
+RUNNER="$ROOT/ops/release/woodright-targeted-migration.cjs"
+LOCK_HELPER="$ROOT/ops/lib/woodright-staging-mutation-lock.sh"
+PG_EXEC=""
+IMAGE_REF=""
+MAX_BACKUP_AGE_HOURS=72
 
 log() { printf '%s woodright-targeted-migration %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >&2; }
 die() { log "ERROR: $*"; exit 1; }
@@ -113,6 +116,23 @@ if doc.get("environment") != "public_production":
     raise SystemExit("backup environment mismatch")
 if doc.get("schema") != "woodright_recovery_point_v2":
     raise SystemExit("backup schema mismatch")
+if doc.get("kind") != "woodright_recovery_point":
+    raise SystemExit("backup kind refused")
+if doc.get("status") != "success":
+    raise SystemExit("backup status refused")
+if doc.get("partial") is not False:
+    raise SystemExit("backup partial refused")
+if doc.get("verification_status") not in ("verified", "pending_rehearsal", "unverified"):
+    raise SystemExit("backup verification refused")
+created = doc.get("created_at_utc") or ""
+import datetime
+try:
+    created_at = datetime.datetime.strptime(created, "%Y%m%dT%H%M%SZ").replace(tzinfo=datetime.timezone.utc)
+except ValueError:
+    raise SystemExit("backup created_at missing")
+age = datetime.datetime.now(datetime.timezone.utc) - created_at
+if age.total_seconds() < 0 or age > datetime.timedelta(hours=72):
+    raise SystemExit("backup freshness refused")
 app = doc.get("application_sha") or ""
 if len(app) != 40 or any(ch not in "0123456789abcdef" for ch in app):
     raise SystemExit("backup application SHA missing")
@@ -125,7 +145,7 @@ if len(sha) != 64 or any(ch not in "0123456789abcdef" for ch in sha):
 if os.environ.get("WOODRIGHT_TARGETED_MIGRATION_TEST") == "1":
     raise SystemExit(0)
 path = db.get("path") or ""
-if not path or not os.path.isfile(path):
+if not path or os.path.islink(path) or not os.path.isfile(path):
     raise SystemExit("backup dump missing")
 digest = hashlib.sha256()
 with open(path, "rb") as handle:
@@ -156,42 +176,48 @@ else:
 PY
     return
   fi
-  docker exec "$PG_CONTAINER" psql -U "${WOODRIGHT_PG_USER:-woodright}" -d "$EXPECTED_DB" -Atc "$sql"
+  docker exec "$PG_EXEC" psql -U "${WOODRIGHT_PG_USER:-woodright}" -d "$EXPECTED_DB" -Atc "$sql"
 }
 
-db_name="$(query "select current_database();")"
-[[ "$db_name" == "$EXPECTED_DB" ]] || die "database identity refused: ${db_name:-empty}"
+assert_database_gate() {
+  local db_name regclass applied image_sha file_sha
+  db_name="$(query "select current_database();")"
+  [[ "$db_name" == "$EXPECTED_DB" ]] || die "database identity refused: ${db_name:-empty}"
+  regclass="$(query "select coalesce(to_regclass('public.promotion_slot')::text, '');")"
+  applied="$(query "select name from mikro_orm_migrations where name = '${ALLOWED_MIGRATION}';")"
+  if [[ -n "$applied" && -z "$regclass" ]]; then
+    die "BOOKKEEPING_WITHOUT_TABLE $ALLOWED_MIGRATION"
+  fi
+  if [[ -n "$applied" ]]; then
+    die "ALREADY_APPLIED $ALLOWED_MIGRATION"
+  fi
+  if [[ -n "$regclass" ]]; then
+    die "partial promotion_slot exists without migration bookkeeping"
+  fi
+  if [[ "${WOODRIGHT_TARGETED_MIGRATION_TEST:-}" == "1" ]]; then
+    image_sha="$(tr -d '[:space:]' <"$WOODRIGHT_TARGETED_MIGRATION_FIXTURE_DIR/app-sha")"
+    file_sha="$(tr -d '[:space:]' <"$WOODRIGHT_TARGETED_MIGRATION_FIXTURE_DIR/migration-sha")"
+  else
+    image_sha="$(docker inspect "$IMAGE_REF" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')"
+    file_sha="$(docker run --rm --entrypoint sha256sum "$IMAGE_REF" "$MIGRATIONS_DIR/${ALLOWED_MIGRATION}.js" | awk '{print $1}')"
+  fi
+  [[ "$image_sha" == "$EXPECTED_APP_SHA" ]] || die "backend image revision mismatch"
+  [[ "$file_sha" == "$EXPECTED_MIGRATION_SHA256" ]] || die "migration source hash mismatch"
+}
 
-regclass="$(query "select coalesce(to_regclass('public.promotion_slot')::text, '');")"
-applied="$(query "select name from mikro_orm_migrations where name = '${ALLOWED_MIGRATION}';")"
-if [[ -n "$applied" && -z "$regclass" ]]; then
-  die "BOOKKEEPING_WITHOUT_TABLE $ALLOWED_MIGRATION"
-fi
-if [[ -n "$applied" ]]; then
-  die "ALREADY_APPLIED $ALLOWED_MIGRATION"
-fi
-if [[ -n "$regclass" ]]; then
-  die "partial promotion_slot exists without migration bookkeeping"
-fi
-
-if [[ "${WOODRIGHT_TARGETED_MIGRATION_TEST:-}" == "1" ]]; then
-  image_sha="$(tr -d '[:space:]' <"$WOODRIGHT_TARGETED_MIGRATION_FIXTURE_DIR/app-sha")"
-  file_sha="$(tr -d '[:space:]' <"$WOODRIGHT_TARGETED_MIGRATION_FIXTURE_DIR/migration-sha")"
-else
-  image_sha="$(docker inspect "$BACKEND_IMAGE" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')"
-  file_sha="$(docker run --rm --entrypoint sha256sum "$BACKEND_IMAGE" "$MIGRATIONS_DIR/${ALLOWED_MIGRATION}.js" | awk '{print $1}')"
-fi
-[[ "$image_sha" == "$EXPECTED_APP_SHA" ]] || die "backend image revision mismatch"
-[[ "$file_sha" == "$EXPECTED_MIGRATION_SHA256" ]] || die "migration source hash mismatch"
-
-log "preflight ok scope=$RUNTIME_SCOPE migration=$ALLOWED_MIGRATION db=$db_name mode=$MODE"
+PG_EXEC="$PG_CONTAINER"
+IMAGE_REF="$BACKEND_IMAGE"
 if [[ "$MODE" == "dry-run" ]]; then
+  assert_database_gate
+  log "preflight ok scope=$RUNTIME_SCOPE migration=$ALLOWED_MIGRATION db=$EXPECTED_DB mode=$MODE"
   log "dry-run: no migration executed"
   printf '%s\n' "DRY_RUN_OK migration=$ALLOWED_MIGRATION"
   exit 0
 fi
 
 if [[ "${WOODRIGHT_TARGETED_MIGRATION_TEST:-}" != "1" ]]; then
+  unset WOODRIGHT_STAGING_MUTATION_LOCK_HELD
+  unset _WR_STAGING_LOCK_OWNED
   export WR_STAGING_MUTATION_LOCK_PATH="$LOCK_PATH"
   # shellcheck source=../lib/woodright-staging-mutation-lock.sh
   source "$LOCK_HELPER"
@@ -200,18 +226,25 @@ if [[ "${WOODRIGHT_TARGETED_MIGRATION_TEST:-}" != "1" ]]; then
     "command=$0" \
     "target=$PG_CONTAINER" \
     || die "public_production live-cutover.lock busy/unavailable"
-  pg_user="$(docker exec "$PG_CONTAINER" printenv POSTGRES_USER)"
-  pg_pass="$(docker exec "$PG_CONTAINER" printenv POSTGRES_PASSWORD)"
-  [[ -n "$pg_user" && -n "$pg_pass" ]] || die "postgres credentials missing on $PG_CONTAINER"
-  enc_pass="$(PG_PASS="$pg_pass" python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["PG_PASS"], safe=""))')"
-  # --network container:<postgres> makes 127.0.0.1 this database, not another host.
-  DATABASE_URL="postgres://${pg_user}:${enc_pass}@127.0.0.1:5432/${EXPECTED_DB}"
-  export DATABASE_URL
+  [[ "$WR_STAGING_MUTATION_LOCK_PATH" == "$LOCK_PATH" ]] || die "lock path is not public_production"
+  lock_fd="$(readlink -f /proc/self/fd/9)"
+  [[ "$lock_fd" == "$LOCK_PATH" ]] || die "lock fd is not the public_production lock"
+  PG_ID="$(docker inspect "$PG_CONTAINER" --format '{{.Id}}')"
+  IMAGE_ID="$(docker inspect "$BACKEND_IMAGE" --format '{{.Id}}')"
+  [[ -n "$PG_ID" && -n "$IMAGE_ID" ]] || die "container or image id missing"
+  [[ "$(docker inspect "$PG_ID" --format '{{.Id}}')" == "$PG_ID" ]] || die "postgres id changed under lock"
+  [[ "$(docker inspect "$IMAGE_ID" --format '{{.Id}}')" == "$IMAGE_ID" ]] || die "backend image id changed under lock"
+  PG_EXEC="$PG_ID"
+  IMAGE_REF="$IMAGE_ID"
 fi
+
+assert_database_gate
+log "preflight ok scope=$RUNTIME_SCOPE migration=$ALLOWED_MIGRATION db=$EXPECTED_DB mode=$MODE"
+
 if [[ "${WOODRIGHT_TARGETED_MIGRATION_TEST:-}" == "1" ]]; then
   plan="$(node "$RUNNER" --migration "$ALLOWED_MIGRATION")"
 else
-  plan="$(docker run --rm --entrypoint node -v "$RUNNER:/tmp/woodright-targeted-migration.cjs:ro" "$BACKEND_IMAGE" /tmp/woodright-targeted-migration.cjs --migration "$ALLOWED_MIGRATION")"
+  plan="$(docker run --rm --entrypoint node -v "$RUNNER:/tmp/woodright-targeted-migration.cjs:ro" "$IMAGE_REF" /tmp/woodright-targeted-migration.cjs --migration "$ALLOWED_MIGRATION")"
 fi
 [[ "$plan" == *'"migrations":["'"$ALLOWED_MIGRATION"'"]'* ]] || die "runner plan did not select only $ALLOWED_MIGRATION"
 [[ "$plan" == *'/server/src/modules/promotion-slot/migrations'* ]] || die "runner plan left the promotion-slot directory"
@@ -227,13 +260,21 @@ if [[ "${WOODRIGHT_TARGETED_MIGRATION_TEST:-}" == "1" ]]; then
   exit 0
 fi
 
+pg_user="$(docker exec "$PG_EXEC" printenv POSTGRES_USER)"
+pg_pass="$(docker exec "$PG_EXEC" printenv POSTGRES_PASSWORD)"
+[[ -n "$pg_user" && -n "$pg_pass" ]] || die "postgres credentials missing on pinned container"
+enc_pass="$(PG_PASS="$pg_pass" python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["PG_PASS"], safe=""))')"
+DATABASE_URL="postgres://${pg_user}:${enc_pass}@127.0.0.1:5432/${EXPECTED_DB}"
+export DATABASE_URL
+trap 'unset DATABASE_URL' EXIT
+
 docker run --rm \
-  --network "container:${PG_CONTAINER}" \
+  --network "container:${PG_EXEC}" \
   --entrypoint node \
   -e DATABASE_URL \
   -e WOODRIGHT_TARGETED_MIGRATION_FRAMEWORK=1 \
   -v "$RUNNER:/tmp/woodright-targeted-migration.cjs:ro" \
-  "$BACKEND_IMAGE" \
+  "$IMAGE_REF" \
   /tmp/woodright-targeted-migration.cjs \
   --migration "$ALLOWED_MIGRATION" \
   --migrations-dir "$MIGRATIONS_DIR"

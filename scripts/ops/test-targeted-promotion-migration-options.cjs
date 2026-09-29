@@ -3,6 +3,7 @@
 const test = require("node:test")
 const assert = require("node:assert/strict")
 const path = require("node:path")
+const fs = require("node:fs")
 const runner = require(path.join(__dirname, "../../ops/release/woodright-targeted-migration.cjs"))
 
 test("accepts only the promotion slot migration", () => {
@@ -65,4 +66,20 @@ test("result guard rejects any other migration name", () => {
 test("close errors stay visible unless the connection is already closed", () => {
   assert.equal(runner.isBenignCloseError(new Error("Connection is closed")), true)
   assert.equal(runner.isBenignCloseError(new Error("pool failed")), false)
+  assert.doesNotThrow(() => runner.assertCloseOutcome(null, null))
+  assert.throws(() => runner.assertCloseOutcome(new Error("pool failed"), null), /ORM_CLOSE_FAILED/)
+  assert.throws(
+    () => runner.assertCloseOutcome(new Error("pool failed"), new Error("migration exploded")),
+    /migration exploded/
+  )
+})
+
+test("runner source has no down path and redacts credentials", () => {
+  const source = fs.readFileSync(path.join(__dirname, "../../ops/release/woodright-targeted-migration.cjs"), "utf8")
+  assert.equal(source.includes("migrations.revert"), false)
+  assert.equal(source.includes("WOODRIGHT_TARGETED_MIGRATION_DIRECTION"), false)
+  assert.equal(
+    runner.redact("failed postgres://woodright:secret@127.0.0.1:5432/woodright_public_production"),
+    "failed postgres://redacted@127.0.0.1:5432/woodright_public_production"
+  )
 })

@@ -36,9 +36,15 @@ reset_fixture() {
   printf '%s\n' "$MIG_SHA" >"$TMP/fix/migration-sha"
   printf '%s\n' "$GOV" >"$TMP/marker"
   python3 - <<PY
-import json
+import datetime, json
+created = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 json.dump({
+  "kind": "woodright_recovery_point",
   "schema": "woodright_recovery_point_v2",
+  "status": "success",
+  "partial": False,
+  "verification_status": "pending_rehearsal",
+  "created_at_utc": created,
   "environment": "public_production",
   "application_sha": "$SHA",
   "db": {"name": "woodright_public_production", "sha256": "$MIG_SHA"},
@@ -136,9 +142,15 @@ invoke "${BASE[@]}" --mode dry-run
 
 reset_fixture
 python3 - <<PY
-import json
+import datetime, json
+created = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 json.dump({
+  "kind": "woodright_recovery_point",
   "schema": "woodright_recovery_point_v2",
+  "status": "success",
+  "partial": False,
+  "verification_status": "pending_rehearsal",
+  "created_at_utc": created,
   "environment": "public_demo",
   "application_sha": "$SHA",
   "db": {"name": "woodright_public_production", "sha256": "$MIG_SHA"},
@@ -149,9 +161,15 @@ grep -q 'backup environment mismatch' "$TMP/err" && pass "backup environment ref
 
 reset_fixture
 python3 - <<PY
-import json
+import datetime, json
+created = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 json.dump({
+  "kind": "woodright_recovery_point",
   "schema": "woodright_recovery_point_v2",
+  "status": "success",
+  "partial": False,
+  "verification_status": "pending_rehearsal",
+  "created_at_utc": created,
   "environment": "public_production",
   "application_sha": "$SHA",
   "db": {"name": "woodright_public_production", "sha256": "zzzz"},
@@ -162,9 +180,15 @@ grep -q 'backup db checksum missing' "$TMP/err" && pass "bad backup checksum ref
 
 reset_fixture
 python3 - <<PY
-import json
+import datetime, json
+created = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 json.dump({
+  "kind": "woodright_recovery_point",
   "schema": "woodright_recovery_point_v2",
+  "status": "success",
+  "partial": False,
+  "verification_status": "pending_rehearsal",
+  "created_at_utc": created,
   "environment": "public_production",
   "application_sha": "not-a-sha",
   "db": {"name": "woodright_public_production", "sha256": "$MIG_SHA"},
@@ -183,6 +207,65 @@ run "${BASE[@]}" --mode execute --confirm "$TOKEN"
 
 node --test "$ROOT/scripts/ops/test-targeted-promotion-migration-options.cjs"
 pass "framework options unit test"
+
+python3 - "$ROOT" <<'PY'
+from pathlib import Path
+import sys
+root = Path(sys.argv[1])
+sh = (root / "ops/release/woodright-targeted-migration.sh").read_text()
+cjs = (root / "ops/release/woodright-targeted-migration.cjs").read_text()
+assert "WOODRIGHT_TARGETED_MIGRATION_RUNNER" not in sh
+assert "WOODRIGHT_MUTATION_LOCK_HELPER" not in sh
+assert "migrations.revert" not in cjs
+assert "WOODRIGHT_TARGETED_MIGRATION_DIRECTION" not in cjs
+acquire = sh.index("wr_staging_mutation_lock_acquire")
+after = sh[acquire:]
+assert "assert_database_gate" in after
+assert 'container:${PG_EXEC}' in after
+assert '"$IMAGE_REF"' in after
+assert "unset WOODRIGHT_STAGING_MUTATION_LOCK_HELD" in sh
+PY
+pass "no override, no down path, recheck after lock"
+
+reset_fixture
+python3 - <<PY
+import json
+path = "$TMP/backup.json"
+doc = json.load(open(path))
+doc["status"] = "failed"
+json.dump(doc, open(path, "w"))
+PY
+invoke "${BASE[@]}" --mode dry-run
+grep -q 'backup status refused' "$TMP/err" && pass "failed recovery point refused" || fail "failed backup rc=$RC"
+
+reset_fixture
+python3 - <<PY
+import json
+path = "$TMP/backup.json"
+doc = json.load(open(path))
+doc["partial"] = True
+json.dump(doc, open(path, "w"))
+PY
+invoke "${BASE[@]}" --mode dry-run
+grep -q 'backup partial refused' "$TMP/err" && pass "partial recovery point refused" || fail "partial backup rc=$RC"
+
+reset_fixture
+python3 - <<PY
+import json
+path = "$TMP/backup.json"
+doc = json.load(open(path))
+doc["created_at_utc"] = "20200101T000000Z"
+json.dump(doc, open(path, "w"))
+PY
+invoke "${BASE[@]}" --mode dry-run
+grep -q 'backup freshness refused' "$TMP/err" && pass "stale recovery point refused" || fail "stale backup rc=$RC"
+
+WOODRIGHT_TARGETED_MIGRATION_RUNNER="/tmp/evil-runner.cjs" \
+WOODRIGHT_MUTATION_LOCK_HELPER="/tmp/evil-lock.sh" \
+WOODRIGHT_STAGING_MUTATION_LOCK_HELD=1 \
+  run "${BASE[@]}" --mode execute --confirm "$TOKEN"
+[[ "$RC" -eq 0 ]] && [[ "$(cat "$TMP/fix/executed")" == Migration20260908120000 ]] \
+  && pass "caller runner and lock overrides are ignored" || fail "override ignore rc=$RC"
 
 mkdir -p "$TMP/policy"
 cp "$SCRIPT" "$TMP/policy/"

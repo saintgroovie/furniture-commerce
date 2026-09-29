@@ -6,7 +6,9 @@ This helper applies only `Migration20260908120000`.
 
 It uses the Medusa `Migrations.run` wrapper shipped in the production backend image. That wrapper calls MikroORM `migrator.up({ migrations: ["Migration20260908120000"] })` with `transactional: true` and `allOrNothing: true`. The only migration directory loaded is `/server/src/modules/promotion-slot/migrations`. Bookkeeping is the framework row in `mikro_orm_migrations`, written in that same migration transaction.
 
-Execute holds `/srv/woodright/locks/public_production/live-cutover.lock` through `ops/lib/woodright-staging-mutation-lock.sh`. Dry-run does not take the lock and does not open a migration connection.
+Execute holds `/srv/woodright/locks/public_production/live-cutover.lock` through `ops/lib/woodright-staging-mutation-lock.sh`. An inherited lock from another environment is cleared. After the lock is held, the helper checks the lock file descriptor, pins the postgres container id and backend image id, and checks the database, bookkeeping, and image again. Dry-run does not take the lock and does not open a migration connection.
+
+The runner and lock helper paths are the copies next to this script. Caller environment variables cannot replace them. The helper has no down or revert mode.
 
 ## Preconditions
 
@@ -15,7 +17,7 @@ Execute holds `/srv/woodright/locks/public_production/live-cutover.lock` through
 - Application SHA is `931140158756b921100e4f97cf1f27cd3ba61bc2`, and the backend image label matches it.
 - Migration file SHA-256 is `e5e3ecdfa91af6680f848585c94e93599d9cd7d6f6671ff4b2bc90d0d2f0fdb1`.
 - Governance marker `/srv/woodright/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt` equals `--governance-sha`.
-- Backup manifest is schema `woodright_recovery_point_v2`, environment `public_production`, database `woodright_public_production`, a 40-hex `application_sha`, and a 64-hex `db.sha256`. On a real run the dump file at `db.path` must match that checksum. The manifest `application_sha` is the storefront image label recorded by the backup helper. The runner still pins the backend image to `931140158756b921100e4f97cf1f27cd3ba61bc2`.
+- Backup manifest is schema `woodright_recovery_point_v2`, kind `woodright_recovery_point`, status `success`, `partial` false, verification status `verified`, `pending_rehearsal`, or `unverified`, environment `public_production`, database `woodright_public_production`, a 40-hex `application_sha`, a 64-hex `db.sha256`, and `created_at_utc` within 72 hours. On a real run the dump file at `db.path` must be a regular file and match that checksum. The manifest `application_sha` is the storefront image label recorded by the backup helper. The runner still pins the backend image to `931140158756b921100e4f97cf1f27cd3ba61bc2`.
 - `promotion_slot` is absent and `Migration20260908120000` is absent from `mikro_orm_migrations`.
 - Rehearsal container name is exactly `woodright-rehearsal-promotion-slot`.
 - Live container name is exactly `woodright-public-production-postgres`.
@@ -78,7 +80,7 @@ Expected: table present, only `Migration20260908120000` among those two names, p
 
 ## Rollback
 
-Preferred live rollback is restore of the pre-migration `public_production` recovery point. `down()` is `DROP TABLE IF EXISTS promotion_slot CASCADE`. That is not the production rollback path, because later objects could depend on the table.
+Preferred live rollback is restore of the pre-migration `public_production` recovery point. The migration class `down()` is `DROP TABLE IF EXISTS promotion_slot CASCADE`. This helper does not call it.
 
 ## Cleanup
 

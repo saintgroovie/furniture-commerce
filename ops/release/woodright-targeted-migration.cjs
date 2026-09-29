@@ -62,15 +62,29 @@ function parseArgs(argv) {
 }
 
 async function closeOrm(orm) {
-  if (!orm || typeof orm.close !== "function") return
+  if (!orm || typeof orm.close !== "function") return null
   try {
     await orm.close(true)
+    return null
   } catch (error) {
-    if (isBenignCloseError(error)) return
+    if (isBenignCloseError(error)) return null
     process.stderr.write(
       "ORM_CLOSE_ERROR " + String(error && error.message ? error.message : error) + "\n"
     )
+    return error
   }
+}
+
+function assertCloseOutcome(closeError, migrationError) {
+  if (migrationError) throw migrationError
+  if (closeError) {
+    const message = String(closeError && closeError.message ? closeError.message : closeError)
+    throw new Error("ORM_CLOSE_FAILED " + message)
+  }
+}
+
+function redact(message) {
+  return String(message).replace(/postgres(?:ql)?:\/\/[^@\s]+@/gi, "postgres://redacted@")
 }
 
 async function runFramework(name, migrationsDir, databaseUrl) {
@@ -89,24 +103,26 @@ async function runFramework(name, migrationsDir, databaseUrl) {
     [],
     migrationsDir
   )
-  try {
-    const migrations = new Migrations(orm)
-    const seen = []
-    const guard = (event) => {
-      seen.push(event.name)
-      if (event.name !== ALLOWED_MIGRATION) {
-        throw new Error("UNEXPECTED_MIGRATION " + event.name)
-      }
+  const migrations = new Migrations(orm)
+  const seen = []
+  const guard = (event) => {
+    seen.push(event.name)
+    if (event.name !== ALLOWED_MIGRATION) {
+      throw new Error("UNEXPECTED_MIGRATION " + event.name)
     }
-    migrations.on("migrating", guard)
-    migrations.on("reverting", guard)
-    const result = process.env.WOODRIGHT_TARGETED_MIGRATION_DIRECTION === "down"
-      ? await migrations.revert(options)
-      : await migrations.run(options)
-    return assertMigrationResult((result || []).map((row) => row.name), seen)
-  } finally {
-    await closeOrm(orm)
   }
+  migrations.on("migrating", guard)
+  migrations.on("reverting", guard)
+  let names
+  try {
+    const result = await migrations.run(options)
+    names = assertMigrationResult((result || []).map((row) => row.name), seen)
+  } catch (error) {
+    await closeOrm(orm)
+    throw error
+  }
+  assertCloseOutcome(await closeOrm(orm), null)
+  return names
 }
 
 async function main() {
@@ -134,11 +150,13 @@ module.exports = {
   assertMigrationsDir,
   assertMigrationResult,
   isBenignCloseError,
+  assertCloseOutcome,
+  redact,
 }
 
 if (require.main === module) {
   main().catch((error) => {
-    process.stderr.write(String(error && error.message ? error.message : error) + "\n")
+    process.stderr.write(redact(error && error.message ? error.message : error) + "\n")
     process.exit(1)
   })
 }
