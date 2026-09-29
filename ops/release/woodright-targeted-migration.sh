@@ -17,6 +17,7 @@ set -Eeuo pipefail
 
 ALLOWED_MIGRATION="Migration20260908120000"
 EXPECTED_APP_SHA="23019df5c2d3cb9b47f0e9b780e8efef8b40a440"
+EXPECTED_BACKEND_DIGEST="sha256:b8da6ff6f70958f2562c0c981b49d3cd5054b659ad32c644794a3e286e893fdb"
 EXPECTED_MIGRATION_SHA256="e5e3ecdfa91af6680f848585c94e93599d9cd7d6f6671ff4b2bc90d0d2f0fdb1"
 EXPECTED_DB="woodright_public_production"
 EXECUTE_TOKEN="I_UNDERSTAND_TARGETED_MIGRATION_EXECUTE"
@@ -244,7 +245,7 @@ PY
 }
 
 assert_database_gate() {
-  local db_name regclass applied image_sha file_sha
+  local db_name regclass applied image_sha file_sha image_digest
   db_name="$(query "select current_database();")"
   [[ "$db_name" == "$EXPECTED_DB" ]] || die "database identity refused: ${db_name:-empty}"
   regclass="$(query "select coalesce(to_regclass('public.promotion_slot')::text, '');")"
@@ -261,11 +262,14 @@ assert_database_gate() {
   if [[ "${WOODRIGHT_TARGETED_MIGRATION_TEST:-}" == "1" ]]; then
     image_sha="$(tr -d '[:space:]' <"$WOODRIGHT_TARGETED_MIGRATION_FIXTURE_DIR/app-sha")"
     file_sha="$(tr -d '[:space:]' <"$WOODRIGHT_TARGETED_MIGRATION_FIXTURE_DIR/migration-sha")"
+    image_digest="$(tr -d '[:space:]' <"$WOODRIGHT_TARGETED_MIGRATION_FIXTURE_DIR/image-digest")"
   else
     image_sha="$(docker inspect "$IMAGE_REF" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')"
     file_sha="$(docker run --rm --entrypoint sha256sum "$IMAGE_REF" "$MIGRATIONS_DIR/${ALLOWED_MIGRATION}.js" | awk '{print $1}')"
+    image_digest="$(docker image inspect "$IMAGE_REF" --format '{{json .RepoDigests}}')"
   fi
   [[ "$image_sha" == "$EXPECTED_APP_SHA" ]] || die "backend image revision mismatch"
+  [[ "$image_digest" == *"$EXPECTED_BACKEND_DIGEST"* ]] || die "backend image digest mismatch"
   [[ "$file_sha" == "$EXPECTED_MIGRATION_SHA256" ]] || die "migration source hash mismatch"
 }
 

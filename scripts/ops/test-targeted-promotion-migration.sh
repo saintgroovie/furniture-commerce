@@ -11,6 +11,7 @@ pass() { PASS=$((PASS + 1)); printf 'PASS %s\n' "$1"; }
 fail() { FAIL=$((FAIL + 1)); printf 'FAIL %s\n' "$1"; }
 
 SHA="23019df5c2d3cb9b47f0e9b780e8efef8b40a440"
+DIGEST="sha256:b8da6ff6f70958f2562c0c981b49d3cd5054b659ad32c644794a3e286e893fdb"
 GOV="39fe9dc37a9c267352292e100169faa3c5eae263"
 MIG_SHA="e5e3ecdfa91af6680f848585c94e93599d9cd7d6f6671ff4b2bc90d0d2f0fdb1"
 TOKEN="I_UNDERSTAND_REHEARSAL_TARGETED_MIGRATION"
@@ -33,6 +34,7 @@ reset_fixture() {
   printf '%s\n' "" >"$TMP/fix/regclass"
   printf '%s\n' "PRIMARY KEY (workflow_id, transaction_id, run_id)" >"$TMP/fix/pk"
   printf '%s\n' "$SHA" >"$TMP/fix/app-sha"
+  printf '%s\n' "$DIGEST" >"$TMP/fix/image-digest"
   printf '%s\n' "$MIG_SHA" >"$TMP/fix/migration-sha"
   printf '%s\n' "$GOV" >"$TMP/marker"
   python3 - <<PY
@@ -125,6 +127,14 @@ run "${BASE[@]}" --mode execute
 
 run "${BASE[@]}" --application-sha 0000000000000000000000000000000000000000 --mode execute --confirm "$TOKEN"
 grep -q 'application SHA refused' "$TMP/err" && [[ ! -f "$TMP/fix/executed" ]] && pass "wrong application SHA refused" || fail "app sha rc=$RC"
+
+run "${BASE[@]}" --application-sha 931140158756b921100e4f97cf1f27cd3ba61bc2 --mode execute --confirm "$TOKEN"
+grep -q 'application SHA refused' "$TMP/err" && [[ ! -f "$TMP/fix/executed" ]] && pass "previous production SHA refused" || fail "old sha rc=$RC"
+
+reset_fixture
+printf '%s\n' 'sha256:0000000000000000000000000000000000000000000000000000000000000000' >"$TMP/fix/image-digest"
+invoke "${BASE[@]}" --mode dry-run
+grep -q 'backend image digest mismatch' "$TMP/err" && pass "wrong backend digest refused" || fail "digest rc=$RC"
 
 reset_fixture
 printf '%s\n' 0000000000000000000000000000000000000000 >"$TMP/marker"
