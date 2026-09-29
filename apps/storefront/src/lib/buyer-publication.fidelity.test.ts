@@ -47,5 +47,6 @@ assert.match(layout, /rejectUnpublishedProduct/)
 assert.match(layout, /notFound\(\)/)
 const proxy = readFileSync(join("src/proxy.ts"), "utf8")
 assert.match(proxy, /x-woodright-pathname/)
+assert.match(proxy, /\/product\/:path\*/)
 
 console.log("buyer-publication.fidelity.test.ts: ok")

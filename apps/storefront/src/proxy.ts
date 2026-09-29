@@ -154,7 +154,10 @@ export const config = {
     /*
      * All routes except Next static assets and images that should stay
      * cache-friendly without CSP nonce variance on every chunk.
+     * Product routes stay included even when the id looks like a file name,
+     * so the root layout can still reject an unpublished product with HTTP 404.
      */
+    "/product/:path*",
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 }
