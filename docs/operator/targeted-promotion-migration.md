@@ -14,10 +14,10 @@ The runner and lock helper paths are the copies next to this script. Caller envi
 
 - Environment argument is `public_production`.
 - Database name inside the named container is `woodright_public_production`.
-- Application SHA is `931140158756b921100e4f97cf1f27cd3ba61bc2`, and the backend image label matches it.
+- Application SHA is `23019df5c2d3cb9b47f0e9b780e8efef8b40a440`, and the backend image label matches it.
 - Migration file SHA-256 is `e5e3ecdfa91af6680f848585c94e93599d9cd7d6f6671ff4b2bc90d0d2f0fdb1`.
 - Governance marker `/srv/woodright/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt` equals `--governance-sha`.
-- Backup manifest is schema `woodright_recovery_point_v2`, kind `woodright_recovery_point`, status `success`, `partial` false, verification status `verified`, `pending_rehearsal`, or `unverified`, environment `public_production`, database `woodright_public_production`, a 40-hex `application_sha`, a 64-hex `db.sha256`, and `created_at_utc` within 72 hours. On a real run the dump file at `db.path` must be a regular file and match that checksum. The manifest `application_sha` is the storefront image label recorded by the backup helper. The runner still pins the backend image to `931140158756b921100e4f97cf1f27cd3ba61bc2`.
+- Backup manifest is schema `woodright_recovery_point_v2`, kind `woodright_recovery_point`, status `success`, `partial` false, verification status `verified`, `pending_rehearsal`, or `unverified`, environment `public_production`, database `woodright_public_production`, a 40-hex `application_sha`, a 64-hex `db.sha256`, and `created_at_utc` within 72 hours. On a real run the dump file at `db.path` must be a regular file and match that checksum. The manifest `application_sha` is the storefront image label recorded by the backup helper. The runner still pins the backend image to `23019df5c2d3cb9b47f0e9b780e8efef8b40a440`.
 - `promotion_slot` is absent and `Migration20260908120000` is absent from `mikro_orm_migrations`.
 - Rehearsal container name is exactly `woodright-rehearsal-promotion-slot`.
 - Live container name is exactly `woodright-public-production-postgres`.
@@ -32,7 +32,7 @@ bash ops/release/woodright-targeted-migration.sh \
   --migration Migration20260908120000 \
   --runtime-scope rehearsal \
   --postgres-container woodright-rehearsal-promotion-slot \
-  --application-sha 931140158756b921100e4f97cf1f27cd3ba61bc2 \
+  --application-sha 23019df5c2d3cb9b47f0e9b780e8efef8b40a440 \
   --governance-sha <installed-governance-sha> \
   --backup-manifest <recovery-point.json> \
   --backend-image <production-backend-image> \
