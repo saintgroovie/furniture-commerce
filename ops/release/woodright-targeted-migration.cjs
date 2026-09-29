@@ -69,7 +69,7 @@ async function closeOrm(orm) {
   } catch (error) {
     if (isBenignCloseError(error)) return null
     process.stderr.write(
-      "ORM_CLOSE_ERROR " + String(error && error.message ? error.message : error) + "\n"
+      "ORM_CLOSE_ERROR " + redact(error && error.message ? error.message : error) + "\n"
     )
     return error
   }
@@ -78,7 +78,7 @@ async function closeOrm(orm) {
 function assertCloseOutcome(closeError, migrationError) {
   if (migrationError) throw migrationError
   if (closeError) {
-    const message = String(closeError && closeError.message ? closeError.message : closeError)
+    const message = redact(closeError && closeError.message ? closeError.message : closeError)
     throw new Error("ORM_CLOSE_FAILED " + message)
   }
 }

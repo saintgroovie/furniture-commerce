@@ -48,6 +48,34 @@ MAX_BACKUP_AGE_HOURS=72
 log() { printf '%s woodright-targeted-migration %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >&2; }
 die() { log "ERROR: $*"; exit 1; }
 
+MIGRATION_NAME=""
+stop_migration_container() {
+  if [[ -n "${MIGRATION_NAME:-}" ]]; then
+    docker kill "$MIGRATION_NAME" >/dev/null 2>&1 || true
+    docker wait "$MIGRATION_NAME" >/dev/null 2>&1 || true
+    docker rm -f "$MIGRATION_NAME" >/dev/null 2>&1 || true
+  fi
+  unset DATABASE_URL || true
+}
+on_migration_exit() {
+  local rc=$?
+  stop_migration_container
+  wr_staging_mutation_lock_release || true
+  return "$rc"
+}
+on_migration_int() {
+  stop_migration_container
+  wr_staging_mutation_lock_release || true
+  trap - INT
+  kill -INT $$
+}
+on_migration_term() {
+  stop_migration_container
+  wr_staging_mutation_lock_release || true
+  trap - TERM
+  kill -TERM $$
+}
+
 require_value() {
   [[ $# -ge 2 && -n "${2:-}" ]] || die "missing value for $1"
 }
@@ -266,9 +294,13 @@ pg_pass="$(docker exec "$PG_EXEC" printenv POSTGRES_PASSWORD)"
 enc_pass="$(PG_PASS="$pg_pass" python3 -c 'import os, urllib.parse; print(urllib.parse.quote(os.environ["PG_PASS"], safe=""))')"
 DATABASE_URL="postgres://${pg_user}:${enc_pass}@127.0.0.1:5432/${EXPECTED_DB}"
 export DATABASE_URL
-trap 'unset DATABASE_URL' EXIT
+unset enc_pass pg_pass
+MIGRATION_NAME="woodright-targeted-migration-$$"
+trap 'on_migration_exit' EXIT
+trap 'on_migration_int' INT
+trap 'on_migration_term' TERM
 
-docker run --rm \
+docker run -d --name "$MIGRATION_NAME" \
   --network "container:${PG_EXEC}" \
   --entrypoint node \
   -e DATABASE_URL \
@@ -277,8 +309,16 @@ docker run --rm \
   "$IMAGE_REF" \
   /tmp/woodright-targeted-migration.cjs \
   --migration "$ALLOWED_MIGRATION" \
-  --migrations-dir "$MIGRATIONS_DIR"
-unset DATABASE_URL
+  --migrations-dir "$MIGRATIONS_DIR" >/dev/null
+set +e
+framework_rc="$(docker wait "$MIGRATION_NAME")"
+set -e
+framework_logs="$(docker logs "$MIGRATION_NAME" 2>&1 || true)"
+stop_migration_container
+MIGRATION_NAME=""
+printf '%s\n' "$framework_logs" | python3 -c 'import sys,re; sys.stdout.write(re.sub(r"postgres(?:ql)?://[^@\s]+@", "postgres://redacted@", sys.stdin.read()))'
+unset framework_logs DATABASE_URL
+[[ "$framework_rc" == "0" ]] || die "framework container failed"
 
 applied_after="$(query "select name from mikro_orm_migrations where name = '${ALLOWED_MIGRATION}';")"
 [[ -n "$applied_after" ]] || die "bookkeeping missing after execute"

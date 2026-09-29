@@ -72,6 +72,13 @@ test("close errors stay visible unless the connection is already closed", () => 
     () => runner.assertCloseOutcome(new Error("pool failed"), new Error("migration exploded")),
     /migration exploded/
   )
+  try {
+    runner.assertCloseOutcome(new Error("postgres://woodright:secret@127.0.0.1/db"), null)
+    assert.fail("close error should fail")
+  } catch (error) {
+    assert.match(error.message, /postgres:\/\/redacted@/)
+    assert.equal(error.message.includes("secret"), false)
+  }
 })
 
 test("runner source has no down path and redacts credentials", () => {

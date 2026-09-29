@@ -218,12 +218,18 @@ assert "WOODRIGHT_TARGETED_MIGRATION_RUNNER" not in sh
 assert "WOODRIGHT_MUTATION_LOCK_HELPER" not in sh
 assert "migrations.revert" not in cjs
 assert "WOODRIGHT_TARGETED_MIGRATION_DIRECTION" not in cjs
-acquire = sh.index("wr_staging_mutation_lock_acquire")
+acquire = sh.index("  wr_staging_mutation_lock_acquire \\\n")
 after = sh[acquire:]
 assert "assert_database_gate" in after
 assert 'container:${PG_EXEC}' in after
 assert '"$IMAGE_REF"' in after
 assert "unset WOODRIGHT_STAGING_MUTATION_LOCK_HELD" in sh
+exit_fn = sh.index("on_migration_exit()")
+stop_at = sh.index("stop_migration_container", exit_fn)
+release_at = sh.index("wr_staging_mutation_lock_release", exit_fn)
+assert stop_at < release_at
+assert "docker run -d --name" in sh
+assert 'framework_rc="$(docker wait "$MIGRATION_NAME")"' in sh
 PY
 pass "no override, no down path, recheck after lock"
 
@@ -266,6 +272,24 @@ WOODRIGHT_STAGING_MUTATION_LOCK_HELD=1 \
   run "${BASE[@]}" --mode execute --confirm "$TOKEN"
 [[ "$RC" -eq 0 ]] && [[ "$(cat "$TMP/fix/executed")" == Migration20260908120000 ]] \
   && pass "caller runner and lock overrides are ignored" || fail "override ignore rc=$RC"
+
+reset_fixture
+printf 'dump-bytes' >"$TMP/dump.bin"
+python3 - <<PY
+import json
+path = "$TMP/backup.json"
+doc = json.load(open(path))
+doc["db"]["path"] = "$TMP/dump.bin"
+doc["db"]["sha256"] = "0000000000000000000000000000000000000000000000000000000000000000"
+json.dump(doc, open(path, "w"))
+PY
+set +e
+WOODRIGHT_GOVERNANCE_MARKER="$TMP/marker" \
+  bash "$SCRIPT" "${BASE[@]}" --mode dry-run >"$TMP/out" 2>"$TMP/err"
+checksum_rc=$?
+set -e
+[[ "$checksum_rc" -ne 0 ]] && grep -q 'backup checksum mismatch' "$TMP/err" \
+  && pass "real dump checksum mismatch refused" || fail "checksum rc=$checksum_rc"
 
 mkdir -p "$TMP/policy"
 cp "$SCRIPT" "$TMP/policy/"
