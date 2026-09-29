@@ -49,32 +49,60 @@ log() { printf '%s woodright-targeted-migration %s\n' "$(date -u +%Y-%m-%dT%H:%M
 die() { log "ERROR: $*"; exit 1; }
 
 MIGRATION_NAME=""
-stop_migration_container() {
-  if [[ -n "${MIGRATION_NAME:-}" ]]; then
-    docker kill "$MIGRATION_NAME" >/dev/null 2>&1 || true
-    docker wait "$MIGRATION_NAME" >/dev/null 2>&1 || true
-    docker rm -f "$MIGRATION_NAME" >/dev/null 2>&1 || true
+# BEGIN MIGRATION_CONTAINER_GUARD
+migration_container_confirmed_stopped() {
+  [[ -z "${MIGRATION_NAME:-}" ]] && return 0
+  if ! docker info >/dev/null 2>&1; then
+    return 1
   fi
-  unset DATABASE_URL || true
+  local state
+  if ! state="$(docker inspect -f '{{.State.Status}}' "$MIGRATION_NAME" 2>/dev/null)"; then
+    return 0
+  fi
+  if [[ "$state" != "exited" && "$state" != "dead" ]]; then
+    return 1
+  fi
+  docker rm -f "$MIGRATION_NAME" >/dev/null 2>&1 || return 1
+  if docker inspect "$MIGRATION_NAME" >/dev/null 2>&1; then
+    return 1
+  fi
+  return 0
+}
+stop_migration_container() {
+  [[ -z "${MIGRATION_NAME:-}" ]] && return 0
+  docker kill "$MIGRATION_NAME" >/dev/null 2>&1 || true
+  if migration_container_confirmed_stopped; then
+    MIGRATION_NAME=""
+    unset DATABASE_URL || true
+    return 0
+  fi
+  return 1
+}
+wait_until_migration_stopped() {
+  while ! stop_migration_container; do
+    log "holding public_production lock until the migration container is confirmed stopped"
+    sleep "${WOODRIGHT_MIGRATION_STOP_WAIT_SEC:-2}"
+  done
 }
 on_migration_exit() {
   local rc=$?
-  stop_migration_container
+  wait_until_migration_stopped
   wr_staging_mutation_lock_release || true
   return "$rc"
 }
 on_migration_int() {
-  stop_migration_container
+  wait_until_migration_stopped
   wr_staging_mutation_lock_release || true
   trap - INT
   kill -INT $$
 }
 on_migration_term() {
-  stop_migration_container
+  wait_until_migration_stopped
   wr_staging_mutation_lock_release || true
   trap - TERM
   kill -TERM $$
 }
+# END MIGRATION_CONTAINER_GUARD
 
 require_value() {
   [[ $# -ge 2 && -n "${2:-}" ]] || die "missing value for $1"
@@ -314,8 +342,7 @@ set +e
 framework_rc="$(docker wait "$MIGRATION_NAME")"
 set -e
 framework_logs="$(docker logs "$MIGRATION_NAME" 2>&1 || true)"
-stop_migration_container
-MIGRATION_NAME=""
+wait_until_migration_stopped
 printf '%s\n' "$framework_logs" | python3 -c 'import sys,re; sys.stdout.write(re.sub(r"postgres(?:ql)?://[^@\s]+@", "postgres://redacted@", sys.stdin.read()))'
 unset framework_logs DATABASE_URL
 [[ "$framework_rc" == "0" ]] || die "framework container failed"

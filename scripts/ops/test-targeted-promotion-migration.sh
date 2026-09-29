@@ -225,9 +225,9 @@ assert 'container:${PG_EXEC}' in after
 assert '"$IMAGE_REF"' in after
 assert "unset WOODRIGHT_STAGING_MUTATION_LOCK_HELD" in sh
 exit_fn = sh.index("on_migration_exit()")
-stop_at = sh.index("stop_migration_container", exit_fn)
+wait_at = sh.index("wait_until_migration_stopped", exit_fn)
 release_at = sh.index("wr_staging_mutation_lock_release", exit_fn)
-assert stop_at < release_at
+assert wait_at < release_at
 assert "docker run -d --name" in sh
 assert 'framework_rc="$(docker wait "$MIGRATION_NAME")"' in sh
 PY
@@ -290,6 +290,73 @@ checksum_rc=$?
 set -e
 [[ "$checksum_rc" -ne 0 ]] && grep -q 'backup checksum mismatch' "$TMP/err" \
   && pass "real dump checksum mismatch refused" || fail "checksum rc=$checksum_rc"
+
+mkdir -p "$TMP/bin"
+cat >"$TMP/bin/docker" <<'EOF'
+#!/bin/bash
+mode="$(cat "$DOCKER_MODE")"
+if [[ "$mode" == "down" ]]; then
+  exit 1
+fi
+if [[ "$1" == "info" ]]; then
+  exit 0
+fi
+if [[ "$1" == "inspect" ]]; then
+  if [[ "$mode" == "absent" ]]; then
+    exit 1
+  fi
+  printf '%s\n' "$mode"
+  exit 0
+fi
+if [[ "$1" == "rm" ]]; then
+  printf '%s\n' absent >"$DOCKER_MODE"
+  exit 0
+fi
+if [[ "$1" == "kill" && "$mode" == "running" ]]; then
+  printf '%s\n' exited >"$DOCKER_MODE"
+fi
+exit 0
+EOF
+chmod +x "$TMP/bin/docker"
+awk '/# BEGIN MIGRATION_CONTAINER_GUARD/,/# END MIGRATION_CONTAINER_GUARD/' "$SCRIPT" >"$TMP/guard.sh"
+DOCKER_MODE="$TMP/docker-mode" PATH="$TMP/bin:$PATH" bash -c '
+set -euo pipefail
+log() { :; }
+source "$1"
+MIGRATION_NAME="woodright-targeted-migration-test"
+printf "%s\n" down >"$DOCKER_MODE"
+if stop_migration_container; then
+  echo RELEASED_WHILE_DOCKER_DOWN
+  exit 1
+fi
+[[ "$MIGRATION_NAME" == "woodright-targeted-migration-test" ]]
+printf "%s\n" running >"$DOCKER_MODE"
+stop_migration_container
+[[ -z "$MIGRATION_NAME" ]]
+[[ "$(cat "$DOCKER_MODE")" == "absent" ]]
+' bash "$TMP/guard.sh"
+pass "lock cleanup refuses to succeed while docker cannot confirm stop"
+
+printf '%s\n' down >"$TMP/docker-mode"
+RELEASE_FILE="$TMP/released" DOCKER_MODE="$TMP/docker-mode" PATH="$TMP/bin:$PATH" WOODRIGHT_MIGRATION_STOP_WAIT_SEC=0 \
+  bash -c '
+log() { :; }
+source "$1"
+wr_staging_mutation_lock_release() { printf released >"$RELEASE_FILE"; }
+MIGRATION_NAME="woodright-targeted-migration-test"
+on_migration_exit
+' bash "$TMP/guard.sh" &
+hold_pid=$!
+sleep 1
+if [[ -f "$TMP/released" ]]; then
+  kill "$hold_pid" 2>/dev/null || true
+  wait "$hold_pid" 2>/dev/null || true
+  fail "lock was released while docker was down"
+else
+  kill "$hold_pid" 2>/dev/null || true
+  wait "$hold_pid" 2>/dev/null || true
+  pass "exit handler holds the lock while docker is down"
+fi
 
 mkdir -p "$TMP/policy"
 cp "$SCRIPT" "$TMP/policy/"
