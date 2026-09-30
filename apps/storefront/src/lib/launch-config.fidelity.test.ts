@@ -129,7 +129,19 @@ assert.match(
     },
     "public"
   ),
-  /connect-src 'self' https:\/\/api\.woodright\.ru/
+  /connect-src 'self' https:\/\/api\.woodright\.ru$/
+)
+assert.match(
+  buildConnectSrcDirective(
+    {
+      WOODRIGHT_EXPOSURE: "public",
+      WOODRIGHT_RUNTIME_ROLE: "production",
+      WOODRIGHT_CANONICAL_API_ORIGIN: "https://api.woodright.ru",
+      YANDEX_METRIKA_ID: "12345678",
+    },
+    "public"
+  ),
+  /connect-src 'self' https:\/\/api\.woodright\.ru https:\/\/mc\.yandex\.ru https:\/\/mc\.yandex\.com$/
 )
 
 assert.equal(isLegalLaunchComplete({}), false)
