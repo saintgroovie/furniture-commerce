@@ -222,6 +222,63 @@ else
   pass "split writer refuses pin update"
 fi
 
+# Unified reconcile must accept the split manifest and converge both documents.
+CONV="$TMP/converge"
+SRV="$CONV/srv/woodright"
+OWN="$SRV/runtime-ownership-public-demo"
+COMPOSE="$CONV/etc/dokploy/compose/woodright-stack-3dsdhd/code"
+META="$CONV/meta"
+LOCK="$SRV/locks/public_demo/live-cutover.lock"
+mkdir -p "$OWN" "$COMPOSE" "$(dirname "$LOCK")" "$META/public_demo" "$CONV/profiles" "$SRV/reports/public_demo"
+: >"$LOCK"
+cp "$SPLIT_DOC" "$OWN/EXPECTED_RELEASE.json"
+python3 - "$OWN/ACTIVE_OWNER.json" "$SF" "$BE_DIG" "$SF_DIG" <<'PY'
+import json, sys
+from pathlib import Path
+p, sha, be, sf = sys.argv[1:5]
+Path(p).write_text(json.dumps({
+  "approved_git_sha": sha, "desired_git_sha": sha,
+  "backend_digest": be, "storefront_digest": sf,
+  "running_backend_digest": be, "running_storefront_digest": sf,
+  "owner": "Dokploy",
+}, indent=2) + "\n")
+PY
+printf 'WOODRIGHT_BACKEND_IMAGE=ghcr.io/saintgroovie/woodright-backend@%s\nWOODRIGHT_STOREFRONT_IMAGE=ghcr.io/saintgroovie/woodright-storefront@%s\nWOODRIGHT_RELEASE_SHA=%s\n' \
+  "$BE_DIG" "$SF_DIG" "$SF" >"$COMPOSE/.env"
+printf 'services: {}\n' >"$COMPOSE/docker-compose.staging.yml"
+python3 - "$ROOT/ops/config/runtime-environments/public_demo.conf" "$CONV/profiles/public_demo.conf" "$SRV" "$CONV/etc/dokploy" <<'PY'
+from pathlib import Path
+import sys
+src, dst, srv, dok = sys.argv[1:5]
+Path(dst).write_text(Path(src).read_text().replace("/srv/woodright", srv).replace("/etc/dokploy", dok))
+PY
+if WOODRIGHT_ENV_PROFILE_DIR="$CONV/profiles" WOODRIGHT_META_ROOT="$META" \
+  WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1 WOODRIGHT_CUTOVER_LOCK_PATH="$LOCK" \
+  WOODRIGHT_VALIDATION_FREEZE_OVERRIDE=1 \
+  ENV_FILE="$COMPOSE/.env" COMPOSE_FILE="$COMPOSE/docker-compose.staging.yml" \
+  EXPECTED_RELEASE_SHA="$UNIFIED" EXPECTED_BACKEND_DIGEST="$NEW_BE" EXPECTED_STOREFRONT_DIGEST="$NEW_SF" \
+  APPLY=1 UPDATE_PINS=1 UPDATE_ACTIVE_PUBLIC=1 UPDATE_ACTIVE_RELEASE=0 UPDATE_SCOPED_OWNERSHIP=1 \
+  REQUIRE_LIVE_MATCH=0 SKIP_COMPOSE_VALIDATE=1 \
+  bash "$PIN" --environment public_demo --component pair >"$CONV/apply.out" 2>&1; then
+  pass "split manifest converges on unified reconcile"
+else
+  fail "split manifest blocked unified reconcile"
+  cat "$CONV/apply.out" || true
+fi
+python3 - "$OWN/EXPECTED_RELEASE.json" "$OWN/ACTIVE_OWNER.json" "$UNIFIED" <<'PY' || fail "unified fields missing after converge"
+import json, sys
+from pathlib import Path
+exp = json.loads(Path(sys.argv[1]).read_text())
+owner = json.loads(Path(sys.argv[2]).read_text())
+sha = sys.argv[3]
+assert exp.get("release_identity") == "unified", exp.get("release_identity")
+assert exp.get("application_source_sha") == sha
+assert exp.get("backend_source_sha") == sha and exp.get("storefront_source_sha") == sha
+assert owner.get("approved_git_sha") == sha
+print("ok")
+PY
+pass "unified fields written over split predecessor"
+
 # Cutover backup must pass the profile postgres name through sudo and refuse production.
 CUTOVER="$ROOT/ops/release/cutover-public-demo-pair.sh"
 grep -q 'WOODRIGHT_PG_CONTAINER="$pg"' "$CUTOVER" \

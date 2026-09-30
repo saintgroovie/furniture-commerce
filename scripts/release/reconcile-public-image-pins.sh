@@ -989,6 +989,23 @@ for label, doc in (("ACTIVE_OWNER", owner), ("EXPECTED_RELEASE", expected)):
 o_sha, e_sha = pick_sha(owner), pick_sha(expected)
 o_be, e_be = pick_be(owner), pick_be(expected)
 o_sf, e_sf = pick_sf(owner), pick_sf(expected)
+be_src = str(expected.get("backend_source_sha") or "")
+sf_src = str(expected.get("storefront_source_sha") or "")
+# An exact split predecessor has no single global SHA. Pair cutover is allowed
+# to rewrite that manifest onto the unified release; the post-write check still
+# requires both documents to converge.
+if (
+    expected.get("release_identity") == "split"
+    and SHA_RE.match(be_src)
+    and SHA_RE.match(sf_src)
+    and be_src != sf_src
+):
+    if not (DIGEST_RE.match(e_be) and DIGEST_RE.match(e_sf)):
+        raise SystemExit("split EXPECTED_RELEASE missing sha256 digests")
+    if not SHA_RE.match(o_sha):
+        raise SystemExit("ACTIVE_OWNER missing 40-hex sha")
+    print("scoped_docs_split_predecessor_ok")
+    raise SystemExit(0)
 if not (SHA_RE.match(o_sha) and SHA_RE.match(e_sha)):
     raise SystemExit("scoped docs missing 40-hex sha")
 if not (DIGEST_RE.match(o_be) and DIGEST_RE.match(e_be) and DIGEST_RE.match(o_sf) and DIGEST_RE.match(e_sf)):
