@@ -551,7 +551,16 @@ run_backup_gate() {
   if [[ ! -x "$bak" ]]; then
     die "official backup helper missing: $bak"
   fi
-  sudo -n "$bak" || die "backup helper failed"
+  # sudo resets the environment, so the public_demo profile pin must be passed
+  # explicitly. The historical compose name is not the live demo postgres.
+  # Production containers are refused here; the backup helper must not inherit
+  # a shared default that could select another environment.
+  local pg="${WOODRIGHT_PG_CONTAINER_PREFIX:-}"
+  [[ -n "$pg" ]] || die "public_demo postgres container unset"
+  case "$pg" in
+    *production*|*public-production*) die "refusing production postgres for public_demo backup: $pg" ;;
+  esac
+  sudo -n env WOODRIGHT_PG_CONTAINER="$pg" "$bak" || die "backup helper failed"
   wr_cutover_pin_backup "$EVIDENCE_DIR" || die "pin backup failed"
 }
 
@@ -567,6 +576,54 @@ pair_rollback() {
     "$HERE/rollback-staging-storefront-from-keeper.sh" \
     || true
   return "$ROLLBACK_RC"
+}
+
+# Read-only mount tuple. Skips the alpine volume probe so dry-run does not
+# create a container. Execute still runs the probe inside backend recreate.
+run_media_pre_promote_gate() {
+  local gate="$HERE/verify-backend-media-mount.sh"
+  local out rc
+  [[ -x "$gate" ]] || die "media gate missing: $gate"
+  set +e
+  out="$(bash "$gate" \
+    --environment public_demo \
+    --mode pre-promote \
+    --target-image "$BE_IMAGE" \
+    --expected-digest "$BE_DIGEST" \
+    --target-sha "$TARGET_SHA" \
+    --predecessor-container "${WOODRIGHT_BE_CONTAINER_DEFAULT}" \
+    --media-volume "${WOODRIGHT_MEDIA_VOLUME}" \
+    --mount-destination "${WOODRIGHT_MEDIA_MOUNT_IN_BE:-/server/static}" \
+    --skip-volume-probe)"
+  rc=$?
+  set -e
+  mkdir -p "$EVIDENCE_DIR/json"
+  printf '%s\n' "$out" >"$EVIDENCE_DIR/json/media-pre-promote.json"
+  if [[ "$rc" -ne 0 ]]; then
+    log "MEDIA_PRE_PROMOTE_GATE_FAILED"
+    printf '%s\n' "$out" >&2
+    exit 2
+  fi
+  local fields
+  fields="$(python3 -c 'import json,sys
+raw=sys.argv[1]
+start=raw.find("{")
+d=json.loads(raw[start:]) if start>=0 else {}
+detail=d.get("detail") or {}
+print("\n".join([
+  "media_type="+str(detail.get("media_type") or ""),
+  "predecessor_media_source="+str(detail.get("predecessor_media_source") or ""),
+  "predecessor_destination="+str(detail.get("predecessor_destination") or ""),
+  "target_media_source="+str(detail.get("target_media_source") or ""),
+  "target_destination="+str(detail.get("target_destination") or ""),
+  "keeper_required="+("yes" if detail.get("keeper_required") else "no"),
+  "sentinel_count="+str(detail.get("sentinel_count") or 0),
+  "media_gate_verdict="+str(detail.get("media_gate_verdict") or d.get("verdict") or ""),
+]))' "$out")"
+  local line
+  while IFS= read -r line; do
+    [[ -n "$line" ]] && log "$line"
+  done <<<"$fields"
 }
 
 verify_pair() {
@@ -786,6 +843,7 @@ if [[ "$MODE" == "dry-run" || "$MODE" == "preflight" ]]; then
   # Prove dry-run does not mutate: record container IDs
   wr_cutover_docker inspect "${WOODRIGHT_BE_CONTAINER_DEFAULT}" --format '{{.Id}}' >"$EVIDENCE_DIR/json/be-id-before.txt"
   wr_cutover_docker inspect "${WOODRIGHT_SF_CONTAINER_DEFAULT}" --format '{{.Id}}' >"$EVIDENCE_DIR/json/sf-id-before.txt"
+  run_media_pre_promote_gate
   log "DRY_RUN_OR_PREFLIGHT_OK mode=$MODE"
   exit 0
 fi

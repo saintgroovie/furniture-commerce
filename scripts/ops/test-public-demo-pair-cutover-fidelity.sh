@@ -164,6 +164,19 @@ PY
       fi
     fi
     ;;
+  volume)
+    sub="${1:-}"; shift || true
+    if [[ "$sub" == "inspect" ]]; then
+      vol_name="${1:-}"
+      [[ -f "$STATE/volumes/${vol_name}" ]] || exit 1
+      printf '{"Name":"%s","Driver":"local"}\n' "$vol_name"
+    fi
+    ;;
+  exec)
+    printf '%s\n' \
+      "/server/static/products/oliver/OL-95-1_gallery_02.jpg" \
+      "/server/static/products/molly/mo-02-1-iso-1.webp"
+    ;;
   stop|start|rename|create|rm)
     echo "$cmd $*" >>"$STATE/log/mutations.log"
     if [[ "$cmd" == "stop" || "$cmd" == "start" || "$cmd" == "rename" || "$cmd" == "create" || "$cmd" == "rm" ]]; then
@@ -229,7 +242,8 @@ OLD_SF="sha256:879406cfcad13b81f4761d999a17363b8ce1be252bbb2cebdedb8534e3a7b88c"
 
 setup_state() {
   local state="$1"
-  mkdir -p "$state/containers" "$state/images" "$state/networks"
+  mkdir -p "$state/containers" "$state/images" "$state/networks" "$state/volumes"
+  touch "$state/volumes/woodright-stack-3dsdhd_woodright_staging_media"
   touch "$state/networks/woodright-stack-3dsdhd_woodright_staging.ok"
   touch "$state/networks/dokploy-network.ok"
   # containers
@@ -262,7 +276,15 @@ def ctr(name, image, role="public_demo"):
       "woodright-stack-3dsdhd_woodright_staging": {"Aliases":["storefront" if "storefront" in name else "backend"]},
       "dokploy-network": {"Aliases":[]},
     }, "Ports": {}},
-    "Mounts": [],
+    "Mounts": [{
+      "Type": "volume",
+      "Name": "woodright-stack-3dsdhd_woodright_staging_media",
+      "Source": "/var/lib/docker/volumes/woodright-stack-3dsdhd_woodright_staging_media/_data",
+      "Destination": "/server/static",
+      "Driver": "local",
+      "Mode": "rw",
+      "RW": True,
+    }] if ("backend" in name and "production" not in name) else [],
     "State": {"Status":"running","Health":{"Status":"healthy"}},
   }]
 def write_image(dig, title, sha="7628056dcc1d150745de1b0fa881f1e9d36b798b"):

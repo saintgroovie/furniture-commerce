@@ -226,6 +226,7 @@ jobs:
           node scripts/release/deployment-owner-label.fidelity.test.cjs
           bash scripts/ops/test-runtime-discovery-fidelity.sh
           bash scripts/ops/test-media-gate-v2-fidelity.sh
+          bash scripts/ops/test-public-demo-media-prepromote-fidelity.sh
           node scripts/release/backend-media-promotion.fidelity.test.cjs
           node scripts/release/staging-mutation-lock.fidelity.test.cjs
           node scripts/release/backend-network-alias.fidelity.test.cjs

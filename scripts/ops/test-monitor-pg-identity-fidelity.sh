@@ -45,10 +45,14 @@ DEMO_REDIS="$(awk -F= '/^WOODRIGHT_REDIS_CONTAINER_DEFAULT=/{print $2; exit}' "$
   && pass "public_demo identity map user/db" || fail "public_demo identity unexpected user=$DEMO_USER db=$DEMO_DB"
 [[ "$PROD_USER" != "$DEMO_USER" || "$PROD_DB" != "$DEMO_DB" ]] \
   && pass "production and public_demo identities differ" || fail "identities unexpectedly identical"
-[[ "$DEMO_PG" == *"-1" || "$DEMO_PG" == *"postgres-1" ]] \
-  && pass "public_demo PG prefix is exact container name" || fail "public_demo PG prefix missing -1: $DEMO_PG"
+[[ "$DEMO_PG" == "woodright-staging-postgres" ]] \
+  && pass "public_demo PG is the live container name" || fail "public_demo PG=$DEMO_PG"
+[[ "$DEMO_PG" != "$PROD_PG" && "$DEMO_PG" != *"public-production"* ]] \
+  && pass "public_demo PG is not the production container" || fail "demo PG collided with production: $DEMO_PG"
 [[ "$PROD_REDIS" == "woodright-production-redis" ]] && pass "production redis default" || fail "production redis=$PROD_REDIS"
-[[ "$DEMO_REDIS" == "woodright-stack-3dsdhd-redis-1" ]] && pass "public_demo redis default" || fail "demo redis=$DEMO_REDIS"
+[[ "$DEMO_REDIS" == "woodright-staging-redis" ]] && pass "public_demo redis default" || fail "demo redis=$DEMO_REDIS"
+[[ "$DEMO_REDIS" != "$PROD_REDIS" && "$DEMO_REDIS" != *"public-production"* ]] \
+  && pass "public_demo redis is not the production container" || fail "demo redis collided with production: $DEMO_REDIS"
 
 # --- Docker shim for identity probes ---
 TMP="$(mktemp -d)"
