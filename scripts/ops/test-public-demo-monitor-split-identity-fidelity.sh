@@ -279,6 +279,26 @@ print("ok")
 PY
 pass "unified fields written over split predecessor"
 
+python3 - <<'PY' || fail "datastore host parse"
+def host_of(env, key):
+    prefix = key + "="
+    for item in env:
+        if not item.startswith(prefix):
+            continue
+        val = item.split("=", 1)[1]
+        if "://" in val:
+            val = val.split("://", 1)[1]
+        if "@" in val:
+            val = val.split("@", 1)[1]
+        return val.split(":", 1)[0].split("/", 1)[0]
+    return ""
+assert host_of(["DATABASE_URL=postgres://u:p@postgres:5432/db"], "DATABASE_URL") == "postgres"
+assert host_of(["REDIS_URL=redis://redis:6379"], "REDIS_URL") == "redis"
+assert host_of(["REDIS_URL=redis://:pw@woodright-public-production-redis:6379"], "REDIS_URL") == "woodright-public-production-redis"
+print("ok")
+PY
+pass "datastore host parsed without credentials"
+
 # Cutover backup must pass the profile postgres name through sudo and refuse production.
 CUTOVER="$ROOT/ops/release/cutover-public-demo-pair.sh"
 grep -q 'WOODRIGHT_PG_CONTAINER="$pg"' "$CUTOVER" \

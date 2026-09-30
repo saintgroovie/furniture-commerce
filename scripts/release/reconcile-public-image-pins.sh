@@ -287,9 +287,11 @@ def host_of(env, key):
         if not item.startswith(prefix):
             continue
         val = item.split("=", 1)[1]
-        if "@" not in val:
-            return ""
-        return val.split("@", 1)[1].split(":", 1)[0].split("/", 1)[0]
+        if "://" in val:
+            val = val.split("://", 1)[1]
+        if "@" in val:
+            val = val.split("@", 1)[1]
+        return val.split(":", 1)[0].split("/", 1)[0]
     return ""
 
 for name in (be_name, sf_name, pg_name, redis_name):
