@@ -17,6 +17,14 @@
 #   ops/release/verify-backend-media-mount.sh --mode pre-promote --target-image repo@sha256:…
 #   ops/release/verify-backend-media-mount.sh --compose-only [--compose-file PATH]
 #   ops/release/verify-backend-media-mount.sh --fixture-dir DIR
+#   ops/release/verify-backend-media-mount.sh --media-plan-json PLAN.json
+#
+# Pre-promote identity:
+#   A present compose file must still declare the external media volume.
+#   A missing historical compose path is not a pass by itself. The live
+#   predecessor mount tuple must equal the profile target mount
+#   (type, source, destination, rw). Named volumes must already exist.
+#   Production volumes and containers are refused.
 #
 # Exit 0 only when all required checks PASS. Prints JSON summary on stdout.
 set -Eeuo pipefail
@@ -48,6 +56,9 @@ WRITE_EVIDENCE=""
 SKIP_VOLUME_PROBE=0
 ENV_ARG=""
 COMPOSE_FILE_SET_BY_ARG=0
+PREDECESSOR_CONTAINER=""
+KEEPER_NAME=""
+MEDIA_PLAN_JSON=""
 
 fail_json() {
   local code="$1" msg="$2"
@@ -57,6 +68,108 @@ fail_json() {
 
 ok_json() {
   python3 -c 'import json,sys; print(json.dumps({"ok":True,"verdict":"MEDIA_GATE_PASS","detail":json.loads(sys.argv[1])},indent=2))' "$1"
+}
+
+# Compare a predecessor mount tuple with the independently supplied target.
+# Prints fail JSON and exits 1, or success detail JSON and exits 0.
+wr_media_eval_plan() {
+  python3 - "$1" <<'PY'
+import json, sys
+plan = json.load(open(sys.argv[1]))
+
+def fail(code, msg):
+    print(json.dumps({"ok": False, "verdict": code, "message": msg}, indent=2))
+    raise SystemExit(1)
+
+env = str(plan.get("environment") or "")
+if env != "public_demo":
+    fail("WRONG_ENVIRONMENT", f"runtime media tuple is public_demo-only (got {env or 'empty'})")
+expect_ctr = str(plan.get("expected_container") or "woodright-staging-backend")
+pred = str(plan.get("predecessor_container") or "")
+if not pred:
+    fail("PREDECESSOR_REQUIRED", "missing predecessor container")
+if pred != expect_ctr or "production" in pred:
+    fail("PRODUCTION_MOUNT_SELECTED" if "production" in pred else "WRONG_ENVIRONMENT",
+         f"predecessor container refused: {pred}")
+if plan.get("keeper_present"):
+    fail("KEEPER_ALREADY_EXISTS", "keeper already exists; refuse recreate")
+
+dest = str((plan.get("target") or {}).get("destination") or "")
+mounts = [m for m in (plan.get("predecessor_mounts") or []) if m.get("Destination") == dest]
+if not dest:
+    fail("MOUNT_DEST_INVALID", "target destination empty")
+if len(mounts) == 0:
+    fail("MEDIA_MOUNT_MISSING", f"no predecessor mount at {dest}")
+if len(mounts) > 1:
+    fail("MEDIA_MOUNT_AMBIGUOUS", f"{len(mounts)} mounts at {dest}")
+m = mounts[0]
+mtype = str(m.get("Type") or "")
+if mtype == "volume":
+    source = str(m.get("Name") or "")
+elif mtype == "bind":
+    source = str(m.get("Source") or "")
+else:
+    fail("MOUNT_TYPE_MISMATCH", f"unsupported predecessor type {mtype or 'empty'}")
+rw = bool(m.get("RW"))
+target = plan.get("target") or {}
+ttype = str(target.get("type") or "")
+tsource = str(target.get("source") or "")
+tdest = str(target.get("destination") or "")
+trw = bool(target.get("rw"))
+if mtype != ttype:
+    fail("MOUNT_TYPE_MISMATCH", f"predecessor {mtype} != target {ttype}")
+if source != tsource:
+    fail("MEDIA_SOURCE_MISMATCH", f"predecessor {source} != target {tsource}")
+if dest != tdest:
+    fail("MEDIA_DEST_MISMATCH", f"predecessor {dest} != target {tdest}")
+if rw != trw or not trw:
+    fail("MEDIA_MODE_MISMATCH", f"predecessor rw={rw} target rw={trw}")
+forbidden = set(plan.get("forbidden_volumes") or [])
+if source in forbidden or tsource in forbidden:
+    fail("PRODUCTION_MOUNT_SELECTED", f"volume {source} belongs to another environment")
+if mtype == "volume":
+    if not plan.get("volume_exists"):
+        fail("MEDIA_VOLUME_MISSING", f"volume missing: {source}")
+    if not source or source in ("", "none"):
+        fail("MEDIA_VOLUME_MISSING", "empty volume name")
+else:
+    if not source.startswith("/") or "/var/lib/docker/containers/" in source:
+        fail("MEDIA_SOURCE_MISSING", f"bind source is not a durable host path: {source}")
+    if not plan.get("source_exists"):
+        fail("MEDIA_SOURCE_MISSING", f"bind source missing: {source}")
+paths = [str(p) for p in (plan.get("sentinel_paths") or []) if str(p)]
+jpeg = [p for p in paths if p.lower().endswith((".jpg", ".jpeg"))]
+webp = [p for p in paths if p.lower().endswith(".webp")]
+if not jpeg or not webp:
+    fail("SENTINELS_UNAVAILABLE", f"need jpeg and webp sentinels (have {len(paths)})")
+detail = {
+    "mode": "pre-promote",
+    "identity_source": "runtime_mount_tuple" if not plan.get("compose_present") else "compose_and_runtime_mount_tuple",
+    "compose_present": bool(plan.get("compose_present")),
+    "media_type": mtype,
+    "predecessor_media_source": source,
+    "predecessor_destination": dest,
+    "target_media_source": tsource,
+    "target_destination": tdest,
+    "mode_rw": True,
+    "keeper_required": True,
+    "sentinel_count": len(paths),
+    "media_gate_verdict": "PASS",
+    "volume": source if mtype == "volume" else None,
+    "mount_destination": dest,
+}
+print(json.dumps(detail))
+PY
+}
+
+wr_media_forbidden_volumes() {
+  local dir="$ROOT/ops/config/runtime-environments"
+  local f vol
+  for f in "$dir"/*.conf; do
+    [[ "$(basename "$f")" == "public_demo.conf" ]] && continue
+    vol="$(sed -n 's/^WOODRIGHT_MEDIA_VOLUME=//p' "$f" | head -1)"
+    [[ -n "$vol" ]] && printf '%s\n' "$vol"
+  done
 }
 
 while [[ $# -gt 0 ]]; do
@@ -76,6 +189,9 @@ while [[ $# -gt 0 ]]; do
     --mount-destination) MEDIA_DEST="$2"; WOODRIGHT_MEDIA_MOUNT_IN_BE="$2"; shift 2 ;;
     --write-evidence) WRITE_EVIDENCE="$2"; shift 2 ;;
     --skip-volume-probe) SKIP_VOLUME_PROBE=1; shift ;;
+    --predecessor-container) PREDECESSOR_CONTAINER="$2"; shift 2 ;;
+    --keeper-name) KEEPER_NAME="$2"; shift 2 ;;
+    --media-plan-json) MEDIA_PLAN_JSON="$2"; shift 2 ;;
     -h|--help)
       sed -n '1,40p' "$0"
       exit 0
@@ -98,6 +214,22 @@ if [[ -z "$FIXTURE_DIR" ]]; then
   if [[ "$COMPOSE_FILE_SET_BY_ARG" != "1" && -n "${WOODRIGHT_COMPOSE_FILE:-}" && -f "${WOODRIGHT_COMPOSE_FILE}" ]]; then
     COMPOSE_FILE="${WOODRIGHT_COMPOSE_FILE}"
   fi
+fi
+
+if [[ -n "$MEDIA_PLAN_JSON" ]]; then
+  [[ -f "$MEDIA_PLAN_JSON" ]] || fail_json MEDIA_PLAN_MISSING "$MEDIA_PLAN_JSON"
+  plan_detail=""
+  plan_rc=0
+  set +e
+  plan_detail="$(wr_media_eval_plan "$MEDIA_PLAN_JSON")"
+  plan_rc=$?
+  set -e
+  if [[ "$plan_rc" -ne 0 ]]; then
+    printf '%s\n' "$plan_detail"
+    exit 1
+  fi
+  ok_json "$plan_detail"
+  exit 0
 fi
 
 if [[ "$COMPOSE_ONLY" == "1" && "${WOODRIGHT_ENVIRONMENT:-}" != "public_demo" && -z "$FIXTURE_DIR" ]]; then
@@ -147,8 +279,82 @@ probe_volume_content_ro() {
   return 0
 }
 
+assert_media_identity_source() {
+  local compose_present=0 keeper_present=0 vol_exists=0
+  local mounts sentinels plan_file plan_detail plan_rc
+  if [[ -f "$COMPOSE_FILE" ]]; then
+    assert_compose_declares_media
+    compose_present=1
+  fi
+  if [[ -z "$PREDECESSOR_CONTAINER" ]]; then
+    [[ "$compose_present" == "1" ]] || fail_json COMPOSE_MISSING "compose not found: $COMPOSE_FILE and no --predecessor-container"
+    return 0
+  fi
+  [[ "$MEDIA_DEST" == "/server/static" ]] || fail_json MOUNT_DEST_INVALID "planned dest must be /server/static (got $MEDIA_DEST)"
+  mounts="$(docker inspect "$PREDECESSOR_CONTAINER" --format '{{json .Mounts}}' 2>/dev/null)" \
+    || fail_json MEDIA_MOUNT_MISSING "cannot inspect predecessor $PREDECESSOR_CONTAINER"
+  if [[ -n "$KEEPER_NAME" ]] && docker inspect "$KEEPER_NAME" >/dev/null 2>&1; then
+    keeper_present=1
+  fi
+  # Sample each format on its own. A single find | head can return only JPEGs
+  # and then reject a volume that does contain WebP later in the walk.
+  sentinels="$(
+    docker exec "$PREDECESSOR_CONTAINER" sh -c 'find /server/static -type f \( -iname "*.jpg" -o -iname "*.jpeg" \) | head -1' 2>/dev/null
+    docker exec "$PREDECESSOR_CONTAINER" sh -c 'find /server/static -type f -iname "*.webp" | head -1' 2>/dev/null
+  )" || fail_json SENTINELS_UNAVAILABLE "cannot read media sentinels in $PREDECESSOR_CONTAINER"
+  if docker volume inspect "$MEDIA_VOLUME" >/dev/null 2>&1; then
+    vol_exists=1
+  fi
+  plan_file="$(mktemp)"
+  python3 - "$plan_file" "$WOODRIGHT_ENVIRONMENT" "${WOODRIGHT_BE_CONTAINER_DEFAULT}" \
+    "$PREDECESSOR_CONTAINER" "$compose_present" "$keeper_present" "$vol_exists" \
+    "$MEDIA_VOLUME" "$MEDIA_DEST" "$mounts" "$sentinels" <<'PY'
+import json, sys
+path, env, expect, pred, compose, keeper, vol_exists, volume, dest, mounts, sentinels = sys.argv[1:12]
+forbidden = []
+# Filled by the shell after this process via a side file if needed.
+plan = {
+    "environment": env,
+    "expected_container": expect,
+    "predecessor_container": pred,
+    "compose_present": compose == "1",
+    "keeper_present": keeper == "1",
+    "volume_exists": vol_exists == "1",
+    "source_exists": False,
+    "forbidden_volumes": forbidden,
+    "predecessor_mounts": json.loads(mounts or "[]"),
+    "target": {"type": "volume", "source": volume, "destination": dest, "rw": True},
+    "sentinel_paths": [ln.strip() for ln in sentinels.splitlines() if ln.strip()],
+}
+open(path, "w").write(json.dumps(plan))
+PY
+  # Attach forbidden volumes without trusting container output as code.
+  local forbid_file
+  forbid_file="$(mktemp)"
+  wr_media_forbidden_volumes >"$forbid_file"
+  python3 - "$plan_file" "$forbid_file" <<'PY'
+import json, sys
+plan = json.load(open(sys.argv[1]))
+plan["forbidden_volumes"] = [ln.strip() for ln in open(sys.argv[2]) if ln.strip()]
+open(sys.argv[1], "w").write(json.dumps(plan))
+PY
+  rm -f "$forbid_file"
+  set +e
+  plan_detail="$(wr_media_eval_plan "$plan_file")"
+  plan_rc=$?
+  set -e
+  rm -f "$plan_file"
+  if [[ "$plan_rc" -ne 0 ]]; then
+    printf '%s\n' "$plan_detail"
+    exit 1
+  fi
+  MEDIA_IDENTITY_DETAIL="$plan_detail"
+}
+
 run_pre_promote() {
-  assert_compose_declares_media
+  MEDIA_IDENTITY_DETAIL=""
+  assert_media_identity_source
+  local identity_detail="${MEDIA_IDENTITY_DETAIL}"
   [[ -n "$TARGET_IMAGE" ]] || fail_json TARGET_IMAGE_REQUIRED "pre-promote requires --target-image repo@sha256:…"
   assert_immutable_digest_ref "$TARGET_IMAGE"
   local dig="${TARGET_IMAGE##*@}"
@@ -210,8 +416,13 @@ run_pre_promote() {
   assert_planned_host_publish backend
 
   # Explicitly do not require / mutate EXPECTED_RELEASE or running digest.
-  ok_json "$(python3 -c 'import json,sys; print(json.dumps({"mode":"pre-promote","target_image":sys.argv[1],"target_digest":sys.argv[2],"target_sha":sys.argv[3],"oci_revision":sys.argv[4],"volume":sys.argv[5],"mount_destination":sys.argv[6],"files":int(sys.argv[7]),"bytes":int(sys.argv[8]),"manifests":"unchanged","running_required":False,"host_publish":"mode_a_pass","host_publish_policy":sys.argv[9]}))' \
-    "$TARGET_IMAGE" "$EXPECTED_DIGEST" "${TARGET_SHA:-}" "${oci_rev:-}" "$MEDIA_VOLUME" "$MEDIA_DEST" "${files:-0}" "${bytes:-0}" "${WOODRIGHT_HOST_PUBLISH_POLICY:-}")"
+  ok_json "$(python3 -c 'import json,sys
+base={"mode":"pre-promote","target_image":sys.argv[1],"target_digest":sys.argv[2],"target_sha":sys.argv[3],"oci_revision":sys.argv[4],"volume":sys.argv[5],"mount_destination":sys.argv[6],"files":int(sys.argv[7]),"bytes":int(sys.argv[8]),"manifests":"unchanged","running_required":False,"host_publish":"mode_a_pass","host_publish_policy":sys.argv[9],"media_gate_verdict":"PASS"}
+extra=sys.argv[10].strip()
+if extra:
+    base.update(json.loads(extra))
+print(json.dumps(base))' \
+    "$TARGET_IMAGE" "$EXPECTED_DIGEST" "${TARGET_SHA:-}" "${oci_rev:-}" "$MEDIA_VOLUME" "$MEDIA_DEST" "${files:-0}" "${bytes:-0}" "${WOODRIGHT_HOST_PUBLISH_POLICY:-}" "${identity_detail:-}")"
 }
 
 # Mode A: planned host-publish must match profile before mutation.
@@ -312,8 +523,6 @@ PY
 }
 
 run_post_promote() {
-  assert_compose_declares_media
-
   # Digest pin for advance: do NOT require EXPECTED_RELEASE to already list the new digest.
   if [[ -n "$EXPECTED_DIGEST" ]]; then
     [[ "$EXPECTED_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || fail_json TARGET_NOT_IMMUTABLE "bad --expected-digest"
@@ -336,6 +545,8 @@ run_post_promote() {
   if wr_name_is_excluded "$BE"; then
     fail_json NAME_EXCLUDED "refusing keeper/candidate as live: $BE"
   fi
+  PREDECESSOR_CONTAINER="$BE"
+  assert_media_identity_source
 
   assert_live_host_publish "$BE" backend
 
