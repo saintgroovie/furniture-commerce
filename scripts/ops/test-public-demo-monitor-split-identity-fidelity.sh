@@ -155,14 +155,53 @@ got="$(resolve_pair "$SPLIT")"
 grep -q 'storefront_source_sha' "$ROOT/ops/monitoring/woodright-health-check.sh" \
   && pass "buyer check reads storefront_source_sha" || fail "buyer check missing storefront_source_sha"
 
-# Pin rewriter records both component SHAs.
+# Unified pin rewrite records both component SHAs from EXPECTED_RELEASE_SHA only.
 grep -q 'doc\["backend_source_sha"\] = sha' "$ROOT/scripts/release/reconcile-public-image-pins.sh" \
   && pass "pin reconcile writes backend_source_sha from unified sha" || fail "pin reconcile missing unified backend_source_sha"
-grep -q 'EXPECTED_BACKEND_SOURCE_SHA' "$ROOT/scripts/release/reconcile-public-image-pins.sh" \
-  && fail "pin reconcile still accepts component SHA env override" \
-  || pass "pin reconcile ignores component SHA env override"
+grep -q 'release_identity"\] = "unified"' "$ROOT/scripts/release/reconcile-public-image-pins.sh" \
+  && pass "unified rewrite marks release_identity" || fail "unified rewrite missing release_identity"
 grep -q 'component shas not converged' "$ROOT/scripts/release/reconcile-public-image-pins.sh" \
   && pass "pin reconcile validates component shas" || fail "pin reconcile missing component sha validation"
+
+# Explicit split writer: does not stamp one SHA, refuses pin updates, fixture only.
+PIN="$ROOT/scripts/release/reconcile-public-image-pins.sh"
+SPLIT_DOC="$TMP/host-expected.json"
+printf '%s\n' '{"application_source_sha":"24f7dc9a73a48836df21762ea28b3ee8b8e54f48","release_sha":"24f7dc9a73a48836df21762ea28b3ee8b8e54f48","backend_digest":"sha256:5a491106748ee42cc5a399a15003d537c241069ddc3678dc7f9b3e92672c80fe","storefront_digest":"sha256:ab1b258288dd035a11400a33d3d15dfa6a95135566491f323574d305d5da1212"}' >"$SPLIT_DOC"
+if WRITE_SPLIT_EXPECTED_RELEASE=1 UPDATE_PINS=0 UPDATE_ACTIVE_PUBLIC=0 UPDATE_ACTIVE_RELEASE=0 UPDATE_SCOPED_OWNERSHIP=0 \
+  APPLY=1 WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1 \
+  EXPECTED_RELEASE_FILE="$SPLIT_DOC" \
+  EXPECTED_BACKEND_SOURCE_SHA="$BE" EXPECTED_STOREFRONT_SOURCE_SHA="$SF" \
+  EXPECTED_BACKEND_DIGEST="$BE_DIG" EXPECTED_STOREFRONT_DIGEST="$SF_DIG" \
+  bash "$PIN" --environment public_demo --component pair >"$TMP/split-write.out" 2>&1; then
+  pass "split writer apply"
+else
+  fail "split writer apply"
+  cat "$TMP/split-write.out" || true
+fi
+python3 - "$SPLIT_DOC" "$BE" "$SF" "$BE_DIG" "$SF_DIG" <<'PY' || fail "split writer document"
+import json, sys
+from pathlib import Path
+doc = json.loads(Path(sys.argv[1]).read_text())
+be, sf, be_d, sf_d = sys.argv[2:6]
+assert doc["release_identity"] == "split", doc.get("release_identity")
+assert doc["backend_source_sha"] == be and doc["storefront_source_sha"] == sf
+assert doc["backend_digest"] == be_d and doc["storefront_digest"] == sf_d
+for key in ("application_source_sha", "release_sha", "git_sha", "approved_git_sha"):
+    assert not doc.get(key), key
+assert doc["previous_application_source_sha"].startswith("24f7dc9")
+print("ok")
+PY
+pass "split writer drops unified sha"
+if WRITE_SPLIT_EXPECTED_RELEASE=1 UPDATE_PINS=1 UPDATE_ACTIVE_PUBLIC=0 UPDATE_ACTIVE_RELEASE=0 UPDATE_SCOPED_OWNERSHIP=0 \
+  APPLY=0 WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1 \
+  EXPECTED_RELEASE_FILE="$SPLIT_DOC" \
+  EXPECTED_BACKEND_SOURCE_SHA="$BE" EXPECTED_STOREFRONT_SOURCE_SHA="$SF" \
+  EXPECTED_BACKEND_DIGEST="$BE_DIG" EXPECTED_STOREFRONT_DIGEST="$SF_DIG" \
+  bash "$PIN" --environment public_demo --component pair >"$TMP/split-pins.out" 2>&1; then
+  fail "split writer accepted pin update"
+else
+  pass "split writer refuses pin update"
+fi
 
 # Cutover backup must pass the profile postgres name through sudo and refuse production.
 CUTOVER="$ROOT/ops/release/cutover-public-demo-pair.sh"
