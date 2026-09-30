@@ -206,7 +206,25 @@ if [[ "${WRITE_SPLIT_EXPECTED_RELEASE:-0}" == "1" ]]; then
   [[ "$be_sha" != "$sf_sha" ]] || fail 2 "split source SHAs must differ; unified reconcile owns equal SHAs"
   [[ "$EXPECTED_BACKEND_DIGEST" =~ $DIGEST_RE && "$EXPECTED_STOREFRONT_DIGEST" =~ $DIGEST_RE ]] \
     || fail 2 "split digests invalid"
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" != "1" ]]; then
+    EXPECTED_RELEASE_FILE="${WOODRIGHT_EXPECTED_RELEASE}"
+  fi
   [[ -f "$EXPECTED_RELEASE_FILE" ]] || fail 2 "EXPECTED_RELEASE missing: $EXPECTED_RELEASE_FILE"
+  _split_target="$(readlink -f "$EXPECTED_RELEASE_FILE" 2>/dev/null || echo "$EXPECTED_RELEASE_FILE")"
+  _owner_target="$(readlink -f "${WOODRIGHT_ACTIVE_OWNER}" 2>/dev/null || echo "${WOODRIGHT_ACTIVE_OWNER}")"
+  [[ "$_split_target" != "$_owner_target" ]] || fail 2 "refusing to rewrite ACTIVE_OWNER as expected release"
+  case "$_split_target" in
+    *ACTIVE_OWNER.json|*runtime-ownership-production*|*runtime-ownership-public-production*)
+      fail 2 "refusing protected manifest path: $_split_target"
+      ;;
+  esac
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" != "1" ]]; then
+    _canon_expected="$(readlink -f "${WOODRIGHT_EXPECTED_RELEASE}" 2>/dev/null || echo "${WOODRIGHT_EXPECTED_RELEASE}")"
+    [[ "$_split_target" == "$_canon_expected" ]] || fail 2 "split write must target public_demo EXPECTED_RELEASE"
+    wr_assert_manifest_path_for_environment "$EXPECTED_RELEASE_FILE" \
+      || fail 2 "EXPECTED_RELEASE outside public_demo ownership"
+  fi
+  unset _split_target _owner_target _canon_expected
   for _name in \
     "$BACKEND_CONTAINER" "$STOREFRONT_CONTAINER" \
     "${WOODRIGHT_PG_CONTAINER_PREFIX:-}" "${WOODRIGHT_REDIS_CONTAINER_DEFAULT:-}"
@@ -217,6 +235,9 @@ if [[ "${WRITE_SPLIT_EXPECTED_RELEASE:-0}" == "1" ]]; then
     esac
   done
   unset _name
+  # Defined here, invoked only after acquire_lock so a concurrent cutover
+  # cannot publish a unified release underneath this write.
+  wr_split_expected_apply() {
   if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" != "1" ]]; then
     python3 - "$BACKEND_CONTAINER" "$STOREFRONT_CONTAINER" \
       "${WOODRIGHT_PG_CONTAINER_PREFIX}" "${WOODRIGHT_REDIS_CONTAINER_DEFAULT}" \
@@ -248,7 +269,17 @@ def digest_ok(ins, want):
     if img == want:
         return True
     r = subprocess.run(["docker", "image", "inspect", want, "--format", "{{.Id}}"], capture_output=True, text=True)
-    return r.returncode == 0 and r.stdout.strip() == img
+    if r.returncode == 0 and r.stdout.strip() == img:
+        return True
+    # Registry manifest digests are not image ids. Accept only an exact RepoDigest.
+    img_doc = subprocess.run(["docker", "image", "inspect", img], capture_output=True, text=True)
+    if img_doc.returncode != 0:
+        return False
+    try:
+        repo = json.loads(img_doc.stdout)[0].get("RepoDigests") or []
+    except Exception:
+        return False
+    return any(item.endswith("@" + want) for item in repo)
 
 def host_of(env, key):
     prefix = key + "="
@@ -316,7 +347,7 @@ PY
   if [[ "$APPLY" != "1" ]]; then
     rm -f "$SPLIT_TMP"
     log "split_expected_dry_run file=$EXPECTED_RELEASE_FILE"
-    exit 0
+    return 0
   fi
   if [[ -w "$EXPECTED_RELEASE_FILE" ]]; then
     cp "$SPLIT_TMP" "$EXPECTED_RELEASE_FILE"
@@ -339,7 +370,8 @@ for key in ("application_source_sha", "release_sha", "git_sha", "approved_git_sh
 print("split_expected_written")
 PY
   log "split_expected_written file=$EXPECTED_RELEASE_FILE"
-  exit 0
+  return 0
+  }
 fi
 
 release_lock_holder() {
@@ -510,6 +542,12 @@ maybe_fault() {
     fail 7 "injected fault after $stage"
   fi
 }
+
+if [[ "${WRITE_SPLIT_EXPECTED_RELEASE:-0}" == "1" ]]; then
+  acquire_lock
+  wr_split_expected_apply
+  exit 0
+fi
 
 [[ "$EXPECTED_RELEASE_SHA" =~ $SHA_RE ]] || fail 2 "EXPECTED_RELEASE_SHA invalid"
 [[ "$EXPECTED_BACKEND_DIGEST" =~ $DIGEST_RE ]] || fail 2 "EXPECTED_BACKEND_DIGEST invalid"

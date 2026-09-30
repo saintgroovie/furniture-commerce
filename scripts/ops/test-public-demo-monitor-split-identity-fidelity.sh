@@ -166,9 +166,12 @@ grep -q 'component shas not converged' "$ROOT/scripts/release/reconcile-public-i
 # Explicit split writer: does not stamp one SHA, refuses pin updates, fixture only.
 PIN="$ROOT/scripts/release/reconcile-public-image-pins.sh"
 SPLIT_DOC="$TMP/host-expected.json"
+SPLIT_LOCK="$TMP/live-cutover.lock"
+: >"$SPLIT_LOCK"
 printf '%s\n' '{"application_source_sha":"24f7dc9a73a48836df21762ea28b3ee8b8e54f48","release_sha":"24f7dc9a73a48836df21762ea28b3ee8b8e54f48","backend_digest":"sha256:5a491106748ee42cc5a399a15003d537c241069ddc3678dc7f9b3e92672c80fe","storefront_digest":"sha256:ab1b258288dd035a11400a33d3d15dfa6a95135566491f323574d305d5da1212"}' >"$SPLIT_DOC"
 if WRITE_SPLIT_EXPECTED_RELEASE=1 UPDATE_PINS=0 UPDATE_ACTIVE_PUBLIC=0 UPDATE_ACTIVE_RELEASE=0 UPDATE_SCOPED_OWNERSHIP=0 \
   APPLY=1 WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1 \
+  WOODRIGHT_CUTOVER_LOCK_PATH="$SPLIT_LOCK" \
   EXPECTED_RELEASE_FILE="$SPLIT_DOC" \
   EXPECTED_BACKEND_SOURCE_SHA="$BE" EXPECTED_STOREFRONT_SOURCE_SHA="$SF" \
   EXPECTED_BACKEND_DIGEST="$BE_DIG" EXPECTED_STOREFRONT_DIGEST="$SF_DIG" \
@@ -192,8 +195,22 @@ assert doc["previous_application_source_sha"].startswith("24f7dc9")
 print("ok")
 PY
 pass "split writer drops unified sha"
+OWNER_DOC="$TMP/ACTIVE_OWNER.json"
+cp "$SPLIT_DOC" "$OWNER_DOC"
+if WRITE_SPLIT_EXPECTED_RELEASE=1 UPDATE_PINS=0 UPDATE_ACTIVE_PUBLIC=0 UPDATE_ACTIVE_RELEASE=0 UPDATE_SCOPED_OWNERSHIP=0 \
+  APPLY=1 WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1 \
+  WOODRIGHT_CUTOVER_LOCK_PATH="$SPLIT_LOCK" \
+  EXPECTED_RELEASE_FILE="$OWNER_DOC" \
+  EXPECTED_BACKEND_SOURCE_SHA="$BE" EXPECTED_STOREFRONT_SOURCE_SHA="$SF" \
+  EXPECTED_BACKEND_DIGEST="$BE_DIG" EXPECTED_STOREFRONT_DIGEST="$SF_DIG" \
+  bash "$PIN" --environment public_demo --component pair >"$TMP/split-owner.out" 2>&1; then
+  fail "split writer accepted ACTIVE_OWNER path"
+else
+  pass "split writer refuses ACTIVE_OWNER path"
+fi
 if WRITE_SPLIT_EXPECTED_RELEASE=1 UPDATE_PINS=1 UPDATE_ACTIVE_PUBLIC=0 UPDATE_ACTIVE_RELEASE=0 UPDATE_SCOPED_OWNERSHIP=0 \
   APPLY=0 WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK=1 \
+  WOODRIGHT_CUTOVER_LOCK_PATH="$SPLIT_LOCK" \
   EXPECTED_RELEASE_FILE="$SPLIT_DOC" \
   EXPECTED_BACKEND_SOURCE_SHA="$BE" EXPECTED_STOREFRONT_SOURCE_SHA="$SF" \
   EXPECTED_BACKEND_DIGEST="$BE_DIG" EXPECTED_STOREFRONT_DIGEST="$SF_DIG" \
@@ -209,6 +226,41 @@ grep -q 'WOODRIGHT_PG_CONTAINER="$pg"' "$CUTOVER" \
   && pass "cutover passes profile postgres to backup" || fail "cutover backup missing profile postgres pin"
 grep -q 'refusing production postgres' "$CUTOVER" \
   && pass "cutover refuses production postgres" || fail "cutover missing production postgres refusal"
+
+# Registry manifest digest matches via RepoDigests. A different digest does not.
+SHIM="$(mktemp -d)"
+cat >"$SHIM/docker" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == "inspect" && "${2:-}" == "-f" ]]; then
+  printf '%s\n' "sha256:454b7c84f1d69d46c532c3b981575cec7039c5d0f640c8ed71ea9fbd9ce86890"
+  exit 0
+fi
+if [[ "${1:-}" == "image" && "${2:-}" == "inspect" ]]; then
+  if [[ "${3:-}" == sha256:454b7c84f1d69d46c532c3b981575cec7039c5d0f640c8ed71ea9fbd9ce86890 ]]; then
+    printf '%s\n' "ghcr.io/saintgroovie/woodright-backend@sha256:67ef1ac5189f44465be149fa836066f4652b4437c9a1bada3ffdfc393a5c9e94"
+    exit 0
+  fi
+  exit 1
+fi
+exit 1
+EOF
+chmod +x "$SHIM/docker"
+if PATH="$SHIM:$PATH" wr_container_image_matches_expected_digest \
+  woodright-staging-backend \
+  "sha256:67ef1ac5189f44465be149fa836066f4652b4437c9a1bada3ffdfc393a5c9e94"; then
+  pass "registry digest matches RepoDigests"
+else
+  fail "registry digest did not match RepoDigests"
+fi
+if PATH="$SHIM:$PATH" wr_container_image_matches_expected_digest \
+  woodright-staging-backend \
+  "sha256:0000000000000000000000000000000000000000000000000000000000000000"; then
+  fail "wrong registry digest was accepted"
+else
+  pass "wrong registry digest rejected"
+fi
+rm -rf "$SHIM"
 
 [[ "$FAIL" -eq 0 ]] || exit 1
 echo "public-demo-monitor-split-identity: ok"
