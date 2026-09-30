@@ -1,4 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { isBuyerPublicProductStatus } from "../../../../lib/buyer-publication"
 import { exactlyOneProduct } from "../../../../lib/room-set-item-product"
 import { ROOM_SET_MODULE } from "../../../../modules/room-set"
 import RoomSetModuleService from "../../../../modules/room-set/service"
@@ -46,7 +47,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   if (view === PRODUCT_IDS_VIEW) {
     const { data: itemsLean } = await query.graph({
       entity: "room_set_item",
-      fields: ["id", "sort_order", "products.id"],
+      fields: ["id", "sort_order", "products.id", "products.status"],
       filters: { room_set_id: roomSet.id },
     })
     const items: Array<Record<string, unknown> & { product: { id: string } }> =
@@ -54,7 +55,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     for (const row of itemsLean ?? []) {
       const item = row as Record<string, unknown> & {
         sort_order?: number
-        products?: Array<{ id?: string }>
+        products?: Array<{ id?: string; status?: unknown }>
       }
       const one = exactlyOneProduct(item.products)
       if (!one.ok || typeof one.product.id !== "string" || !one.product.id) {
@@ -66,6 +67,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         })
         return
       }
+      if (!isBuyerPublicProductStatus(one.product.status)) continue
       const { products: _products, ...rest } = item
       items.push({ ...rest, product: { id: one.product.id } })
     }
@@ -84,6 +86,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         "quantity",
         "sort_order",
         "products.id",
+        "products.status",
         "products.title",
         "products.handle",
         "products.thumbnail",
@@ -106,6 +109,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         return
       }
       const product = one.product
+      if (!isBuyerPublicProductStatus(product.status)) continue
       const variantsRaw = product.variants
       const variants = Array.isArray(variantsRaw)
         ? variantsRaw
@@ -169,6 +173,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       })
       return
     }
+    const productStatus = (one.product as { status?: unknown }).status
+    if (!isBuyerPublicProductStatus(productStatus)) continue
     const { products: _drop, ...rest } = row
     items.push({
       ...rest,

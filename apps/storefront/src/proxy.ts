@@ -141,6 +141,7 @@ export function proxy(request: NextRequest) {
   // Next reads CSP from the *request* to stamp nonce on bootstrap scripts.
   requestHeaders.set("Content-Security-Policy", csp)
   requestHeaders.set("x-nonce", nonce)
+  requestHeaders.set("x-woodright-pathname", request.nextUrl.pathname)
 
   const response = NextResponse.next({
     request: { headers: requestHeaders },
@@ -154,7 +155,10 @@ export const config = {
     /*
      * All routes except Next static assets and images that should stay
      * cache-friendly without CSP nonce variance on every chunk.
+     * Product routes stay included even when the id looks like a file name,
+     * so the root layout can still reject an unpublished product with HTTP 404.
      */
+    "/product/:path*",
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 }

@@ -14,6 +14,7 @@
  * URLs under one declared frame still yield both wood chips on catalog cards.
  */
 
+import { isBuyerPublicProductStatus } from "./buyer-publication"
 import { sanitizeGreenwichPaintMatrix } from "./greenwich-paint-media"
 import type { PromotionSlotPayload } from "./api/promotion-slot"
 
@@ -291,7 +292,9 @@ export function toCatalogBrowseClientProduct(
 export function toCatalogBrowseClientProducts(
   products: Array<Record<string, unknown>>
 ): Array<Record<string, unknown>> {
-  return products.map(toCatalogBrowseClientProduct)
+  return products
+    .filter((product) => isBuyerPublicProductStatus(product.status))
+    .map(toCatalogBrowseClientProduct)
 }
 
 /**
@@ -303,11 +306,19 @@ export function toClientPromotionSlot(
   slot: PromotionSlotPayload | null | undefined
 ): PromotionSlotPayload | null {
   if (!slot || !slot.slot || slot.items.length === 0) return null
-  return {
-    slot: slot.slot,
-    items: slot.items.map((item) => ({
+  const items = slot.items
+    .filter((item) =>
+      isBuyerPublicProductStatus(
+        (item.product as { status?: unknown } | undefined)?.status
+      )
+    )
+    .map((item) => ({
       ...item,
       product: toCatalogBrowseClientProduct(item.product),
-    })),
+    }))
+  if (items.length === 0) return null
+  return {
+    slot: slot.slot,
+    items,
   }
 }

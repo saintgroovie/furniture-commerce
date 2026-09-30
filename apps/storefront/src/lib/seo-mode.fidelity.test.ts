@@ -266,11 +266,13 @@ assert.ok(staticEntries.every((e) => e.loc.startsWith("https://woodright.ru")))
 assert.ok(!staticEntries.some((e) => e.loc.includes("/cart")))
 
 const products = collectProductSitemapEntries("https://woodright.ru", [
-  { handle: "greenwich-gr-67-1" },
-  { handle: "greenwich-gr-67-1" },
-  { handle: "" },
-  { handle: "../evil" },
-  { handle: "ok-handle-2" },
+  { handle: "greenwich-gr-67-1", status: "published" },
+  { handle: "greenwich-gr-67-1", status: "published" },
+  { handle: "", status: "published" },
+  { handle: "../evil", status: "published" },
+  { handle: "ok-handle-2", status: "published" },
+  { handle: "pr-02-1", status: "draft" },
+  { handle: "missing-status" },
 ])
 assert.equal(products.length, 2)
 assert.deepEqual(

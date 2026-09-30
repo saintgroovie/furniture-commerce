@@ -25,6 +25,16 @@ assert.match(
   /prices:\s*variant\.price_set\.prices/,
   "retrieve must flatten price_set into variant.prices"
 )
+assert.match(
+  routeSrc,
+  /status:\s*BUYER_PUBLIC_PRODUCT_STATUS/,
+  "buyer retrieve must query only published products"
+)
+assert.match(
+  routeSrc,
+  /isBuyerPublicProductStatus/,
+  "buyer retrieve must fail closed when status is not published"
+)
 
 function flattenVariantPrices(
   product: Record<string, unknown>

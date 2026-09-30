@@ -10,6 +10,7 @@
  * Default `/store/products` unchanged.
  */
 import type { MedusaRequest } from "@medusajs/framework/http"
+import { BUYER_PUBLIC_PRODUCT_STATUS } from "../../../lib/buyer-publication"
 import { QueryContext } from "@medusajs/framework/utils"
 import {
   dedupeCatalogProductsById,
@@ -211,7 +212,9 @@ export async function loadStoreProductList(
   const categoryId = (req.query.category_id as string) || undefined
   const handle = (req.query.handle as string) || undefined
 
-  const filters: Record<string, unknown> = { status: "published" }
+  const filters: Record<string, unknown> = {
+    status: BUYER_PUBLIC_PRODUCT_STATUS,
+  }
   if (handle) filters.handle = handle
   if (options?.ids) {
     if (options.ids.length === 0) return []

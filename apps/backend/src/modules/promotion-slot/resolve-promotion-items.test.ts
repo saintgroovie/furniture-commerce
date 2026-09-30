@@ -152,6 +152,16 @@ describe("resolvePromotionItems - product skipping", () => {
     assert.equal(r.items.length, 1)
   })
 
+  it("missing status is not public", () => {
+    const r = resolvePromotionItems(
+      slot({ product_ids: ["p1"] }),
+      map(saleProduct("p1", { status: undefined })),
+      NOW
+    )
+    assert.deepEqual(r.skipped, [{ product_id: "p1", reason: "unpublished" }])
+    assert.equal(r.items.length, 0)
+  })
+
   it("BESPOKE product skipped", () => {
     const r = resolvePromotionItems(
       slot({ product_ids: ["p1"] }),
