@@ -8,6 +8,10 @@ Official, lock-safe tooling to cut over **public_demo** (`--environment public_d
 
 This replaces ad-hoc `docker create` during deploy. Ad-hoc recreate is forbidden because it risks Dokploy ownership drift, missing keepers, split release SHA, and irreversible partial cutovers.
 
+A live split predecessor (backend release SHA != storefront release SHA) can move to one new unified pair only when the caller passes all four exact values: `--expected-old-backend-sha`, `--expected-old-storefront-sha`, `--expected-old-backend-digest`, `--expected-old-storefront-digest`. Any mismatch fails closed. `--expected-old-sha` remains the unified-predecessor flag and cannot describe a split. The destination images must share `--target-sha`. Rollback evidence stores the two old SHAs and digests separately; keepers restore those original containers. `cutover-public-production-pair.sh` does not accept this path.
+
+The migration diff uses the live backend SHA. `--app-repo` defaults to the script checkout. The installed copy under `/srv/woodright/ops` is not an application checkout, so a live split cutover must pass `--app-repo` to a git checkout that contains both commits. A missing checkout, missing commits, or a failed diff refuses the cutover.
+
 ## Scope
 
 | In scope | Out of scope |

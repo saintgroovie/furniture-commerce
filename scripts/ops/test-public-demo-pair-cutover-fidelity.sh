@@ -975,6 +975,266 @@ else
   fail "pair dry-run matching env identity"
 fi
 
+# Split predecessor: explicit tuple only. Unified case A is the dry-run above.
+SHA_A="7628056dcc1d150745de1b0fa881f1e9d36b798b"
+SHA_B="023c9862f5e22d3a0d9dc536a38fc088002eb754"
+SHA_Y="1111111111111111111111111111111111111111"
+ensure_commit() {
+  local sha="$1"
+  if git -C "$ROOT" cat-file -e "${sha}^{commit}" 2>/dev/null; then
+    return 0
+  fi
+  echo "NOTE: fetching $sha so the migration gate can see the range" >&2
+  git -C "$ROOT" fetch --depth=1 origin "$sha"
+  git -C "$ROOT" cat-file -e "${sha}^{commit}"
+}
+ensure_commit "$SHA_A"
+ensure_commit "$SHA40"
+if [[ -f "$EV2/json/predecessor-kind.txt" ]] && [[ "$(cat "$EV2/json/predecessor-kind.txt")" == "unified" ]]; then
+  pass "A unified predecessor kind"
+else
+  fail "A unified predecessor kind missing"
+fi
+if grep -q 'accept_explicit_split_predecessor' "$ROOT/ops/release/cutover-public-production-pair.sh"; then
+  fail "production pair cutover gained the demo split-predecessor path"
+else
+  pass "production pair cutover has no split-predecessor acceptor"
+fi
+
+set_release_sha() {
+  local state="$1" name="$2" sha="$3"
+  python3 - "$state" "$name" "$sha" <<'PY'
+import json,sys
+state,name,sha=sys.argv[1:4]
+p=f"{state}/containers/{name}.json"
+d=json.load(open(p))
+d[0]["Config"]["Labels"]["com.woodright.release-sha"]=sha
+d[0]["Config"]["Labels"]["org.opencontainers.image.revision"]=sha
+json.dump(d, open(p,"w"))
+PY
+}
+
+SPLIT_STATE="$TMP/state-split"
+rm -rf "$SPLIT_STATE"
+cp -a "$TMP/state" "$SPLIT_STATE"
+set_release_sha "$SPLIT_STATE" woodright-staging-backend "$SHA_A"
+set_release_sha "$SPLIT_STATE" woodright-staging-storefront "$SHA_B"
+export WOODRIGHT_FAKE_DOCKER_STATE="$SPLIT_STATE"
+export WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0
+rm -f "$SPLIT_STATE/log/mutations.log" "$SPLIT_STATE/log/commands.log"
+
+EV_SPLIT="$TMP/ev-split-ok"
+mkdir -p "$EV_SPLIT"
+if bash "$PAIR" --environment public_demo --component pair --mode dry-run \
+  --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+  --evidence-dir "$EV_SPLIT" \
+  --expected-old-backend-sha "$SHA_A" \
+  --expected-old-storefront-sha "$SHA_B" \
+  --expected-old-backend-digest "$OLD_BE" \
+  --expected-old-storefront-digest "$OLD_SF" \
+  >"$TMP/split-ok.out" 2>&1; then
+  pass "B explicit split predecessor dry-run accepted"
+else
+  fail "B explicit split predecessor dry-run rejected"
+  cat "$TMP/split-ok.out" || true
+fi
+if [[ "$(cat "$EV_SPLIT/json/predecessor-kind.txt" 2>/dev/null || true)" == "split" ]] \
+  && grep -q "\"backend_sha\": \"$SHA_A\"" "$EV_SPLIT/json/predecessor-tuple.json" \
+  && grep -q "\"storefront_sha\": \"$SHA_B\"" "$EV_SPLIT/json/predecessor-tuple.json"; then
+  pass "B predecessor tuple keeps both SHAs"
+else
+  fail "B predecessor tuple collapsed or missing"
+fi
+if python3 - "$EV_SPLIT/json/migration-gate.json" "$SHA_A" "$SHA_B" <<'PY'
+import json,sys
+doc=json.load(open(sys.argv[1]))
+sys.exit(0 if doc.get("from")==sys.argv[2] and doc.get("from")!=sys.argv[3] and doc.get("migration_required") is False else 1)
+PY
+then
+  pass "B migration gate uses backend SHA"
+else
+  fail "B migration gate did not use the backend SHA"
+fi
+if python3 - "$PAIR" <<'PY'
+import sys
+text=open(sys.argv[1]).read().splitlines()
+calls=[i for i,l in enumerate(text,1) if l.strip()=="check_no_migration"]
+caps=[i for i,l in enumerate(text,1) if l.strip()=="capture_old_identity"]
+if not calls or not caps or min(calls) < min(caps):
+    sys.exit(1)
+PY
+then
+  pass "migration gate runs after predecessor capture"
+else
+  fail "migration gate still precedes predecessor capture"
+fi
+if [[ -f "$SPLIT_STATE/log/mutations.log" ]]; then
+  fail "J split dry-run mutated docker"
+else
+  pass "J split dry-run did not recreate"
+fi
+if [[ -f "$SPLIT_STATE/log/commands.log" ]] && grep -qE 'stop|rename|network disconnect' "$SPLIT_STATE/log/commands.log"; then
+  fail "J split dry-run issued a mutation command"
+else
+  pass "J split dry-run has no stop/rename/disconnect"
+fi
+
+run_split_reject() {
+  local label="$1" expect="$2"
+  shift 2
+  local ev="$TMP/ev-split-$label"
+  mkdir -p "$ev"
+  set +e
+  bash "$PAIR" --environment public_demo --component pair --mode dry-run \
+    --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+    --evidence-dir "$ev" "$@" >"$TMP/split-$label.out" 2>&1
+  local rc=$?
+  set -e
+  if [[ "$rc" -ne 0 ]] && grep -q "$expect" "$TMP/split-$label.out"; then
+    pass "$label split predecessor fail-closed"
+  else
+    fail "$label split predecessor rc=$rc missing: $expect"
+    cat "$TMP/split-$label.out" || true
+  fi
+}
+run_split_reject C "requires --expected-old-backend-sha" \
+  --expected-old-storefront-sha "$SHA_B" \
+  --expected-old-backend-digest "$OLD_BE" \
+  --expected-old-storefront-digest "$OLD_SF"
+run_split_reject D "requires --expected-old-storefront-sha" \
+  --expected-old-backend-sha "$SHA_A" \
+  --expected-old-backend-digest "$OLD_BE" \
+  --expected-old-storefront-digest "$OLD_SF"
+run_split_reject E "expected-old-backend-digest mismatch" \
+  --expected-old-backend-sha "$SHA_A" \
+  --expected-old-storefront-sha "$SHA_B" \
+  --expected-old-backend-digest "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee" \
+  --expected-old-storefront-digest "$OLD_SF"
+run_split_reject APPREPO "migration gate requires /tmp/wr-not-an-app-repo/apps/backend" \
+  --app-repo /tmp/wr-not-an-app-repo \
+  --expected-old-backend-sha "$SHA_A" \
+  --expected-old-storefront-sha "$SHA_B" \
+  --expected-old-backend-digest "$OLD_BE" \
+  --expected-old-storefront-digest "$OLD_SF"
+run_split_reject F "expected-old-storefront-sha mismatch" \
+  --expected-old-backend-sha "$SHA_A" \
+  --expected-old-storefront-sha "$SHA_Y" \
+  --expected-old-backend-digest "$OLD_BE" \
+  --expected-old-storefront-digest "$OLD_SF"
+
+EV_TSPLIT="$TMP/ev-target-split"
+mkdir -p "$EV_TSPLIT"
+python3 - "$SPLIT_STATE" "$SF_DIG" "$SHA_Y" <<'PY'
+import json,os,sys
+state,dig,sha=sys.argv[1:4]
+img=f"ghcr.io/saintgroovie/woodright-storefront@{dig}"
+for key in (dig.replace("/","_"), img.replace("/","_")):
+  p=os.path.join(state,"images",key+".json")
+  d=json.load(open(p))
+  d["Config"]["Labels"]["org.opencontainers.image.revision"]=sha
+  json.dump(d, open(p,"w"))
+PY
+if bash "$PAIR" --environment public_demo --component pair --mode dry-run \
+  --target-sha "$SHA40" --backend-digest "$BE_DIG" --storefront-digest "$SF_DIG" \
+  --evidence-dir "$EV_TSPLIT" \
+  --expected-old-backend-sha "$SHA_A" \
+  --expected-old-storefront-sha "$SHA_B" \
+  --expected-old-backend-digest "$OLD_BE" \
+  --expected-old-storefront-digest "$OLD_SF" \
+  >"$TMP/target-split.out" 2>&1; then
+  fail "G split target pair accepted"
+else
+  grep -q "target pair is split" "$TMP/target-split.out" \
+    && pass "G split target pair rejected" || fail "G missing target-split token"
+fi
+
+split_rollback_case() {
+  local label="$1" mode="$2"
+  local rb="$TMP/rollback-$label"
+  mkdir -p "$rb/state" "$rb/evidence/pin-backup" "$rb/evidence/json" "$rb/pins"
+  setup_state "$rb/state"
+  set_release_sha "$rb/state" woodright-staging-backend "$SHA_A"
+  set_release_sha "$rb/state" woodright-staging-storefront "$SHA_B"
+  python3 - "$rb/state" "$mode" "$OLD_BE" "$BE_DIG" "$SHA40" <<'PY'
+import json,os,sys
+state,mode,old_be,new_be,sha=sys.argv[1:6]
+ctr=os.path.join(state,"containers")
+def load(n): return json.load(open(os.path.join(ctr,n+".json")))
+def dump(n,d): json.dump(d, open(os.path.join(ctr,n+".json"),"w"))
+be=load("woodright-staging-backend")
+sf=load("woodright-staging-storefront")
+dump("woodright-staging-backend-keeper-split", be)
+if mode=="both":
+  dump("woodright-staging-storefront-keeper-split", sf)
+def retarget(d, dig, title):
+  d[0]["Image"]=dig
+  d[0]["Config"]["Image"]=f"ghcr.io/saintgroovie/{title}@{dig}"
+  d[0]["Config"]["Labels"]["com.woodright.release-sha"]=sha
+  d[0]["Config"]["Labels"]["org.opencontainers.image.revision"]=sha
+  return d
+dump("woodright-staging-backend", retarget(load("woodright-staging-backend"), new_be, "woodright-backend"))
+if mode=="both":
+  dump("woodright-staging-storefront", retarget(load("woodright-staging-storefront"), sys.argv[6] if False else new_be, "woodright-storefront"))
+PY
+  # both-mode storefront must use the storefront target digest, not the backend digest
+  if [[ "$mode" == "both" ]]; then
+    python3 - "$rb/state" "$SF_DIG" "$SHA40" <<'PY'
+import json,sys
+state,dig,sha=sys.argv[1:4]
+p=f"{state}/containers/woodright-staging-storefront.json"
+d=json.load(open(p))
+d[0]["Image"]=dig
+d[0]["Config"]["Image"]=f"ghcr.io/saintgroovie/woodright-storefront@{dig}"
+d[0]["Config"]["Labels"]["com.woodright.release-sha"]=sha
+json.dump(d, open(p,"w"))
+PY
+  fi
+  printf 'WOODRIGHT_BACKEND_IMAGE=old-be\nWOODRIGHT_STOREFRONT_IMAGE=old-sf\n' >"$rb/pins/DOKPLOY_IMAGE_PINS.env"
+  cp -p "$rb/pins/DOKPLOY_IMAGE_PINS.env" "$rb/evidence/pin-backup/DOKPLOY_IMAGE_PINS.env"
+  export WOODRIGHT_FAKE_DOCKER_STATE="$rb/state"
+  export WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=1
+  export WOODRIGHT_ROLLBACK_POLL_SLEEP_SEC=0
+  export WOODRIGHT_CUTOVER_PINS_ENV="$rb/pins/DOKPLOY_IMAGE_PINS.env"
+  export WOODRIGHT_CUTOVER_ALLOW_TEST_PATHS=1
+  export WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST="$OLD_SF"
+  export WOODRIGHT_ROLLBACK_EXPECT_SF_SHA="$SHA_B"
+  export WOODRIGHT_ROLLBACK_EXPECT_BE_SHA="$SHA_A"
+  export WOODRIGHT_ROLLBACK_EXPECT_BE_DIGEST="$OLD_BE"
+  export WR_STAGING_MUTATION_LOCK_PATH="$rb/live-cutover.lock"
+  export WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL=1
+  touch "$rb/live-cutover.lock"
+  wr_staging_mutation_lock_acquire "actor=$label" command=test
+  wr_staging_mutation_lock_export_inherit
+  local sf_keep=""
+  [[ "$mode" == "both" ]] && sf_keep="woodright-staging-storefront-keeper-split"
+  set +e
+  wr_cutover_pair_rollback \
+    "$rb/evidence" \
+    "woodright-staging-backend-keeper-split" \
+    "$sf_keep" \
+    "$ROOT/ops/release/rollback-staging-backend-from-keeper.sh" \
+    "$ROOT/ops/release/rollback-staging-storefront-from-keeper.sh"
+  local rc=$?
+  set -e
+  wr_staging_mutation_lock_release || true
+  local be_sha sf_sha
+  be_sha="$(WOODRIGHT_FAKE_DOCKER_STATE="$rb/state" "$FAKE_DOCKER/docker" inspect woodright-staging-backend --format '{{index .Config.Labels "com.woodright.release-sha"}}')"
+  sf_sha="$(WOODRIGHT_FAKE_DOCKER_STATE="$rb/state" "$FAKE_DOCKER/docker" inspect woodright-staging-storefront --format '{{index .Config.Labels "com.woodright.release-sha"}}')"
+  if [[ "$rc" -eq 10 && "$be_sha" == "$SHA_A" && "$sf_sha" == "$SHA_B" ]]; then
+    pass "$label rollback restored split predecessor"
+  else
+    fail "$label rollback rc=$rc be=$be_sha sf=$sf_sha"
+  fi
+}
+split_rollback_case H backend-only
+split_rollback_case I both
+
+export WOODRIGHT_FAKE_DOCKER_STATE="$TMP/state"
+export WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0
+unset WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST WOODRIGHT_ROLLBACK_EXPECT_SF_SHA \
+  WOODRIGHT_ROLLBACK_EXPECT_BE_SHA WOODRIGHT_ROLLBACK_EXPECT_BE_DIGEST \
+  WOODRIGHT_CUTOVER_PINS_ENV || true
+
 if [[ "$FAILED" -eq 0 ]]; then
   echo "OK public-demo pair cutover fidelity ($TMP)"
   exit 0
