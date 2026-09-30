@@ -63,7 +63,7 @@ function DiscountEditor({
   onChanged: (next: CatalogPromoAdminProduct) => void
 }) {
   const [percent, setPercent] = useState(
-    product.discount_percent != null ? String(product.discount_percent) : "10"
+    product.discount_percent != null ? String(product.discount_percent) : ""
   )
   const [saleRub, setSaleRub] = useState(
     product.sale_price != null ? String(product.sale_price) : ""
@@ -103,6 +103,12 @@ function DiscountEditor({
   }
 
   const noBase = product.base_price == null
+  const percentValue = Number(percent)
+  const amountValue = Number(saleRub)
+  const canApply =
+    lastField === "amount"
+      ? Number.isFinite(amountValue) && amountValue > 0
+      : Number.isFinite(percentValue) && percentValue > 0 && percentValue < 100
 
   return (
     <div className="flex flex-col gap-2">
@@ -145,21 +151,11 @@ function DiscountEditor({
         <Button
           size="small"
           variant="secondary"
-          disabled={busy || noBase}
+          disabled={busy || noBase || !canApply}
           onClick={() => applyEdited()}
         >
           {product.sale_price != null ? "Обновить скидку" : "Задать скидку"}
         </Button>
-        {product.sale_price == null && (
-          <Button
-            size="small"
-            variant="secondary"
-            disabled={busy || noBase}
-            onClick={() => void apply({ percent: 10 })}
-          >
-            Скидка 10%
-          </Button>
-        )}
         {product.sale_price != null && (
           <Button
             size="small"
