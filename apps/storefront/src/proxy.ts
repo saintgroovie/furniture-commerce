@@ -4,6 +4,7 @@ import {
   shouldEmitXRobotsTag,
   X_ROBOTS_TAG_NOINDEX,
 } from "@/lib/indexing-policy"
+import { buildImgSrcDirective } from "@/lib/analytics-config"
 import { buildConnectSrcDirective } from "@/lib/csp-policy"
 import { storefrontRuntimeIdentityHeaders } from "@/lib/runtime-identity-headers"
 import { legacyBuyerRedirectDestination } from "@/lib/legacy-buyer-redirects"
@@ -93,7 +94,7 @@ export function proxy(request: NextRequest) {
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     // Next/CSS-in-JS and globals.css often need style unsafe-inline in App Router.
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    buildImgSrcDirective(),
     "font-src 'self' data:",
     // Same-origin rewrites by default; public/demo may add canonical API origin.
     buildConnectSrcDirective(),

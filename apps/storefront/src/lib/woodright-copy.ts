@@ -49,6 +49,19 @@ export const a11yCopy = {
   applyFilters: "Показать результаты",
 }
 
+/** Shown only when Yandex Metrika counter ID is configured. */
+export const analyticsConsentCopy = {
+  regionLabel: "Статистика посещений",
+  lead: [
+    "Можно считать просмотры страниц через Яндекс Метрику",
+    "Корзина работает и без этого",
+  ],
+  cookiesLink: "Cookie",
+  accept: "Разрешить статистику",
+  decline: "Только корзина",
+  turnOff: "Выключить статистику",
+}
+
 /** Buyer catalog toolbar microcopy (search / filters chrome). */
 export const catalogUiCopy = {
   searchLabel: "Поиск по каталогу",
@@ -1452,7 +1465,7 @@ export const seo = {
   },
   cookies: {
     title: "Cookie - Woodright",
-    description: "Витрина Woodright использует cookie cart_id для корзины. Сторонней аналитики нет.",
+    description: "Какие cookie использует витрина Woodright",
   },
   requisites: {
     title: "Реквизиты - Woodright",

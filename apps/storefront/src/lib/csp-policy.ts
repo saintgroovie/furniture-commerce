@@ -3,6 +3,7 @@
  * Public launch must allow canonical API origin; never demo/localhost in public mode.
  */
 
+import { analyticsCspConnectExtras } from "@/lib/analytics-config"
 import {
   isDemoHostname,
   isLocalHostname,
@@ -75,7 +76,11 @@ export function buildConnectSrcDirective(
   env: NodeJS.ProcessEnv = process.env,
   mode?: CspConnectMode
 ): string {
-  const parts = ["'self'", ...cspConnectSrcExtras(env, mode)]
+  const extras = [
+    ...cspConnectSrcExtras(env, mode),
+    ...analyticsCspConnectExtras(env),
+  ]
+  const parts = ["'self'", ...new Set(extras)]
   return `connect-src ${parts.join(" ")}`
 }
 

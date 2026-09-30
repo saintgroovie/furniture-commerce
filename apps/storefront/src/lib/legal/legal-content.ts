@@ -7,6 +7,11 @@
  * Bank details are never interpolated here (OD-10 = B).
  */
 
+import {
+  isYandexMetrikaConfigured,
+  type AnalyticsPublicConfig,
+  loadAnalyticsPublicConfig,
+} from "@/lib/analytics-config"
 import { showroomContacts } from "@/lib/showroom-contacts"
 import { checkoutCopy } from "@/lib/woodright-copy"
 import { woodrightSeller } from "@/lib/legal/woodright-seller"
@@ -131,13 +136,15 @@ const RELATED: Record<LegalPageId, { label: string; href: string }[]> = {
 
 export function buildLegalPage(
   id: LegalPageId,
-  values: LegalOwnerValues = loadLegalOwnerValuesFromEnv()
+  values: LegalOwnerValues = loadLegalOwnerValuesFromEnv(),
+  analytics: AnalyticsPublicConfig = loadAnalyticsPublicConfig()
 ): LegalPageModel {
   const incomplete = !isLegalLaunchComplete(values)
   const missing = missingRequiredLegalFields(values)
   const showroom = confirmedShowroomLines()
   const seller = sellerIdentityLines()
   const privacyEmail = String(values.privacy_email ?? "").trim()
+  const metrikaOn = isYandexMetrikaConfigured(analytics)
 
   const base = {
     incompleteForPublicLaunch: incomplete,
@@ -179,6 +186,11 @@ export function buildLegalPage(
               "Адрес доставки, если вы его указываете",
               "Технические сведения, нужные для работы сайта и защиты от злоупотреблений",
               "Идентификатор корзины в cookie cart_id",
+              ...(metrikaOn
+                ? [
+                    "Если вы разрешите статистику посещений, Яндекс Метрика получит технические данные визита",
+                  ]
+                : []),
             ],
           },
           {
@@ -191,11 +203,19 @@ export function buildLegalPage(
           },
           {
             heading: "Cookie",
-            paragraphs: [
-              "Сайт использует cookie cart_id, чтобы сохранить корзину между посещениями",
-              "Сторонней аналитики и рекламных cookie в витрине нет",
-              "Подробнее: страница /cookies",
-            ],
+            paragraphs: metrikaOn
+              ? [
+                  "Сайт использует cookie cart_id, чтобы сохранить корзину между посещениями",
+                  "Cookie wr_ym_consent хранит ваш выбор: считать посещения или нет",
+                  "Если вы разрешите статистику, загружается Яндекс Метрика. Вебвизор и карта кликов выключены",
+                  "Рекламных cookie и Google Analytics на витрине нет",
+                  "Подробнее: страница /cookies",
+                ]
+              : [
+                  "Сайт использует cookie cart_id, чтобы сохранить корзину между посещениями",
+                  "Сторонней аналитики и рекламных cookie в витрине нет",
+                  "Подробнее: страница /cookies",
+                ],
           },
           {
             heading: "Передача",
@@ -203,6 +223,11 @@ export function buildLegalPage(
               "Данные могут получить сотрудники Woodright, которые ведут заказ",
               "Если для доставки или оплаты нужен подрядчик, передаём только то, что нужно для этой задачи",
               "Не передаём данные для рекламных рассылок третьим лицам",
+              ...(metrikaOn
+                ? [
+                    "После вашего согласия технические данные визита обрабатывает Яндекс Метрика",
+                  ]
+                : []),
             ],
           },
           {
@@ -243,6 +268,11 @@ export function buildLegalPage(
               "В заявке и на оформлении заказа: имя, телефон, при желании email и комментарий",
               "Адрес нужен, чтобы согласовать доставку",
               "Cookie cart_id хранит корзину на вашем устройстве",
+              ...(metrikaOn
+                ? [
+                    "Cookie wr_ym_consent хранит, разрешили ли вы статистику посещений",
+                  ]
+                : []),
             ],
           },
           {
@@ -270,32 +300,72 @@ export function buildLegalPage(
         lead: [
           "Какие cookie использует витрина Woodright",
         ],
-        sections: [
-          {
-            heading: "cart_id",
-            paragraphs: [
-              "Это cookie первого лица",
-              "Нужна, чтобы сохранить корзину между страницами и визитами",
-              "Срок: около 30 дней",
-              "SameSite=Lax; на HTTPS ставится флаг Secure",
+        sections: metrikaOn
+          ? [
+              {
+                heading: "cart_id",
+                paragraphs: [
+                  "Это cookie первого лица",
+                  "Нужна, чтобы сохранить корзину между страницами и визитами",
+                  "Срок: около 30 дней",
+                  "SameSite=Lax; на HTTPS ставится флаг Secure",
+                ],
+              },
+              {
+                heading: "wr_ym_consent",
+                paragraphs: [
+                  "Это cookie первого лица",
+                  "Хранит ваш выбор: считать посещения через Яндекс Метрику или нет",
+                  "Срок: около 1 года",
+                  "SameSite=Lax; на HTTPS ставится флаг Secure",
+                ],
+              },
+              {
+                heading: "Яндекс Метрика",
+                paragraphs: [
+                  "Загружается только после кнопки «Разрешить статистику»",
+                  "Вебвизор и карта кликов выключены",
+                  "Сервис может поставить свои cookie, например _ym_uid",
+                  "Google Analytics на витрине нет",
+                  "Meta Pixel и рекламных cookie нет",
+                ],
+              },
+              {
+                heading: "Как отключить",
+                paragraphs: [
+                  "Пока баннер на экране - выберите «Только корзина»",
+                  "Если уже разрешили - нажмите «Выключить статистику» внизу страницы",
+                  "Можно удалить cookie wr_ym_consent в браузере и обновить страницу",
+                  "Без cart_id корзина на этом устройстве не сохранится",
+                ],
+              },
+            ]
+          : [
+              {
+                heading: "cart_id",
+                paragraphs: [
+                  "Это cookie первого лица",
+                  "Нужна, чтобы сохранить корзину между страницами и визитами",
+                  "Срок: около 30 дней",
+                  "SameSite=Lax; на HTTPS ставится флаг Secure",
+                ],
+              },
+              {
+                heading: "Чего нет",
+                paragraphs: [
+                  "Google Analytics на витрине нет",
+                  "Яндекс Метрики нет",
+                  "Meta Pixel и рекламных cookie нет",
+                ],
+              },
+              {
+                heading: "Как отключить",
+                paragraphs: [
+                  "Cookie можно удалить в настройках браузера",
+                  "Без cart_id корзина на этом устройстве не сохранится",
+                ],
+              },
             ],
-          },
-          {
-            heading: "Чего нет",
-            paragraphs: [
-              "Google Analytics на витрине нет",
-              "Яндекс Метрики нет",
-              "Meta Pixel и рекламных cookie нет",
-            ],
-          },
-          {
-            heading: "Как отключить",
-            paragraphs: [
-              "Cookie можно удалить в настройках браузера",
-              "Без cart_id корзина на этом устройстве не сохранится",
-            ],
-          },
-        ],
       }
     case "terms":
       return {
