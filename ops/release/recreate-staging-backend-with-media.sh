@@ -179,16 +179,17 @@ else
 fi
 [[ -x "$GATE" ]] || die "media gate missing: $GATE"
 
-PRE_ARGS=(--environment "$WOODRIGHT_ENVIRONMENT" --mode pre-promote --target-image "$IMAGE" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST" --target-sha "$TARGET_SHA")
+PRE_ARGS=(--environment "$WOODRIGHT_ENVIRONMENT" --mode pre-promote --target-image "$IMAGE" --expected-digest "$EXPECTED_DIGEST" --media-volume "$VOLUME" --mount-destination "$DEST" --target-sha "$TARGET_SHA" --predecessor-container "$NAME")
 wr_assert_component_provenance "$IMAGE" "$TARGET_SHA" "$EXPECTED_DIGEST" || die "OCI_PROVENANCE_FAILED"
 
-# Mode A uses docker run --rm inside the media gate. Skip it for dry-run/preflight so
-# --mode dry-run cannot create any container (even transient).
+# Mode A volume probe uses docker run --rm. Dry-run proves the mount tuple
+# with inspect/exec only, so it cannot create a container.
 if [[ "$MODE" == "execute" ]]; then
   log "running_pre_promote_media_gate gate=$GATE target=$EXPECTED_DIGEST"
   bash "$GATE" "${PRE_ARGS[@]}" || die "MEDIA_PRE_PROMOTE_GATE_FAILED"
 else
-  log "PLANNED media_gate=pre-promote gate=$GATE target=$EXPECTED_DIGEST (skipped in mode=$MODE; no docker run)"
+  bash "$GATE" "${PRE_ARGS[@]}" --skip-volume-probe || die "MEDIA_PRE_PROMOTE_GATE_FAILED"
+  log "PLANNED media_gate=pre-promote gate=$GATE target=$EXPECTED_DIGEST (tuple checked; no docker run)"
 fi
 
 # Freeze storefront peer before backend mutation when scope=backend (env-only; no file write).
