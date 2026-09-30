@@ -1,4 +1,8 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import {
+  BUYER_PUBLIC_PRODUCT_STATUS,
+  isBuyerPublicProductStatus,
+} from "../../../../lib/buyer-publication"
 import { projectDefaultBuyerConfigurationOntoProduct } from "../../../../lib/default-buyer-configuration"
 import { attachStoreCalculatedPrices } from "../../../../lib/store-pricing/store-calculated-price"
 import { attachBuyerPurchaseContract } from "../attach-buyer-purchase"
@@ -14,6 +18,10 @@ import { attachBuyerPurchaseContract } from "../attach-buyer-purchase"
  * Also projects `metadata.buyer_default_configuration` so PDP opening price
  * shares the same backend-resolved default as catalog browse cards.
  * Attaches buyer-safe `purchase` from sales policy / classification.
+ *
+ * Draft and any non-published status are not a buyer resource. The graph
+ * filter and the post-check both require `published`. A missing status is
+ * not public.
  */
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const id = req.params.id as string
@@ -35,10 +43,15 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       "product_classification.*",
       "product_sales_policy.*",
     ],
-    filters: { id },
+    filters: { id, status: BUYER_PUBLIC_PRODUCT_STATUS },
   })
   const product = Array.isArray(data) ? data[0] : undefined
-  if (!product) {
+  if (
+    !product ||
+    !isBuyerPublicProductStatus(
+      (product as { status?: unknown }).status
+    )
+  ) {
     res.status(404).json({ message: "Product not found" })
     return
   }

@@ -2,6 +2,7 @@
  * Production sitemap URL set builder (public_indexable only).
  * Fail-closed: never invent product handles; skip non-public routes.
  */
+import { isBuyerPublicProductStatus } from "@/lib/buyer-publication"
 import { isLegalLaunchComplete } from "@/lib/legal/owner-inputs"
 
 export type SitemapEntry = { loc: string; lastmod?: string }
@@ -80,13 +81,14 @@ export function collectStaticSitemapEntries(origin: string): SitemapEntry[] {
 
 export function collectProductSitemapEntries(
   origin: string,
-  products: Array<{ handle?: unknown; id?: unknown }>,
+  products: Array<{ handle?: unknown; id?: unknown; status?: unknown }>,
   limit = SITEMAP_PRODUCT_LIMIT
 ): SitemapEntry[] {
   const seen = new Set<string>()
   const out: SitemapEntry[] = []
   for (const product of products) {
     if (out.length >= limit) break
+    if (!isBuyerPublicProductStatus(product.status)) continue
     const handle =
       typeof product.handle === "string" ? product.handle.trim() : ""
     if (!handle) continue

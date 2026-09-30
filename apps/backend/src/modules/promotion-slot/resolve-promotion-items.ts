@@ -10,6 +10,7 @@
  *
  * Order = slot `product_ids` order. No Medusa runtime imports.
  */
+import { isBuyerPublicProductStatus } from "../../lib/buyer-publication"
 import {
   isSlotWithinSchedule,
   normalizeProductIds,
@@ -120,7 +121,7 @@ export function classifyPromotionCandidate(
   product: PromotionCandidateProduct | undefined
 ): { ok: true; item: Omit<ResolvedPromotionItem, "product_id"> } | { ok: false; reason: PromotionSkipReason } {
   if (!product) return { ok: false, reason: "not_found" }
-  if (product.status !== undefined && product.status !== "published") {
+  if (!isBuyerPublicProductStatus(product.status)) {
     return { ok: false, reason: "unpublished" }
   }
   const classification = product.product_classification as

@@ -1,4 +1,5 @@
 import type { MedusaRequest } from "@medusajs/framework/http"
+import { BUYER_PUBLIC_PRODUCT_STATUS } from "./buyer-publication"
 import { isWillieWinkieMotifProduct } from "./motif-theme"
 
 /**
@@ -111,7 +112,7 @@ export async function loadWillieWinkieMotifProducts(
   const { data: products } = await query.graph({
     entity: "product",
     fields: [...MOTIF_PRODUCT_FIELDS],
-    filters: { status: "published" },
+    filters: { status: BUYER_PUBLIC_PRODUCT_STATUS },
   })
   const published = (products ?? []) as Array<Record<string, unknown>>
   const ww = published.filter(isWillieWinkieMotifProduct)

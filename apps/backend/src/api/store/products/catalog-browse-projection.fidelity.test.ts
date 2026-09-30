@@ -88,6 +88,7 @@ assert.equal(CATALOG_METADATA_ALLOW.has("workbook_row_key"), false)
   }
   const out = projectCatalogBrowseProduct(product)
   assert.equal(out.id, "prod_1")
+  assert.equal(out.status, "published")
   assert.equal(out.description, undefined)
   assert.deepEqual(out.images, [{ url: "/static/products/a.jpg" }])
   assert.deepEqual(out.variants, [
