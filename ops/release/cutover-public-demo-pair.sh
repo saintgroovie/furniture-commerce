@@ -551,7 +551,16 @@ run_backup_gate() {
   if [[ ! -x "$bak" ]]; then
     die "official backup helper missing: $bak"
   fi
-  sudo -n "$bak" || die "backup helper failed"
+  # sudo resets the environment, so the public_demo profile pin must be passed
+  # explicitly. The historical compose name is not the live demo postgres.
+  # Production containers are refused here; the backup helper must not inherit
+  # a shared default that could select another environment.
+  local pg="${WOODRIGHT_PG_CONTAINER_PREFIX:-}"
+  [[ -n "$pg" ]] || die "public_demo postgres container unset"
+  case "$pg" in
+    *production*|*public-production*) die "refusing production postgres for public_demo backup: $pg" ;;
+  esac
+  sudo -n env WOODRIGHT_PG_CONTAINER="$pg" "$bak" || die "backup helper failed"
   wr_cutover_pin_backup "$EVIDENCE_DIR" || die "pin backup failed"
 }
 

@@ -135,6 +135,24 @@ wr_container_image_id() {
   docker inspect -f '{{.Image}}' "$1" 2>/dev/null || true
 }
 
+# True when the container image id equals the pin, or the pin is the registry
+# manifest digest listed on that image. A bare manifest digest is not an image id,
+# so `docker image inspect sha256:<manifest>` is not sufficient.
+wr_container_image_matches_expected_digest() {
+  local name="$1" expected="$2"
+  local img resolved repo_line
+  img=$(wr_container_image_id "$name")
+  [[ -n "$img" && "$img" == "$expected" ]] && return 0
+  resolved=$(docker image inspect "$expected" --format '{{.Id}}' 2>/dev/null || true)
+  [[ -n "$resolved" && "$img" == "$resolved" ]] && return 0
+  if [[ -n "$img" && "$expected" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+    while IFS= read -r repo_line; do
+      [[ "$repo_line" == *"@${expected}" ]] && return 0
+    done < <(docker image inspect "$img" --format '{{range .RepoDigests}}{{println .}}{{end}}' 2>/dev/null || true)
+  fi
+  return 1
+}
+
 wr_container_mount_name_at() {
   local c="$1" dest="$2"
   docker inspect "$c" --format '{{json .Mounts}}' 2>/dev/null \
@@ -224,15 +242,9 @@ wr_validate_backend_candidate() {
         return 1
       fi
     fi
-    img=$(wr_container_image_id "$name")
-    if [[ "$img" != "$expected_digest" ]]; then
-      # Also accept when Image Id equals resolved Id for the pinned digest ref.
-      local resolved=""
-      resolved=$(docker image inspect "$expected_digest" --format '{{.Id}}' 2>/dev/null || true)
-      if [[ -z "$resolved" || "$img" != "$resolved" ]]; then
-        wr_discovery_set_verdict DIGEST_MISMATCH "backend_digest_mismatch"
-        return 1
-      fi
+    if ! wr_container_image_matches_expected_digest "$name" "$expected_digest"; then
+      wr_discovery_set_verdict DIGEST_MISMATCH "backend_digest_mismatch"
+      return 1
     fi
     if [[ -n "$expected_sha" ]]; then
       local rev
@@ -309,14 +321,9 @@ wr_validate_storefront_candidate() {
       wr_discovery_set_verdict DIGEST_MISMATCH "expected_storefront_digest_missing"
       return 1
     fi
-    img=$(wr_container_image_id "$name")
-    if [[ "$img" != "$expected_digest" ]]; then
-      local resolved=""
-      resolved=$(docker image inspect "$expected_digest" --format '{{.Id}}' 2>/dev/null || true)
-      if [[ -z "$resolved" || "$img" != "$resolved" ]]; then
-        wr_discovery_set_verdict DIGEST_MISMATCH "storefront_digest_mismatch"
-        return 1
-      fi
+    if ! wr_container_image_matches_expected_digest "$name" "$expected_digest"; then
+      wr_discovery_set_verdict DIGEST_MISMATCH "storefront_digest_mismatch"
+      return 1
     fi
     local rev
     rev=$(wr_container_label "$name" "org.opencontainers.image.revision")

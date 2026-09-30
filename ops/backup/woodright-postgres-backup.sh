@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/woodright-backup-root.sh"
 
 BACKUP_ROOT="${WOODRIGHT_BACKUP_ROOT:-/srv/woodright/backups/automated}"
-PG_CONTAINER="${WOODRIGHT_PG_CONTAINER:-woodright-stack-3dsdhd-postgres-1}"
+PG_CONTAINER="${WOODRIGHT_PG_CONTAINER:-${WOODRIGHT_PG_CONTAINER_PREFIX:-woodright-stack-3dsdhd-postgres-1}}"
 PG_USER="${WOODRIGHT_PG_USER:-woodright}"
 PG_DB="${WOODRIGHT_PG_DB:-woodright_staging}"
 ACTIVE_OWNER="${WOODRIGHT_ACTIVE_OWNER:-/srv/woodright/runtime-ownership/ACTIVE_OWNER.json}"
