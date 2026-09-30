@@ -21,6 +21,7 @@ import {
   isRotationRunning,
   rotationReducer,
 } from "@/lib/promotion-rotation"
+import { buyerPromotionLabel } from "@/lib/promotion-label"
 import { promotionCopy } from "@/lib/woodright-copy"
 
 type Props = {
@@ -138,7 +139,7 @@ export function PromotionCard({ slot }: Props) {
   if (views.length === 0) return null
   const active = views[Math.min(state.index, views.length - 1)]!
   const multi = views.length > 1
-  const label = (slot.slot?.label ?? "").trim() || promotionCopy.defaultLabel
+  const label = buyerPromotionLabel(slot.slot?.label)
 
   return (
     <div
@@ -157,11 +158,13 @@ export function PromotionCard({ slot }: Props) {
         <Link
           href={active.href}
           className="product-card-media-link card-link promotion-card-media-link"
-          aria-label={`${active.title} - ${label}`}
+          aria-label={label ? `${active.title} - ${label}` : active.title}
         >
-          <span className="promotion-card-eyebrow" aria-hidden="true">
-            {label}
-          </span>
+          {label ? (
+            <span className="promotion-card-eyebrow" aria-hidden="true">
+              {label}
+            </span>
+          ) : null}
           <span className="promotion-card-stage">
             {views.map((view, i) => (
               <img

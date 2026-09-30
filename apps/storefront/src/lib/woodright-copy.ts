@@ -242,8 +242,6 @@ export const catalogCopy = {
 
 /** Catalog Promotion Window (one rotating card in the first row). */
 export const promotionCopy = {
-  /** Eyebrow when the seller left the slot label empty. */
-  defaultLabel: "Специальная цена",
   /** Card context line when the product has no collection label. */
   contextFallback: "Со скидкой",
   /** Screen-reader prefix before the struck-through price. */

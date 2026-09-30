@@ -10,6 +10,7 @@ import { PROMOTION_SLOT_MAX_PRODUCTS } from "../../../../modules/promotion-slot/
 import { DeskFrame } from "../../../components/woodright/DeskNav"
 import {
   blockerLabel,
+  buyerVisiblePromoLabel,
   formatRubAdmin,
   formatScheduleRu,
   isoToLocalInput,
@@ -386,7 +387,6 @@ const CatalogPromoPage = () => {
                 id="promo-label"
                 value={form.label}
                 maxLength={40}
-                placeholder="Специальная цена"
                 onChange={(e) => setForm({ ...form, label: e.target.value })}
               />
             </div>
@@ -628,7 +628,9 @@ const CatalogPromoPage = () => {
               </Text>
             ) : (
               <ul className="flex flex-wrap gap-3" data-testid="promo-preview">
-                {preview.items.map((item) => (
+                {preview.items.map((item) => {
+                  const previewLabel = buyerVisiblePromoLabel(form.label)
+                  return (
                   <li
                     key={item.product_id}
                     className="flex w-44 flex-col gap-1 rounded-lg border border-ui-border-base p-2"
@@ -636,9 +638,11 @@ const CatalogPromoPage = () => {
                     {item.thumbnail && (
                       <img src={item.thumbnail} alt="" className="aspect-square w-full rounded object-cover" />
                     )}
-                    <Text size="xsmall" className="text-ui-fg-subtle">
-                      {form.label.trim() || "Специальная цена"}
-                    </Text>
+                    {previewLabel ? (
+                      <Text size="xsmall" className="text-ui-fg-subtle">
+                        {previewLabel}
+                      </Text>
+                    ) : null}
                     <Text size="small" weight="plus">
                       {item.title}
                     </Text>
@@ -649,7 +653,8 @@ const CatalogPromoPage = () => {
                       </span>
                     </Text>
                   </li>
-                ))}
+                  )
+                })}
               </ul>
             )}
             {preview && preview.skipped.length > 0 && (
