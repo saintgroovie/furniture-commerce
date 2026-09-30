@@ -43,6 +43,15 @@ export async function medusaSend<T>(path: string, method: "POST" | "PUT", body: 
     body: JSON.stringify(body),
     cache: "no-store",
   })
-  if (!response.ok) throw new DeskHttpError(response.status, "Не удалось сохранить")
+  if (!response.ok) {
+    let message = "Не удалось сохранить"
+    try {
+      const payload = (await response.json()) as { message?: unknown }
+      if (typeof payload.message === "string" && payload.message.trim()) message = payload.message
+    } catch {
+      message = "Не удалось сохранить"
+    }
+    throw new DeskHttpError(response.status, message)
+  }
   return (await response.json()) as T
 }

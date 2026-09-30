@@ -8,6 +8,7 @@ import {
 } from "../../../../../../lib/woodright-order-process/ensure-process"
 import { orderExistenceHttp } from "../../../../../../lib/woodright-order-process/assert-medusa-order-exists"
 import { applyAndPersistProcessTransition } from "../../../../../../lib/woodright-order-process/apply-transition"
+import { requireDeskWrite } from "../../../../../../lib/woodright-workspace/require-desk-write"
 import {
   isOrderProcessStage,
   type OrderProcessStage,
@@ -19,6 +20,8 @@ type SqlClient = {
 }
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const gate = await requireDeskWrite(req, res, "orders.process.write")
+  if (!gate) return
   const orderId = req.params.order_id as string
   const body = req.body as {
     to_stage?: unknown
@@ -87,9 +90,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     medusaCanceled = false
   }
 
-  const actorId =
-    (req as MedusaRequest & { auth_context?: { actor_id?: string } })
-      .auth_context?.actor_id ?? null
+  const actorId = gate.actorId
 
   const rawKey =
     typeof body.idempotency_key === "string" ? body.idempotency_key.trim() : ""
@@ -133,7 +134,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       idempotency_key,
       actor_type: "admin",
       actor_id: actorId,
-      actor_display: null,
+      actor_display: gate.email,
       source: "admin_api",
       medusa_order_canceled: medusaCanceled,
       recipient_key: `order:${orderId}`,

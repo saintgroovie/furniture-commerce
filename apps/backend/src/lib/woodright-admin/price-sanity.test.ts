@@ -6,6 +6,7 @@ import {
   parseSellerPriceInput,
   pickPrimaryRubPrice,
   PRICE_SANITY_MAX,
+  mergeBasePriceUpdate,
   productHasRubPrice,
 } from "./price-sanity.ts"
 
@@ -137,5 +138,23 @@ describe("pickPrimaryRubPrice", () => {
     })
     assert.deepEqual(first, { id: "price_a", amount: 189000, currency_code: "rub" })
     assert.deepEqual(second, { id: "price_c", amount: 45000, currency_code: "rub" })
+  })
+})
+
+describe("mergeBasePriceUpdate", () => {
+  it("changes only the selected ruble price and keeps other base prices", () => {
+    const next = mergeBasePriceUpdate(
+      [
+        { id: "rub", amount: 82000, currency_code: "rub" },
+        { id: "usd", amount: 900, currency_code: "usd" },
+        { id: "sale", amount: 70000, currency_code: "rub", price_list_id: "plist_1" },
+      ],
+      "rub",
+      76000
+    )
+    assert.deepEqual(next, [
+      { id: "rub", amount: 76000, currency_code: "rub" },
+      { id: "usd", amount: 900, currency_code: "usd" },
+    ])
   })
 })

@@ -7,10 +7,12 @@ type Hit = { id: string; group: string; title: string; hint: string | null; href
 
 const COMMANDS = [
   { title: "Открыть Сегодня", href: "/today" },
-  { title: "Открыть Заказы", href: "/orders" },
-  { title: "Открыть Каталог", href: "/catalog" },
-  { title: "Открыть Людей", href: "/people" },
-  { title: "Открыть Заявки", href: "/requests" },
+  { title: "Найти заказ", href: "/orders" },
+  { title: "Найти SKU", href: "/catalog" },
+  { title: "Найти человека", href: "/people" },
+  { title: "Открыть «Нет цены»", href: "/catalog?filter=missing_price" },
+  { title: "Открыть «Нет изображения»", href: "/media" },
+  { title: "Перейти к заявкам", href: "/requests" },
 ]
 
 const GROUP_LABEL: Record<string, string> = {

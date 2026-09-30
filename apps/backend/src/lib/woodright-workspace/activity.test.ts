@@ -26,4 +26,39 @@ describe("projectOrderActivity", () => {
   it("returns nothing when history is absent", () => {
     assert.deepEqual(projectOrderActivity({ orderId: "order_2" }), [])
   })
+
+  it("labels the first process event as opened, not a later change", () => {
+    const items = projectOrderActivity({
+      orderId: "order_4",
+      createdAt: "2026-09-30T10:00:00.000Z",
+      events: [
+        {
+          id: "evt_created",
+          created_at: "2026-09-30T10:00:01.000Z",
+          event_type: "created",
+          next_stage: "new",
+        },
+      ],
+    })
+    assert.deepEqual(
+      items.map((item) => item.label),
+      ["Заказ создан", "Этап изготовления открыт"]
+    )
+  })
+
+  it("does not pretend a note save is a stage change", () => {
+    const items = projectOrderActivity({
+      orderId: "order_3",
+      events: [
+        {
+          id: "evt_note",
+          created_at: "2026-09-30T12:00:00.000Z",
+          event_type: "note_updated",
+          next_stage: "in_production",
+          internal_note: "Позвонили",
+        },
+      ],
+    })
+    assert.deepEqual(items.map((item) => item.kind), ["note"])
+  })
 })

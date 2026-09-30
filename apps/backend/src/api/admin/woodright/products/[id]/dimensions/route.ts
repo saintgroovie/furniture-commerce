@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
+import { requireDeskWrite } from "../../../../../../lib/woodright-workspace/require-desk-write"
 import {
   applyDimensionsToMetadata,
   isDimensionsCommandFailure,
@@ -26,6 +27,8 @@ type ProductModule = {
  * POST /admin/woodright/products/:id/dimensions
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const gate = await requireDeskWrite(req, res, "catalog.edit")
+  if (!gate) return
   const id = req.params.id as string
   const parsed = parseDimensionsBody(req.body)
   if (isDimensionsCommandFailure(parsed)) {
