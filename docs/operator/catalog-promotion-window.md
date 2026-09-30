@@ -46,48 +46,36 @@ Fail-closed rules: if the sales-policy link cannot be read, every candidate is t
 | Task | How |
 | --- | --- |
 | Turn the window off / on | Checkbox «Показывать промо-окно в каталоге» → «Сохранить». Storefront fetches the slot `no-store`, so the next catalog reload shows it |
-| Add a product | «Добавить товар» → название / артикул / адрес → «Добавить» → задайте скидку (кнопка «Скидка 10%» или % / ₽) → «Сохранить». Без скидки товар в окне не появится |
+| Add a product | «Добавить товар» → название / артикул / адрес → «Добавить» → enter an explicit percent or an exact ruble price (the fields start empty; there is no preset) → «Задать скидку» → «Сохранить» for the slot. Without a lower promotional price the product does not appear |
 | Remove a product | «Убрать» на строке → «Сохранить» |
 | Change order | ↑ / ↓ на строке → «Сохранить». Порядок = очередь ротации |
-| Change the discount | «Скидка, %» или «Цена со скидкой, ₽» → «Обновить скидку» (пишет в нативный прайс-лист сразу, без «Сохранить»). «Убрать скидку» снимает её. «Открыть карточку товара» ведёт в карточку Woodright |
+| Change the discount | «Скидка, %» starts empty, or «Цена со скидкой, ₽». Type `[процент]` or `[цена в ₽]`, check that the amount is the one you intend, then «Задать скидку» / «Обновить скидку». That writes the price list immediately and does not press «Сохранить». Saving the slot does not change prices. «Убрать скидку» deletes only the promotional price, not the base price. «Открыть карточку товара» opens the Woodright product |
 | Schedule | «Показывать с» / «Показывать до» у окна; срок самой скидки - в нативном прайс-листе («Открыть прайс-лист в Medusa») |
 | Preview | «Что сейчас видит покупатель» - очередь на сайте и список «Не показываются» с причиной |
 
 Storefront reads the seller values only; no product ids or discount values are hard-coded.
 
-## Launch bootstrap (idempotent, fail-closed)
+## Historical launch bootstrap (deprecated, not a launch path)
+
+This script is historical evidence. It is not the way to start a catalog promotion. Do not treat its prices, label, or enable flag as approved.
+
+It refuses database name `woodright_public_production` in every target and mode, including `local`, before any price-list or promotion-slot read or write. The refusal code is `REFUSED_DEPRECATED_PUBLIC_PRODUCTION_PROMO_BOOTSTRAP`.
+
+## Historical manifest record (not approved prices)
 
 Script: `apps/backend/src/scripts/bootstrap-catalog-promo-launch.ts`
 Manifest: `catalog-promo-launch-v1`, pinned SHA `f2177dee696bc6fc64600439e0f77ab896e2c70df4d9578f7b53c0ecf1671f23`
 
-| Product | id | SKU | Base | Sale (−10 %) |
+The amounts below are the frozen historical manifest. They are not a discount to enter.
+
+| Product | id | SKU | Base at the time | Historical sale amount |
 | --- | --- | --- | --- | --- |
 | Комод (Greenwich) | `prod_01KM1QHNHNKSG173KZ6C2AZ5JR` | `GR-05-1` | 109 500 ₽ | 98 550 ₽ |
 | Консоль (Greenwich) | `prod_01KM1QHNHNR5R4YZKQERDE8EZ6` | `GR-44-1` | 45 900 ₽ | 41 310 ₽ |
 
-Card / PDP / cart show the tier-aware opening price (LDSP tier): 68 985 ₽ вместо 76 650 ₽ and 28 917 ₽ вместо 32 130 ₽.
+The old manifest also assumed an LDSP opening tier. Current public products do not use that tier. Do not copy those figures into Admin.
 
-| Variable | Staging | Production |
-| --- | --- | --- |
-| `CATALOG_PROMO_TARGET` | `staging` | `production` |
-| `CATALOG_PROMO_MODE` | `dry-run` / `apply` | same (required) |
-| `DATABASE_URL` | db name exact `woodright_staging` | exact `woodright_production` |
-| `CATALOG_PROMO_CONFIRM` | unset | `CATALOG_PROMO_LAUNCH_V1_PRODUCTION_OWNER_APPROVED` |
-| `CATALOG_PROMO_PRODUCTION_ACK` | unset | `I_UNDERSTAND_THIS_WRITES_PRODUCTION` |
-
-```sh
-# local / worktree (TypeScript)
-CATALOG_PROMO_TARGET=production CATALOG_PROMO_MODE=dry-run \
-  npx medusa exec ./src/scripts/bootstrap-catalog-promo-launch.ts
-
-# immutable backend image (compiled by scripts/compile-ops-seeds.mjs into dist/src/scripts/)
-CATALOG_PROMO_TARGET=production CATALOG_PROMO_MODE=dry-run \
-  ./node_modules/.bin/medusa exec ./src/scripts/bootstrap-catalog-promo-launch.js
-```
-
-The bootstrap is never part of CMD / HEALTHCHECK / migrate. Run the migration first, then `dry-run`, then `apply` with both production tokens set.
-
-The script verifies every manifest product against the live DB (id, handle, SKU, base price), creates the price list once, upserts exactly two sale prices, upserts the `catalog_main` slot and prints a before / after diff. A second `apply` is a no-op. Any mismatch → `FAIL_CLOSED`, nothing written.
+The script is not part of CMD, HEALTHCHECK, or migrate. It is not the current launch workflow. Pointing it at `woodright_public_production` stops before any write. A blank label on the live card stays blank; this manifest's old label is not a storefront fallback.
 
 Migration: `apps/backend/src/modules/promotion-slot/migrations/Migration20260908120000.ts` (creates `promotion_slot`; additive, rollback drops the table).
 

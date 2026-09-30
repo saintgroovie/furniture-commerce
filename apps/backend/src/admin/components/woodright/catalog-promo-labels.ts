@@ -3,6 +3,13 @@
  */
 import type { CatalogPromoAdminProduct } from "../../../lib/woodright-admin/catalog-promo-admin"
 
+/** Buyer eyebrow preview. Blank and whitespace-only labels stay blank. */
+export function buyerVisiblePromoLabel(label: string | null | undefined): string | null {
+  if (typeof label !== "string") return null
+  const trimmed = label.trim()
+  return trimmed.length > 0 ? trimmed : null
+}
+
 export function formatRubAdmin(amount: number | null | undefined): string {
   if (amount == null || !Number.isFinite(amount)) return "-"
   return `${new Intl.NumberFormat("ru-RU").format(Math.round(amount))}\u00a0₽`
