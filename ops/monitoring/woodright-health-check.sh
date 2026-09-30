@@ -619,12 +619,22 @@ else
   short=$(echo "${EXP_SF#sha256:}" | cut -c1-12)
   [[ "$SF_IMG" == *"$short"* ]] && sf_match=1
 fi
+if [[ $sf_match -eq 0 && -n "$EXP_SF" && "$SF_IMG" != "unknown" ]]; then
+  if docker image inspect "$SF_IMG" --format '{{range .RepoDigests}}{{println .}}{{end}}' 2>/dev/null | grep -q "@${EXP_SF}$"; then
+    sf_match=1
+  fi
+fi
 [[ $sf_match -eq 1 ]] && add_check "digest_sf" info pass "match" || add_check "digest_sf" warning fail "mismatch"
 
 be_match=0
 if [[ -n "$EXP_BE" ]]; then
   short=$(echo "${EXP_BE#sha256:}" | cut -c1-12)
   [[ "$BE_IMG" == *"$short"* || "$BE_IMG" == *"${EXP_BE#sha256:}"* ]] && be_match=1
+fi
+if [[ $be_match -eq 0 && -n "$EXP_BE" && "$BE_IMG" != "unknown" ]]; then
+  if docker image inspect "$BE_IMG" --format '{{range .RepoDigests}}{{println .}}{{end}}' 2>/dev/null | grep -q "@${EXP_BE}$"; then
+    be_match=1
+  fi
 fi
 [[ -z "$EXP_BE" ]] && add_check "digest_be" warning fail "no_expected" || \
   { [[ $be_match -eq 1 ]] && add_check "digest_be" info pass "match" || add_check "digest_be" warning fail "mismatch"; }
