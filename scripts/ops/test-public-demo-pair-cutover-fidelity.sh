@@ -979,6 +979,17 @@ fi
 SHA_A="7628056dcc1d150745de1b0fa881f1e9d36b798b"
 SHA_B="023c9862f5e22d3a0d9dc536a38fc088002eb754"
 SHA_Y="1111111111111111111111111111111111111111"
+ensure_commit() {
+  local sha="$1"
+  if git -C "$ROOT" cat-file -e "${sha}^{commit}" 2>/dev/null; then
+    return 0
+  fi
+  echo "NOTE: fetching $sha so the migration gate can see the range" >&2
+  git -C "$ROOT" fetch --depth=1 origin "$sha"
+  git -C "$ROOT" cat-file -e "${sha}^{commit}"
+}
+ensure_commit "$SHA_A"
+ensure_commit "$SHA40"
 if [[ -f "$EV2/json/predecessor-kind.txt" ]] && [[ "$(cat "$EV2/json/predecessor-kind.txt")" == "unified" ]]; then
   pass "A unified predecessor kind"
 else
