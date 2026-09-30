@@ -162,6 +162,8 @@ grep -q 'release_identity"\] = "unified"' "$ROOT/scripts/release/reconcile-publi
   && pass "unified rewrite marks release_identity" || fail "unified rewrite missing release_identity"
 grep -q 'component shas not converged' "$ROOT/scripts/release/reconcile-public-image-pins.sh" \
   && pass "pin reconcile validates component shas" || fail "pin reconcile missing component sha validation"
+grep -q "trap 'release_lock_holder' EXIT" "$ROOT/scripts/release/reconcile-public-image-pins.sh" \
+  && pass "split writer releases the lock holder" || fail "split writer missing lock-holder trap"
 
 # Explicit split writer: does not stamp one SHA, refuses pin updates, fixture only.
 PIN="$ROOT/scripts/release/reconcile-public-image-pins.sh"

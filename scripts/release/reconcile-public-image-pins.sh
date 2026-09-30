@@ -544,6 +544,9 @@ maybe_fault() {
 }
 
 if [[ "${WRITE_SPLIT_EXPECTED_RELEASE:-0}" == "1" ]]; then
+  # The full cleanup trap is installed later for pin updates. This path exits
+  # first, so release the fallback lock holder on every exit including fail().
+  trap 'release_lock_holder' EXIT
   acquire_lock
   wr_split_expected_apply
   exit 0
