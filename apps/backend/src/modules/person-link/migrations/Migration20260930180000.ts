@@ -7,6 +7,12 @@ import { Migration } from "@medusajs/framework/mikro-orm/migrations"
 export class Migration20260930180000PersonLink extends Migration {
   async up(): Promise<void> {
     this.addSql(`
+      do $$
+      begin
+        if current_database() !~ '^workspace_it' then
+          raise exception 'person-link migration refused for database %', current_database();
+        end if;
+      end $$;
       create table if not exists "woodright_person_link" (
         "id" text not null,
         "lead_id" text not null,
@@ -25,6 +31,14 @@ export class Migration20260930180000PersonLink extends Migration {
   }
 
   async down(): Promise<void> {
-    this.addSql(`drop table if exists "woodright_person_link" cascade;`)
+    this.addSql(`
+      do $$
+      begin
+        if current_database() !~ '^workspace_it' then
+          raise exception 'person-link rollback refused for database %', current_database();
+        end if;
+      end $$;
+      drop table if exists "woodright_person_link" cascade;
+    `)
   }
 }

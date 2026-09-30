@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { describe, it } from "node:test"
-import { matchCandidates, normalizeEmail, normalizePhone } from "./identity.ts"
+import { matchCandidates, normalizeEmail, normalizePhone, withholdIncompleteLookup } from "./identity.ts"
 
 describe("normalizeEmail", () => {
   it("trims and lowercases", () => {
@@ -48,5 +48,14 @@ describe("matchCandidates", () => {
 
   it("returns none when nothing matches", () => {
     assert.equal(matchCandidates(people, { email: "no@one.ru" }).status, "none")
+  })
+
+  it("does not keep a unique email hit when the phone lookup failed", () => {
+    const result = withholdIncompleteLookup(
+      { status: "linked", ids: ["c1"] },
+      { phonePresent: true, phoneLookupFailed: true }
+    )
+    assert.equal(result.status, "needs_review")
+    assert.equal(result.lookup_incomplete, true)
   })
 })

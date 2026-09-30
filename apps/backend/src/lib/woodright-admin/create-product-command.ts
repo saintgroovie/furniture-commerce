@@ -151,6 +151,21 @@ export function isCreateProductFailure(
   return "ok" in value && value.ok === false
 }
 
+function describeFailure(error: unknown): string {
+  if (typeof error === "string") return error.slice(0, 300)
+  if (error instanceof Error && error.message) return error.message.slice(0, 300)
+  if (error && typeof error === "object") {
+    const message = (error as { message?: unknown }).message
+    if (typeof message === "string" && message) return message.slice(0, 300)
+    try {
+      return JSON.stringify(error).slice(0, 300)
+    } catch {
+      return "unknown"
+    }
+  }
+  return "unknown"
+}
+
 export async function createWoodrightDraftProduct(
   body: unknown,
   ports: CreateProductPorts
@@ -187,7 +202,8 @@ export async function createWoodrightDraftProduct(
       }
     }
     return { ok: true, product }
-  } catch {
+  } catch (error) {
+    console.error("[woodright-admin] draft create failed", describeFailure(error))
     let productCleanupFailed = false
     let classificationCleanupFailed = false
     if (productId) {

@@ -57,3 +57,14 @@ export function matchCandidates(
   if (ids.length === 1) return { status: "linked", ids }
   return { status: "needs_review", ids }
 }
+
+/** A failed phone lookup must not look like a unique email match. */
+export function withholdIncompleteLookup(
+  result: MatchResult,
+  input: { phonePresent: boolean; phoneLookupFailed: boolean }
+): MatchResult & { lookup_incomplete: boolean } {
+  if (input.phonePresent && input.phoneLookupFailed) {
+    return { status: "needs_review", ids: result.ids, lookup_incomplete: true }
+  }
+  return { ...result, lookup_incomplete: false }
+}

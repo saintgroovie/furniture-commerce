@@ -9,7 +9,7 @@
     "start": "NEXT_DIST_DIR=.next-build next start --port 3118 --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "node --experimental-strip-types --test src/lib/runtime-boundary.test.ts src/lib/browser-boundary.test.ts"
+    "test": "node --experimental-strip-types --test src/lib/runtime-boundary.test.ts src/lib/browser-boundary.test.ts src/lib/session-codec.test.ts"
   },
   "dependencies": {
     "next": "16.2.12",

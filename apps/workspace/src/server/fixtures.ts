@@ -135,9 +135,13 @@ export const fixturePerson = {
     { id: "req_sample", status: "new", comment: "Нужен стол под окно", created_at: "2026-09-29T12:00:00.000Z" },
   ],
   orders: [] as Array<{ id: string; display_id?: string | number | null }>,
-  link: null,
+  link: null as null | { customer_id: string | null; assignee_id: string | null; match_status: string },
   links_available: false,
-  suggestion: { status: "none", customer_ids: [] },
+  suggestion: {
+    status: "none",
+    customer_ids: [] as string[],
+    candidates: [] as Array<{ id: string; email: string | null; phone: string | null }>,
+  },
   staff: [],
 }
 

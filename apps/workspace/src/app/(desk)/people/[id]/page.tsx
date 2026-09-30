@@ -54,6 +54,7 @@ export default async function PersonPage({
             personId={person.id}
             suggestion={result.data.suggestion}
             linksAvailable={result.data.links_available}
+            linkedCustomerId={result.data.link?.customer_id ?? null}
             notice={notice}
           />
         </aside>

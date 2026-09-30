@@ -3,11 +3,34 @@ import { Modules } from "@medusajs/framework/utils"
 import { BESPOKE_REQUEST_MODULE } from "../../../../../modules/bespoke-request"
 import { LEAD_MODULE } from "../../../../../modules/lead"
 import { PERSON_LINK_MODULE } from "../../../../../modules/person-link"
-import { matchCandidates, normalizeEmail } from "../../../../../lib/woodright-workspace/identity"
+import { matchCandidates, normalizeEmail, withholdIncompleteLookup } from "../../../../../lib/woodright-workspace/identity"
 import { queryOf } from "../../../../../lib/woodright-workspace/load-seller-products"
 
 function text(value: unknown): string | null {
   return typeof value === "string" ? value : null
+}
+
+function suggestionPayload(
+  suggestion: { status: string; ids: string[]; lookup_incomplete?: boolean },
+  customers: Array<{ id: string; email: string | null; phone: string | null }>
+) {
+  const byId = new Map(customers.map((customer) => [customer.id, customer]))
+  const candidates = suggestion.ids.map((id) => {
+    const customer = byId.get(id)
+    return {
+      id,
+      email: customer?.email ?? null,
+      phone: customer?.phone ?? null,
+    }
+  })
+  const lookup_incomplete = suggestion.lookup_incomplete === true
+  if (suggestion.status === "needs_review") {
+    return { status: "needs_review", customer_ids: suggestion.ids, candidates, lookup_incomplete }
+  }
+  if (suggestion.status === "linked") {
+    return { status: "candidate", customer_ids: suggestion.ids, candidates, lookup_incomplete }
+  }
+  return { status: "none", customer_ids: [], candidates: [], lookup_incomplete }
 }
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
@@ -38,25 +61,51 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const email = text(lead.email)
   const phone = text(lead.phone)
   let customers: Array<{ id: string; email: string | null; phone: string | null }> = []
+  let phoneLookupFailed = false
   try {
     const query = queryOf(req)
-    const byEmail = email
-      ? await query.graph({
+    const rows = new Map<string, { id: string; email: string | null; phone: string | null }>()
+    const collect = (data: unknown) => {
+      for (const row of (data ?? []) as Array<Record<string, unknown>>) {
+        const id = String(row.id)
+        rows.set(id, { id, email: text(row.email), phone: text(row.phone) })
+      }
+    }
+    if (email) {
+      try {
+        const byEmail = await query.graph({
           entity: "customer",
           fields: ["id", "email", "phone", "first_name", "last_name"],
           filters: { email: normalizeEmail(email) ?? email },
-          pagination: { take: 5 },
+          pagination: { take: 5, skip: 0 },
         })
-      : { data: [] }
-    customers = ((byEmail.data ?? []) as Array<Record<string, unknown>>).map((row) => ({
-      id: String(row.id),
-      email: text(row.email),
-      phone: text(row.phone),
-    }))
+        collect(byEmail.data)
+      } catch {
+        // email lookup is optional for the suggestion
+      }
+    }
+    if (phone) {
+      try {
+        const byPhone = await query.graph({
+          entity: "customer",
+          fields: ["id", "email", "phone", "first_name", "last_name"],
+          filters: { phone },
+          pagination: { take: 5, skip: 0 },
+        })
+        collect(byPhone.data)
+      } catch {
+        phoneLookupFailed = true
+      }
+    }
+    customers = [...rows.values()]
   } catch {
     customers = []
+    phoneLookupFailed = Boolean(phone)
   }
-  const suggestion = matchCandidates(customers, { email, phone })
+  const suggestion = withholdIncompleteLookup(matchCandidates(customers, { email, phone }), {
+    phonePresent: Boolean(phone),
+    phoneLookupFailed,
+  })
 
   let orders: Array<Record<string, unknown>> = []
   const customerId = link ? text(link.customer_id) : null
@@ -67,7 +116,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         entity: "order",
         fields: ["id", "display_id", "created_at", "total", "currency_code", "payment_status"],
         filters: { customer_id: customerId },
-        pagination: { take: 20 },
+        pagination: { take: 20, skip: 0 },
       })
       orders = (result.data ?? []) as Array<Record<string, unknown>>
     } catch {
@@ -107,12 +156,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         }
       : null,
     links_available: linksAvailable,
-    suggestion:
-      suggestion.status === "needs_review"
-        ? { status: "needs_review", customer_ids: suggestion.ids }
-        : suggestion.status === "linked"
-          ? { status: "candidate", customer_ids: suggestion.ids }
-          : { status: "none", customer_ids: [] },
+    suggestion: suggestionPayload(suggestion, customers),
     staff,
   })
 }

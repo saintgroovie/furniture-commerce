@@ -59,7 +59,17 @@ File: `apps/backend/src/modules/person-link/migrations/Migration20260930180000.t
 
 It creates `woodright_person_link` and drops that table on the way down.
 
-This change was not applied to production and was not applied to the daily QA database. Apply only with an owner decision, on a backup, with `medusa db:migrate` from the release that contains this module. Until then, people and requests still read. Link and assignee writes return 503.
+This change was not applied to production and was not applied to the daily QA database. The migration itself refuses any database whose name does not start with `workspace_it`. `yarn db:migrate:workspace-it` loads the same env files as Medusa, then allows the migration only when `WOODRIGHT_DB_ISOLATION=isolated` and the URL is loopback, not port `5432`, database name starts with `workspace_it`, and the URL does not override host or port. That flag does not make a forbidden target allowed.
+
+On an isolated database named `workspace_it` the migration applied, a second run was a no-op, a dropped table rolled back inside a transaction, and a second link for the same lead was rejected by the unique index.
+
+Lead, bespoke request, room-set, product classification and payment link previously had no committed migrations, so a fresh database had no tables. Draft product create failed with `product_classification does not exist` and left an inventory item behind. Additive `create table if not exists` migrations were added. Their `down` refuses every database except `workspace_it`, so a mistaken rollback cannot drop the live tables. On `workspace_it`, creating a STANDARD draft then returned 201 and stayed a draft.
+
+The desk session cookie is httpOnly. Its expiry is signed with `WOODRIGHT_WORKSPACE_SESSION_SECRET` (at least 32 characters, server only). A cookie with a changed expiry is rejected. Without that secret, login does not issue a session.
+
+## Admin fallback is not access control
+
+`WOODRIGHT_WORKSPACE_OWNER_EMAILS` only decides whether Стол shows «Открыть в Medusa». It does not close `/app`. Any Medusa admin who can sign in can still open `/app` directly. Existing staff are not locked out. New workspace writes still require a Medusa admin session. The escape hatch stays closed unless the email is on the allowlist.
 
 ## DNS mail debt
 

@@ -10,12 +10,17 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
   const { id } = await context.params
   const form = await request.formData()
+  const unlink = form.get("unlink") === "1"
   const customerId = String(form.get("customer_id") ?? "")
-  if (!customerId || customerId.includes(",")) {
+  if (!unlink && (!customerId || customerId.includes(","))) {
     return NextResponse.json({ message: "Нужен один покупатель" }, { status: 400 })
   }
   try {
-    await medusaSend(`/admin/woodright/people/${id}/link`, "POST", { customer_id: customerId })
+    await medusaSend(
+      `/admin/woodright/people/${id}/link`,
+      "POST",
+      unlink ? { unlink: true } : { customer_id: customerId }
+    )
   } catch {
     return redirectTo(request, `/people/${id}?saved=0`)
   }
