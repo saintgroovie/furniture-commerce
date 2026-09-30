@@ -1,7 +1,9 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
 import { describe, it } from "node:test"
 import {
   blockerLabel,
+  buyerVisiblePromoLabel,
   formatRubAdmin,
   formatScheduleRu,
   isoToLocalInput,
@@ -12,6 +14,20 @@ import {
 } from "./catalog-promo-labels.ts"
 
 describe("catalog-promo-labels", () => {
+  it("buyerVisiblePromoLabel does not invent a phrase", () => {
+    assert.equal(buyerVisiblePromoLabel(""), null)
+    assert.equal(buyerVisiblePromoLabel("   "), null)
+    assert.equal(buyerVisiblePromoLabel(null), null)
+    assert.equal(buyerVisiblePromoLabel(undefined), null)
+    assert.equal(buyerVisiblePromoLabel("  Весна  "), "Весна")
+    const page = readFileSync(
+      new URL("../../routes/woodright/catalog-promo/page.tsx", import.meta.url),
+      "utf8"
+    )
+    assert.equal(page.includes("Специальная цена"), false)
+    assert.match(page, /buyerVisiblePromoLabel/)
+  })
+
   it("formatRubAdmin groups and uses nbsp", () => {
     assert.equal(formatRubAdmin(98550), "98\u00a0550\u00a0₽")
     assert.equal(formatRubAdmin(null), "-")

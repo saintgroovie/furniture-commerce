@@ -10,6 +10,9 @@
  *   production apply additionally requires:
  *     CATALOG_PROMO_CONFIRM=CATALOG_PROMO_LAUNCH_V1_PRODUCTION_OWNER_APPROVED
  *     CATALOG_PROMO_PRODUCTION_ACK=I_UNDERSTAND_THIS_WRITES_PRODUCTION
+ *
+ * Historical only. Any resolved database name `woodright_public_production`
+ * is refused before target/mode checks and before any price or slot write.
  */
 import {
   CATALOG_PROMO_MANIFEST_ID,
@@ -23,6 +26,9 @@ export const CATALOG_PROMO_CONFIRM_EXPECTED =
   "CATALOG_PROMO_LAUNCH_V1_PRODUCTION_OWNER_APPROVED" as const
 export const CATALOG_PROMO_PRODUCTION_ACK_EXPECTED =
   "I_UNDERSTAND_THIS_WRITES_PRODUCTION" as const
+export const CATALOG_PROMO_PUBLIC_PRODUCTION_DB = "woodright_public_production" as const
+export const CATALOG_PROMO_PUBLIC_PRODUCTION_REFUSED =
+  "REFUSED_DEPRECATED_PUBLIC_PRODUCTION_PROMO_BOOTSTRAP" as const
 
 export type CatalogPromoTarget = "local" | "staging" | "production"
 export type CatalogPromoMode = "dry-run" | "apply"
@@ -60,6 +66,18 @@ export function assertCatalogPromoGate(
   }
   const manifest = validateCatalogPromoManifest()
   if (!manifest.ok) return fail("manifest_invalid", manifest.message)
+
+  const databaseUrlEarly =
+    input.databaseUrl !== undefined ? input.databaseUrl : envRaw(env, "DATABASE_URL")
+  if (databaseUrlEarly != null && databaseUrlEarly !== "") {
+    const early = parseDatabaseUrl(databaseUrlEarly)
+    if (early.ok && early.dbName === CATALOG_PROMO_PUBLIC_PRODUCTION_DB) {
+      return fail(
+        CATALOG_PROMO_PUBLIC_PRODUCTION_REFUSED,
+        "historical catalog promo bootstrap cannot run against woodright_public_production"
+      )
+    }
+  }
 
   const target = envRaw(env, "CATALOG_PROMO_TARGET")
   const mode = envRaw(env, "CATALOG_PROMO_MODE")

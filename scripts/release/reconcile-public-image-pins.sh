@@ -193,6 +193,189 @@ if [[ "$UPDATE_SCOPED_OWNERSHIP" == "1" ]]; then
     || fail 2 "UPDATE_SCOPED_OWNERSHIP=1 requires EXPECTED_RELEASE.json at $EXPECTED_RELEASE_FILE"
 fi
 
+# Pre-cutover only: record an exact split predecessor in EXPECTED_RELEASE.
+# Does not touch image pins, ACTIVE_OWNER, or compose. A unified pair still
+# goes through UPDATE_SCOPED_OWNERSHIP after cutover.
+if [[ "${WRITE_SPLIT_EXPECTED_RELEASE:-0}" == "1" ]]; then
+  [[ "$COMPONENT_SCOPE" == "pair" ]] || fail 2 "WRITE_SPLIT_EXPECTED_RELEASE=1 is pair-only"
+  [[ "$UPDATE_PINS" == "0" && "$UPDATE_ACTIVE_PUBLIC" == "0" && "$UPDATE_ACTIVE_RELEASE" == "0" && "$UPDATE_SCOPED_OWNERSHIP" == "0" ]] \
+    || fail 2 "split expected write refuses pins, active release, and scoped owner rewrite"
+  be_sha="${EXPECTED_BACKEND_SOURCE_SHA:-}"
+  sf_sha="${EXPECTED_STOREFRONT_SOURCE_SHA:-}"
+  [[ "$be_sha" =~ $SHA_RE && "$sf_sha" =~ $SHA_RE ]] || fail 2 "split source SHAs invalid"
+  [[ "$be_sha" != "$sf_sha" ]] || fail 2 "split source SHAs must differ; unified reconcile owns equal SHAs"
+  [[ "$EXPECTED_BACKEND_DIGEST" =~ $DIGEST_RE && "$EXPECTED_STOREFRONT_DIGEST" =~ $DIGEST_RE ]] \
+    || fail 2 "split digests invalid"
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" != "1" ]]; then
+    EXPECTED_RELEASE_FILE="${WOODRIGHT_EXPECTED_RELEASE}"
+  fi
+  [[ -f "$EXPECTED_RELEASE_FILE" ]] || fail 2 "EXPECTED_RELEASE missing: $EXPECTED_RELEASE_FILE"
+  _split_target="$(readlink -f "$EXPECTED_RELEASE_FILE" 2>/dev/null || echo "$EXPECTED_RELEASE_FILE")"
+  _owner_target="$(readlink -f "${WOODRIGHT_ACTIVE_OWNER}" 2>/dev/null || echo "${WOODRIGHT_ACTIVE_OWNER}")"
+  [[ "$_split_target" != "$_owner_target" ]] || fail 2 "refusing to rewrite ACTIVE_OWNER as expected release"
+  case "$_split_target" in
+    *ACTIVE_OWNER.json|*runtime-ownership-production*|*runtime-ownership-public-production*)
+      fail 2 "refusing protected manifest path: $_split_target"
+      ;;
+  esac
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" != "1" ]]; then
+    _canon_expected="$(readlink -f "${WOODRIGHT_EXPECTED_RELEASE}" 2>/dev/null || echo "${WOODRIGHT_EXPECTED_RELEASE}")"
+    [[ "$_split_target" == "$_canon_expected" ]] || fail 2 "split write must target public_demo EXPECTED_RELEASE"
+    wr_assert_manifest_path_for_environment "$EXPECTED_RELEASE_FILE" \
+      || fail 2 "EXPECTED_RELEASE outside public_demo ownership"
+  fi
+  unset _split_target _owner_target _canon_expected
+  for _name in \
+    "$BACKEND_CONTAINER" "$STOREFRONT_CONTAINER" \
+    "${WOODRIGHT_PG_CONTAINER_PREFIX:-}" "${WOODRIGHT_REDIS_CONTAINER_DEFAULT:-}"
+  do
+    case "$_name" in
+      *production*|*public-production*) fail 2 "refusing production runtime identity: $_name" ;;
+      "") fail 2 "runtime identity name empty" ;;
+    esac
+  done
+  unset _name
+  # Defined here, invoked only after acquire_lock so a concurrent cutover
+  # cannot publish a unified release underneath this write.
+  wr_split_expected_apply() {
+  if [[ "${WOODRIGHT_PIN_RECONCILE_ALLOW_TEST_LOCK:-}" != "1" ]]; then
+    python3 - "$BACKEND_CONTAINER" "$STOREFRONT_CONTAINER" \
+      "${WOODRIGHT_PG_CONTAINER_PREFIX}" "${WOODRIGHT_REDIS_CONTAINER_DEFAULT}" \
+      "$be_sha" "$sf_sha" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY' \
+      || fail 5 "split live identity did not match docker"
+import json, subprocess, sys
+be_name, sf_name, pg_name, redis_name, be_sha, sf_sha, be_dig, sf_dig = sys.argv[1:9]
+
+def die(msg):
+    raise SystemExit(msg)
+
+def inspect(name):
+    r = subprocess.run(["docker", "inspect", name], capture_output=True, text=True)
+    if r.returncode != 0:
+        die("inspect_failed " + name)
+    return json.loads(r.stdout)[0]
+
+def running(ins):
+    return bool((ins.get("State") or {}).get("Running"))
+
+def labels(ins):
+    return (ins.get("Config") or {}).get("Labels") or {}
+
+def networks(ins):
+    return set(((ins.get("NetworkSettings") or {}).get("Networks") or {}))
+
+def digest_ok(ins, want):
+    img = ins.get("Image") or ""
+    if img == want:
+        return True
+    r = subprocess.run(["docker", "image", "inspect", want, "--format", "{{.Id}}"], capture_output=True, text=True)
+    if r.returncode == 0 and r.stdout.strip() == img:
+        return True
+    # Registry manifest digests are not image ids. Accept only an exact RepoDigest.
+    img_doc = subprocess.run(["docker", "image", "inspect", img], capture_output=True, text=True)
+    if img_doc.returncode != 0:
+        return False
+    try:
+        repo = json.loads(img_doc.stdout)[0].get("RepoDigests") or []
+    except Exception:
+        return False
+    return any(item.endswith("@" + want) for item in repo)
+
+def host_of(env, key):
+    prefix = key + "="
+    for item in env:
+        if not item.startswith(prefix):
+            continue
+        val = item.split("=", 1)[1]
+        if "://" in val:
+            val = val.split("://", 1)[1]
+        if "@" in val:
+            val = val.split("@", 1)[1]
+        return val.split(":", 1)[0].split("/", 1)[0]
+    return ""
+
+for name in (be_name, sf_name, pg_name, redis_name):
+    if "production" in name.lower():
+        die("production_name " + name)
+be, sf = inspect(be_name), inspect(sf_name)
+pg, rd = inspect(pg_name), inspect(redis_name)
+for ins, name in ((be, be_name), (sf, sf_name), (pg, pg_name), (rd, redis_name)):
+    if not running(ins):
+        die("not_running " + name)
+if labels(be).get("com.woodright.runtime-role") != "public_demo":
+    die("backend_role")
+if labels(sf).get("com.woodright.runtime-role") != "public_demo":
+    die("storefront_role")
+if labels(be).get("org.opencontainers.image.revision") != be_sha:
+    die("backend_revision")
+if labels(sf).get("org.opencontainers.image.revision") != sf_sha:
+    die("storefront_revision")
+if not digest_ok(be, be_dig) or not digest_ok(sf, sf_dig):
+    die("digest")
+be_nets = networks(be)
+if not (networks(pg) & be_nets) or not (networks(rd) & be_nets):
+    die("datastore_network")
+env = (be.get("Config") or {}).get("Env") or []
+pg_host, rd_host = host_of(env, "DATABASE_URL"), host_of(env, "REDIS_URL")
+if (not pg_host) or (not rd_host) or ("production" in pg_host) or ("production" in rd_host):
+    die("datastore_host")
+print("split_live_identity_ok")
+PY
+  fi
+  SPLIT_TMP="$(mktemp)"
+  python3 - "$EXPECTED_RELEASE_FILE" "$SPLIT_TMP" "$be_sha" "$sf_sha" \
+    "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY' || fail 2 "split expected rewrite failed"
+import json, sys
+from datetime import datetime, timezone
+from pathlib import Path
+src, dst, be_sha, sf_sha, be_d, sf_d = sys.argv[1:7]
+doc = json.loads(Path(src).read_text())
+for key in ("application_source_sha", "release_sha", "git_sha", "approved_git_sha"):
+    prev = doc.get(key)
+    if prev and prev not in (be_sha, sf_sha):
+        doc["previous_" + key] = prev
+    doc.pop(key, None)
+doc["release_identity"] = "split"
+doc["backend_source_sha"] = be_sha
+doc["storefront_source_sha"] = sf_sha
+doc["backend_digest"] = be_d
+doc["storefront_digest"] = sf_d
+now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+doc["updated_at"] = now
+if "updated_at_utc" in doc:
+    doc["updated_at_utc"] = now
+Path(dst).write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+PY
+  if [[ "$APPLY" != "1" ]]; then
+    rm -f "$SPLIT_TMP"
+    log "split_expected_dry_run file=$EXPECTED_RELEASE_FILE"
+    return 0
+  fi
+  if [[ -w "$EXPECTED_RELEASE_FILE" ]]; then
+    cp "$SPLIT_TMP" "$EXPECTED_RELEASE_FILE"
+  else
+    sudo -n cp "$SPLIT_TMP" "$EXPECTED_RELEASE_FILE" || fail 4 "blocked_root_expected_release_write"
+  fi
+  rm -f "$SPLIT_TMP"
+  python3 - "$EXPECTED_RELEASE_FILE" "$be_sha" "$sf_sha" <<'PY' || fail 7 "split expected post-write check failed"
+import json, sys
+from pathlib import Path
+doc = json.loads(Path(sys.argv[1]).read_text())
+be, sf = sys.argv[2], sys.argv[3]
+if doc.get("release_identity") != "split":
+    raise SystemExit("release_identity")
+if doc.get("backend_source_sha") != be or doc.get("storefront_source_sha") != sf:
+    raise SystemExit("component_sha")
+for key in ("application_source_sha", "release_sha", "git_sha", "approved_git_sha"):
+    if doc.get(key):
+        raise SystemExit("unified sha still present: " + key)
+print("split_expected_written")
+PY
+  log "split_expected_written file=$EXPECTED_RELEASE_FILE"
+  return 0
+  }
+fi
+
 release_lock_holder() {
   if [[ -n "${LOCK_HOLDER_PID:-}" ]]; then
     kill "$LOCK_HOLDER_PID" 2>/dev/null || true
@@ -361,6 +544,15 @@ maybe_fault() {
     fail 7 "injected fault after $stage"
   fi
 }
+
+if [[ "${WRITE_SPLIT_EXPECTED_RELEASE:-0}" == "1" ]]; then
+  # The full cleanup trap is installed later for pin updates. This path exits
+  # first, so release the fallback lock holder on every exit including fail().
+  trap 'release_lock_holder' EXIT
+  acquire_lock
+  wr_split_expected_apply
+  exit 0
+fi
 
 [[ "$EXPECTED_RELEASE_SHA" =~ $SHA_RE ]] || fail 2 "EXPECTED_RELEASE_SHA invalid"
 [[ "$EXPECTED_BACKEND_DIGEST" =~ $DIGEST_RE ]] || fail 2 "EXPECTED_BACKEND_DIGEST invalid"
@@ -714,6 +906,8 @@ PY
 
 rewrite_expected_release() {
   local src="$1" dst="$2"
+  # Unified pair reconcile only. Component SHAs always follow EXPECTED_RELEASE_SHA.
+  # A pre-cutover split is written by the monitor pin, not by caller env overrides.
   python3 - "$src" "$dst" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY'
 import json, sys
 from datetime import datetime, timezone
@@ -723,12 +917,15 @@ doc=json.loads(Path(src).read_text())
 prev = doc.get("application_source_sha") or doc.get("release_sha") or doc.get("git_sha") or ""
 if prev and prev != sha:
     doc["previous_application_source_sha"] = prev
+doc["release_identity"] = "unified"
 doc["application_source_sha"] = sha
 doc["release_sha"] = sha
 doc["git_sha"] = sha
 doc["approved_git_sha"] = sha
 doc["backend_digest"] = be_d
 doc["storefront_digest"] = sf_d
+doc["backend_source_sha"] = sha
+doc["storefront_source_sha"] = sha
 now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 doc["updated_at"] = now
 if "updated_at_utc" in doc:
@@ -794,6 +991,23 @@ for label, doc in (("ACTIVE_OWNER", owner), ("EXPECTED_RELEASE", expected)):
 o_sha, e_sha = pick_sha(owner), pick_sha(expected)
 o_be, e_be = pick_be(owner), pick_be(expected)
 o_sf, e_sf = pick_sf(owner), pick_sf(expected)
+be_src = str(expected.get("backend_source_sha") or "")
+sf_src = str(expected.get("storefront_source_sha") or "")
+# An exact split predecessor has no single global SHA. Pair cutover is allowed
+# to rewrite that manifest onto the unified release; the post-write check still
+# requires both documents to converge.
+if (
+    expected.get("release_identity") == "split"
+    and SHA_RE.match(be_src)
+    and SHA_RE.match(sf_src)
+    and be_src != sf_src
+):
+    if not (DIGEST_RE.match(e_be) and DIGEST_RE.match(e_sf)):
+        raise SystemExit("split EXPECTED_RELEASE missing sha256 digests")
+    if not SHA_RE.match(o_sha):
+        raise SystemExit("ACTIVE_OWNER missing 40-hex sha")
+    print("scoped_docs_split_predecessor_ok")
+    raise SystemExit(0)
 if not (SHA_RE.match(o_sha) and SHA_RE.match(e_sha)):
     raise SystemExit("scoped docs missing 40-hex sha")
 if not (DIGEST_RE.match(o_be) and DIGEST_RE.match(e_be) and DIGEST_RE.match(o_sf) and DIGEST_RE.match(e_sf)):
@@ -823,6 +1037,10 @@ if owner.get("running_backend_digest") != be or owner.get("running_storefront_di
     fail("ACTIVE_OWNER running digests not converged")
 if expected.get("application_source_sha") != sha or expected.get("release_sha") != sha:
     fail("EXPECTED_RELEASE sha not converged")
+if expected.get("backend_source_sha") != sha or expected.get("storefront_source_sha") != sha:
+    fail("EXPECTED_RELEASE component shas not converged")
+if expected.get("release_identity") != "unified":
+    fail("EXPECTED_RELEASE release_identity not unified")
 if expected.get("backend_digest") != be or expected.get("storefront_digest") != sf:
     fail("EXPECTED_RELEASE digests not converged")
 print("scoped_docs_converged_ok")

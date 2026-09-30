@@ -111,7 +111,9 @@ OWNER_SHA=""
 log "identity sf=$SF_DIGEST be=$BE_DIGEST git=$GIT_SHA"
 
 # PostgreSQL readiness
-PG_CONTAINER="${WOODRIGHT_PG_CONTAINER:-woodright-stack-3dsdhd-postgres-1}"
+# Profile exports WOODRIGHT_PG_CONTAINER_PREFIX (exact public_demo name).
+# Do not fall through to the historical compose-generated name when the profile is loaded.
+PG_CONTAINER="${WOODRIGHT_PG_CONTAINER:-${WOODRIGHT_PG_CONTAINER_PREFIX:-woodright-stack-3dsdhd-postgres-1}}"
 docker exec "$PG_CONTAINER" pg_isready -U "${WOODRIGHT_PG_USER:-woodright}" >/dev/null \
   || die "pg_isready failed"
 

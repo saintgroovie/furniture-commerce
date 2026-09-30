@@ -12,6 +12,9 @@
  *
  * NEVER touches other products / prices. NEVER deletes. Re-running is a no-op.
  * Gate: see catalog-promo-launch-gate.ts (target/mode/db/production tokens).
+ * Deprecated for the current public catalog. Database name
+ * woodright_public_production is refused before any read or write,
+ * in every target and mode.
  */
 import type { ExecArgs } from "@medusajs/framework/types"
 import {
