@@ -222,7 +222,24 @@ export async function removeCatalogPromoPrice(
   return { removed: true, price_id: current.id }
 }
 
-/** Sale amount for a percent discount, rounded to whole rubles (never ≥ base). */
+/** Percent is preview math. Stored value must be a positive integer below the base. */
+export function promoSaleAmount(input: {
+  amount?: unknown
+  percent?: unknown
+  base: number
+}): number | null {
+  if (typeof input.percent === "number") return saleAmountForPercent(input.base, input.percent)
+  if (
+    typeof input.amount === "number" &&
+    Number.isSafeInteger(input.amount) &&
+    input.amount > 0 &&
+    input.amount < input.base
+  ) {
+    return input.amount
+  }
+  return null
+}
+
 export function saleAmountForPercent(basePrice: number, percent: number): number | null {
   if (!(basePrice > 0) || !(percent > 0) || percent >= 100) return null
   const sale = Math.round(basePrice * (1 - percent / 100))

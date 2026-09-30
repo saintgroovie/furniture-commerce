@@ -117,7 +117,7 @@ export function buildDeskInbox(input: {
         hint: "Опубликован, покупатель не найдёт",
         action: "Исправить видимость",
         overdue: true,
-        href: `/woodright/products/${product.id}`,
+        href: `/woodright/products/${product.id}#publish`,
       })
     }
     if (product.missing_media) {
@@ -128,7 +128,7 @@ export function buildDeskInbox(input: {
         hint: product.sku ? `${product.sku} - нет фото` : "Нет фото",
         action: "Открыть карточку",
         overdue: true,
-        href: `/woodright/products/${product.id}`,
+        href: `/woodright/products/${product.id}#media`,
       })
     }
     if (product.missing_price) {
@@ -139,7 +139,7 @@ export function buildDeskInbox(input: {
         hint: "Нет цены",
         action: "Поставить цену",
         overdue: false,
-        href: `/woodright/products/${product.id}`,
+        href: `/woodright/products/${product.id}#price`,
       })
     }
   }

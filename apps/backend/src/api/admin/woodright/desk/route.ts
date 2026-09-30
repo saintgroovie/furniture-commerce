@@ -22,7 +22,7 @@ function toWorkspaceHref(href: string): string {
     return id ? `/requests/${id}` : "/requests"
   }
   if (url.pathname.startsWith("/woodright/products/")) {
-    return `/catalog/${url.pathname.slice("/woodright/products/".length)}`
+    return `/catalog/${url.pathname.slice("/woodright/products/".length)}${url.hash}`
   }
   if (url.pathname.startsWith("/woodright/production")) {
     const focus = url.searchParams.get("focus")

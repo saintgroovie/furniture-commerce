@@ -7,6 +7,8 @@ import {
   type PromotionSlotUpdateInput,
 } from "../../../../modules/promotion-slot/slot-contract"
 import { loadCatalogPromoState } from "./load-catalog-promo-state"
+import { appendDeskAudit } from "../../../../lib/woodright-workspace/desk-audit"
+import { requireDeskWrite } from "../../../../lib/woodright-workspace/require-desk-write"
 
 /**
  * Catalog Promotion Window - seller workspace state.
@@ -66,6 +68,8 @@ function parseSlotBody(body: unknown):
  * PUT /admin/woodright/catalog-promo
  */
 async function putHandler(req: MedusaRequest, res: MedusaResponse): Promise<void> {
+  const gate = await requireDeskWrite(req, res, "promotions.manage")
+  if (!gate) return
   const parsed = parseSlotBody(req.body)
   if (!parsed.ok) {
     res.status(400).json({ code: "invalid_body", message: parsed.message, field: parsed.field })
@@ -74,6 +78,7 @@ async function putHandler(req: MedusaRequest, res: MedusaResponse): Promise<void
   const slotService = req.scope.resolve(
     PROMOTION_SLOT_MODULE
   ) as PromotionSlotModuleService
+  const before = await loadCatalogPromoState(req)
   try {
     await slotService.upsertCatalogSlot(parsed.value)
   } catch (error) {
@@ -83,7 +88,17 @@ async function putHandler(req: MedusaRequest, res: MedusaResponse): Promise<void
     }
     throw error
   }
-  res.json(await loadCatalogPromoState(req))
+  const after = await loadCatalogPromoState(req)
+  const audit = await appendDeskAudit(req, {
+    actorId: gate.actorId,
+    actorEmail: gate.email,
+    entityType: "promotion_slot",
+    entityId: after.slot.id ?? "catalog_main",
+    action: "slot.update",
+    before: { enabled: before.slot.enabled, product_ids: before.slot.product_ids },
+    after: { enabled: after.slot.enabled, product_ids: after.slot.product_ids },
+  })
+  res.json({ ...after, audit })
 }
 
 export const GET = withPromoErrors(getHandler)

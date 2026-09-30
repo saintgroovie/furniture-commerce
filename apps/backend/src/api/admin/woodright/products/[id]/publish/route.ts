@@ -1,5 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
+import { appendDeskAudit } from "../../../../../../lib/woodright-workspace/desk-audit"
+import { requireDeskWrite } from "../../../../../../lib/woodright-workspace/require-desk-write"
 import {
   computeWorkspacePublishReadiness,
   decideWorkspacePublish,
@@ -19,6 +21,8 @@ type ProductModule = {
  * POST /admin/woodright/products/:id/publish
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const gate = await requireDeskWrite(req, res, "catalog.publish")
+  if (!gate) return
   const id = req.params.id as string
   const query = req.scope.resolve("query") as QueryGraph
   const { data } = await query.graph({
@@ -45,10 +49,21 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   const productModule = req.scope.resolve(Modules.PRODUCT) as ProductModule
+  const previousStatus = String(raw.status ?? "draft")
   await productModule.updateProducts(id, { status: "published" })
   const product = await loadSellerProductById(query, id)
+  const audit = await appendDeskAudit(req, {
+    actorId: gate.actorId,
+    actorEmail: gate.email,
+    entityType: "product",
+    entityId: id,
+    action: "publish",
+    before: { status: previousStatus },
+    after: { status: product?.status ?? "published" },
+  })
   res.json({
     product,
     publish: product?.publish ?? readiness,
+    audit,
   })
 }

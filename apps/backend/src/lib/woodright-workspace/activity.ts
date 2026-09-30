@@ -3,7 +3,7 @@ import { STAGE_OWNER_LABEL, type OrderProcessStage } from "../woodright-order-pr
 export type ActivityItem = {
   id: string
   at: string | null
-  kind: "order_created" | "stage_changed" | "note"
+  kind: "order_created" | "stage_changed" | "note" | "assignee"
   label: string
   detail: string | null
 }
@@ -37,6 +37,38 @@ export function projectOrderActivity(input: {
     })
   }
   for (const event of input.events ?? []) {
+    if (event.event_type === "note_updated") {
+      items.push({
+        id: `note:${event.id}`,
+        at: event.created_at ?? null,
+        kind: "note",
+        label: "Внутренняя заметка",
+        detail: event.internal_note?.trim() || "Заметка очищена",
+      })
+      continue
+    }
+    if (event.event_type === "assignee_changed") {
+      items.push({
+        id: `assignee:${event.id}`,
+        at: event.created_at ?? null,
+        kind: "assignee",
+        label: "Ответственный изменён",
+        detail: event.internal_note?.trim() || null,
+      })
+      continue
+    }
+    if (event.event_type === "created") {
+      items.push({
+        id: `opened:${event.id}`,
+        at: event.created_at ?? null,
+        kind: "stage_changed",
+        label: "Этап изготовления открыт",
+        detail: event.next_stage
+          ? STAGE_OWNER_LABEL[event.next_stage as OrderProcessStage] ?? event.next_stage
+          : null,
+      })
+      continue
+    }
     if (event.next_stage || event.event_type) {
       items.push({
         id: `stage:${event.id}`,

@@ -138,6 +138,28 @@ export function pickPrimaryRubPrice(variant: Record<string, unknown>): VariantRu
   return prices[0] ?? null
 }
 
+export type BasePriceRow = {
+  id: string
+  amount: number
+  currency_code: string
+  price_list_id?: string | null
+}
+
+/** Keep every base price. Only the selected ruble row changes. */
+export function mergeBasePriceUpdate(
+  prices: BasePriceRow[],
+  targetId: string,
+  nextAmount: number
+): Array<{ id: string; amount: number; currency_code: string }> | null {
+  const base = prices.filter((price) => !price.price_list_id)
+  if (!base.some((price) => price.id === targetId)) return null
+  return base.map((price) => ({
+    id: price.id,
+    currency_code: price.currency_code,
+    amount: price.id === targetId ? nextAmount : price.amount,
+  }))
+}
+
 export function productHasRubPrice(product: Record<string, unknown>): boolean {
   const variants = product.variants
   if (!Array.isArray(variants) || variants.length === 0) return false

@@ -1,4 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { requireDeskWrite } from "../../../../../../lib/woodright-workspace/require-desk-write"
 import { PERSON_LINK_MODULE } from "../../../../../../modules/person-link"
 
 type Body = {
@@ -12,6 +13,8 @@ type Body = {
  * the caller must send one customer id.
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const gate = await requireDeskWrite(req, res, "people.link")
+  if (!gate) return
   const leadId = req.params.id as string
   const body = (req.body ?? {}) as Body
   if (Array.isArray((body as { customer_ids?: unknown }).customer_ids)) {
