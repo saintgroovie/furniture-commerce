@@ -362,7 +362,9 @@ try:
   d=json.load(open(p))
 except Exception:
   raise SystemExit(0)
-print(str(d.get("release_sha") or d.get("application_sha") or d.get("sha") or "").strip().lower())
+# Buyer header is the storefront revision. Prefer the explicit storefront
+# source SHA so an approved split predecessor is not compared to the backend SHA.
+print(str(d.get("storefront_source_sha") or d.get("release_sha") or d.get("application_sha") or d.get("sha") or "").strip().lower())
 ' "$EXPECTED_RELEASE" 2>/dev/null || true)"
 fi
 if [[ -z "$BUYER_SHA" ]]; then
