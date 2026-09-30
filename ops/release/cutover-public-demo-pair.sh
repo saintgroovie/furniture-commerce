@@ -35,10 +35,14 @@ SF_DIGEST=""
 BE_IMAGE=""
 SF_IMAGE=""
 EXPECTED_OLD_SHA=""
+EXPECTED_OLD_BE_SHA=""
+EXPECTED_OLD_SF_SHA=""
 EXPECTED_OLD_BE_DIGEST=""
 EXPECTED_OLD_SF_DIGEST=""
 EXPECTED_OLD_BE_ID=""
 EXPECTED_OLD_SF_ID=""
+PREDECESSOR_KIND="unified"
+APP_REPO=""
 EVIDENCE_DIR=""
 BE_ENV_FILE=""
 SF_ENV_FILE=""
@@ -73,14 +77,29 @@ Required:
   --backend-digest sha256:<64hex>
   --storefront-digest sha256:<64hex>
   --evidence-dir <absolute path outside git>
+  [--app-repo <git checkout with apps/backend>]
+
+--app-repo defaults to the script repository. The installed ops tree is not
+an application checkout. A required migration range (split predecessor, or
+unified --expected-old-sha) fails closed unless that checkout contains both
+commits. This is not a skip switch.
 
 Execute additionally:
   --backend-env-file <mode 600>
   --storefront-env-file <mode 600>
   --confirm-mutation I_UNDERSTAND_PUBLIC_DEMO_CUTOVER
   [--expected-old-sha <40hex>]
+  [--expected-old-backend-sha <40hex>]
+  [--expected-old-storefront-sha <40hex>]
   [--expected-old-backend-digest sha256:<64hex>]
   [--expected-old-storefront-digest sha256:<64hex>]
+
+Split live predecessor (backend release SHA != storefront release SHA) is
+accepted only for public_demo, and only when all four expected component
+values are passed and match the live containers exactly. A single
+--expected-old-sha cannot describe that state. The new pair must still be
+one application SHA. Rollback evidence keeps the two old SHAs and digests
+separately. This path is not enabled in cutover-public-production-pair.sh.
   [--expected-old-backend-id <docker-id>]
   [--expected-old-storefront-id <docker-id>]
   [--pdp-url <https://woodright-demo.ru/products/...>]
@@ -161,6 +180,10 @@ parse_args() {
       --storefront-image) SF_IMAGE="${2:?}"; shift 2 ;;
       --expected-old-sha) EXPECTED_OLD_SHA="${2:?}"; shift 2 ;;
       --expected-old-sha=*) EXPECTED_OLD_SHA="${1#--expected-old-sha=}"; shift ;;
+      --expected-old-backend-sha) EXPECTED_OLD_BE_SHA="${2:?}"; shift 2 ;;
+      --expected-old-backend-sha=*) EXPECTED_OLD_BE_SHA="${1#--expected-old-backend-sha=}"; shift ;;
+      --expected-old-storefront-sha) EXPECTED_OLD_SF_SHA="${2:?}"; shift 2 ;;
+      --expected-old-storefront-sha=*) EXPECTED_OLD_SF_SHA="${1#--expected-old-storefront-sha=}"; shift ;;
       --expected-old-backend-digest) EXPECTED_OLD_BE_DIGEST="${2:?}"; shift 2 ;;
       --expected-old-backend-digest=*) EXPECTED_OLD_BE_DIGEST="${1#--expected-old-backend-digest=}"; shift ;;
       --expected-old-storefront-digest) EXPECTED_OLD_SF_DIGEST="${2:?}"; shift 2 ;;
@@ -170,6 +193,8 @@ parse_args() {
       --expected-old-storefront-id) EXPECTED_OLD_SF_ID="${2:?}"; shift 2 ;;
       --expected-old-storefront-id=*) EXPECTED_OLD_SF_ID="${1#--expected-old-storefront-id=}"; shift ;;
       --evidence-dir) EVIDENCE_DIR="${2:?}"; shift 2 ;;
+      --app-repo) APP_REPO="${2:?}"; shift 2 ;;
+      --app-repo=*) APP_REPO="${1#--app-repo=}"; shift ;;
       --evidence-dir=*) EVIDENCE_DIR="${1#--evidence-dir=}"; shift ;;
       --backend-env-file) BE_ENV_FILE="${2:?}"; shift 2 ;;
       --storefront-env-file) SF_ENV_FILE="${2:?}"; shift 2 ;;
@@ -196,6 +221,95 @@ scope_gate() {
   wr_cutover_refuse_production_name "$sf" || exit 2
   case "$be" in *production*) die "production BE name" ;; esac
   case "$sf" in *production*) die "production SF name" ;; esac
+}
+
+write_predecessor_tuple() {
+  mkdir -p "$EVIDENCE_DIR/json"
+  printf '%s\n' "$PREDECESSOR_KIND" >"$EVIDENCE_DIR/json/predecessor-kind.txt"
+  python3 - "$EVIDENCE_DIR/json/predecessor-tuple.json" \
+    "$PREDECESSOR_KIND" "$OLD_BE_SHA" "$OLD_BE_DIGEST" "$OLD_SF_SHA" "$OLD_SF_DIGEST" <<'PY'
+import json, sys
+path, kind, be_sha, be_dig, sf_sha, sf_dig = sys.argv[1:7]
+doc = {
+    "kind": kind,
+    "backend_sha": be_sha,
+    "backend_digest": be_dig,
+    "storefront_sha": sf_sha,
+    "storefront_digest": sf_dig,
+}
+with open(path, "w", encoding="utf-8") as fh:
+    json.dump(doc, fh, indent=2, sort_keys=True)
+    fh.write("\n")
+PY
+}
+
+assert_predecessor_healthy() {
+  local name="${1:?}"
+  local health
+  health="$(wr_cutover_docker inspect "$name" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' 2>/dev/null || true)"
+  [[ "$health" == "healthy" ]] || die "predecessor not healthy name=$name health=${health:-empty}"
+}
+
+# public_demo only. Production pair cutover does not call this.
+accept_explicit_split_predecessor() {
+  local be="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
+  local sf="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
+  [[ "${WOODRIGHT_ENVIRONMENT}" == "public_demo" ]] \
+    || die "split predecessor refused for environment=${WOODRIGHT_ENVIRONMENT}"
+  [[ "$be" == "woodright-staging-backend" && "$sf" == "woodright-staging-storefront" ]] \
+    || die "split predecessor refused for containers be=$be sf=$sf"
+  [[ -z "$EXPECTED_OLD_SHA" ]] \
+    || die "split predecessor refuses a single --expected-old-sha"
+  [[ -n "$EXPECTED_OLD_BE_SHA" ]] \
+    || die "split predecessor requires --expected-old-backend-sha"
+  [[ -n "$EXPECTED_OLD_SF_SHA" ]] \
+    || die "split predecessor requires --expected-old-storefront-sha"
+  [[ -n "$EXPECTED_OLD_BE_DIGEST" ]] \
+    || die "split predecessor requires --expected-old-backend-digest"
+  [[ -n "$EXPECTED_OLD_SF_DIGEST" ]] \
+    || die "split predecessor requires --expected-old-storefront-digest"
+  wr_cutover_require_full_sha "$EXPECTED_OLD_BE_SHA" || exit 2
+  wr_cutover_require_full_sha "$EXPECTED_OLD_SF_SHA" || exit 2
+  wr_cutover_require_digest "$EXPECTED_OLD_BE_DIGEST" || exit 2
+  wr_cutover_require_digest "$EXPECTED_OLD_SF_DIGEST" || exit 2
+  [[ "$EXPECTED_OLD_BE_SHA" != "$EXPECTED_OLD_SF_SHA" ]] \
+    || die "split predecessor expected SHAs must differ"
+  [[ "$OLD_BE_SHA" == "$EXPECTED_OLD_BE_SHA" ]] \
+    || die "expected-old-backend-sha mismatch want=$EXPECTED_OLD_BE_SHA got=$OLD_BE_SHA"
+  [[ "$OLD_SF_SHA" == "$EXPECTED_OLD_SF_SHA" ]] \
+    || die "expected-old-storefront-sha mismatch want=$EXPECTED_OLD_SF_SHA got=$OLD_SF_SHA"
+  [[ "$OLD_BE_DIGEST" == "$EXPECTED_OLD_BE_DIGEST" ]] \
+    || die "expected-old-backend-digest mismatch want=$EXPECTED_OLD_BE_DIGEST got=$OLD_BE_DIGEST"
+  [[ "$OLD_SF_DIGEST" == "$EXPECTED_OLD_SF_DIGEST" ]] \
+    || die "expected-old-storefront-digest mismatch want=$EXPECTED_OLD_SF_DIGEST got=$OLD_SF_DIGEST"
+  local role_be role_sf
+  role_be="$(wr_cutover_docker inspect "$be" --format '{{index .Config.Labels "com.woodright.runtime-role"}}')"
+  role_sf="$(wr_cutover_docker inspect "$sf" --format '{{index .Config.Labels "com.woodright.runtime-role"}}')"
+  [[ "$role_be" == "public_demo" && "$role_sf" == "public_demo" ]] \
+    || die "split predecessor runtime-role mismatch be=$role_be sf=$role_sf"
+  assert_predecessor_healthy "$be"
+  assert_predecessor_healthy "$sf"
+  PREDECESSOR_KIND="split"
+  log "split_predecessor_accepted be_sha=$OLD_BE_SHA sf_sha=$OLD_SF_SHA"
+}
+
+assert_target_pair_unified() {
+  local be_rev="" sf_rev=""
+  if wr_cutover_docker image inspect "$BE_IMAGE" >/dev/null 2>&1; then
+    be_rev="$(wr_cutover_image_revision_label "$BE_IMAGE")"
+  fi
+  if wr_cutover_docker image inspect "$SF_IMAGE" >/dev/null 2>&1; then
+    sf_rev="$(wr_cutover_image_revision_label "$SF_IMAGE")"
+  fi
+  if [[ -n "$be_rev" && -n "$sf_rev" && "$be_rev" != "$sf_rev" ]]; then
+    die "target pair is split be_revision=$be_rev sf_revision=$sf_rev"
+  fi
+  if [[ -n "$be_rev" && "$be_rev" != "$TARGET_SHA" ]]; then
+    die "target backend revision is not the application SHA want=$TARGET_SHA have=$be_rev"
+  fi
+  if [[ -n "$sf_rev" && "$sf_rev" != "$TARGET_SHA" ]]; then
+    die "target storefront revision is not the application SHA want=$TARGET_SHA have=$sf_rev"
+  fi
 }
 
 _digest_from_inspect_json() {
@@ -233,9 +347,22 @@ capture_old_identity() {
   printf '%s\n' "$OLD_BE_SHA" >"$EVIDENCE_DIR/json/old-backend-release-sha.txt"
   printf '%s\n' "$OLD_SF_SHA" >"$EVIDENCE_DIR/json/old-storefront-release-sha.txt"
   if [[ -n "$OLD_BE_SHA" && -n "$OLD_SF_SHA" && "$OLD_BE_SHA" != "$OLD_SF_SHA" ]]; then
-    die "split live release SHA be=$OLD_BE_SHA sf=$OLD_SF_SHA"
+    accept_explicit_split_predecessor
+  else
+    PREDECESSOR_KIND="unified"
+    if [[ -n "$EXPECTED_OLD_BE_SHA" ]]; then
+      wr_cutover_require_full_sha "$EXPECTED_OLD_BE_SHA" || exit 2
+      [[ "$OLD_BE_SHA" == "$EXPECTED_OLD_BE_SHA" ]] \
+        || die "expected-old-backend-sha mismatch want=$EXPECTED_OLD_BE_SHA got=$OLD_BE_SHA"
+    fi
+    if [[ -n "$EXPECTED_OLD_SF_SHA" ]]; then
+      wr_cutover_require_full_sha "$EXPECTED_OLD_SF_SHA" || exit 2
+      [[ "$OLD_SF_SHA" == "$EXPECTED_OLD_SF_SHA" ]] \
+        || die "expected-old-storefront-sha mismatch want=$EXPECTED_OLD_SF_SHA got=$OLD_SF_SHA"
+    fi
   fi
-  if [[ -n "$EXPECTED_OLD_SHA" ]]; then
+  write_predecessor_tuple
+  if [[ "$PREDECESSOR_KIND" == "unified" && -n "$EXPECTED_OLD_SHA" ]]; then
     wr_cutover_require_full_sha "$EXPECTED_OLD_SHA" || exit 2
     if [[ -z "$OLD_BE_SHA" || -z "$OLD_SF_SHA" ]]; then
       die "expected-old-sha set but live release-sha labels missing (be='${OLD_BE_SHA}' sf='${OLD_SF_SHA}'); use --expected-old-*-digest/--expected-old-*-id instead"
@@ -278,18 +405,40 @@ check_no_migration() {
   if [[ "${WOODRIGHT_PENDING_MIGRATION:-0}" == "1" ]]; then
     die "pending migration detected (WOODRIGHT_PENDING_MIGRATION=1) - refuse pair cutover"
   fi
-  # Evidence-backed: target SHA must not introduce migration files vs expected old when provided.
-  if [[ -n "${EXPECTED_OLD_SHA:-}" && -d "${REPO_ROOT}/apps/backend" ]]; then
-    if command -v git >/dev/null 2>&1 && git -C "$REPO_ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-      local mig_diff
-      mig_diff="$(git -C "$REPO_ROOT" diff --name-only "${EXPECTED_OLD_SHA}..${TARGET_SHA}" -- \
-        'apps/backend/src/migrations' 'apps/backend/migrations' '**/migrations/**' 2>/dev/null)" || {
-        die "migration gate git diff failed for ${EXPECTED_OLD_SHA}..${TARGET_SHA}"
-      }
-      if [[ -n "$(echo "$mig_diff" | sed "/^$/d")" ]]; then
-        die "migration files changed between $EXPECTED_OLD_SHA and $TARGET_SHA - refuse image-only cutover"
-      fi
+  # Evidence-backed: target SHA must not introduce migration files vs the live
+  # backend commit. Unified callers pass one --expected-old-sha. A split
+  # predecessor uses the live backend SHA and does not collapse to the
+  # storefront SHA. When a base SHA is required, a missing checkout, missing
+  # commits, or a failed diff refuses the cutover. Omitting --expected-old-sha
+  # on a unified predecessor still skips the diff.
+  local mig_from=""
+  if [[ "$PREDECESSOR_KIND" == "split" ]]; then
+    mig_from="$OLD_BE_SHA"
+  else
+    mig_from="${EXPECTED_OLD_SHA:-}"
+  fi
+  if [[ -n "$mig_from" ]]; then
+    [[ -d "${APP_REPO}/apps/backend" ]] \
+      || die "migration gate requires ${APP_REPO}/apps/backend for ${mig_from}..${TARGET_SHA}"
+    command -v git >/dev/null 2>&1 \
+      || die "migration gate requires git for ${mig_from}..${TARGET_SHA}"
+    git -C "$APP_REPO" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+      || die "migration gate requires a git checkout at ${APP_REPO} for ${mig_from}..${TARGET_SHA}"
+    if ! git -C "$APP_REPO" cat-file -e "${mig_from}^{commit}" 2>/dev/null \
+      || ! git -C "$APP_REPO" cat-file -e "${TARGET_SHA}^{commit}" 2>/dev/null; then
+      die "migration gate commit objects missing for ${mig_from}..${TARGET_SHA}"
     fi
+    local mig_diff
+    mig_diff="$(git -C "$APP_REPO" diff --name-only "${mig_from}..${TARGET_SHA}" -- \
+      'apps/backend/src/migrations' 'apps/backend/migrations' '**/migrations/**' 2>/dev/null)" || {
+      die "migration gate git diff failed for ${mig_from}..${TARGET_SHA}"
+    }
+    if [[ -n "$(echo "$mig_diff" | sed "/^$/d")" ]]; then
+      die "migration files changed between $mig_from and $TARGET_SHA - refuse image-only cutover"
+    fi
+    printf '{"migration_required":false,"policy":"image_only_cutover","checked_pending_env":true,"from":"%s","to":"%s"}\n' \
+      "$mig_from" "$TARGET_SHA" >"$EVIDENCE_DIR/json/migration-gate.json"
+    return 0
   fi
   printf '{"migration_required":false,"policy":"image_only_cutover","checked_pending_env":true}\n' >"$EVIDENCE_DIR/json/migration-gate.json"
 }
@@ -442,7 +591,14 @@ verify_pair() {
   if [[ "${SKIP_PUBLIC_VERIFY:-0}" == "1" && "$MODE" != "execute" ]]; then
     return 0
   fi
-  local prev="${EXPECTED_OLD_SHA:-${OLD_SF_SHA:-${OLD_BE_SHA:-}}}"
+  local prev_sf prev_be
+  if [[ "$PREDECESSOR_KIND" == "split" ]]; then
+    prev_sf="$OLD_SF_SHA"
+    prev_be="$OLD_BE_SHA"
+  else
+    prev_sf="${EXPECTED_OLD_SHA:-${OLD_SF_SHA:-${OLD_BE_SHA:-}}}"
+    prev_be="$prev_sf"
+  fi
   mkdir -p "$EVIDENCE_DIR/raw"
   local sf_id be_id
   sf_id="$(wr_cutover_docker inspect "$sf" --format '{{.Id}}')" || return 1
@@ -455,13 +611,13 @@ verify_pair() {
     return 1
   }
   wr_public_demo_wait_buyer_edge \
-    "$TARGET_SHA" "public_demo" "public_demo_db" "$prev" \
+    "$TARGET_SHA" "public_demo" "public_demo_db" "$prev_sf" \
     "$EVIDENCE_DIR/raw/sf-headers.txt" || {
     log "PUBLIC_EDGE_VERIFY_FAILED ${WR_PUBLIC_DEMO_EDGE_RESULT:-PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT} buyer last_sha=${WR_PUBLIC_DEMO_EDGE_LAST_SHA:-empty} last_http=${WR_PUBLIC_DEMO_EDGE_LAST_HTTP:-empty}"
     return 1
   }
   wr_public_demo_wait_api_edge \
-    "$TARGET_SHA" "$prev" \
+    "$TARGET_SHA" "$prev_be" \
     "$EVIDENCE_DIR/raw/api-headers.txt" || {
     log "PUBLIC_EDGE_VERIFY_FAILED ${WR_PUBLIC_DEMO_EDGE_RESULT:-PUBLIC_DEMO_EDGE_CONVERGENCE_TIMEOUT} api last_sha=${WR_PUBLIC_DEMO_EDGE_LAST_SHA:-empty} last_http=${WR_PUBLIC_DEMO_EDGE_LAST_HTTP:-empty}"
     return 1
@@ -487,6 +643,7 @@ wr_require_environment_from_args "${FULL_ARGV[@]}" || exit 1
 wr_require_component_from_args "${FULL_ARGV[@]}" || die "missing required --component pair"
 [[ "${WOODRIGHT_COMPONENT_SCOPE}" == "pair" ]] || die "pair cutover requires --component pair"
 parse_args "${FULL_ARGV[@]}"
+APP_REPO="${APP_REPO:-$REPO_ROOT}"
 scope_gate
 wr_assert_environment_provisioned || exit 1
 wr_validation_freeze_assert_clear_for_mutation "$WOODRIGHT_ENVIRONMENT" || exit 1
@@ -531,8 +688,6 @@ printf '%s\n' "$TARGET_SHA" >"$EVIDENCE_DIR/json/target-sha.txt"
 printf '%s\n' "$BE_DIGEST" >"$EVIDENCE_DIR/json/target-backend-digest.txt"
 printf '%s\n' "$SF_DIGEST" >"$EVIDENCE_DIR/json/target-storefront-digest.txt"
 
-check_no_migration
-
 if [[ "$MODE" == "verify" ]]; then
   verify_pair || exit 21
   log "VERIFY_OK pair sha=$TARGET_SHA"
@@ -574,7 +729,12 @@ printf '%s\n' "$PRELOCK_SF_DIGEST" >"$EVIDENCE_DIR/json/prelock-storefront-diges
 printf '%s\n' "$PRELOCK_BE_ID" >"$EVIDENCE_DIR/json/prelock-backend-id.txt"
 printf '%s\n' "$PRELOCK_SF_ID" >"$EVIDENCE_DIR/json/prelock-storefront-id.txt"
 
-# Image presence / revision + OCI provenance
+# After predecessor validation. Split uses the live backend SHA; a missing
+# range fails closed. Re-checked under the mutation lock before recreate.
+check_no_migration
+
+# Image presence / revision + OCI provenance. Destination must be one SHA.
+assert_target_pair_unified
 if wr_cutover_docker image inspect "$BE_IMAGE" >/dev/null 2>&1; then
   wr_assert_component_provenance "$BE_IMAGE" "$TARGET_SHA" "$BE_DIGEST" || die "backend OCI_PROVENANCE_FAILED"
   wr_cutover_assert_image_revision "$BE_IMAGE" "$TARGET_SHA" || exit 2
@@ -672,6 +832,7 @@ wr_assert_container_matches_environment "${WOODRIGHT_BE_CONTAINER_DEFAULT}" back
 wr_assert_container_matches_environment "${WOODRIGHT_SF_CONTAINER_DEFAULT}" storefront || die "under-lock storefront retarget"
 capture_old_identity
 assert_identity_stable_under_lock
+check_no_migration
 check_monitor
 wr_public_demo_require_endpoint_write_capability \
   || die "TRAEFIK_ENDPOINT_CAPABILITY_FAILED"
@@ -679,8 +840,15 @@ run_backup_gate
 
 # Wire peer-SF identity for BE-only auto-rollback (no SF keeper yet).
 export WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST="$OLD_SF_DIGEST"
+export WOODRIGHT_ROLLBACK_EXPECT_SF_SHA="$OLD_SF_SHA"
+export WOODRIGHT_ROLLBACK_EXPECT_BE_SHA="$OLD_BE_SHA"
+export WOODRIGHT_ROLLBACK_EXPECT_BE_DIGEST="$OLD_BE_DIGEST"
 [[ -n "$WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST" ]] || die "OLD_SF_DIGEST missing before mutation"
+[[ -n "$WOODRIGHT_ROLLBACK_EXPECT_BE_DIGEST" ]] || die "OLD_BE_DIGEST missing before mutation"
 printf '%s\n' "$WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST" >"$EVIDENCE_DIR/json/rollback-expect-storefront-digest.txt"
+printf '%s\n' "$WOODRIGHT_ROLLBACK_EXPECT_BE_DIGEST" >"$EVIDENCE_DIR/json/rollback-expect-backend-digest.txt"
+printf '%s\n' "$OLD_BE_SHA" >"$EVIDENCE_DIR/json/rollback-expect-backend-sha.txt"
+printf '%s\n' "$OLD_SF_SHA" >"$EVIDENCE_DIR/json/rollback-expect-storefront-sha.txt"
 
 MUTATION_STARTED=1
 # Backend recreate (digest-advance) under pair component scope
@@ -711,8 +879,8 @@ log "post-backend identity gate PASS container=${WOODRIGHT_BE_CONTAINER_DEFAULT}
 # Storefront recreate under pair component scope
 if ! REQUIRE_CURRENT_DIGEST=0 \
   SKIP_PUBLIC_VERIFY=0 \
-  WOODRIGHT_EDGE_PREVIOUS_SHA="${EXPECTED_OLD_SHA:-${OLD_SF_SHA:-}}" \
-  EXPECTED_OLD_SHA="${EXPECTED_OLD_SHA:-${OLD_SF_SHA:-}}" \
+  WOODRIGHT_EDGE_PREVIOUS_SHA="${OLD_SF_SHA:-${EXPECTED_OLD_SHA:-}}" \
+  EXPECTED_OLD_SHA="${OLD_SF_SHA:-${EXPECTED_OLD_SHA:-}}" \
   bash "$HERE/recreate-staging-storefront.sh" \
   --environment public_demo \
   --component pair \

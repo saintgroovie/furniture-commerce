@@ -453,6 +453,14 @@ wr_cutover_pair_rollback() {
           wr_cutover_log "ERROR: storefront digest drifted during BE-only rollback have=$WR_CUTOVER_REPO_DIGEST want=$WOODRIGHT_ROLLBACK_EXPECT_SF_DIGEST"
           sf_ok=0
         fi
+        if [[ -n "${WOODRIGHT_ROLLBACK_EXPECT_SF_SHA:-}" ]]; then
+          local live_sf_sha
+          live_sf_sha="$(wr_cutover_docker inspect "${WOODRIGHT_SF_CONTAINER_DEFAULT:-woodright-staging-storefront}" --format '{{index .Config.Labels "com.woodright.release-sha"}}' 2>/dev/null || true)"
+          if [[ "$live_sf_sha" != "${WOODRIGHT_ROLLBACK_EXPECT_SF_SHA}" ]]; then
+            wr_cutover_log "ERROR: storefront release SHA drifted during BE-only rollback have=$live_sf_sha want=${WOODRIGHT_ROLLBACK_EXPECT_SF_SHA}"
+            sf_ok=0
+          fi
+        fi
       else
         wr_cutover_log "ERROR: cannot resolve live storefront digest after BE-only rollback"
         sf_ok=0
