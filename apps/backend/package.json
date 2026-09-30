@@ -14,7 +14,8 @@
     "db:sync-links": "medusa db:sync-links",
     "seed": "medusa exec ./src/scripts/seed.ts",
     "postinstall": "node scripts/patch-skip-cart-promotions.mjs && node scripts/patch-medusa-develop-watch.mjs --warn-only",
-    "generate:catalog-card-derivatives": "tsx scripts/generate-catalog-card-derivatives.ts"
+    "generate:catalog-card-derivatives": "tsx scripts/generate-catalog-card-derivatives.ts",
+    "test:workspace-boundary": "node ./node_modules/tsx/dist/cli.mjs --test src/lib/woodright-workspace/identity.test.ts src/lib/woodright-workspace/permissions.test.ts src/lib/woodright-workspace/mail-boundary.test.ts src/lib/woodright-workspace/order-view.test.ts src/lib/woodright-workspace/activity.test.ts src/lib/woodright-workspace/search.test.ts src/lib/woodright-admin/seller-desk.test.ts src/lib/woodright-admin/seller-product.test.ts src/lib/woodright-admin/publish-readiness.test.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.18.0",

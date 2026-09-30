@@ -1,5 +1,7 @@
 # Woodright Admin Workspace
 
+The daily employee UI is now `apps/workspace` (Стол). This file describes the seller desk that still lives inside Medusa Admin at `/app`. Keep `/app` as the fallback. Current boundary: `docs/architecture/workspace.md`.
+
 Seller-facing workspace inside stock Medusa Admin. It does not replace native Admin.
 
 ## Purpose

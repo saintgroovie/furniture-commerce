@@ -1,5 +1,7 @@
 # Admin extension inventory
 
+> Historical snapshot, 2026-07-25. Woodright now has a seller desk inside Medusa Admin and a separate `apps/workspace` shell. This file is not the current admin map. Current boundary: `docs/architecture/workspace.md`.
+
 **Worktree:** `/Users/leonidmbp/Documents/projects/furniture-commerce-wt-sales-order-lifecycle-20260725`  
 **Scope:** `apps/backend/src/admin/**` + Admin UI extension surface vs Admin REST APIs  
 **Date:** 2026-07-25

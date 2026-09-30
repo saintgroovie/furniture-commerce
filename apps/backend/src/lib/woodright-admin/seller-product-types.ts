@@ -70,6 +70,8 @@ export type SellerProduct = {
   execution_finishes: SellerExecutionFinish[]
   has_material_tiers: boolean
   collection_key: string | null
+  /** Storefront kids navigation. Not a product classification. */
+  kids_nav: boolean
   publish: WorkspacePublishReadiness
 }
 

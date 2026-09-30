@@ -1,5 +1,7 @@
 # Notification inventory
 
+> Historical snapshot, 2026-07-25. The seller desk, `order.placed` subscriber, and fake notification outbox now exist on main. This file is not the current mail architecture. Current boundary: `docs/architecture/workspace.md`.
+
 **Worktree:** `/Users/leonidmbp/Documents/projects/furniture-commerce-wt-sales-order-lifecycle-20260725`  
 **Scope:** notification modules/providers, email, subscribers, fake/test providers, event names  
 **Date:** 2026-07-25
