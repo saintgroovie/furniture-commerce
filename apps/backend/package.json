@@ -11,10 +11,12 @@
     "test:woodright-admin": "node ./node_modules/tsx/dist/cli.mjs --test src/lib/woodright-admin/price-sanity.test.ts src/lib/woodright-admin/readiness-summary.test.ts src/lib/woodright-admin/dimensions-command.test.ts src/lib/woodright-admin/execution-media-guard.test.ts src/lib/woodright-admin/site-preview-url.test.ts src/lib/woodright-admin/workspace-query.test.ts src/lib/woodright-admin/site-contacts.test.ts src/lib/woodright-admin/site-partners.test.ts src/lib/woodright-admin/create-product-command.test.ts src/lib/woodright-admin/publish-readiness.test.ts src/lib/woodright-admin/seller-product.test.ts src/lib/woodright-admin/seller-site-state.test.ts src/lib/woodright-admin/publish-checklist.test.ts src/lib/woodright-admin/media-health.test.ts src/admin/components/woodright/site-status-labels.test.ts src/modules/promotion-slot/resolve-promotion-items.test.ts src/modules/promotion-slot/slot-contract.test.ts src/lib/woodright-admin/catalog-promo-admin.test.ts src/lib/woodright-admin/catalog-promo-price-list.test.ts src/scripts/catalog-promo-launch-gate.test.ts src/lib/store-pricing/store-calculated-price.test.ts src/admin/components/woodright/catalog-promo-labels.test.ts src/lib/woodright-admin/seller-desk.test.ts && node --test scripts/link-admin-build.test.mjs",
     "db:generate": "medusa db:generate",
     "db:migrate": "medusa db:migrate",
+    "db:migrate:workspace-it": "node ./node_modules/tsx/dist/cli.mjs scripts/assert-workspace-db-isolation.ts && medusa db:migrate",
     "db:sync-links": "medusa db:sync-links",
     "seed": "medusa exec ./src/scripts/seed.ts",
     "postinstall": "node scripts/patch-skip-cart-promotions.mjs && node scripts/patch-medusa-develop-watch.mjs --warn-only",
-    "generate:catalog-card-derivatives": "tsx scripts/generate-catalog-card-derivatives.ts"
+    "generate:catalog-card-derivatives": "tsx scripts/generate-catalog-card-derivatives.ts",
+    "test:workspace-boundary": "node ./node_modules/tsx/dist/cli.mjs --test src/lib/woodright-workspace/db-isolation.test.ts src/lib/woodright-workspace/identity.test.ts src/lib/woodright-workspace/permissions.test.ts src/lib/woodright-workspace/mail-boundary.test.ts src/lib/woodright-workspace/order-view.test.ts src/lib/woodright-workspace/activity.test.ts src/lib/woodright-workspace/search.test.ts src/lib/woodright-admin/seller-desk.test.ts src/lib/woodright-admin/seller-product.test.ts src/lib/woodright-admin/publish-readiness.test.ts"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.18.0",

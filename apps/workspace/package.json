@@ -1,0 +1,28 @@
+{
+  "name": "workspace",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "yarn@4.17.1",
+  "scripts": {
+    "dev": "NEXT_DIST_DIR=.next-dev next dev --port 3118 --hostname 127.0.0.1",
+    "build": "NEXT_DIST_DIR=.next-build next build --webpack",
+    "start": "NEXT_DIST_DIR=.next-build next start --port 3118 --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "node --experimental-strip-types --test src/lib/runtime-boundary.test.ts src/lib/browser-boundary.test.ts src/lib/session-codec.test.ts"
+  },
+  "dependencies": {
+    "next": "16.2.12",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "server-only": "0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "20.19.43",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.2",
+    "eslint-config-next": "16.2.12",
+    "typescript": "5.9.3"
+  }
+}

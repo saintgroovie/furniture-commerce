@@ -65,5 +65,20 @@ describe("toSellerProduct variant prices", () => {
     })
     assert.equal(mapped.subtitle, "90 см по фронту")
     assert.equal(mapped.description, "Базовый спальный формат.")
+    assert.equal(mapped.kids_nav, false)
+  })
+
+  it("marks kids navigation without changing classification", () => {
+    const mapped = toSellerProduct({
+      id: "prod_kids",
+      title: "Кровать",
+      handle: "ww-01",
+      status: "published",
+      metadata: { collection: "willie-winkie", storefront_section: "kids" },
+      variants: [],
+      product_classification: { product_type: "STANDARD" },
+    })
+    assert.equal(mapped.classification, "STANDARD")
+    assert.equal(mapped.kids_nav, true)
   })
 })

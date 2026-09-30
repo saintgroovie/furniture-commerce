@@ -4,6 +4,7 @@ import { hasExecutionMediaContract } from "./execution-media-guard"
 import { collectProductImageUrls, partitionSellerMedia } from "./media-health"
 import { pickPrimaryRubPrice } from "./price-sanity"
 import { catalogPublishGateAudit, computeWorkspacePublishReadiness } from "./publish-readiness"
+import { isKidsMetadataStorefrontProduct } from "./kids-metadata"
 import { aggregateAttention, summarizeProductReadiness } from "./readiness-summary"
 import type {
   AttentionCounts,
@@ -111,6 +112,7 @@ export function toSellerProduct(raw: Record<string, unknown>): SellerProduct {
     execution_finishes: media.execution_finishes,
     has_material_tiers: Boolean(meta.material_tiers && typeof meta.material_tiers === "object"),
     collection_key: collectionKey,
+    kids_nav: isKidsMetadataStorefrontProduct({ metadata: meta }),
     publish: computeWorkspacePublishReadiness(product),
   }
 }
