@@ -156,8 +156,13 @@ grep -q 'storefront_source_sha' "$ROOT/ops/monitoring/woodright-health-check.sh"
   && pass "buyer check reads storefront_source_sha" || fail "buyer check missing storefront_source_sha"
 
 # Pin rewriter records both component SHAs.
-grep -q 'backend_source_sha' "$ROOT/scripts/release/reconcile-public-image-pins.sh" \
-  && pass "pin reconcile writes backend_source_sha" || fail "pin reconcile missing backend_source_sha"
+grep -q 'doc\["backend_source_sha"\] = sha' "$ROOT/scripts/release/reconcile-public-image-pins.sh" \
+  && pass "pin reconcile writes backend_source_sha from unified sha" || fail "pin reconcile missing unified backend_source_sha"
+grep -q 'EXPECTED_BACKEND_SOURCE_SHA' "$ROOT/scripts/release/reconcile-public-image-pins.sh" \
+  && fail "pin reconcile still accepts component SHA env override" \
+  || pass "pin reconcile ignores component SHA env override"
+grep -q 'component shas not converged' "$ROOT/scripts/release/reconcile-public-image-pins.sh" \
+  && pass "pin reconcile validates component shas" || fail "pin reconcile missing component sha validation"
 
 # Cutover backup must pass the profile postgres name through sudo and refuse production.
 CUTOVER="$ROOT/ops/release/cutover-public-demo-pair.sh"

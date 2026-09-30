@@ -714,13 +714,13 @@ PY
 
 rewrite_expected_release() {
   local src="$1" dst="$2"
-  python3 - "$src" "$dst" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" \
-    "${EXPECTED_BACKEND_SOURCE_SHA:-$EXPECTED_RELEASE_SHA}" \
-    "${EXPECTED_STOREFRONT_SOURCE_SHA:-$EXPECTED_RELEASE_SHA}" <<'PY'
+  # Unified pair reconcile only. Component SHAs always follow EXPECTED_RELEASE_SHA.
+  # A pre-cutover split is written by the monitor pin, not by caller env overrides.
+  python3 - "$src" "$dst" "$EXPECTED_RELEASE_SHA" "$EXPECTED_BACKEND_DIGEST" "$EXPECTED_STOREFRONT_DIGEST" <<'PY'
 import json, sys
 from datetime import datetime, timezone
 from pathlib import Path
-src, dst, sha, be_d, sf_d, be_sha, sf_sha = sys.argv[1:8]
+src, dst, sha, be_d, sf_d = sys.argv[1:6]
 doc=json.loads(Path(src).read_text())
 prev = doc.get("application_source_sha") or doc.get("release_sha") or doc.get("git_sha") or ""
 if prev and prev != sha:
@@ -731,10 +731,8 @@ doc["git_sha"] = sha
 doc["approved_git_sha"] = sha
 doc["backend_digest"] = be_d
 doc["storefront_digest"] = sf_d
-# Pair reconcile converges both component SHAs onto the unified release.
-# An explicit split (pre-cutover) passes different EXPECTED_*_SOURCE_SHA values.
-doc["backend_source_sha"] = be_sha
-doc["storefront_source_sha"] = sf_sha
+doc["backend_source_sha"] = sha
+doc["storefront_source_sha"] = sha
 now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 doc["updated_at"] = now
 if "updated_at_utc" in doc:
@@ -829,6 +827,8 @@ if owner.get("running_backend_digest") != be or owner.get("running_storefront_di
     fail("ACTIVE_OWNER running digests not converged")
 if expected.get("application_source_sha") != sha or expected.get("release_sha") != sha:
     fail("EXPECTED_RELEASE sha not converged")
+if expected.get("backend_source_sha") != sha or expected.get("storefront_source_sha") != sha:
+    fail("EXPECTED_RELEASE component shas not converged")
 if expected.get("backend_digest") != be or expected.get("storefront_digest") != sf:
     fail("EXPECTED_RELEASE digests not converged")
 print("scoped_docs_converged_ok")
