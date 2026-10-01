@@ -13,7 +13,7 @@ This file is the git-safe index. **Passwords are not here.**
 | Stack | nginx 1.30.2 + Apache 2.4.62 + PHP **7.4.33 LSAPI (alt)** + CS-Cart in `/www/woodright.ru` |
 | Host IPv4 | `79.133.175.43` (also unused shared `79.133.175.44` on the account) |
 | DNS | One master zone `woodright.ru`, NS `ns1.itb-host.ru` / `ns2.itb-host.ru`, DNSSEC off |
-| SSL | Let's Encrypt `woodright.ru_le2` on `woodright.ru` + `www`, **expires 2026-12-17** (issued 2026-09-18; replaced `woodright.ru_le1`). Leftover unused: `woodright.ru_le1` until 2026-10-19, self-signed `woodright.ru` until 2027-01-21. Brief ACME window served a self-signed cert, then live TLS returned to Let's Encrypt. |
+| SSL | Let's Encrypt `woodright.ru_le2` on `woodright.ru` + `www`, **expires 2026-12-17**. Unused `woodright.ru_le1` and self-signed `woodright.ru` were deleted from the panel on 2026-09-18 after `le2` was confirmed live. |
 | DB | one MySQL 8.0.45 schema `u232077_db` ~430 MB on localhost |
 | Cron | empty |
 | WordPress | none |
@@ -48,7 +48,7 @@ Owner-authorized 2026-09-18 pull. Files are **not** in this repo (`*.sql` / arch
 | `2026-09-12.u232077.tar.gz` | 2.0 GB | Panel full backup; `gzip -t` OK; contains `.system/db.mysql.u232077_db` + `data/` |
 | `from-backup-20260912/` | small | Extracted from that archive only: `config.local.php`, `config.php`, `.htaccess`, `admin.php`, `robots.txt`, backup metadata |
 
-Not downloaded (junk / duplicate): panel daily diffs, `images/` (~1.9 GB), `var/cache`, Adminer `__sql.php`, a second SQL from inside the tar. Docroot still has public `__sql.php` (Adminer) and un-renamed `admin.php`.
+Not downloaded (junk / duplicate): panel daily diffs, `images/` (~1.9 GB), `var/cache`, a second SQL from inside the tar. Live docroot: public Adminer `__sql.php` plus junk `1.txt` / `what.txt` were deleted via FTP on 2026-09-18 (`404`). `admin.php` is still the un-renamed admin entry.
 
 ## Where secrets and the full inventory live
 
