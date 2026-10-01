@@ -1,181 +1,223 @@
 import Link from "next/link"
-import { FirstPriceFields } from "@/components/first-price-fields"
+import { ConfirmAction } from "@/components/confirm-action"
+import { ConflictPanel } from "@/components/conflict-panel"
+import { MediaGallery } from "@/components/media-gallery"
 import { MediaUpload } from "@/components/media-upload"
-import { ErrorBlock, PageHeader } from "@/components/page"
-import { formatRub, priceLine } from "@/lib/format"
+import { Card, ErrorBlock, ObjectHeader } from "@/components/page"
+import { PendingForm } from "@/components/pending-form"
+import { PriceEditor } from "@/components/price-editor"
+import { ReadinessChecklist } from "@/components/readiness-checklist"
+import { ResultToast } from "@/components/result-toast"
+import { SidePanel } from "@/components/side-panel"
+import { StateBadge, Status } from "@/components/status"
+import { parsePriceConflict } from "@/lib/price-presentation"
+import { classificationLabel, primaryProductAction, publicationState, readinessChecklist, readinessSummary, toCm } from "@/lib/product-presentation"
 import { loadProduct } from "@/server/loaders"
+
+const SECTIONS = [
+  ["#overview", "Обзор"],
+  ["#profile", "Основное"],
+  ["#dimensions", "Размеры"],
+  ["#price", "Цена"],
+  ["#media", "Медиа"],
+  ["#publish", "Публикация"],
+  ["#links", "Связи"],
+] as const
 
 export default async function ProductPage({
   params,
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ saved?: string; error?: string; storefront?: string }>
+  searchParams: Promise<Record<string, string | undefined>>
 }) {
   const { id } = await params
   const query = await searchParams
   const result = await loadProduct(id)
-  if (!result.ok) return <><PageHeader title="Товар" /><ErrorBlock message={result.message} /></>
+  if (!result.ok) return <><ObjectHeader back="Товары" backHref="/catalog" title="Товар" /><ErrorBlock message={result.message} /></>
   const product = result.data.product
-  const blockers = product.publish?.blockers ?? []
+  const siteUrl = (result.data as { site_url?: string | null }).site_url ?? null
+  const promoAvailable = (result.data as { promo_price_available?: boolean }).promo_price_available !== false
   const bespoke = product.classification === "BESPOKE"
-  const height = product.dimensions?.height_mm ? product.dimensions.height_mm / 10 : ""
-  const width = product.dimensions?.width_mm ? product.dimensions.width_mm / 10 : ""
-  const depth = product.dimensions?.depth_mm ? product.dimensions.depth_mm / 10 : ""
+  const published = product.status === "published"
+  const checklist = readinessChecklist(product)
+  const summary = readinessSummary(checklist)
+  const primary = primaryProductAction(product)
+  const publication = publicationState(product)
+  const conflict = parsePriceConflict(query)
+  const needsConfirm = query.confirm === "needed"
+  const siteHref = siteUrl ? `${siteUrl.replace(/\/$/, "")}/product/${encodeURIComponent(product.id)}` : null
+  const classificationSafe = !published
+
   return (
     <>
-      <PageHeader kicker="Товар" title={product.title} lead={bespoke ? "По проекту, в корзину не кладётся" : product.subtitle || product.collection_label || ""} />
-      {query.saved === "1" && query.storefront === "miss" ? (
-        <p className="toast warn" role="status">Данные сохранены<br />Витрина ещё не показывает эту цену</p>
-      ) : null}
-      {query.saved === "1" && query.storefront === "match" ? (
-        <p className="toast" role="status">Сохранено. Витрина показывает ту же цену</p>
-      ) : null}
-      {query.saved === "1" && query.storefront === "skipped" ? (
-        <p className="toast" role="status">Данные сохранены<br />Проверка витрины не запускалась</p>
-      ) : null}
-      {query.saved === "1" && !query.storefront ? <p className="toast" role="status">Сохранено</p> : null}
-      {query.error ? <p className="toast warn" role="alert">{query.error}</p> : null}
-      <div className="section-grid">
-        <div className="stack">
-          <section className="card">
-            <h2>Основное</h2>
-            <p className="muted">Артикул: {product.skus?.join(", ") || "не указан"}. Адрес страницы не меняется отсюда</p>
-            <form action={`/api/catalog/${id}`} method="post" className="stack">
+      <ObjectHeader
+        back="Товары"
+        backHref="/catalog"
+        title={product.title}
+        meta={[product.skus?.join(", ") || "SKU нет", classificationLabel(product.classification), product.collection_label || null, product.kids_nav ? "детская навигация" : null].filter(Boolean).join(" · ")}
+        states={
+          <>
+            <StateBadge size="lg" state={publication} />
+            <Status tone={summary.done === summary.total ? "positive" : "attention"} size="lg">
+              Готовность {summary.done} из {summary.total}
+            </Status>
+          </>
+        }
+        next={primary.kind === "published" ? "товар на витрине, дальше следим за ценой и фото" : primary.kind === "blocked" ? primary.reason : primary.label.toLowerCase()}
+        primary={
+          primary.kind === "publish" ? (
+            <PendingForm action={`/api/catalog/${id}`}>
+              <input type="hidden" name="intent" value="publish" />
+              <button className="btn btn-primary" type="submit">Опубликовать</button>
+            </PendingForm>
+          ) : primary.kind === "published" ? (
+            siteHref ? <a className="btn btn-primary" href={siteHref} target="_blank" rel="noreferrer">Посмотреть на сайте</a> : null
+          ) : (
+            <a className="btn btn-primary" href={primary.anchor}>{primary.label}</a>
+          )
+        }
+        secondary={
+          <>
+            {published ? (
+              <ConfirmAction
+                action={`/api/catalog/${id}`}
+                fields={{ intent: "unpublish" }}
+                trigger="Снять с витрины"
+                title="Снять товар с витрины?"
+                text="Покупатель перестанет видеть товар. Карточка, цены и фото сохранятся, вернуть можно будет кнопкой «Опубликовать»"
+                confirmLabel="Снять с витрины"
+              />
+            ) : null}
+            {!published && siteHref && product.readiness.visible ? <a className="btn btn-ghost" href={siteHref} target="_blank" rel="noreferrer">Посмотреть на сайте</a> : null}
+          </>
+        }
+      />
+      <ResultToast saved={query.saved} error={conflict ? undefined : query.error} storefront={query.storefront} />
+      <nav className="section-nav" aria-label="Разделы товара">
+        {SECTIONS.map(([href, label]) => (
+          <a key={href} href={href}>{label}</a>
+        ))}
+      </nav>
+      <div className="two-col">
+        <div className="stack-lg">
+          <Card id="overview" title="Обзор">
+            <ReadinessChecklist items={checklist} />
+            {bespoke ? <p className="meta">По проекту: корзина закрыта, покупатель оставляет заявку</p> : null}
+          </Card>
+          <Card id="profile" title="Основное" trailing={<span className="meta">адрес страницы не меняется</span>}>
+            <PendingForm action={`/api/catalog/${id}`} className="stack">
               <input type="hidden" name="intent" value="profile" />
-              <label>Название<input name="title" defaultValue={product.title} required /></label>
-              <label>Подзаголовок<input name="subtitle" defaultValue={product.subtitle || ""} /></label>
-              <label>Описание<textarea name="description" rows={4} defaultValue={product.description || ""} /></label>
-              <button className="primary" type="submit">Сохранить текст</button>
-            </form>
-          </section>
-          <section className="card">
-            <h2>Размеры</h2>
-            <p className="muted">Высота, ширина, глубина, в сантиметрах</p>
-            <form action={`/api/catalog/${id}`} method="post" className="stack">
+              <label className="field"><span>Название</span><input name="title" defaultValue={product.title} required /></label>
+              <label className="field"><span>Подзаголовок</span><input name="subtitle" defaultValue={product.subtitle || ""} /></label>
+              <label className="field"><span>Описание</span><textarea name="description" rows={4} defaultValue={product.description || ""} /></label>
+              <button className="btn btn-secondary" type="submit">Сохранить текст</button>
+            </PendingForm>
+          </Card>
+          <Card id="dimensions" title="Размеры" trailing={<span className="meta">в сантиметрах</span>}>
+            <PendingForm action={`/api/catalog/${id}`} className="stack">
               <input type="hidden" name="intent" value="dimensions" />
-              <label>Высота, см<input name="height_cm" inputMode="decimal" defaultValue={height} /></label>
-              <label>Ширина, см<input name="width_cm" inputMode="decimal" defaultValue={width} /></label>
-              <label>Глубина, см<input name="depth_cm" inputMode="decimal" defaultValue={depth} /></label>
-              <button className="primary" type="submit">Сохранить размеры</button>
-            </form>
-          </section>
-          <section className="card" id="price">
-            <h2>Цена</h2>
-            {bespoke ? <p>У товара по проекту нет цены в корзине</p> : null}
-            {!bespoke ? <p>{priceLine(product.price_display)}. Обычная цена и акция в прайс-листе - разные поля</p> : null}
-            {!bespoke ? product.variants.map((variant) => (
-              variant.rub_price?.id ? (
-                <form key={variant.id} action={`/api/catalog/${id}`} method="post" className="stack">
-                  <input type="hidden" name="intent" value="price" />
-                  <input type="hidden" name="variant_id" value={variant.id} />
-                  <input type="hidden" name="expected_amount" value={variant.rub_price.amount} />
-                  <p>{variant.sku || variant.title || "Вариант"} · было {formatRub(variant.rub_price.amount)}</p>
-                  <label>Будет, ₽<input name="amount" inputMode="numeric" defaultValue={variant.rub_price.amount} /></label>
-                  <label className="muted"><input type="checkbox" name="confirm" value="1" /> Подтверждаю сильное изменение</label>
-                  <button className="primary" type="submit">Сохранить цену варианта</button>
-                </form>
-              ) : (
-                <form key={variant.id} action={`/api/catalog/${id}`} method="post" className="stack">
-                  <input type="hidden" name="intent" value="price" />
-                  <input type="hidden" name="create" value="1" />
-                  <input type="hidden" name="variant_id" value={variant.id} />
-                  <p>{variant.sku || variant.title || "Вариант"}</p>
-                  <p>Цена не задана</p>
-                  <FirstPriceFields />
-                  <button className="primary" type="submit">Задать цену</button>
-                </form>
-              )
-            )) : null}
-            {!bespoke ? product.variants.map((variant) => (
-              <form key={`${variant.id}-promo`} action={`/api/catalog/${id}`} method="post" className="stack">
-                <input type="hidden" name="intent" value="promo" />
-                <input type="hidden" name="variant_id" value={variant.id} />
-                <label>Акционная цена, меньше обычной<input name="amount" inputMode="numeric" /></label>
-                <button className="ghost" type="submit">Записать в прайс-лист</button>
-                <button className="ghost" type="submit" name="remove" value="1">Убрать акционную цену</button>
-              </form>
-            )) : null}
-          </section>
-          <section className="card" id="media">
-            <h2>Медиа</h2>
-            <p>{product.thumbnail ? "Главный кадр выбран" : "Нет главного кадра"}</p>
-            <MediaUpload productId={id} />
-            {(product.images?.length ? product.images : []).map((image, index, list) => (
-              <div key={image.id} className="media-frame">
-                <img src={image.url} alt="" width={72} height={54} />
-                <div className="stack">
-                  <p>{image.url === product.thumbnail ? "Главный кадр" : "Дополнительный кадр"}</p>
-                  <form action={`/api/catalog/${id}`} method="post">
-                    <input type="hidden" name="intent" value="hero" />
-                    <input type="hidden" name="thumbnail_url" value={image.url} />
-                    <button className={image.url === product.thumbnail ? "ghost" : "primary"} type="submit">
-                      {image.url === product.thumbnail ? "Уже главный кадр" : "Сделать главным"}
-                    </button>
-                  </form>
-                  <form action={`/api/catalog/${id}`} method="post">
-                    <input type="hidden" name="intent" value="reorder" />
-                    <input type="hidden" name="url" value={image.url} />
-                    <input type="hidden" name="direction" value="up" />
-                    <input type="hidden" name="expected" value={list.map((item) => item.url).join("\n")} />
-                    <button className="ghost" type="submit" disabled={index === 0}>Выше</button>
-                  </form>
-                  <form action={`/api/catalog/${id}`} method="post">
-                    <input type="hidden" name="intent" value="reorder" />
-                    <input type="hidden" name="url" value={image.url} />
-                    <input type="hidden" name="direction" value="down" />
-                    <input type="hidden" name="expected" value={list.map((item) => item.url).join("\n")} />
-                    <button className="ghost" type="submit" disabled={index === list.length - 1}>Ниже</button>
-                  </form>
-                  <form action={`/api/catalog/${id}`} method="post">
-                    <input type="hidden" name="intent" value="detach" />
-                    <input type="hidden" name="url" value={image.url} />
-                    <input type="hidden" name="expected" value={list.map((item) => item.url).join("\n")} />
-                    <button className="ghost" type="submit">Убрать из товара</button>
-                    <p className="muted">Файл не удаляется</p>
-                  </form>
-                </div>
+              <div className="field-row">
+                <label className="field"><span>Высота, см</span><input name="height_cm" inputMode="decimal" defaultValue={toCm(product.dimensions?.height_mm)} /></label>
+                <label className="field"><span>Ширина, см</span><input name="width_cm" inputMode="decimal" defaultValue={toCm(product.dimensions?.width_mm)} /></label>
+                <label className="field"><span>Глубина, см</span><input name="depth_cm" inputMode="decimal" defaultValue={toCm(product.dimensions?.depth_mm)} /></label>
               </div>
-            ))}
-            {!product.images?.length ? <p className="empty">Кадры не назначены. Неподтверждённый кандидат сам не публикуется</p> : null}
-          </section>
+              <button className="btn btn-secondary" type="submit">Сохранить размеры</button>
+            </PendingForm>
+          </Card>
+          <Card id="price" title="Цена" trailing={<span className="meta">обычная и акционная - разные поля</span>}>
+            {conflict ? <ConflictPanel conflict={conflict} refreshHref={`/catalog/${id}#price`} /> : null}
+            {!conflict && query.error && (query.your_amount || query.confirm) ? <div className="banner critical" role="alert">{query.error}</div> : null}
+            <div className="stack-lg">
+              {product.variants.map((variant) => (
+                <PriceEditor
+                  key={variant.id}
+                  productId={id}
+                  classification={product.classification}
+                  variant={variant}
+                  yourAmount={query.variant_id === variant.id ? query.your_amount ?? null : null}
+                  needsConfirm={needsConfirm && query.variant_id === variant.id}
+                  promoAvailable={promoAvailable}
+                />
+              ))}
+              {product.variants.length === 0 ? <Status tone="critical" size="lg">У товара нет вариантов - цену задать некуда</Status> : null}
+            </div>
+          </Card>
+          <Card id="media" title="Медиа" trailing={<span className="meta">{product.images?.length ?? 0} кадров</span>}>
+            <MediaGallery productId={id} images={product.images ?? []} thumbnail={product.thumbnail ?? null} />
+            <MediaUpload productId={id} />
+          </Card>
         </div>
-        <aside className="card" id="publish">
-          <h2>Публикация</h2>
-          <div className="pills">
-            <span className="pill">{product.classification}</span>
-            {product.kids_nav ? <span className="pill">Детская витрина</span> : null}
-            <span className="pill">{product.status === "published" ? "Опубликован" : "Черновик"}</span>
-          </div>
-          <p>{product.readiness.visible ? "Покупатель видит" : "На витрине не виден"}</p>
-          {blockers.length ? (
-            <ul>
-              {blockers.map((blocker) => <li key={blocker.code}>{blocker.message}</li>)}
+        <aside className="stack-lg context">
+          <Card id="publish" title="Публикация">
+            <StateBadge size="lg" state={publication} />
+            <p className="meta">{product.readiness.visible ? "Покупатель видит товар на витрине" : published ? "Опубликован, но витрина его не отдаёт. Проверьте цену, фото и коллекцию" : "Покупатель пока не видит товар"}</p>
+            {product.publish?.blockers?.length ? (
+              <ul className="checklist">
+                {product.publish.blockers.map((blocker) => (
+                  <li key={blocker.code}><Status tone="critical">{blocker.message}</Status></li>
+                ))}
+              </ul>
+            ) : null}
+            {product.publish?.warnings?.length ? (
+              <ul className="checklist">
+                {product.publish.warnings.map((warning: { code: string; message: string } | string) => {
+                  const text = typeof warning === "string" ? warning : warning.message
+                  const key = typeof warning === "string" ? warning : warning.code
+                  return <li key={key}><Status tone="attention">{text}</Status></li>
+                })}
+              </ul>
+            ) : null}
+            {!published && product.publish?.ready ? (
+              <PendingForm action={`/api/catalog/${id}`}>
+                <input type="hidden" name="intent" value="publish" />
+                <button className="btn btn-primary full" type="submit">Опубликовать</button>
+              </PendingForm>
+            ) : null}
+            {published ? (
+              <>
+                <ConfirmAction
+                  action={`/api/catalog/${id}`}
+                  fields={{ intent: "unpublish" }}
+                  trigger="Снять с витрины"
+                  triggerClassName="btn btn-danger full"
+                  title="Снять товар с витрины?"
+                  text="Покупатель перестанет видеть товар. Карточка, цены и фото сохранятся, вернуть можно будет кнопкой «Опубликовать»"
+                  confirmLabel="Снять с витрины"
+                />
+                <p className="meta">Товар не удаляется. Покупатель перестанет его видеть</p>
+              </>
+            ) : null}
+          </Card>
+          <Card title="Тип товара">
+            <p>{classificationLabel(product.classification)}</p>
+            <p className="meta">{bespoke ? "Корзина закрыта, остаётся заявка" : "Можно положить в корзину"}</p>
+            {classificationSafe ? (
+              <SidePanel trigger="Изменить тип" triggerClassName="btn btn-ghost sm" title="Изменить тип товара">
+                <p className="meta">Смена типа не публикует товар. SKU и адрес страницы остаются</p>
+                <PendingForm action={`/api/catalog/${id}`} className="stack">
+                  <input type="hidden" name="intent" value="classification" />
+                  {(["STANDARD", "CONFIGURABLE", "BESPOKE"] as const).map((type) => (
+                    <label key={type} className="check">
+                      <input type="radio" name="classification" value={type} defaultChecked={product.classification === type} />
+                      <span>{classificationLabel(type)}</span>
+                    </label>
+                  ))}
+                  <label className="check"><input type="checkbox" name="confirm" value="1" /><span>Подтверждаю смену типа</span></label>
+                  <button className="btn btn-secondary" type="submit">Сохранить тип</button>
+                </PendingForm>
+              </SidePanel>
+            ) : (
+              <p className="meta">Тип опубликованного товара меняется после снятия с витрины</p>
+            )}
+          </Card>
+          <Card id="links" title="Связи">
+            <ul className="checklist">
+              <li><span className="meta">Коллекция</span> {product.collection_label || "не указана"}</li>
+              <li><span className="meta">Детская навигация</span> {product.kids_nav ? "да" : "нет"}</li>
+              <li><span className="meta">Витрина</span> <Link href="/promo">карточка на витрине</Link></li>
             </ul>
-          ) : <p className="pill ok">Блокеров публикации нет</p>}
-          <form action={`/api/catalog/${id}`} method="post" className="stack">
-            <h2>Тип</h2>
-            <p className="muted">Смена типа не публикует товар. Артикул и адрес страницы остаются</p>
-            <ul>
-              <li>Обычный и с вариантами можно положить в корзину</li>
-              <li>По проекту корзина закрыта, остаётся заявка</li>
-            </ul>
-            {(["STANDARD", "CONFIGURABLE", "BESPOKE"] as const).map((type) => (
-              <label key={type}>
-                <input type="radio" name="classification" value={type} defaultChecked={product.classification === type} />
-                {" "}
-                {type === "STANDARD" ? "Обычный" : type === "CONFIGURABLE" ? "С вариантами" : "По проекту"}
-              </label>
-            ))}
-            <label className="muted"><input type="checkbox" name="confirm" value="1" /> Подтверждаю смену типа</label>
-            <button className="ghost" type="submit" name="intent" value="classification">Сохранить тип</button>
-          </form>
-          <form action={`/api/catalog/${id}`} method="post" className="stack">
-            <button className="primary" type="submit" name="intent" value="publish">Опубликовать</button>
-            <button className="ghost" type="submit" name="intent" value="unpublish">Снять с витрины</button>
-            <p className="muted">Снятие с витрины не удаляет товар. Покупатель перестанет его видеть</p>
-          </form>
-          <Link href="/catalog">К каталогу</Link>
+          </Card>
         </aside>
       </div>
     </>

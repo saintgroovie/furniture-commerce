@@ -1,25 +1,19 @@
 "use client"
 
-import { useEffect, useId, useRef, useState } from "react"
+import { useEffect, useId, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
+import { OPEN_SEARCH_EVENT } from "@/components/desk-nav"
+import { COMMANDS } from "@/lib/commands"
 
 type Hit = { id: string; group: string; title: string; hint: string | null; href: string }
 
-const COMMANDS = [
-  { title: "Открыть Сегодня", href: "/today" },
-  { title: "Найти заказ", href: "/orders" },
-  { title: "Найти SKU", href: "/catalog" },
-  { title: "Найти человека", href: "/people" },
-  { title: "Открыть «Нет цены»", href: "/catalog?filter=missing_price" },
-  { title: "Открыть «Нет изображения»", href: "/media" },
-  { title: "Перейти к заявкам", href: "/requests" },
-]
 
 const GROUP_LABEL: Record<string, string> = {
-  order: "Заказы",
-  product: "Каталог",
-  person: "Люди",
-  request: "Заявки",
+  order: "Заказ",
+  product: "Товар",
+  person: "Человек",
+  request: "Заявка",
+  command: "Команда",
 }
 
 export function CommandPalette() {
@@ -28,8 +22,18 @@ export function CommandPalette() {
   const [q, setQ] = useState("")
   const [hits, setHits] = useState<Hit[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [cursor, setCursor] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
   const titleId = useId()
+
+  // Native modal: focus trapped inside, Esc closes, focus returns to the trigger.
+  useEffect(() => {
+    const dialog = dialogRef.current
+    if (!dialog) return
+    if (open && !dialog.open) dialog.showModal()
+    if (!open && dialog.open) dialog.close()
+  }, [open])
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -41,16 +45,18 @@ export function CommandPalette() {
       } else if (event.key === "/" && !typing) {
         event.preventDefault()
         setOpen(true)
-      } else if (event.key === "Escape") {
-        setOpen(false)
       }
     }
+    const onOpen = () => setOpen(true)
     window.addEventListener("keydown", onKey)
-    return () => window.removeEventListener("keydown", onKey)
+    window.addEventListener(OPEN_SEARCH_EVENT, onOpen)
+    return () => {
+      window.removeEventListener("keydown", onKey)
+      window.removeEventListener(OPEN_SEARCH_EVENT, onOpen)
+    }
   }, [])
 
   const query = q.trim()
-  const visibleHits = query.length < 2 ? [] : hits
 
   useEffect(() => {
     if (!open) return
@@ -72,63 +78,112 @@ export function CommandPalette() {
     return () => window.clearTimeout(handle)
   }, [open, query])
 
-  if (!open) {
-    return (
-      <button type="button" className="search-trigger" onClick={() => setOpen(true)}>
-        Найти заказ, товар или человека
-      </button>
+  const rows = useMemo(() => {
+    const needle = query.toLowerCase()
+    const commands: Hit[] = COMMANDS.filter((command) => !needle || command.title.toLowerCase().includes(needle)).map(
+      (command) => ({ id: command.href, group: "command", title: command.title, hint: command.hint, href: command.href })
     )
+    return [...(query.length >= 2 ? hits : []), ...commands]
+  }, [hits, query])
+
+  const activeIndex = Math.min(cursor, Math.max(0, rows.length - 1))
+
+  function go(href: string) {
+    setOpen(false)
+    router.push(href)
   }
 
   return (
-    <div className="modal-back" role="presentation" onMouseDown={() => setOpen(false)}>
-      <div
-        className="modal"
-        role="dialog"
-        aria-modal="true"
+    <>
+      <button type="button" className="search-trigger" onClick={() => setOpen(true)} aria-label="Поиск и команды">
+        <SearchGlyph />
+        <span className="search-hint">Найти человека, заказ, товар или команду</span>
+        <kbd className="kbd">⌘K</kbd>
+      </button>
+      <dialog
+        ref={dialogRef}
+        className="palette"
         aria-labelledby={titleId}
-        onMouseDown={(event) => event.stopPropagation()}
+        onClose={() => {
+          setOpen(false)
+          setQ("")
+        }}
+        onMouseDown={(event) => {
+          if (event.target === dialogRef.current) setOpen(false)
+        }}
       >
-        <h2 id={titleId}>Поиск</h2>
-        <input
-          ref={inputRef}
-          aria-label="Запрос"
-          value={q}
-          placeholder="Номер, SKU, почта, телефон"
-          onChange={(event) => setQ(event.target.value)}
-        />
-        {error ? <p className="error">{error}</p> : null}
-        <div className="hits">
-          {COMMANDS.filter((command) => command.title.toLowerCase().includes(q.trim().toLowerCase()) || !q.trim()).map((command) => (
-            <a
-              key={command.href}
-              href={command.href}
-              onClick={(event) => {
+        <h2 id={titleId} style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }}>
+          Поиск и команды
+        </h2>
+        <div className="palette-input">
+          <SearchGlyph />
+          <input
+            ref={inputRef}
+            aria-label="Запрос"
+            role="combobox"
+            aria-expanded="true"
+            aria-controls={`${titleId}-list`}
+            aria-activedescendant={rows[activeIndex] ? `${titleId}-opt-${activeIndex}` : undefined}
+            aria-autocomplete="list"
+            value={q}
+            placeholder="Имя, телефон, почта, номер заказа, SKU"
+            onChange={(event) => {
+              setQ(event.target.value)
+              setCursor(0)
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowDown") {
                 event.preventDefault()
-                setOpen(false)
-                router.push(command.href)
-              }}
-            >
-              {command.title}
-            </a>
-          ))}
-            {visibleHits.map((hit) => (
+                setCursor(Math.min(rows.length - 1, activeIndex + 1))
+              } else if (event.key === "ArrowUp") {
+                event.preventDefault()
+                setCursor(Math.max(0, activeIndex - 1))
+              } else if (event.key === "Enter" && rows[activeIndex]) {
+                event.preventDefault()
+                go(rows[activeIndex]!.href)
+              }
+            }}
+          />
+        </div>
+        <div className="palette-list" role="listbox" aria-label="Результаты" id={`${titleId}-list`}>
+          {error ? <p className="error">{error}</p> : null}
+          {query.length >= 2 && hits.length === 0 && !error ? <p className="meta palette-group">Совпадений нет. Ниже - команды</p> : null}
+          {rows.map((hit, index) => (
             <a
               key={`${hit.group}:${hit.id}`}
+              id={`${titleId}-opt-${index}`}
               href={hit.href}
+              role="option"
+              aria-selected={index === activeIndex}
+              className="palette-hit"
+              onMouseEnter={() => setCursor(index)}
               onClick={(event) => {
                 event.preventDefault()
-                setOpen(false)
-                router.push(hit.href)
+                go(hit.href)
               }}
             >
-              <span className="muted">{GROUP_LABEL[hit.group] ?? hit.group}</span>
-              <strong style={{ display: "block" }}>{hit.title}</strong>
-              {hit.hint ? <span className="muted">{hit.hint}</span> : null}
+              <span className="meta palette-kind">{GROUP_LABEL[hit.group] ?? hit.group}</span>
+              <span className="palette-title">{hit.title}</span>
+              {hit.hint ? <span className="meta">{hit.hint}</span> : null}
             </a>
           ))}
         </div>
-      </div>
-    </div>
+        <div className="palette-foot">
+          <span className="meta">Enter открыть</span>
+          <span className="meta">↑↓ выбрать</span>
+          <span className="meta">Esc закрыть</span>
+          <span className="meta">Команды только открывают объект</span>
+        </div>
+      </dialog>
+    </>
+  )
+}
+
+function SearchGlyph() {
+  return (
+    <svg className="search-glyph" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6">
+      <circle cx="7" cy="7" r="4.5" />
+      <path d="M10.5 10.5 14 14" strokeLinecap="round" />
+    </svg>
   )
 }

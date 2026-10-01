@@ -1,18 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 
+type Phase = { kind: "idle" } | { kind: "uploading"; progress: number } | { kind: "failed"; message: string }
+
+/**
+ * Upload with real progress. Success = server redirect back to the product
+ * with `saved=1`; failure stays on screen with a retry, no optimistic frame.
+ */
 export function MediaUpload({ productId }: { productId: string }) {
-  const [progress, setProgress] = useState<number | null>(null)
-  const [message, setMessage] = useState("")
+  const [phase, setPhase] = useState<Phase>({ kind: "idle" })
   const [preview, setPreview] = useState<string | null>(null)
-  const [failed, setFailed] = useState(false)
+  const [fileName, setFileName] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   function onFile(file: File | null) {
     if (preview) URL.revokeObjectURL(preview)
     setPreview(file ? URL.createObjectURL(file) : null)
-    setMessage("")
-    setFailed(false)
+    setFileName(file?.name ?? null)
+    setPhase({ kind: "idle" })
   }
 
   return (
@@ -25,17 +31,16 @@ export function MediaUpload({ productId }: { productId: string }) {
       onDrop={(event) => {
         event.preventDefault()
         const file = event.dataTransfer.files?.[0]
-        const input = event.currentTarget.querySelector<HTMLInputElement>("input[type=file]")
-        if (file && input) {
+        if (file && inputRef.current) {
           const list = new DataTransfer()
           list.items.add(file)
-          input.files = list.files
+          inputRef.current.files = list.files
           onFile(file)
         }
       }}
       onSubmit={(event) => {
         const form = event.currentTarget
-        const file = form.querySelector<HTMLInputElement>("input[type=file]")?.files?.[0]
+        const file = inputRef.current?.files?.[0]
         if (!file || !window.XMLHttpRequest) return
         event.preventDefault()
         const xhr = new XMLHttpRequest()
@@ -43,54 +48,46 @@ export function MediaUpload({ productId }: { productId: string }) {
         xhr.setRequestHeader("x-desk-upload", "1")
         xhr.upload.onprogress = (progressEvent) => {
           if (!progressEvent.lengthComputable) return
-          setProgress(Math.round((progressEvent.loaded / progressEvent.total) * 100))
+          setPhase({ kind: "uploading", progress: Math.round((progressEvent.loaded / progressEvent.total) * 100) })
         }
         xhr.onload = () => {
-          setProgress(null)
           if (xhr.status >= 200 && xhr.status < 400) {
             window.location.assign(`/catalog/${productId}?saved=1#media`)
             return
           }
-          setFailed(true)
+          let message = "Не удалось загрузить кадр"
           try {
             const payload = JSON.parse(xhr.responseText) as { message?: string }
-            setMessage(payload.message || "Не удалось загрузить кадр")
+            if (payload.message) message = payload.message
           } catch {
-            setMessage("Не удалось загрузить кадр")
+            // keep default wording
           }
+          setPhase({ kind: "failed", message })
         }
-        xhr.onerror = () => {
-          setProgress(null)
-          setFailed(true)
-          setMessage("Не удалось загрузить кадр")
-        }
-        setFailed(false)
-        setMessage("Загрузка…")
-        setProgress(0)
+        xhr.onerror = () => setPhase({ kind: "failed", message: "Не удалось загрузить кадр. Проверьте связь" })
+        setPhase({ kind: "uploading", progress: 0 })
         xhr.send(new FormData(form))
       }}
     >
-      <p className="muted">JPEG, PNG или WebP до 8 МБ. Кадр не становится главным сам и не публикует товар</p>
-      <label>
-        Файл
-        <input
-          type="file"
-          name="file"
-          accept="image/jpeg,image/png,image/webp"
-          required
-          onChange={(event) => onFile(event.target.files?.[0] ?? null)}
-        />
+      <label className={`dropzone${phase.kind === "failed" ? " failed" : ""}`}>
+        {preview ? <img src={preview} alt="Предпросмотр кадра" width={96} height={72} /> : <span className="dropzone-glyph" aria-hidden="true">＋</span>}
+        <span className="object-row-title">{fileName ?? "Перетащите кадр или выберите файл"}</span>
+        <span className="meta">JPEG, PNG или WebP до 8 МБ. Кадр не станет главным сам и не опубликует товар</span>
+        <input ref={inputRef} className="sr-only" type="file" name="file" accept="image/jpeg,image/png,image/webp" required onChange={(event) => onFile(event.target.files?.[0] ?? null)} />
       </label>
-      {preview ? <img src={preview} alt="Предпросмотр кадра" width={160} height={120} /> : null}
-      {progress != null ? (
-        <p>
-          <progress value={progress} max={100}>{progress}%</progress>
-          {" "}
-          {progress}%
+      {phase.kind === "uploading" ? (
+        <p role="status" className="meta">
+          <progress value={phase.progress} max={100}>{phase.progress}%</progress> Загружаем… {phase.progress}%
         </p>
       ) : null}
-      {message ? <p className={failed ? "toast warn" : "muted"} role={failed ? "alert" : "status"}>{message}</p> : null}
-      <button className="primary" type="submit">Загрузить кадр</button>
+      {phase.kind === "failed" ? (
+        <p role="alert" className="banner critical">
+          {phase.message}. Файл остался в форме, можно повторить
+        </p>
+      ) : null}
+      <button className="btn btn-secondary" type="submit" disabled={phase.kind === "uploading"}>
+        {phase.kind === "failed" ? "Повторить загрузку" : "Загрузить кадр"}
+      </button>
     </form>
   )
 }

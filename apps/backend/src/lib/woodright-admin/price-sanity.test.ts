@@ -5,6 +5,7 @@ import {
   formatRubAmount,
   parseSellerPriceInput,
   pickPrimaryRubPrice,
+  pickPromoRubPrice,
   PRICE_SANITY_MAX,
   mergeBasePriceUpdate,
   productHasRubPrice,
@@ -152,6 +153,22 @@ describe("pickPrimaryRubPrice", () => {
     })
     assert.equal(promoOnly, null)
     assert.deepEqual(both, { id: "base", amount: 82000, currency_code: "rub" })
+  })
+
+  it("exposes the promotional row separately and never as the base", () => {
+    const variant = {
+      prices: [
+        { id: "base", amount: 82000, currency_code: "rub", price_list_id: null },
+        { id: "sale", amount: 70000, currency_code: "rub", price_list_id: "plist_1" },
+      ],
+    }
+    assert.deepEqual(pickPromoRubPrice(variant, "plist_1"), { amount: 70000, price_list_id: "plist_1" })
+    assert.deepEqual(pickPrimaryRubPrice(variant), { id: "base", amount: 82000, currency_code: "rub" })
+    assert.equal(pickPromoRubPrice({ prices: [{ id: "base", amount: 82000, currency_code: "rub" }] }, "plist_1"), null)
+    // Another price list is not the catalog promo - never shown as the editable promo.
+    assert.equal(pickPromoRubPrice(variant, "plist_other"), null)
+    // Unknown canonical list → no guessing.
+    assert.equal(pickPromoRubPrice(variant, null), null)
   })
 })
 

@@ -1,63 +1,102 @@
 import Link from "next/link"
-import { ErrorBlock, PageHeader } from "@/components/page"
-import { formatWhen, fulfillmentLabel, formatRub, paymentLabel } from "@/lib/format"
+import { OrderAxesCells, OrderAxesInline } from "@/components/order-axes"
+import { Card, EmptyState, ErrorBlock, ModeTabs, PageHeader } from "@/components/page"
+import { Status } from "@/components/status"
+import { ageLabel, formatRub } from "@/lib/format"
+import { nextOrderAction, orderAxes } from "@/lib/order-presentation"
+import { ORDER_MODES } from "@/lib/nav"
 import { loadOrders } from "@/server/loaders"
 
 const FILTERS = [
   ["all", "Все"],
-  ["new", "Новые"],
   ["action", "Требуют действия"],
+  ["new", "Новые"],
   ["waiting", "Ждём клиента"],
   ["production", "В производстве"],
   ["ready", "Готовы"],
-  ["fulfilled", "Отгружены"],
+  ["fulfilled", "Выполнены"],
 ] as const
 
-export default async function OrdersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ filter?: string }>
-}) {
+export default async function OrdersPage({ searchParams }: { searchParams: Promise<{ filter?: string }> }) {
   const params = await searchParams
-  const filter = params.filter || "all"
+  const filter = FILTERS.some(([id]) => id === params.filter) ? (params.filter as string) : "all"
   const result = await loadOrders(filter)
   return (
     <>
-      <PageHeader kicker="Заказы" title="Заказы" lead="Оплата и отгрузка живут отдельно от этапа изготовления" />
-      <div className="filters">
+      <PageHeader kicker="Заказы" title="Заказы" lead="Деньги, доставка и изготовление - три отдельные оси. Строка подсвечена, если нужно ваше действие" right={<ModeTabs items={ORDER_MODES} active="list" />} />
+      <nav className="filters" aria-label="Фильтр заказов">
         {FILTERS.map(([id, label]) => (
           <Link key={id} href={id === "all" ? "/orders" : `/orders?filter=${id}`} aria-current={filter === id ? "page" : undefined}>
             {label}
           </Link>
         ))}
-      </div>
+      </nav>
       {!result.ok ? <ErrorBlock message={result.message} /> : null}
-      {result.ok && result.data.orders.length === 0 ? <p className="empty">В этом срезе заказов нет</p> : null}
-      {result.ok ? (
-        <div className="stack">
-          {result.data.orders.map((order) => (
-            <Link key={order.id} href={`/orders/${order.id}`} className="row-card">
-              <div>
-                <h2>Заказ {order.display_id ?? "без номера"}</h2>
-                <span className="muted">{order.person_name || order.email || "Человек не связан"}</span>
-              </div>
-              <div className="pills">
-                <span className="pill">{paymentLabel(order.payment_status)}</span>
-                <span className="pill">{fulfillmentLabel(order.fulfillment_status)}</span>
-                <span className={order.action_needed ? "pill warn" : "pill"}>
-                  {order.manufacturing_label || "Этап ещё не начат"}
-                </span>
-              </div>
-              <div>
-                <div>{formatRub(order.total)}</div>
-                <span className="muted">{formatWhen(order.created_at)}</span>
-              </div>
-            </Link>
-          ))}
-          {result.data.has_more ? <p className="muted">Показаны последние {result.data.limit}</p> : null}
-        </div>
+      {result.ok && result.data.orders.length === 0 ? (
+        <Card>
+          <EmptyState title="Заказов в этом срезе нет" href="/orders" linkLabel="Все заказы" />
+        </Card>
       ) : null}
-      <p className="muted" style={{ marginTop: 16 }}>Доска изготовления - те же этапы, что и фильтр «В производстве»</p>
+      {result.ok && result.data.orders.length > 0 ? (
+        <>
+          <div className="card table-wrap desktop-only">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th scope="col">Заказ</th>
+                  <th scope="col">Покупатель</th>
+                  <th scope="col">Сумма</th>
+                  <th scope="col">Деньги</th>
+                  <th scope="col">Доставка</th>
+                  <th scope="col">Изготовление</th>
+                  <th scope="col">Следующее действие</th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.data.orders.map((order) => {
+                  const axes = orderAxes(order)
+                  return (
+                    <tr key={order.id} className={order.action_needed ? "needs-action" : undefined}>
+                      <td>
+                        <Link href={`/orders/${order.id}`} className="object-row-title">
+                          {order.display_id ? `#${order.display_id}` : order.id}
+                        </Link>
+                        <div className="meta">{ageLabel(order.created_at)} назад</div>
+                      </td>
+                      <td>
+                        <div>{order.person_name || order.email || "Без имени"}</div>
+                        {order.person_name && order.email ? <div className="meta">{order.email}</div> : null}
+                      </td>
+                      <td className="money">{formatRub(order.total)}</td>
+                      <OrderAxesCells axes={axes} />
+                      <td>
+                        {order.action_needed ? <Status tone="attention">{nextOrderAction(order.manufacturing_stage)}</Status> : <span className="meta">{nextOrderAction(order.manufacturing_stage)}</span>}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="card mobile-only list">
+            {result.data.orders.map((order) => {
+              const axes = orderAxes(order)
+              return (
+                <Link key={order.id} href={`/orders/${order.id}`} className="object-row" style={{ textDecoration: "none" }}>
+                  <div className="object-row-main">
+                    <span className="object-row-title">
+                      {order.display_id ? `#${order.display_id}` : order.id} · {order.person_name || order.email || "Без имени"}
+                    </span>
+                    <span className="object-row-meta">{formatRub(order.total)} · {nextOrderAction(order.manufacturing_stage)}</span>
+                    <OrderAxesInline axes={axes} />
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+          {result.data.has_more ? <p className="meta">Показаны первые {result.data.limit}. Для остальных используйте поиск</p> : null}
+        </>
+      ) : null}
     </>
   )
 }

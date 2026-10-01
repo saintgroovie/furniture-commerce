@@ -6,7 +6,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { id } = await context.params
   const form = await request.formData()
   const intent = String(form.get("intent") ?? "")
-  return writeAndReturn(request, `/catalog/${id}`, async () => {
+  const anchor = intent === "price" || intent === "promo" ? "#price" : intent === "hero" || intent === "reorder" || intent === "detach" ? "#media" : intent === "publish" || intent === "unpublish" || intent === "classification" ? "#publish" : intent === "dimensions" ? "#dimensions" : ""
+  // On a price conflict the employee's amount must stay visible next to the server amount.
+  const keep: Record<string, string> =
+    intent === "price"
+      ? { your_amount: String(form.get("amount") ?? "").replace(/\s/g, ""), variant_id: String(form.get("variant_id") ?? "") }
+      : {}
+  return writeAndReturn(request, `/catalog/${id}${anchor}`, async () => {
     if (intent === "profile") {
       await medusaSend(`/admin/woodright/products/${id}/profile`, "POST", {
         title: String(form.get("title") ?? ""),
@@ -84,7 +90,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       })
       return { storefront: await probeBuyerPrice(id, amount) }
     }
-  })
+  }, keep)
 }
 
 async function probeTitle(productId: string, title: string | null) {
