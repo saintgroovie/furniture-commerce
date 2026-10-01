@@ -1,7 +1,8 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, generateEntityId } from "@medusajs/framework/utils"
 import { assessPriceSave } from "../../../../../../lib/woodright-admin/price-sanity"
 import { appendDeskAudit } from "../../../../../../lib/woodright-workspace/desk-audit"
+import { createFirstRubPrice, type SqlClient } from "../../../../../../lib/woodright-workspace/first-price"
 import { loadSellerProductById, type QueryGraph } from "../../../../../../lib/woodright-admin/seller-product"
 import { requireDeskWrite } from "../../../../../../lib/woodright-workspace/require-desk-write"
 
@@ -14,6 +15,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     amount?: unknown
     expected_amount?: unknown
     confirm?: unknown
+    create?: unknown
+    currency?: unknown
   }
   if (typeof body.variant_id !== "string" || !body.variant_id) {
     res.status(400).json({ message: "Выберите вариант" })
@@ -23,7 +26,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     res.status(400).json({ message: "Укажите цену целым числом рублей" })
     return
   }
-  if (typeof body.expected_amount !== "number") {
+  if (body.currency != null && body.currency !== "rub") {
+    res.status(400).json({ message: "Цена здесь задаётся только в рублях" })
+    return
+  }
+  const creating = body.create === true
+  if (!creating && typeof body.expected_amount !== "number") {
     res.status(400).json({ message: "Обновите страницу и повторите" })
     return
   }
@@ -39,8 +47,59 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return
   }
   const current = variant.rub_price
+  const sql = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as SqlClient
   if (!current?.id) {
-    res.status(409).json({ message: "У варианта ещё нет рублёвой цены. Её задают в Medusa" })
+    if (!creating) {
+      res.status(409).json({
+        code: "missing_base_price",
+        message: "Цена не задана",
+      })
+      return
+    }
+    const assessment = assessPriceSave(body.amount, null)
+    if (assessment.decision === "reject") {
+      res.status(400).json({ message: assessment.message })
+      return
+    }
+    if (assessment.decision === "confirm" && body.confirm !== true) {
+      res.status(409).json({ code: "needs_confirm", message: assessment.message })
+      return
+    }
+    const created = await createFirstRubPrice(sql, {
+      variantId: variant.id,
+      amount: body.amount,
+      priceId: generateEntityId(undefined, "price"),
+    })
+    if (!created.ok) {
+      const status = created.code === "not_atomic" ? 500 : 409
+      res.status(status).json({ code: created.code, message: created.message })
+      return
+    }
+    const product = await loadSellerProductById(query, id)
+    const saved = product?.variants.find((item) => item.id === variant.id)?.rub_price ?? null
+    const audit = await appendDeskAudit(req, {
+      actorId: gate.actorId,
+      actorEmail: gate.email,
+      entityType: "price",
+      entityId: created.id,
+      action: "price.create",
+      before: { variant_id: variant.id, amount: null, currency_code: "rub" },
+      after: { variant_id: variant.id, amount: saved?.amount ?? null, currency_code: "rub" },
+    })
+    res.status(201).json({
+      product,
+      price: saved,
+      amount: saved?.amount ?? null,
+      created: true,
+      audit,
+    })
+    return
+  }
+  if (creating) {
+    res.status(409).json({
+      code: "base_exists",
+      message: "Обычная цена уже есть. Обновите страницу",
+    })
     return
   }
   if (current.amount !== body.expected_amount) {
@@ -61,10 +120,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return
   }
   // One-row CAS. A partial prices[] through updateProductVariantsWorkflow deletes other base prices.
-  const sql = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as {
-    raw: (query: string, bindings?: unknown[]) => Promise<{ rows?: Array<Record<string, unknown>> }>
-  }
-  const cas = await sql.raw(
+  const casResult = await sql.raw(
     `update price
         set amount = ?,
             raw_amount = cast(? as jsonb),
@@ -82,7 +138,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       body.expected_amount,
     ]
   )
-  if (!cas.rows?.length) {
+  const casRows =
+    casResult && typeof casResult === "object" && "rows" in casResult
+      ? (casResult as { rows?: unknown[] }).rows
+      : []
+  if (!casRows?.length) {
     res.status(409).json({
       code: "stale_price",
       message: "Цену уже изменили. Обновите страницу",

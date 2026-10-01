@@ -8,6 +8,7 @@ import type {
   SalesMode,
   SalesModifier,
 } from "../../../../../../lib/woodright-sales/sales-modes"
+import { requireDeskWrite } from "../../../../../../lib/woodright-workspace/require-desk-write"
 
 type SalesPolicyRow = {
   id: string
@@ -141,6 +142,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 }
 
 export async function PUT(req: MedusaRequest, res: MedusaResponse) {
+  const gate = await requireDeskWrite(req, res, "catalog.edit")
+  if (!gate) return
   const productId = req.params.id as string
   const body = req.body as {
     sales_mode?: unknown
@@ -217,6 +220,8 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
 }
 
 export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
+  const gate = await requireDeskWrite(req, res, "catalog.edit")
+  if (!gate) return
   const productId = req.params.id as string
   const preview = await loadProductPreview(req, productId)
   if (!preview) {

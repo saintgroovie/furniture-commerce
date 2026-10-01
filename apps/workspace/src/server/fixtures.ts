@@ -173,6 +173,7 @@ export const fixtureProducts = {
       ],
       thumbnail: null as string | null,
       image_urls: [] as string[],
+      images: [] as Array<{ id: string; url: string }>,
       price_display: { kind: "single", amount: 186000 },
       readiness: { published: false, visible: false, has_price: true, has_media: false, warning_count: 0, error_count: 1, codes: ["missing_media"] },
       dimensions: { height_mm: 750, width_mm: 1600, depth_mm: 800 },

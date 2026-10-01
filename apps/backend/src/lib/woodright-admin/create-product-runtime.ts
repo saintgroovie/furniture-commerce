@@ -80,6 +80,9 @@ export function createWoodrightDraftPorts(scope: {
                   title: spec.variant_title,
                   sku: spec.sku,
                   options: { [spec.option_title]: spec.option_value },
+                  // Desk drafts are not stock-tracked. A stock location stays
+                  // a Medusa Admin concern, and must not block the buyer cart.
+                  manage_inventory: false,
                 },
               ],
             },

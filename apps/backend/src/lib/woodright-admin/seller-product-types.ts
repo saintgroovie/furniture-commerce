@@ -47,6 +47,11 @@ export type SellerExecutionFinish = {
   photo_count: number
 }
 
+export type SellerImage = {
+  id: string
+  url: string
+}
+
 export type SellerProduct = {
   id: string
   title: string
@@ -65,6 +70,7 @@ export type SellerProduct = {
   execution_media_guard: boolean
   dimensions: SellerDimensionsMm
   image_urls: string[]
+  images: SellerImage[]
   general_image_urls: string[]
   execution_photo_count: number
   execution_finishes: SellerExecutionFinish[]

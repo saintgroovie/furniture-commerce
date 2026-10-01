@@ -244,5 +244,10 @@ export default defineMiddlewares({
       method: ["POST"],
       middlewares: [ensureNotBespokeForCart],
     },
+    {
+      matcher: "/admin/woodright/products/:id/media/upload",
+      method: ["POST"],
+      bodyParser: { sizeLimit: 12 * 1024 * 1024 },
+    },
   ],
 })

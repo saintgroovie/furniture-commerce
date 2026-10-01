@@ -14,14 +14,18 @@ export async function requireDeskSession(request: Request) {
 export async function writeAndReturn(
   request: Request,
   back: string,
-  run: () => Promise<void>,
+  run: () => Promise<void | { storefront?: "match" | "miss" | "skipped" }>,
   keep?: Record<string, string>
 ) {
   const gate = await requireDeskSession(request)
   if (!gate.ok) return gate.response
   try {
-    await run()
-    return redirectTo(request, `${back}${back.includes("?") ? "&" : "?"}saved=1`)
+    const extra = await run()
+    const params = new URLSearchParams({ saved: "1" })
+    if (extra && typeof extra === "object" && extra.storefront) {
+      params.set("storefront", extra.storefront)
+    }
+    return redirectTo(request, `${back}${back.includes("?") ? "&" : "?"}${params.toString()}`)
   } catch (error) {
     const message = error instanceof DeskHttpError ? error.message : "Не удалось сохранить"
     const params = new URLSearchParams({ error: message.slice(0, 180) })

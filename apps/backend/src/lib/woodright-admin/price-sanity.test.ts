@@ -139,6 +139,20 @@ describe("pickPrimaryRubPrice", () => {
     assert.deepEqual(first, { id: "price_a", amount: 189000, currency_code: "rub" })
     assert.deepEqual(second, { id: "price_c", amount: 45000, currency_code: "rub" })
   })
+
+  it("ignores a promotional RUB row when choosing the base price", () => {
+    const promoOnly = pickPrimaryRubPrice({
+      prices: [{ id: "sale", amount: 70000, currency_code: "rub", price_list_id: "plist_1" }],
+    })
+    const both = pickPrimaryRubPrice({
+      prices: [
+        { id: "sale", amount: 70000, currency_code: "rub", price_list_id: "plist_1" },
+        { id: "base", amount: 82000, currency_code: "rub", price_list_id: null },
+      ],
+    })
+    assert.equal(promoOnly, null)
+    assert.deepEqual(both, { id: "base", amount: 82000, currency_code: "rub" })
+  })
 })
 
 describe("mergeBasePriceUpdate", () => {

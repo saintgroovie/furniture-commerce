@@ -36,6 +36,7 @@ function sellerDraft(overrides: Partial<SellerProduct> = {}): SellerProduct {
     execution_media_guard: false,
     dimensions: {},
     image_urls: [],
+    images: [],
     general_image_urls: [],
     execution_photo_count: 0,
     execution_finishes: [],

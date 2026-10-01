@@ -6,6 +6,7 @@ import {
   readStagedSiteContacts,
   WOODRIGHT_CONTACTS_SOURCE_STATUS,
 } from "../../../../lib/woodright-admin/site-contacts"
+import { requireDeskWrite } from "../../../../lib/woodright-workspace/require-desk-write"
 
 type StoreRow = {
   id: string
@@ -46,6 +47,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
  * PUT /admin/woodright/contacts
  */
 export async function PUT(req: MedusaRequest, res: MedusaResponse) {
+  const gate = await requireDeskWrite(req, res, "site.manage")
+  if (!gate) return
   const parsed = parseWoodrightSiteContacts(req.body)
   if (!parsed.ok) {
     res.status(400).json({

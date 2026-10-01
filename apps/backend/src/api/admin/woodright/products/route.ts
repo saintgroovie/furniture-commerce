@@ -8,6 +8,7 @@ import {
   type QueryGraph,
 } from "../../../../lib/woodright-admin/seller-product"
 import { resolveWoodrightSiteUrl } from "../../../../lib/woodright-admin/site-preview-url"
+import { requireDeskWrite } from "../../../../lib/woodright-workspace/require-desk-write"
 
 async function loadAllProducts(query: QueryGraph): Promise<Record<string, unknown>[]> {
   const products: Record<string, unknown>[] = []
@@ -51,6 +52,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
  * POST /admin/woodright/products
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const gate = await requireDeskWrite(req, res, "catalog.edit")
+  if (!gate) return
   const result = await createWoodrightDraftProduct(req.body, createWoodrightDraftPorts(req.scope))
   if (!result.ok) {
     const status = result.code === "duplicate_sku" ? 409 : 400
