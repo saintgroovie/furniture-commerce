@@ -144,6 +144,32 @@ export function pickPrimaryRubPrice(variant: Record<string, unknown>): VariantRu
   return prices[0] ?? null
 }
 
+/**
+ * RUB row of the canonical catalog promo price list. Read-only projection for
+ * the desk; never used as the base price. Without a known list id nothing is
+ * guessed - the editor then shows «акции нет», and writes still go through
+ * `findCatalogPromoPriceList`.
+ */
+export function pickPromoRubPrice(
+  variant: Record<string, unknown>,
+  promoPriceListId: string | null | undefined
+): { amount: number; price_list_id: string } | null {
+  if (!promoPriceListId) return null
+  const nested = variant.price_set as { prices?: unknown } | undefined
+  const raw = variant.prices ?? nested?.prices
+  if (!Array.isArray(raw)) return null
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue
+    const row = item as { amount?: unknown; currency_code?: unknown; price_list_id?: unknown }
+    if (row.price_list_id !== promoPriceListId) continue
+    if (typeof row.amount !== "number" || !Number.isFinite(row.amount)) continue
+    const currency = typeof row.currency_code === "string" ? row.currency_code.toLowerCase() : "rub"
+    if (currency !== "rub") continue
+    return { amount: row.amount, price_list_id: row.price_list_id }
+  }
+  return null
+}
+
 export type BasePriceRow = {
   id: string
   amount: number

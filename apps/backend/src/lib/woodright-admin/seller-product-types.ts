@@ -23,11 +23,21 @@ export type VariantRubPrice = {
   currency_code: string
 }
 
+/** Promotional RUB row from a price list (read projection; base price stays in `rub_price`). */
+export type VariantPromoPrice = {
+  amount: number
+  price_list_id: string
+}
+
 export type SellerVariant = {
   id: string
   sku: string | null
   title: string | null
   rub_price: VariantRubPrice | null
+  /** Optional: filled by the seller read model, absent in older literals. */
+  promo_price?: VariantPromoPrice | null
+  /** Pricing module price set of the variant; lets the detail route attach the canonical promo row. */
+  price_set_id?: string | null
 }
 
 export type SellerPriceDisplay =

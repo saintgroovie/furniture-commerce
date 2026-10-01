@@ -2,7 +2,7 @@ import { resolveAdminCollectionLabel } from "../../admin/lib/collection-display-
 import { readDimensionsMm } from "./dimensions-command"
 import { hasExecutionMediaContract } from "./execution-media-guard"
 import { collectProductImageUrls, partitionSellerMedia } from "./media-health"
-import { pickPrimaryRubPrice } from "./price-sanity"
+import { pickPrimaryRubPrice, pickPromoRubPrice } from "./price-sanity"
 import { catalogPublishGateAudit, computeWorkspacePublishReadiness } from "./publish-readiness"
 import { isKidsMetadataStorefrontProduct } from "./kids-metadata"
 import { aggregateAttention, summarizeProductReadiness } from "./readiness-summary"
@@ -34,16 +34,19 @@ function flattenVariantPrices(product: Record<string, unknown>): Record<string, 
   }
 }
 
-function mapVariant(raw: unknown): SellerVariant | null {
+function mapVariant(raw: unknown, promoPriceListId: string | null): SellerVariant | null {
   const variant = asRecord(raw)
   if (!variant) return null
   const id = typeof variant.id === "string" ? variant.id : ""
   if (!id) return null
+  const priceSet = asRecord(variant.price_set)
   return {
     id,
     sku: typeof variant.sku === "string" && variant.sku ? variant.sku : null,
     title: typeof variant.title === "string" && variant.title ? variant.title : null,
     rub_price: pickPrimaryRubPrice(variant),
+    promo_price: pickPromoRubPrice(variant, promoPriceListId),
+    price_set_id: typeof priceSet?.id === "string" ? priceSet.id : null,
   }
 }
 
@@ -82,11 +85,17 @@ function productImagesOf(product: Record<string, unknown>): { id: string; url: s
   return out
 }
 
-export function toSellerProduct(raw: Record<string, unknown>): SellerProduct {
+export type SellerProductOptions = {
+  /** Canonical catalog promo price list id. `null` → `promo_price` stays null (no guessing). */
+  promoPriceListId?: string | null
+}
+
+export function toSellerProduct(raw: Record<string, unknown>, options: SellerProductOptions = {}): SellerProduct {
   const product = flattenVariantPrices(raw)
   const meta = asRecord(product.metadata) ?? {}
+  const promoPriceListId = options.promoPriceListId ?? null
   const variants = (Array.isArray(product.variants) ? product.variants : [])
-    .map(mapVariant)
+    .map((variant) => mapVariant(variant, promoPriceListId))
     .filter((v): v is SellerVariant => v != null)
   const skus = variants.map((v) => v.sku).filter((sku): sku is string => Boolean(sku))
   const collection = asRecord(product.collection)
@@ -136,7 +145,7 @@ export function toSellerProductList(products: Record<string, unknown>[]): {
   attention: AttentionCounts
   publish_gate_audit: ReturnType<typeof catalogPublishGateAudit>
 } {
-  const mapped = products.map(toSellerProduct)
+  const mapped = products.map((product) => toSellerProduct(product))
   const attention = aggregateAttention(mapped.map((p) => p.readiness))
   return {
     products: mapped,
@@ -162,6 +171,7 @@ export const SELLER_PRODUCT_GRAPH_FIELDS = [
   "variants.id",
   "variants.sku",
   "variants.title",
+  "variants.price_set.id",
   "variants.price_set.prices.id",
   "variants.price_set.prices.amount",
   "variants.price_set.prices.currency_code",
@@ -180,7 +190,8 @@ export type QueryGraph = {
 
 export async function loadSellerProductById(
   query: QueryGraph,
-  id: string
+  id: string,
+  options: SellerProductOptions = {}
 ): Promise<SellerProduct | null> {
   const { data } = await query.graph({
     entity: "product",
@@ -188,7 +199,7 @@ export async function loadSellerProductById(
     filters: { id },
   })
   const raw = data?.[0] as Record<string, unknown> | undefined
-  return raw ? toSellerProduct(raw) : null
+  return raw ? toSellerProduct(raw, options) : null
 }
 
 export type { AttentionCounts, ProductReadinessSummary } from "./seller-product-types"

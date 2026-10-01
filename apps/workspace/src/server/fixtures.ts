@@ -169,7 +169,13 @@ export const fixtureProducts = {
       kids_nav: false,
       skus: ["OL-01-1"],
       variants: [
-        { id: "variant_1", sku: "OL-01-1", title: "Основной", rub_price: { id: "price_1", amount: 186000, currency_code: "rub" } },
+        {
+          id: "variant_1",
+          sku: "OL-01-1",
+          title: "Основной",
+          rub_price: { id: "price_1", amount: 186000, currency_code: "rub" } as { id: string; amount: number; currency_code?: string } | null,
+          promo_price: null as { amount: number; price_list_id: string } | null,
+        },
       ],
       thumbnail: null as string | null,
       image_urls: [] as string[],
@@ -209,7 +215,21 @@ export const fixtureRooms = {
 export const fixturePromo = {
   slot: { enabled: true, label: "Сейчас в каталоге", product_ids: ["prod_sample"], rotation_interval_ms: 7000 },
   price_list: { id: "plist_1", title: "Акция каталога", active_now: true, admin_path: null },
-  products: [{ product_id: "prod_sample", title: "Стол Оливер", sku: "OL-01-1", blocker: "no_sale_price", sale_price: null }],
+  products: [
+    {
+      product_id: "prod_sample",
+      title: "Стол Оливер",
+      sku: "OL-01-1" as string | null,
+      status: "draft" as string | null,
+      thumbnail: null as string | null,
+      base_price: 186000 as number | null,
+      sale_price: null as number | null,
+      discount_percent: null as number | null,
+      buyer_base_price: 186000 as number | null,
+      buyer_sale_price: null as number | null,
+      blocker: "no_sale_price" as string | null,
+    },
+  ],
 }
 
 export const fixtureContacts: {

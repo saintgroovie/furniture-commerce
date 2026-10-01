@@ -1,71 +1,118 @@
-import { ErrorBlock, PageHeader } from "@/components/page"
-import { loadPromo } from "@/server/loaders"
+import Link from "next/link"
+import { Thumb } from "@/components/object-row"
+import { ConfirmAction } from "@/components/confirm-action"
+import { Card, EmptyState, ErrorBlock, PageHeader } from "@/components/page"
+import { PendingForm } from "@/components/pending-form"
+import { ResultToast } from "@/components/result-toast"
+import { Status } from "@/components/status"
+import { formatRub } from "@/lib/format"
+import { loadContacts, loadProducts, loadPromo } from "@/server/loaders"
 
-export default async function PromoPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ saved?: string; error?: string }>
-}) {
+const BLOCKER_TEXT: Record<string, string> = {
+  no_sale_price: "В слоте, но акционной цены нет. Карточка не станет акционной",
+  unpublished: "Черновик. Покупатель эту карточку не увидит",
+  no_image: "Нет кадра, карточка не выйдет",
+  bespoke: "Товар по проекту в карточку не ставится",
+}
+
+/**
+ * «Витрина» = what the site shows right now. The slot picks products;
+ * the buyer price comes from the price list and is edited in the product card.
+ */
+export default async function PromoPage({ searchParams }: { searchParams: Promise<{ saved?: string; error?: string }> }) {
   const query = await searchParams
-  const result = await loadPromo()
+  const [promo, products, contacts] = await Promise.all([loadPromo(), loadProducts(), loadContacts()])
+  const inSlot = new Set(promo.ok ? promo.data.slot.product_ids : [])
+  const candidates = products.ok ? products.data.products.filter((product) => !inSlot.has(product.id) && product.classification !== "BESPOKE") : []
   return (
     <>
-      <PageHeader
-        kicker="Акции"
-        title="Акция в каталоге"
-        lead="Слот выбирает, что показать. Цену покупателя задаёт прайс-лист, не слот"
-      />
-      {query.saved === "1" ? <p className="toast" role="status">Сохранено</p> : null}
-      {query.error ? <p className="toast warn" role="alert">{query.error}</p> : null}
-      {!result.ok ? <ErrorBlock message={result.message} /> : null}
-      {result.ok ? (
-        <div className="section-grid">
-          <section className="card">
-            <h2>Что показываем</h2>
-            <p>{result.data.slot.enabled ? "Слот включён" : "Слот выключен"}</p>
-            <p className="muted">{result.data.slot.label || "Подписи нет"}</p>
-            <form action="/api/promo" method="post" className="stack">
-              <button className="primary" name="enabled" value={result.data.slot.enabled ? "0" : "1"} type="submit">
-                {result.data.slot.enabled ? "Выключить слот" : "Включить слот"}
-              </button>
-            </form>
-            <ul>
-              {result.data.products.map((product) => (
-                <li key={product.product_id}>
-                  <p>{product.title}{product.sku ? ` · ${product.sku}` : ""}</p>
-                  <p className="muted">
-                    {product.blocker === "no_sale_price"
-                      ? "В слоте, но скидочной цены нет. Карточка не станет акционной"
-                      : product.blocker === "unpublished"
-                        ? "Черновик. Покупатель эту карточку не увидит"
-                        : product.blocker === "no_image"
-                          ? "Нет кадра, карточка акции не выйдет"
-                          : product.blocker === "bespoke"
-                            ? "Товар по проекту в эту карточку не ставится"
-                            : product.blocker
-                              ? "Слот не показывает эту карточку"
-                              : product.sale_price != null
-                                ? "Покупатель видит цену из прайс-листа"
-                                : "Цена не изменилась от слота"}
-                  </p>
-                  <form action="/api/promo" method="post">
-                    <input type="hidden" name="remove_product_id" value={product.product_id} />
-                    <button className="ghost" type="submit">Убрать из слота</button>
-                  </form>
-                </li>
-              ))}
-            </ul>
-            <form action="/api/promo" method="post" className="stack">
-              <label>Добавить товар в слот<input name="add_product_id" placeholder="id товара" /></label>
-              <button className="primary" type="submit">Поместить в слот</button>
-              <p className="muted">Место в слоте не меняет обычную и акционную цену</p>
-            </form>
-          </section>
-          <section className="card">
-            <h2>Что платит покупатель</h2>
-            <p className="muted">Прайс-лист: {result.data.price_list.title || "не найден"} · {result.data.price_list.active_now ? "сейчас действует" : "сейчас не действует"}</p>
-            <p>Скидку задают в карточке товара, в поле акционной цены</p>
-          </section>
+      <PageHeader kicker="Витрина" title="Витрина" lead="Что покупатель видит на сайте сейчас. Место в карточке и цена покупателя - разные вещи" />
+      <ResultToast saved={query.saved} error={query.error} />
+      {!promo.ok ? <ErrorBlock message={promo.message} /> : null}
+      {promo.ok ? (
+        <div className="two-col">
+          <div className="stack-lg">
+            <Card
+              title="Показываем на витрине"
+              trailing={
+                <PendingForm action="/api/promo">
+                  <button className="btn btn-secondary sm" name="enabled" value={promo.data.slot.enabled ? "0" : "1"} type="submit">
+                    {promo.data.slot.enabled ? "Выключить карточку" : "Включить карточку"}
+                  </button>
+                </PendingForm>
+              }
+            >
+              <div className="row">
+                <Status tone={promo.data.slot.enabled ? "positive" : "neutral"} size="lg">{promo.data.slot.enabled ? "Карточка включена" : "Карточка выключена"}</Status>
+                <span className="meta">{promo.data.slot.label || "подписи нет"}</span>
+              </div>
+              {promo.data.products.length === 0 ? <EmptyState title="В карточке нет товаров" hint="Добавьте товар ниже. Цена от этого не изменится" /> : null}
+              <div className="list">
+                {promo.data.products.map((product) => (
+                  <div key={product.product_id} className="object-row">
+                    <Thumb src={product.thumbnail} />
+                    <div className="object-row-main">
+                      <Link href={`/catalog/${product.product_id}`} className="object-row-title" style={{ textDecoration: "none" }}>
+                        {product.title}
+                      </Link>
+                      <span className="object-row-meta">
+                        {product.sku || "SKU нет"} · обычная {product.base_price != null ? formatRub(product.base_price) : "не задана"} · покупатель видит{" "}
+                        {product.buyer_sale_price != null ? `${formatRub(product.buyer_sale_price)} (−${product.discount_percent ?? 0}%)` : product.buyer_base_price != null ? formatRub(product.buyer_base_price) : "цену не видит"}
+                      </span>
+                      {product.blocker ? <Status tone="attention">{BLOCKER_TEXT[product.blocker] ?? "Слот не показывает эту карточку"}</Status> : <Status tone="positive">Покупатель видит карточку</Status>}
+                    </div>
+                    <div className="object-row-end">
+                      <ConfirmAction
+                        action="/api/promo"
+                        fields={{ remove_product_id: product.product_id }}
+                        trigger="Убрать"
+                        triggerClassName="btn btn-ghost sm"
+                        title="Убрать товар из карточки на витрине?"
+                        text={`${product.title} исчезнет из карточки. Обычная и акционная цены не изменятся`}
+                        confirmLabel="Убрать из карточки"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <PendingForm action="/api/promo" className="field-row">
+                <label className="field" style={{ flex: 1 }}>
+                  <span>Добавить товар</span>
+                  <select name="add_product_id" defaultValue="" required>
+                    <option value="" disabled>Выберите товар</option>
+                    {candidates.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.title} · {product.skus[0] || product.id}{product.status !== "published" ? " · черновик" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button className="btn btn-secondary" type="submit" disabled={candidates.length === 0}>Поместить в карточку</button>
+              </PendingForm>
+              <p className="meta">Место в карточке не меняет ни обычную, ни акционную цену</p>
+            </Card>
+          </div>
+          <aside className="stack-lg context">
+            <Card title="Цена покупателя">
+              <Status tone={promo.data.price_list.active_now ? "positive" : "waiting"} size="lg">
+                {promo.data.price_list.active_now ? "Прайс-лист действует" : "Прайс-лист сейчас не действует"}
+              </Status>
+              <p className="meta">{promo.data.price_list.title || "Прайс-лист не найден"}</p>
+              <p>Скидка задаётся в карточке товара, в поле акционной цены. Здесь она только показывается</p>
+              <Link className="btn btn-ghost sm" href="/catalog">Открыть товары</Link>
+            </Card>
+            <Card title="Контакты на сайте">
+              {contacts.ok && contacts.data.contacts ? (
+                <ul className="checklist">
+                  <li><span className="meta">Бесплатный звонок</span> {contacts.data.contacts.free_call.display}</li>
+                  <li><span className="meta">Написать или позвонить</span> {contacts.data.contacts.write_or_call.display}</li>
+                  <li><Status tone={contacts.data.live ? "positive" : "waiting"}>{contacts.data.live ? "Опубликованы" : "Черновик"}</Status></li>
+                </ul>
+              ) : (
+                <p className="meta">{(contacts.ok ? contacts.data.message : contacts.message) || "Контакты на сайте ещё не настроены"}</p>
+              )}
+            </Card>
+          </aside>
         </div>
       ) : null}
     </>

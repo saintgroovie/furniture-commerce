@@ -1,34 +1,72 @@
 import Link from "next/link"
-import { ErrorBlock, PageHeader } from "@/components/page"
+import { Card, EmptyState, ErrorBlock, PageHeader } from "@/components/page"
+import { Avatar, Thumb } from "@/components/object-row"
+import { StateBadge } from "@/components/status"
+import { ATTENTION_LINKS, groupInbox, queueState } from "@/lib/today-presentation"
 import { loadToday } from "@/server/loaders"
 
+/**
+ * Action inbox, not a dashboard. Every row: what happened (title + reason),
+ * which object, and one action that leads straight into the object's state.
+ */
 export default async function TodayPage() {
   const result = await loadToday()
+  const groups = result.ok ? groupInbox(result.data.inbox) : []
+  const total = result.ok ? result.data.inbox.length : 0
+  const overdue = result.ok ? result.data.inbox.filter((item) => item.overdue).length : 0
   return (
     <>
-      <PageHeader kicker="Сегодня" title="Что сделать" lead="Очередь дел, не сводка ради сводки" />
+      <PageHeader
+        kicker="Сегодня"
+        title="Что сделать"
+        lead={result.ok ? (total === 0 ? "Очередь пустая" : `${overdue} срочных · ${total - overdue} обычных`) : undefined}
+      />
       {!result.ok ? <ErrorBlock message={result.message} /> : null}
       {result.ok ? (
         <>
-          <div className="stats">
-            <Link className="stat" href="/requests"><b>{result.data.attention.open_requests}</b><span>Новые заявки</span></Link>
-            <Link className="stat" href="/catalog?filter=missing_price"><b>{result.data.attention.missing_price}</b><span>Нет цены</span></Link>
-            <Link className="stat" href="/orders?filter=waiting"><b>{result.data.attention.waiting_customer}</b><span>Ждут клиента</span></Link>
-            <Link className="stat" href="/media"><b>{result.data.attention.missing_media}</b><span>Нет кадра</span></Link>
-          </div>
-          <div className="stack">
-            {result.data.inbox.length === 0 ? <p className="empty">Очередь пустая</p> : null}
-            {result.data.inbox.map((item) => (
-              <Link key={item.id} href={item.href} className="row-card">
-                <div>
-                  <h2>{item.title}</h2>
-                  <span className="muted">{item.hint}</span>
-                </div>
-                <span className={item.overdue ? "pill warn" : "pill"}>{item.overdue ? "Просрочено" : "На сегодня"}</span>
-                <span>{item.action}</span>
+          <div className="attention-links" aria-label="Срезы">
+            {ATTENTION_LINKS.map((link) => (
+              <Link key={link.key} href={link.href}>
+                <b>{result.data.attention[link.key]}</b>
+                {link.label}
               </Link>
             ))}
           </div>
+          {groups.length === 0 ? (
+            <Card>
+              <EmptyState title="На сегодня ничего срочного" hint="Новые заявки и проблемы каталога появятся здесь" href="/clients?mode=requests" linkLabel="Открыть заявки" />
+            </Card>
+          ) : null}
+          {groups.map((group) => (
+            <section key={group.id} className="queue-group">
+              <div className="queue-group-title">
+                <h2 className="section-title">{group.title}</h2>
+                <span className="meta">{group.items.length}</span>
+              </div>
+              <div className="card">
+                {group.items.map((item) => {
+                  const state = queueState(item)
+                  return (
+                    <div key={item.id} className="queue-item">
+                      {item.kind === "request" ? <Avatar name={item.title} /> : <Thumb src={null} size="sm" />}
+                      <div className="object-row-main">
+                        <Link href={item.href} className="object-row-title" style={{ textDecoration: "none" }}>
+                          {item.title}
+                        </Link>
+                        <span className="object-row-meta">{item.hint}</span>
+                      </div>
+                      <div className="object-row-end">
+                        <StateBadge state={state} />
+                        <Link className="btn btn-secondary sm row-open" href={item.href}>
+                          {item.action}
+                        </Link>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </section>
+          ))}
         </>
       ) : null}
     </>

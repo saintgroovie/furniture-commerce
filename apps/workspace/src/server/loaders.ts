@@ -41,6 +41,26 @@ export function loadOrders(filter: string) {
   const data = { ...fixtureOrders, filter }
   return load(`/admin/woodright/orders?filter=${encodeURIComponent(filter)}&limit=30&offset=0`, data)
 }
+/** All pages of a filter for board views (bounded). Returns `truncated` when the cap was hit. */
+export async function loadOrdersAll(filter: string, maxPages = 5): Promise<LoadResult<typeof fixtureOrders & { truncated: boolean }>> {
+  const first = await loadOrders(filter)
+  if (!first.ok) return first
+  const orders = [...first.data.orders]
+  let hasMore = first.data.has_more
+  let page = 1
+  while (hasMore && page < maxPages && !first.preview) {
+    const offset = page * first.data.limit
+    const next = await load(
+      `/admin/woodright/orders?filter=${encodeURIComponent(filter)}&limit=${first.data.limit}&offset=${offset}`,
+      { ...fixtureOrders, filter, has_more: false }
+    )
+    if (!next.ok) return next
+    orders.push(...next.data.orders)
+    hasMore = next.data.has_more
+    page += 1
+  }
+  return { ok: true, preview: first.preview, data: { ...first.data, orders, has_more: hasMore, truncated: hasMore } }
+}
 export function loadOrder(id: string) {
   return load(`/admin/woodright/orders/${encodeURIComponent(id)}`, fixtureOrder)
 }

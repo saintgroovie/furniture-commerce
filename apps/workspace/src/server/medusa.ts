@@ -4,9 +4,15 @@ import { readSession } from "@/server/session"
 
 export class DeskHttpError extends Error {
   status: number
-  constructor(status: number, message: string) {
+  /** Backend error code (for example `stale_price`) when the JSON body carried one. */
+  code: string | null
+  /** Whole JSON body of the failed response, for conflict presentation. Never logged to the browser as-is. */
+  payload: Record<string, unknown> | null
+  constructor(status: number, message: string, code: string | null = null, payload: Record<string, unknown> | null = null) {
     super(message)
     this.status = status
+    this.code = code
+    this.payload = payload
   }
 }
 
@@ -28,7 +34,7 @@ export async function medusaGet<T>(path: string): Promise<T> {
   return (await response.json()) as T
 }
 
-export async function medusaSend<T>(path: string, method: "POST" | "PUT", body: unknown): Promise<T> {
+export async function medusaSend<T>(path: string, method: "POST" | "PUT" | "PATCH", body: unknown): Promise<T> {
   const session = await readSession()
   if (!session || session.kind !== "medusa") throw new DeskHttpError(401, "Нужен вход")
   const base = medusaBaseUrl()
@@ -44,14 +50,28 @@ export async function medusaSend<T>(path: string, method: "POST" | "PUT", body: 
     cache: "no-store",
   })
   if (!response.ok) {
-    let message = "Не удалось сохранить"
+    let message = humanStatusMessage(response.status)
+    let code: string | null = null
+    let payload: Record<string, unknown> | null = null
     try {
-      const payload = (await response.json()) as { message?: unknown }
-      if (typeof payload.message === "string" && payload.message.trim()) message = payload.message
+      const json = (await response.json()) as Record<string, unknown>
+      payload = json
+      if (typeof json.message === "string" && json.message.trim()) message = json.message
+      if (typeof json.code === "string") code = json.code
     } catch {
-      message = "Не удалось сохранить"
+      payload = null
     }
-    throw new DeskHttpError(response.status, message)
+    throw new DeskHttpError(response.status, message, code, payload)
   }
   return (await response.json()) as T
+}
+
+/** Known HTTP statuses → Woodright wording. Unknown errors stay visible, not hidden. */
+export function humanStatusMessage(status: number): string {
+  if (status === 401) return "Сессия закончилась. Войдите снова"
+  if (status === 403) return "У вас нет доступа к этому действию"
+  if (status === 404) return "Объект не найден"
+  if (status === 409) return "Данные уже изменились. Обновите страницу"
+  if (status >= 500) return "Сервер не ответил. Попробуйте ещё раз"
+  return "Не удалось сохранить"
 }
