@@ -33,6 +33,7 @@ function product(partial: Partial<SellerProduct> & Pick<SellerProduct, "id" | "t
     execution_media_guard: false,
     dimensions: {},
     image_urls: [],
+    images: [],
     general_image_urls: [],
     execution_photo_count: 0,
     execution_finishes: [],

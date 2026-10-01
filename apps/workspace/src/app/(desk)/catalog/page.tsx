@@ -48,7 +48,7 @@ export default async function CatalogPage({
       {result.ok && slice.length === 0 ? <p className="empty">Ничего не найдено</p> : null}
       <div className="stack">
         {slice.map((product) => (
-          <Link key={product.id} href={`/catalog/${product.id}`} className="row-card">
+          <Link key={product.id} href={`/catalog/${product.id}${filter === "missing_price" ? "#price" : filter === "missing_media" ? "#media" : filter === "drafts" || filter === "published_invisible" ? "#publish" : ""}`} className="row-card">
             <div>
               <h2>{product.title}</h2>
               <span className="muted">{product.skus[0] || "SKU нет"} · {dimensionLine(product.dimensions)}</span>

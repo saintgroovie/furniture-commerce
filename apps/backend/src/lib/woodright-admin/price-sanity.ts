@@ -118,7 +118,13 @@ export function extractVariantRubPrices(variant: Record<string, unknown>): Varia
   const out: VariantRubPrice[] = []
   for (const item of raw) {
     if (!item || typeof item !== "object") continue
-    const row = item as { id?: unknown; amount?: unknown; currency_code?: unknown }
+    const row = item as {
+      id?: unknown
+      amount?: unknown
+      currency_code?: unknown
+      price_list_id?: unknown
+    }
+    if (typeof row.price_list_id === "string" && row.price_list_id) continue
     const amount = row.amount
     if (typeof amount !== "number" || !Number.isFinite(amount)) continue
     const currency =

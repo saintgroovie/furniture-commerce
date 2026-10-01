@@ -4,6 +4,7 @@ import { resolvePublicProductTitle } from "../../../../../../lib/catalog-normali
 import { guardBuyerFacingTitle } from "../../../../../../lib/catalog-normalization/import-guards"
 import { mergeProductMetadata, metadataFingerprintWithoutPublicTitle } from "../../../../../../lib/catalog-admin/merge-metadata"
 import { buildAdminProductProjection } from "../../../../../../lib/catalog-admin/admin-product-projection"
+import { requireDeskWrite } from "../../../../../../lib/woodright-workspace/require-desk-write"
 
 async function loadClassification(
   req: MedusaRequest,
@@ -119,6 +120,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 }
 
 export async function PUT(req: MedusaRequest, res: MedusaResponse) {
+  const gate = await requireDeskWrite(req, res, "catalog.edit")
+  if (!gate) return
   const id = String(req.params.id ?? "")
   if (!id) {
     res.status(400).json({ message: "product id required" })

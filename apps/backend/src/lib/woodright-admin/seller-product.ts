@@ -69,6 +69,19 @@ function imageUrlsOf(product: Record<string, unknown>): string[] {
   return collectProductImageUrls(product)
 }
 
+function productImagesOf(product: Record<string, unknown>): { id: string; url: string }[] {
+  const images = product.images
+  if (!Array.isArray(images)) return []
+  const out: { id: string; url: string }[] = []
+  for (const raw of images) {
+    const image = asRecord(raw)
+    if (!image) continue
+    if (typeof image.id !== "string" || typeof image.url !== "string" || !image.url) continue
+    out.push({ id: image.id, url: image.url })
+  }
+  return out
+}
+
 export function toSellerProduct(raw: Record<string, unknown>): SellerProduct {
   const product = flattenVariantPrices(raw)
   const meta = asRecord(product.metadata) ?? {}
@@ -107,6 +120,7 @@ export function toSellerProduct(raw: Record<string, unknown>): SellerProduct {
     execution_media_guard: hasExecutionMediaContract(meta),
     dimensions: readDimensionsMm(meta),
     image_urls,
+    images: productImagesOf(product),
     general_image_urls: media.general_image_urls,
     execution_photo_count: media.execution_photo_count,
     execution_finishes: media.execution_finishes,
@@ -141,6 +155,7 @@ export const SELLER_PRODUCT_GRAPH_FIELDS = [
   "thumbnail",
   "metadata",
   "updated_at",
+  "images.id",
   "images.url",
   "collection.title",
   "collection.handle",
@@ -150,6 +165,7 @@ export const SELLER_PRODUCT_GRAPH_FIELDS = [
   "variants.price_set.prices.id",
   "variants.price_set.prices.amount",
   "variants.price_set.prices.currency_code",
+  "variants.price_set.prices.price_list_id",
   "product_classification.product_type",
 ]
 

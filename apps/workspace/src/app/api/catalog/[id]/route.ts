@@ -1,4 +1,5 @@
 import { medusaSend } from "@/server/medusa"
+import { probeBuyerPrice } from "@/server/storefront-probe"
 import { writeAndReturn } from "@/server/write"
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -28,19 +29,43 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return
     }
     if (intent === "publish") {
-      await medusaSend(`/admin/woodright/products/${id}/publish`, "POST", {})
-      return
+      const saved = await medusaSend<{ product?: { title?: string } }>(
+        `/admin/woodright/products/${id}/publish`,
+        "POST",
+        {}
+      )
+      return { storefront: await probeTitle(id, saved.product?.title ?? null) }
     }
     if (intent === "unpublish") {
       await medusaSend(`/admin/woodright/products/${id}/unpublish`, "POST", {})
-      return
+      return { storefront: "skipped" }
     }
     if (intent === "price") {
+      const create = form.get("create") === "1"
+      const amount = Number(String(form.get("amount") ?? "").replace(/\s/g, ""))
       await medusaSend(`/admin/woodright/products/${id}/price`, "POST", {
         variant_id: String(form.get("variant_id") ?? ""),
-        amount: Number(String(form.get("amount") ?? "").replace(/\s/g, "")),
-        expected_amount: Number(form.get("expected_amount")),
+        amount,
+        expected_amount: create ? undefined : Number(form.get("expected_amount")),
         confirm: form.get("confirm") === "1",
+        create,
+        currency: "rub",
+      })
+      return { storefront: await probeBuyerPrice(id, amount) }
+    }
+    if (intent === "classification") {
+      await medusaSend(`/admin/woodright/products/${id}/classification`, "POST", {
+        classification: String(form.get("classification") ?? ""),
+        confirm: form.get("confirm") === "1",
+      })
+      return
+    }
+    if (intent === "reorder" || intent === "detach") {
+      await medusaSend(`/admin/woodright/products/${id}/media`, "POST", {
+        action: intent === "reorder" ? "reorder" : "detach",
+        url: String(form.get("url") ?? ""),
+        direction: String(form.get("direction") ?? ""),
+        expected: String(form.get("expected") ?? ""),
       })
       return
     }
@@ -51,11 +76,29 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       return
     }
     if (intent === "promo") {
+      const amount = form.get("remove") === "1" ? null : Number(String(form.get("amount") ?? "").replace(/\s/g, ""))
       await medusaSend(`/admin/woodright/products/${id}/promo-price`, "POST", {
         variant_id: String(form.get("variant_id") ?? ""),
-        amount: form.get("remove") === "1" ? undefined : Number(String(form.get("amount") ?? "").replace(/\s/g, "")),
+        amount: amount ?? undefined,
         remove: form.get("remove") === "1",
       })
+      return { storefront: await probeBuyerPrice(id, amount) }
     }
   })
+}
+
+async function probeTitle(productId: string, title: string | null) {
+  const base = process.env.WOODRIGHT_STOREFRONT_INTERNAL_URL?.replace(/\/$/, "")
+  if (!base || !title) return "skipped" as const
+  try {
+    const response = await fetch(`${base}/product/${encodeURIComponent(productId)}`, {
+      cache: "no-store",
+      signal: AbortSignal.timeout(5000),
+    })
+    if (!response.ok) return "miss" as const
+    const html = await response.text()
+    return html.includes(title) ? "match" as const : "miss" as const
+  } catch {
+    return "miss" as const
+  }
 }

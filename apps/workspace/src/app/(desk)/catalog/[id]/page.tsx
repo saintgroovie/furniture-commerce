@@ -1,4 +1,6 @@
 import Link from "next/link"
+import { FirstPriceFields } from "@/components/first-price-fields"
+import { MediaUpload } from "@/components/media-upload"
 import { ErrorBlock, PageHeader } from "@/components/page"
 import { formatRub, priceLine } from "@/lib/format"
 import { loadProduct } from "@/server/loaders"
@@ -8,7 +10,7 @@ export default async function ProductPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ saved?: string; error?: string }>
+  searchParams: Promise<{ saved?: string; error?: string; storefront?: string }>
 }) {
   const { id } = await params
   const query = await searchParams
@@ -23,7 +25,16 @@ export default async function ProductPage({
   return (
     <>
       <PageHeader kicker="Товар" title={product.title} lead={bespoke ? "По проекту, в корзину не кладётся" : product.subtitle || product.collection_label || ""} />
-      {query.saved === "1" ? <p className="toast" role="status">Сохранено</p> : null}
+      {query.saved === "1" && query.storefront === "miss" ? (
+        <p className="toast warn" role="status">Данные сохранены<br />Витрина ещё не показывает эту цену</p>
+      ) : null}
+      {query.saved === "1" && query.storefront === "match" ? (
+        <p className="toast" role="status">Сохранено. Витрина показывает ту же цену</p>
+      ) : null}
+      {query.saved === "1" && query.storefront === "skipped" ? (
+        <p className="toast" role="status">Данные сохранены<br />Проверка витрины не запускалась</p>
+      ) : null}
+      {query.saved === "1" && !query.storefront ? <p className="toast" role="status">Сохранено</p> : null}
       {query.error ? <p className="toast warn" role="alert">{query.error}</p> : null}
       <div className="section-grid">
         <div className="stack">
@@ -54,15 +65,27 @@ export default async function ProductPage({
             {bespoke ? <p>У товара по проекту нет цены в корзине</p> : null}
             {!bespoke ? <p>{priceLine(product.price_display)}. Обычная цена и акция в прайс-листе - разные поля</p> : null}
             {!bespoke ? product.variants.map((variant) => (
-              <form key={variant.id} action={`/api/catalog/${id}`} method="post" className="stack">
-                <input type="hidden" name="intent" value="price" />
-                <input type="hidden" name="variant_id" value={variant.id} />
-                <input type="hidden" name="expected_amount" value={variant.rub_price?.amount ?? ""} />
-                <p>{variant.sku || variant.title || "Вариант"} · было {formatRub(variant.rub_price?.amount)}</p>
-                <label>Будет, ₽<input name="amount" inputMode="numeric" defaultValue={variant.rub_price?.amount ?? ""} /></label>
-                <label className="muted"><input type="checkbox" name="confirm" value="1" /> Подтверждаю сильное изменение</label>
-                <button className="primary" type="submit">Сохранить цену варианта</button>
-              </form>
+              variant.rub_price?.id ? (
+                <form key={variant.id} action={`/api/catalog/${id}`} method="post" className="stack">
+                  <input type="hidden" name="intent" value="price" />
+                  <input type="hidden" name="variant_id" value={variant.id} />
+                  <input type="hidden" name="expected_amount" value={variant.rub_price.amount} />
+                  <p>{variant.sku || variant.title || "Вариант"} · было {formatRub(variant.rub_price.amount)}</p>
+                  <label>Будет, ₽<input name="amount" inputMode="numeric" defaultValue={variant.rub_price.amount} /></label>
+                  <label className="muted"><input type="checkbox" name="confirm" value="1" /> Подтверждаю сильное изменение</label>
+                  <button className="primary" type="submit">Сохранить цену варианта</button>
+                </form>
+              ) : (
+                <form key={variant.id} action={`/api/catalog/${id}`} method="post" className="stack">
+                  <input type="hidden" name="intent" value="price" />
+                  <input type="hidden" name="create" value="1" />
+                  <input type="hidden" name="variant_id" value={variant.id} />
+                  <p>{variant.sku || variant.title || "Вариант"}</p>
+                  <p>Цена не задана</p>
+                  <FirstPriceFields />
+                  <button className="primary" type="submit">Задать цену</button>
+                </form>
+              )
             )) : null}
             {!bespoke ? product.variants.map((variant) => (
               <form key={`${variant.id}-promo`} action={`/api/catalog/${id}`} method="post" className="stack">
@@ -77,16 +100,44 @@ export default async function ProductPage({
           <section className="card" id="media">
             <h2>Медиа</h2>
             <p>{product.thumbnail ? "Главный кадр выбран" : "Нет главного кадра"}</p>
-            {product.image_urls?.length ? product.image_urls.map((url) => (
-              <form key={url} action={`/api/catalog/${id}`} method="post" className="stack">
-                <input type="hidden" name="intent" value="hero" />
-                <input type="hidden" name="thumbnail_url" value={url} />
-                <p className="muted">{url}</p>
-                <button className={url === product.thumbnail ? "ghost" : "primary"} type="submit">
-                  {url === product.thumbnail ? "Уже главный кадр" : "Сделать главным"}
-                </button>
-              </form>
-            )) : <p className="empty">Кадры не назначены. Неподтверждённый кандидат сам не публикуется</p>}
+            <MediaUpload productId={id} />
+            {(product.images?.length ? product.images : []).map((image, index, list) => (
+              <div key={image.id} className="media-frame">
+                <img src={image.url} alt="" width={72} height={54} />
+                <div className="stack">
+                  <p>{image.url === product.thumbnail ? "Главный кадр" : "Дополнительный кадр"}</p>
+                  <form action={`/api/catalog/${id}`} method="post">
+                    <input type="hidden" name="intent" value="hero" />
+                    <input type="hidden" name="thumbnail_url" value={image.url} />
+                    <button className={image.url === product.thumbnail ? "ghost" : "primary"} type="submit">
+                      {image.url === product.thumbnail ? "Уже главный кадр" : "Сделать главным"}
+                    </button>
+                  </form>
+                  <form action={`/api/catalog/${id}`} method="post">
+                    <input type="hidden" name="intent" value="reorder" />
+                    <input type="hidden" name="url" value={image.url} />
+                    <input type="hidden" name="direction" value="up" />
+                    <input type="hidden" name="expected" value={list.map((item) => item.url).join("\n")} />
+                    <button className="ghost" type="submit" disabled={index === 0}>Выше</button>
+                  </form>
+                  <form action={`/api/catalog/${id}`} method="post">
+                    <input type="hidden" name="intent" value="reorder" />
+                    <input type="hidden" name="url" value={image.url} />
+                    <input type="hidden" name="direction" value="down" />
+                    <input type="hidden" name="expected" value={list.map((item) => item.url).join("\n")} />
+                    <button className="ghost" type="submit" disabled={index === list.length - 1}>Ниже</button>
+                  </form>
+                  <form action={`/api/catalog/${id}`} method="post">
+                    <input type="hidden" name="intent" value="detach" />
+                    <input type="hidden" name="url" value={image.url} />
+                    <input type="hidden" name="expected" value={list.map((item) => item.url).join("\n")} />
+                    <button className="ghost" type="submit">Убрать из товара</button>
+                    <p className="muted">Файл не удаляется</p>
+                  </form>
+                </div>
+              </div>
+            ))}
+            {!product.images?.length ? <p className="empty">Кадры не назначены. Неподтверждённый кандидат сам не публикуется</p> : null}
           </section>
         </div>
         <aside className="card" id="publish">
@@ -102,6 +153,23 @@ export default async function ProductPage({
               {blockers.map((blocker) => <li key={blocker.code}>{blocker.message}</li>)}
             </ul>
           ) : <p className="pill ok">Блокеров публикации нет</p>}
+          <form action={`/api/catalog/${id}`} method="post" className="stack">
+            <h2>Тип</h2>
+            <p className="muted">Смена типа не публикует товар. Артикул и адрес страницы остаются</p>
+            <ul>
+              <li>Обычный и с вариантами можно положить в корзину</li>
+              <li>По проекту корзина закрыта, остаётся заявка</li>
+            </ul>
+            {(["STANDARD", "CONFIGURABLE", "BESPOKE"] as const).map((type) => (
+              <label key={type}>
+                <input type="radio" name="classification" value={type} defaultChecked={product.classification === type} />
+                {" "}
+                {type === "STANDARD" ? "Обычный" : type === "CONFIGURABLE" ? "С вариантами" : "По проекту"}
+              </label>
+            ))}
+            <label className="muted"><input type="checkbox" name="confirm" value="1" /> Подтверждаю смену типа</label>
+            <button className="ghost" type="submit" name="intent" value="classification">Сохранить тип</button>
+          </form>
           <form action={`/api/catalog/${id}`} method="post" className="stack">
             <button className="primary" type="submit" name="intent" value="publish">Опубликовать</button>
             <button className="ghost" type="submit" name="intent" value="unpublish">Снять с витрины</button>

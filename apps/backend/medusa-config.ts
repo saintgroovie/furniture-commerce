@@ -280,6 +280,24 @@ export default defineConfig({
     {
       resolve: "./src/modules/promotion-slot",
     },
+    ...(process.env.MEDUSA_FILE_BACKEND_URL
+      ? [
+          {
+            resolve: "@medusajs/medusa/file",
+            options: {
+              providers: [
+                {
+                  resolve: "@medusajs/medusa/file-local",
+                  id: "local",
+                  options: {
+                    backend_url: process.env.MEDUSA_FILE_BACKEND_URL,
+                  },
+                },
+              ],
+            },
+          },
+        ]
+      : []),
     {
       resolve: "./src/modules/person-link",
     },
