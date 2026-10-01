@@ -20,7 +20,7 @@ export const NAV: readonly NavItem[] = [
     label: "Клиенты",
     href: "/clients",
     glyph: "◯",
-    matches: ["/clients", "/people", "/requests"],
+    matches: ["/clients", "/people", "/requests", "/companies"],
     mobile: true,
   },
   { id: "orders", label: "Заказы", href: "/orders", glyph: "▭", matches: ["/orders"], mobile: true },

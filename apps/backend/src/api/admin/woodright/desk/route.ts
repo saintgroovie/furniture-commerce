@@ -1,5 +1,8 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { buildDeskInbox } from "../../../../lib/woodright-admin/seller-desk"
+import { followUpDueBefore, followUpHref, isFollowUpDue, moscowCalendarDate } from "../../../../lib/woodright-crm/follow-up"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { isFollowUpEntity } from "../../../../lib/woodright-crm/constants"
 import { LEAD_MODULE } from "../../../../modules/lead"
 import { BESPOKE_REQUEST_MODULE } from "../../../../modules/bespoke-request"
 import { ORDER_PROCESS_MODULE } from "../../../../modules/order-process"
@@ -16,6 +19,7 @@ function text(value: unknown): string | null {
 }
 
 function toWorkspaceHref(href: string): string {
+  if (/^\/(people|requests|companies|orders|catalog)(\/|$|\?)/.test(href)) return href
   const url = new URL(href, "http://desk.local")
   if (url.pathname.startsWith("/woodright/requests")) {
     const id = url.searchParams.get("id")
@@ -46,8 +50,47 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const leadRows = leads ?? []
   const requestRows = requests ?? []
   const leadsById = new Map(leadRows.map((lead) => [String(lead.id), lead]))
+  const now = new Date()
+  const today = moscowCalendarDate(now)
+  let followUps: Array<{ id: string; title: string; hint: string; overdue: boolean; href: string }> = []
+  let followUpsTruncated = false
+  try {
+    const sql = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as {
+      raw: (query: string, bindings?: unknown[]) => Promise<{ rows?: Array<Record<string, unknown>> }>
+    }
+    const selected = await sql.raw(
+      `select id, entity_type, entity_id, summary, due_at
+       from woodright_follow_up
+       where deleted_at is null and status = 'open' and due_at < ?
+       order by due_at asc
+       limit 50`,
+      [followUpDueBefore(now)]
+    )
+    const rows = (selected.rows ?? []).filter((row) => isFollowUpDue(row.due_at instanceof Date ? row.due_at.toISOString() : text(row.due_at), now))
+    followUpsTruncated = (selected.rows ?? []).length >= 50
+    followUps = rows.flatMap((row) => {
+      const dueAt = row.due_at instanceof Date ? row.due_at.toISOString() : text(row.due_at)
+      if (!isFollowUpDue(dueAt, now)) return []
+      const entityType = text(row.entity_type)
+      const entityId = text(row.entity_id)
+      if (!entityType || !entityId || !isFollowUpEntity(entityType)) return []
+      const dueDay = dueAt ? moscowCalendarDate(new Date(dueAt)) : today
+      const leadName = entityType === "person" ? text(leadsById.get(entityId)?.name) : entityType === "request"
+        ? text(leadsById.get(String(requestRows.find((item) => String(item.id) === entityId)?.lead_id))?.name)
+        : null
+      return [{
+        id: String(row.id),
+        title: leadName || (entityType === "order" ? "Заказ" : entityType === "company" ? "Компания" : "Напоминание"),
+        hint: text(row.summary) || "Напоминание",
+        overdue: dueDay < today,
+        href: followUpHref(entityType, entityId),
+      }]
+    })
+  } catch {
+    followUps = []
+  }
   const rawInbox = buildDeskInbox({
-    now: new Date(),
+    now,
     products: products.map((product) => ({
       id: product.id,
       title: product.title,
@@ -69,6 +112,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       order_id: String(row.order_id),
       current_stage: String(row.current_stage),
     })),
+    followUps,
   })
   const inbox = rawInbox.map((item) => ({ ...item, href: toWorkspaceHref(item.href) }))
 
@@ -86,5 +130,5 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     open_requests: requestRows.filter((row) => row.status === "new" || row.status === "contacted").length,
   }
 
-  res.json({ inbox, attention })
+  res.json({ inbox, attention, follow_ups_truncated: followUpsTruncated })
 }

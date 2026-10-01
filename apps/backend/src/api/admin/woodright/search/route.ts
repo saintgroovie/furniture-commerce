@@ -3,6 +3,7 @@ import { BESPOKE_REQUEST_MODULE } from "../../../../modules/bespoke-request"
 import { LEAD_MODULE } from "../../../../modules/lead"
 import { loadSellerProducts, queryOf } from "../../../../lib/woodright-workspace/load-seller-products"
 import { searchHits } from "../../../../lib/woodright-workspace/search"
+import { CRM_MODULE } from "../../../../modules/crm"
 
 function text(value: unknown): string | null {
   return typeof value === "string" ? value : null
@@ -31,6 +32,15 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   ])
   const leadRows = leads ?? []
   const leadsById = new Map(leadRows.map((lead) => [String(lead.id), lead]))
+  let companies: Array<{ id: string; name: string | null }> = []
+  try {
+    const rows = await (req.scope.resolve(CRM_MODULE) as {
+      listCompanies: (filters: object, config?: object) => Promise<Array<Record<string, unknown>>>
+    }).listCompanies({}, { take: 100 })
+    companies = (rows ?? []).map((row) => ({ id: String(row.id), name: text(row.name) }))
+  } catch {
+    companies = []
+  }
   const hits = searchHits({
     q,
     limit: 12,
@@ -51,6 +61,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       display_id: (order.display_id as string | number | null) ?? null,
       email: text(order.email),
     })),
+    companies,
   })
   res.json({ hits })
 }

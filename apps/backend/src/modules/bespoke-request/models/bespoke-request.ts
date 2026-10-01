@@ -32,4 +32,8 @@ export const BespokeRequest = model.define("bespoke_request", {
     .default("new"),
   internal_notes: model.text().nullable(),
   quoted_at: model.dateTime().nullable(),
+  /** Studio or bureau behind the request. Null until a person is linked to a company. */
+  company_id: model.text().nullable(),
+  /** The other person: end customer when the contact is a designer, or the designer. */
+  counterparty_lead_id: model.text().nullable(),
 })

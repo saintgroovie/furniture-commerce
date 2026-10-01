@@ -19,12 +19,18 @@ export type QueueGroup = { id: string; title: string; items: InboxItem[] }
 export function groupInbox(items: InboxItem[]): QueueGroup[] {
   const groups: QueueGroup[] = [
     { id: "requests", title: "Требует ответа", items: [] },
+    { id: "follow_ups", title: "Напоминания", items: [] },
     { id: "production", title: "Заказы", items: [] },
     { id: "catalog", title: "Каталог", items: [] },
   ]
   for (const item of items) {
-    const target = item.kind === "request" ? groups[0] : item.kind === "production" ? groups[1] : groups[2]
-    target!.items.push(item)
+    const target =
+      item.kind === "request" ? groups[0]
+      : item.kind === "follow_up" ? groups[1]
+      : item.kind === "production" ? groups[2]
+      : item.kind === "catalog" ? groups[3]
+      : null
+    if (target) target.items.push(item)
   }
   return groups.filter((group) => group.items.length > 0)
 }

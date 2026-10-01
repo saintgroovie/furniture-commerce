@@ -1,4 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { recordCrmAudit } from "../../../../lib/woodright-crm/record"
 import { BESPOKE_REQUEST_MODULE } from "../../../../modules/bespoke-request"
 import {
   BESPOKE_REQUEST_STATUS,
@@ -46,5 +47,19 @@ export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
     ...(hasUpdates && { updated_at: new Date() }),
   })
   const bespokeRequest = Array.isArray(updated) ? updated[0] : updated
+  const actorId = (req as MedusaRequest & { auth_context?: { actor_id?: string } }).auth_context?.actor_id
+  if (actorId && hasUpdates) {
+    await recordCrmAudit(req, {
+      actorId,
+      actorEmail: null,
+      entityType: "request",
+      entityId: id,
+      action: "request_updated",
+      after: {
+        status: body.status ?? null,
+        content_changed: body.internal_notes !== undefined,
+      },
+    })
+  }
   res.json({ bespoke_request: bespokeRequest })
 }

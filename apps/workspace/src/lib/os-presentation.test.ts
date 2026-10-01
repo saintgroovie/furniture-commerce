@@ -198,6 +198,11 @@ describe("today queue", () => {
       { id: "ord:1", kind: "production", title: "Заказ 1042", hint: "Ждём клиента", action: "Открыть этап", overdue: false, href: "/orders/1" },
     ])
     assert.deepEqual(groups.map((group) => group.title), ["Требует ответа", "Заказы", "Каталог"])
+    const withFollowUp = groupInbox([
+      { id: "fu:1", kind: "follow_up", title: "Анна", hint: "Позвонить", action: "Открыть", overdue: false, href: "/people/1" },
+      { id: "cat:1", kind: "catalog", title: "Комод", hint: "Нет цены", action: "Поставить цену", overdue: true, href: "/catalog/1#price" },
+    ])
+    assert.deepEqual(withFollowUp.map((group) => group.title), ["Напоминания", "Каталог"])
     assert.equal(groups[2]!.items[0]!.href, "/catalog/1#price")
   })
   it("links every counter to a real filtered list", () => {

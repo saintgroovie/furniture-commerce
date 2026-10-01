@@ -26,6 +26,19 @@ describe("decideDeskWrite", () => {
     assert.equal(accessAllows(access, "orders.note.write"), false)
   })
 
+  it("lets ordinary staff do CRM work", () => {
+    const decision = decideDeskWrite({
+      actorId: "user_1",
+      email: "seller@woodright.ru",
+      action: "crm.follow_up",
+    })
+    assert.equal(decision.ok, true)
+    const access = resolveStaffAccess({ email: "seller@woodright.ru" })
+    assert.equal(accessAllows(access, "crm.view"), true)
+    assert.equal(accessAllows(access, "crm.link_customer"), true)
+    assert.equal(accessAllows(access, "crm.assign"), true)
+  })
+
   it("keeps the Medusa escape hatch off for ordinary staff", () => {
     const decision = decideDeskWrite({
       actorId: "user_1",

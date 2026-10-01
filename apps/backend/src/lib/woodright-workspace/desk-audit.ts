@@ -40,3 +40,29 @@ export async function appendDeskAudit(
     return false
   }
 }
+
+/** Action codes only. Payloads stay in the table and are not returned to the desk. */
+export async function listDeskAuditActions(
+  req: MedusaRequest,
+  pairs: Array<{ entityType: string; entityId: string }>
+): Promise<Array<{ id: string; action: string; created_at: string | null }>> {
+  const usable = pairs.filter((pair) => pair.entityType && pair.entityId).slice(0, 30)
+  if (usable.length === 0) return []
+  try {
+    const sql = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as SqlClient
+    const clauses = usable.map(() => "(entity_type = ? and entity_id = ?)").join(" or ")
+    const bindings = usable.flatMap((pair) => [pair.entityType, pair.entityId])
+    const result = (await sql.raw(
+      `select id, action, created_at from woodright_desk_audit where ${clauses} order by created_at desc limit 40`,
+      bindings
+    )) as { rows?: Array<Record<string, unknown>> }
+    const rows = result?.rows ?? []
+    return rows.map((row) => ({
+      id: String(row.id),
+      action: String(row.action ?? ""),
+      created_at: row.created_at instanceof Date ? row.created_at.toISOString() : typeof row.created_at === "string" ? row.created_at : null,
+    }))
+  } catch {
+    return []
+  }
+}

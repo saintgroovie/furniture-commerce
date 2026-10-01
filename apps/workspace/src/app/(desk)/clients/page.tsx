@@ -3,29 +3,33 @@ import { Avatar, ObjectRow } from "@/components/object-row"
 import { StateBadge, Status } from "@/components/status"
 import { ageLabel } from "@/lib/format"
 import { personRole, requestState } from "@/lib/person-presentation"
-import { loadLeads, loadPeople, loadRequests } from "@/server/loaders"
+import { loadCompanies, loadLeads, loadPeople, loadRequests } from "@/server/loaders"
 
 const MODES = [
   { id: "people", label: "Люди", href: "/clients?mode=people" },
   { id: "requests", label: "Заявки", href: "/clients?mode=requests" },
+  { id: "companies", label: "Компании", href: "/clients?mode=companies" },
 ]
 
-/**
- * One section for people and requests. Companies are DESIGN_FUTURE: no backend
- * entity yet, so no mode is shown.
- */
+const TITLES = {
+  people: ["Люди", "Покупатели, дизайнеры и их заявки в одном месте"],
+  requests: ["Заявки", "Обращения с сайта. Заявка остаётся своей записью, человек - своей"],
+  companies: ["Компании", "Студии и бюро. Человек остаётся человеком, компания - компанией"],
+} as const
+
 export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ mode?: string; filter?: string }> }) {
   const params = await searchParams
-  const mode = params.mode === "requests" ? "requests" : "people"
+  const mode = params.mode === "requests" ? "requests" : params.mode === "companies" ? "companies" : "people"
+  const [title, lead] = TITLES[mode]
   return (
     <>
       <PageHeader
         kicker="Клиенты"
-        title={mode === "people" ? "Люди" : "Заявки"}
-        lead={mode === "people" ? "Покупатели, лиды и их заявки в одном месте" : "Обращения с сайта. Заявка остаётся своей записью, человек - своей"}
+        title={title}
+        lead={lead}
         right={<ModeTabs items={MODES} active={mode} />}
       />
-      {mode === "people" ? <PeopleList filter={params.filter} /> : <RequestsList filter={params.filter} />}
+      {mode === "people" ? <PeopleList filter={params.filter} /> : mode === "requests" ? <RequestsList filter={params.filter} /> : <CompaniesList />}
     </>
   )
 }
@@ -80,6 +84,24 @@ async function PeopleList({ filter }: { filter?: string }) {
         ))}
       </div>
     </>
+  )
+}
+
+async function CompaniesList() {
+  const result = await loadCompanies()
+  if (!result.ok) return <ErrorBlock message={result.message} />
+  return (
+    <div className="card">
+      {result.data.companies.length === 0 ? <EmptyState title="Компаний пока нет" hint="Они появляются, когда человека связывают со студией или бюро" /> : null}
+      {result.data.companies.map((company) => (
+        <ObjectRow
+          key={company.id}
+          href={`/companies/${company.id}`}
+          title={company.name}
+          meta={[company.type_label, `${company.people_count} человек`].filter(Boolean).join(" · ")}
+        />
+      ))}
+    </div>
   )
 }
 

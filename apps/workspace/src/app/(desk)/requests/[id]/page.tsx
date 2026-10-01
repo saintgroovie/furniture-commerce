@@ -2,6 +2,7 @@ import Link from "next/link"
 import { AssigneeControl } from "@/components/assignee-control"
 import { Avatar } from "@/components/object-row"
 import { Card, EmptyState, ErrorBlock, ObjectHeader } from "@/components/page"
+import { FollowUpForm } from "@/components/follow-up-form"
 import { PendingForm } from "@/components/pending-form"
 import { ResultToast } from "@/components/result-toast"
 import { SidePanel } from "@/components/side-panel"
@@ -9,7 +10,7 @@ import { StateBadge, Status } from "@/components/status"
 import { Timeline } from "@/components/timeline"
 import { ageLabel } from "@/lib/format"
 import { nextRequestAction, REQUEST_STAGES, requestState } from "@/lib/person-presentation"
-import { loadLeads, loadPerson, loadRequests } from "@/server/loaders"
+import { loadCompanies, loadLeads, loadPeople, loadPerson, loadRequests } from "@/server/loaders"
 import { requireSession } from "@/server/session"
 
 export default async function RequestPage({
@@ -21,7 +22,13 @@ export default async function RequestPage({
 }) {
   const { id } = await params
   const query = await searchParams
-  const [requests, leads, session] = await Promise.all([loadRequests(), loadLeads(), requireSession()])
+  const [requests, leads, session, companiesResult, peopleResult] = await Promise.all([
+    loadRequests(),
+    loadLeads(),
+    requireSession(),
+    loadCompanies(),
+    loadPeople(),
+  ])
   if (!requests.ok) return <><ObjectHeader back="Клиенты · Заявки" backHref="/clients?mode=requests" title="Заявка" /><ErrorBlock message={requests.message} /></>
   const request = requests.data.bespoke_requests.find((row) => row.id === id)
   if (!request) return <><ObjectHeader back="Клиенты · Заявки" backHref="/clients?mode=requests" title="Заявка" /><EmptyState title="Заявка не найдена" /></>
@@ -69,7 +76,7 @@ export default async function RequestPage({
                   </select>
                 </label>
                 <button className="btn btn-primary full" type="submit">Сохранить результат</button>
-                <p className="meta">Сохраняется на сервере. Напоминания появятся в следующем этапе CRM</p>
+                <p className="meta">Сохраняется на сервере. Это заметка команде, не письмо клиенту</p>
               </PendingForm>
             </SidePanel>
           )
@@ -102,6 +109,9 @@ export default async function RequestPage({
               </div>
             ) : null}
           </Card>
+          <Card title="Напомнить">
+            <FollowUpForm action="/api/follow-ups" back={`/requests/${request.id}`} entityType="request" entityId={request.id} />
+          </Card>
           <Card title="История">
             <Timeline
               items={[
@@ -125,6 +135,54 @@ export default async function RequestPage({
             ) : (
               <p className="meta">Человек не найден</p>
             )}
+          </Card>
+          <Card title="Компания и второй человек">
+            <PendingForm action={`/api/requests/${request.id}/relations`} className="stack">
+              {companiesResult.ok ? (
+                <label className="field">
+                  <span>Компания</span>
+                  <select name="company_id" defaultValue={(request as { company_id?: string | null }).company_id ?? ""}>
+                    <option value="">Не связана</option>
+                    {(() => {
+                      const current = (request as { company_id?: string | null }).company_id
+                      const rows = companiesResult.data.companies
+                      const known = current && rows.some((company) => company.id === current)
+                      return (
+                        <>
+                          {current && !known ? <option value={current}>Текущая связь</option> : null}
+                          {rows.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
+                        </>
+                      )
+                    })()}
+                  </select>
+                </label>
+              ) : (
+                <p className="meta">Список компаний не загрузился. Текущая связь не меняется</p>
+              )}
+              {peopleResult.ok ? (
+                <label className="field">
+                  <span>Второй человек</span>
+                  <select name="counterparty_lead_id" defaultValue={(request as { counterparty_lead_id?: string | null }).counterparty_lead_id ?? ""}>
+                    <option value="">Не указан</option>
+                    {(() => {
+                      const current = (request as { counterparty_lead_id?: string | null }).counterparty_lead_id
+                      const rows = peopleResult.data.people.filter((row) => row.id !== lead?.id)
+                      const known = current && rows.some((row) => row.id === current)
+                      return (
+                        <>
+                          {current && !known ? <option value={current}>Текущая связь</option> : null}
+                          {rows.map((row) => <option key={row.id} value={row.id}>{row.name || "Без имени"}</option>)}
+                        </>
+                      )
+                    })()}
+                  </select>
+                </label>
+              ) : (
+                <p className="meta">Список людей не загрузился. Текущая связь не меняется</p>
+              )}
+              {companiesResult.ok || peopleResult.ok ? <button className="btn btn-secondary sm" type="submit">Сохранить связь</button> : null}
+            </PendingForm>
+            <p className="meta">Дизайнер - роль человека, не отдельный покупатель. Заказы не копируются</p>
           </Card>
           <Card title="Ответственный">
             {lead && person?.ok && person.data.links_available ? (

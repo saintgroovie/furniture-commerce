@@ -20,6 +20,7 @@ test("mobile navigation keeps four sections, Витрина stays reachable by l
 test("deep links resolve to their section", () => {
   assert.equal(activeNavId("/people/lead_1"), "clients")
   assert.equal(activeNavId("/requests/req_1"), "clients")
+  assert.equal(activeNavId("/companies/comp_1"), "clients")
   assert.equal(activeNavId("/orders/production"), "orders")
   assert.equal(activeNavId("/catalog/prod_1"), "products")
   assert.equal(activeNavId("/rooms"), "products")

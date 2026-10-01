@@ -1,4 +1,6 @@
-export type SearchGroup = "order" | "product" | "person" | "request"
+import { normalizeEmail, normalizePhone } from "./identity"
+
+export type SearchGroup = "order" | "product" | "person" | "request" | "company"
 
 export type SearchHit = {
   id: string
@@ -15,6 +17,7 @@ export function searchHits(input: {
   products: Array<{ id: string; title: string; skus?: string[] }>
   people: Array<{ id: string; name?: string | null; email?: string | null; phone?: string | null }>
   requests: Array<{ id: string; name?: string | null; comment?: string | null }>
+  companies?: Array<{ id: string; name?: string | null }>
 }): SearchHit[] {
   const needle = input.q.trim().toLowerCase()
   if (needle.length < 2) return []
@@ -50,15 +53,33 @@ export function searchHits(input: {
       })
     }
   }
+  const needleEmail = normalizeEmail(input.q)
+  const needlePhone = normalizePhone(input.q)
   for (const person of input.people) {
-    const blob = `${person.name ?? ""} ${person.email ?? ""} ${person.phone ?? ""}`.toLowerCase()
-    if (blob.includes(needle)) {
+    const name = (person.name ?? "").toLowerCase()
+    const email = normalizeEmail(person.email)
+    const phone = normalizePhone(person.phone)
+    const nameHit = name.includes(needle)
+    const emailHit = Boolean((needleEmail && email && email === needleEmail) || (email && email.includes(needle)))
+    const phoneHit = Boolean(needlePhone && phone && phone === needlePhone)
+    if (nameHit || emailHit || phoneHit) {
       push({
         id: person.id,
         group: "person",
         title: person.name?.trim() || "Без имени",
         hint: person.email || person.phone || null,
         href: `/people/${person.id}`,
+      })
+    }
+  }
+  for (const company of input.companies ?? []) {
+    if ((company.name ?? "").toLowerCase().includes(needle)) {
+      push({
+        id: company.id,
+        group: "company",
+        title: company.name?.trim() || "Компания",
+        hint: "Компания",
+        href: `/companies/${company.id}`,
       })
     }
   }
