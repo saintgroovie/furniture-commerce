@@ -12,6 +12,11 @@ export const fixtureAccess = {
       publish_catalog: true,
       manage_promotions: true,
       manage_site: true,
+      view_crm: true,
+      edit_crm: true,
+      link_customer: true,
+      assign_crm: true,
+      follow_up: true,
       view_sensitive_settings: false,
       developer_escape_hatch: false,
     },
@@ -48,6 +53,7 @@ export const fixtureToday = {
       href: "/orders/order_sample",
     },
   ],
+  follow_ups_truncated: false,
 }
 
 export const fixtureOrders = {
@@ -155,6 +161,27 @@ export const fixturePerson = {
     candidates: [] as Array<{ id: string; email: string | null; phone: string | null }>,
   },
   staff: [],
+  roles: [] as Array<{ role: string; label: string | null }>,
+  companies: [] as Array<{ id: string; name: string; type: string | null; type_label: string | null; linked_at?: string | null }>,
+  notes: [] as Array<{ id: string; body: string; created_at: string | null }>,
+  follow_ups: [] as Array<{ id: string; entity_type: string | null; entity_id: string | null; assignee_id: string | null; due_at: string | null; summary: string; status: string }>,
+  follow_ups_truncated: false,
+  request_orders: [] as Array<{ id: string; request_id: string | null; order_id: string | null }>,
+  activity: [] as Array<{ id: string; at: string | null; source: string; text: string }>,
+  crm_available: false,
+}
+
+export const fixtureCompanies = {
+  companies: [] as Array<{ id: string; name: string; type: string | null; type_label: string | null; people_count: number }>,
+}
+
+export const fixtureCompany = {
+  company: { id: "comp_sample", name: "Студия", type: "design_studio", type_label: "Дизайн-студия", internal_note: null as string | null, created_at: null as string | null },
+  people: [] as Array<{ id: string; name: string | null; email: string | null; phone: string | null }>,
+  requests: [] as Array<{ id: string; lead_id: string | null; status: string | null; comment: string | null; created_at: string | null }>,
+  order_ids: [] as string[],
+  follow_ups: [] as Array<{ id: string; status: string | null; summary: string | null; due_at: string | null }>,
+  activity: [] as Array<{ id: string; at: string | null; source: string; text: string }>,
 }
 
 export const fixtureProducts = {

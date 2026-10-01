@@ -3,6 +3,8 @@ import { DeskHttpError, medusaGet } from "@/server/medusa"
 import { readSession } from "@/server/session"
 import {
   fixtureAccess,
+  fixtureCompanies,
+  fixtureCompany,
   fixtureContacts,
   fixtureOrder,
   fixtureOrders,
@@ -69,6 +71,12 @@ export function loadPeople() {
 }
 export function loadPerson(id: string) {
   return load(`/admin/woodright/people/${encodeURIComponent(id)}`, fixturePerson)
+}
+export function loadCompanies() {
+  return load("/admin/woodright/companies", fixtureCompanies)
+}
+export function loadCompany(id: string) {
+  return load(`/admin/woodright/companies/${encodeURIComponent(id)}`, fixtureCompany)
 }
 export function loadProducts() {
   return load("/admin/woodright/products", fixtureProducts)

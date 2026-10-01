@@ -3,7 +3,7 @@
  * No DB. UI maps these rows to /woodright/* routes.
  */
 
-export type DeskInboxKind = "request" | "catalog" | "production"
+export type DeskInboxKind = "request" | "catalog" | "production" | "follow_up"
 
 export type DeskInboxItem = {
   id: string
@@ -37,6 +37,14 @@ export type DeskProcessHint = {
   id: string
   order_id: string
   current_stage: string
+}
+
+export type DeskFollowUpHint = {
+  id: string
+  title: string
+  hint: string
+  overdue: boolean
+  href: string
 }
 
 export type DeskLeadHint = {
@@ -88,6 +96,7 @@ export function buildDeskInbox(input: {
   products: DeskCatalogHint[]
   requests: DeskRequestHint[]
   processes: DeskProcessHint[]
+  followUps?: DeskFollowUpHint[]
   now: Date
 }): DeskInboxItem[] {
   const items: DeskInboxItem[] = []
@@ -142,6 +151,18 @@ export function buildDeskInbox(input: {
         href: `/woodright/products/${product.id}#price`,
       })
     }
+  }
+
+  for (const followUp of input.followUps ?? []) {
+    items.push({
+      id: `fu:${followUp.id}`,
+      kind: "follow_up",
+      title: followUp.title,
+      hint: followUp.hint,
+      action: "Открыть",
+      overdue: followUp.overdue,
+      href: followUp.href,
+    })
   }
 
   for (const process of input.processes) {

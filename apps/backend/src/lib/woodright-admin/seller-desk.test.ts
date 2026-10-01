@@ -8,6 +8,31 @@ import {
   REQUEST_SLA_HOURS,
 } from "./seller-desk.ts"
 
+describe("buildDeskInbox follow-ups", () => {
+  it("adds a due follow-up without dropping catalog blockers", () => {
+    const items = buildDeskInbox({
+      now: new Date("2026-10-02T10:00:00.000Z"),
+      requests: [],
+      processes: [],
+      products: [
+        {
+          id: "p1",
+          title: "Полка",
+          sku: "sh-03-2",
+          missing_media: false,
+          missing_price: true,
+          published_invisible: false,
+        },
+      ],
+      followUps: [
+        { id: "fu_1", title: "Анна", hint: "Позвонить", overdue: false, href: "/people/lead_1" },
+      ],
+    })
+    assert.deepEqual(items.map((item) => item.kind).sort(), ["catalog", "follow_up"])
+    assert.equal(items.find((item) => item.kind === "follow_up")?.href, "/people/lead_1")
+  })
+})
+
 describe("hoursSince", () => {
   it("returns elapsed hours", () => {
     const now = new Date("2026-09-16T12:00:00.000Z")

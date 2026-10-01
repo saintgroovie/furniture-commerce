@@ -301,5 +301,8 @@ export default defineConfig({
     {
       resolve: "./src/modules/person-link",
     },
+    {
+      resolve: "./src/modules/crm",
+    },
   ],
 })

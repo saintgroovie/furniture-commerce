@@ -24,6 +24,7 @@ export default async function TodayPage() {
       {!result.ok ? <ErrorBlock message={result.message} /> : null}
       {result.ok ? (
         <>
+          {result.data.follow_ups_truncated ? <p className="meta">Показаны 50 ближайших напоминаний</p> : null}
           <div className="attention-links" aria-label="Срезы">
             {ATTENTION_LINKS.map((link) => (
               <Link key={link.key} href={link.href}>
@@ -48,7 +49,7 @@ export default async function TodayPage() {
                   const state = queueState(item)
                   return (
                     <div key={item.id} className="queue-item">
-                      {item.kind === "request" ? <Avatar name={item.title} /> : <Thumb src={null} size="sm" />}
+                      {item.kind === "request" || item.kind === "follow_up" ? <Avatar name={item.title} /> : <Thumb src={null} size="sm" />}
                       <div className="object-row-main">
                         <Link href={item.href} className="object-row-title" style={{ textDecoration: "none" }}>
                           {item.title}

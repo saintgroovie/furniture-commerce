@@ -3,8 +3,13 @@ import { Modules } from "@medusajs/framework/utils"
 import { BESPOKE_REQUEST_MODULE } from "../../../../../modules/bespoke-request"
 import { LEAD_MODULE } from "../../../../../modules/lead"
 import { PERSON_LINK_MODULE } from "../../../../../modules/person-link"
+import { auditActionText, manufacturingText, projectActivity } from "../../../../../lib/woodright-crm/activity"
+import { readPersonCrm } from "../../../../../lib/woodright-crm/read-person-crm"
 import { matchCandidates, normalizeEmail, withholdIncompleteLookup } from "../../../../../lib/woodright-workspace/identity"
+import { listDeskAuditActions } from "../../../../../lib/woodright-workspace/desk-audit"
 import { queryOf } from "../../../../../lib/woodright-workspace/load-seller-products"
+import { CRM_MODULE } from "../../../../../modules/crm"
+import { ORDER_PROCESS_MODULE } from "../../../../../modules/order-process"
 
 function text(value: unknown): string | null {
   return typeof value === "string" ? value : null
@@ -135,6 +140,56 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     staff = []
   }
 
+  let crm = null as Awaited<ReturnType<typeof readPersonCrm>> | null
+  try {
+    crm = await readPersonCrm(req.scope.resolve(CRM_MODULE), id, (requests ?? []).map((row) => String(row.id)))
+  } catch {
+    crm = null
+  }
+  const linkedOrderIds = new Set(orders.map((order) => String(order.id)))
+  for (const linkRow of crm?.request_orders ?? []) {
+    if (linkRow.order_id && !linkedOrderIds.has(linkRow.order_id)) linkedOrderIds.add(linkRow.order_id)
+  }
+  const manufacturing: Array<{ id: string; at: string | null; source: "manufacturing"; text: string }> = []
+  try {
+    const processes = req.scope.resolve(ORDER_PROCESS_MODULE) as {
+      listWoodrightOrderProcesses: (filters: object) => Promise<Array<Record<string, unknown>>>
+      listWoodrightOrderProcessEvents: (filters: object, config?: object) => Promise<Array<Record<string, unknown>>>
+    }
+    for (const orderId of [...linkedOrderIds].slice(0, 8)) {
+      const rows = await processes.listWoodrightOrderProcesses({ order_id: orderId })
+      const process = rows?.[0]
+      if (!process) continue
+      const events = await processes.listWoodrightOrderProcessEvents(
+        { process_id: String(process.id) },
+        { take: 8, order: { created_at: "DESC" } }
+      )
+      for (const event of events ?? []) {
+        manufacturing.push({
+          id: `m:${event.id}`,
+          at: event.created_at instanceof Date ? event.created_at.toISOString() : text(event.created_at),
+          source: "manufacturing",
+          text: manufacturingText(String(event.event_type ?? "")),
+        })
+      }
+    }
+  } catch {
+    manufacturing.length = 0
+  }
+  const audits = await listDeskAuditActions(req, [
+    { entityType: "person", entityId: id },
+    ...(requests ?? []).map((row) => ({ entityType: "request", entityId: String(row.id) })),
+  ])
+  const activity = projectActivity([
+    ...(crm?.notes ?? []).map((note) => ({ id: `note:${note.id}`, at: note.created_at, source: "note" as const, text: note.body })),
+    ...(crm?.follow_ups ?? []).map((item) => ({ id: `fu:${item.id}`, at: item.due_at, source: "follow_up" as const, text: item.summary || "Напоминание" })),
+    ...(crm?.companies ?? []).map((company) => ({ id: `co:${company.id}`, at: company.linked_at, source: "company" as const, text: company.name })),
+    ...(requests ?? []).map((row) => ({ id: `req:${row.id}`, at: text(row.created_at), source: "request" as const, text: "Заявка" })),
+    ...orders.map((order) => ({ id: `ord:${order.id}`, at: text(order.created_at), source: "order" as const, text: `Заказ ${order.display_id ?? ""}`.trim() })),
+    ...audits.map((row) => ({ id: `audit:${row.id}`, at: row.created_at, source: "audit" as const, text: auditActionText(row.action) })),
+    ...manufacturing,
+  ])
+
   res.json({
     person: {
       id: String(lead.id),
@@ -148,6 +203,14 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     },
     requests: requests ?? [],
     orders,
+    roles: crm?.roles ?? [],
+    companies: crm?.companies ?? [],
+    notes: crm?.notes ?? [],
+    follow_ups: crm?.follow_ups ?? [],
+    follow_ups_truncated: crm?.follow_ups_truncated ?? false,
+    request_orders: crm?.request_orders ?? [],
+    activity,
+    crm_available: crm != null,
     link: link
       ? {
           customer_id: text(link.customer_id),

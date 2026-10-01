@@ -8,6 +8,11 @@ export const STAFF_CAPABILITIES = [
   "publish_catalog",
   "manage_promotions",
   "manage_site",
+  "view_crm",
+  "edit_crm",
+  "link_customer",
+  "assign_crm",
+  "follow_up",
   "view_sensitive_settings",
   "developer_escape_hatch",
 ] as const
@@ -31,6 +36,11 @@ const OPERATIONAL: StaffCapability[] = [
   "publish_catalog",
   "manage_promotions",
   "manage_site",
+  "view_crm",
+  "edit_crm",
+  "link_customer",
+  "assign_crm",
+  "follow_up",
 ]
 
 function blank(value: boolean): Record<StaffCapability, boolean> {
