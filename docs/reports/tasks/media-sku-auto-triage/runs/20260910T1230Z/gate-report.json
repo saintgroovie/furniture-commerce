@@ -1,0 +1,384 @@
+{
+ "generated_at": "2026-09-10T09:52:25Z",
+ "p0_closed": true,
+ "p1_closed": true,
+ "local_medusa_apply": true,
+ "board_validation": {
+  "ship_now_errors": [],
+  "full_errors": 0
+ },
+ "production_apply": "unsafe_scope",
+ "ship_now_count": 63,
+ "ship_now_handles": [
+  "ol-00-1",
+  "ol-01-2",
+  "ol-02-1",
+  "ol-03-1",
+  "ol-05-1",
+  "ol-05-2",
+  "ol-05-3",
+  "ol-06-1",
+  "ol-08-1",
+  "ol-08-2",
+  "ol-09-2",
+  "ol-21-1",
+  "ol-26-1",
+  "ol-26-2",
+  "ol-30-1",
+  "ol-42-1",
+  "ol-43-1",
+  "ol-44-1",
+  "ol-44-2",
+  "ol-57-3",
+  "ol-61-1",
+  "ol-61-2",
+  "ol-62-1",
+  "ol-62-2",
+  "ol-64-1",
+  "ol-65-1",
+  "ol-65-2",
+  "ol-66-1",
+  "ol-66-4",
+  "ol-67-1",
+  "ol-68-1",
+  "ol-68-2",
+  "ol-69-1",
+  "ol-69-2",
+  "ol-69-3",
+  "ol-69-4",
+  "ol-81-1",
+  "ol-84-1",
+  "ol-84-2",
+  "ol-85-1",
+  "ol-85-2",
+  "ol-86-1",
+  "ol-95-1",
+  "ol-95-3",
+  "pv-02-1",
+  "pv-03-1",
+  "pv-09-2",
+  "pv-15-1",
+  "pv-15-2",
+  "pv-16-1",
+  "pv-17-1",
+  "pv-18-1",
+  "pv-23-1",
+  "pv-42-2",
+  "pv-43-1",
+  "pv-55-2",
+  "pv-65-5",
+  "pv-65-6",
+  "pv-65-7",
+  "pv-66-6",
+  "pv-66-7",
+  "pv-68-2",
+  "pv-69-1"
+ ],
+ "ship_now_second_live_angle": 49,
+ "ship_now_second_frame_any": 52,
+ "ship_now_only_main": 11,
+ "hold_count": 45,
+ "by_collection": {
+  "country-london-paris": {
+   "products": 13,
+   "ship_now": 0,
+   "hold": 13,
+   "second_live_angle": 0
+  },
+  "oliver": {
+   "products": 56,
+   "ship_now": 36,
+   "hold": 20,
+   "second_live_angle": 32
+  },
+  "oliver-kids": {
+   "products": 10,
+   "ship_now": 8,
+   "hold": 2,
+   "second_live_angle": 5
+  },
+  "provence": {
+   "products": 29,
+   "ship_now": 19,
+   "hold": 10,
+   "second_live_angle": 12
+  }
+ },
+ "drop_reasons": {
+  "processed_copy": 351,
+  "identity_ambiguous": 116,
+  "unpreviewable": 12,
+  "near_dup_of_kept": 201,
+  "exact_duplicate": 348,
+  "scheme_or_line_drawing": 28,
+  "collapse_drop_basename": 18,
+  "dropped_for_slot_consistency": 2,
+  "tiny_thumbnail": 2
+ },
+ "self_check": {
+  "ol-84-1": {
+   "ok": true,
+   "note": "predicted backend thumbnail ol-84-1-i2.jpg is an in-situ frame (operator control keeps it) | hero=OL-84-1_main.jpg; predicted_thumbnail=ol-84-1-i2.jpg | live_angles_kept=1/1 | warnings: backend_thumbnail_is_in_situ_frame:ol-84-1-i2.jpg",
+   "kept_basenames": [
+    "OL-84-1_main.jpg",
+    "ol-84-1-i2.jpg"
+   ],
+   "dropped_basenames": [
+    "OL-84-1_gallery_01.jpg",
+    "OL-84-1_main.jpg",
+    "ol-84-1-i1.jpg",
+    "ol-84-1-i2.jpg"
+   ],
+   "status": "ship_now"
+  },
+  "ol-05-1": {
+   "ok": true,
+   "note": "hero=OL-05-1_gallery_02.jpg; predicted_thumbnail=ol-05-1_gallery_02.jpg | live_angles_kept=2/2",
+   "kept_basenames": [
+    "OL-05-1_gallery_02.jpg",
+    "OL-05-1_gallery_01.jpg",
+    "OL-05-1_main.jpg"
+   ],
+   "dropped_basenames": [
+    "OL-05-1_gallery_01.jpg",
+    "OL-05-1_gallery_02.jpg",
+    "OL-05-1_main.jpg",
+    "ol-05-1-i1.jpg",
+    "ol-05-1-i2.jpg",
+    "ol-05-1-i4.jpg"
+   ],
+   "status": "ship_now"
+  },
+  "ol-69-1": {
+   "ok": true,
+   "note": "hero=OL-69-1_gallery_02.jpg; predicted_thumbnail=ol-69-1_gallery_02.jpg | live_angles_kept=2/2",
+   "kept_basenames": [
+    "OL-69-1_gallery_02.jpg",
+    "OL-69-1_gallery_01.jpg",
+    "OL-69-1_main.jpg"
+   ],
+   "dropped_basenames": [
+    "OL-69-1_gallery_01.jpg",
+    "OL-69-1_gallery_02.jpg",
+    "OL-69-1_main.jpg",
+    "ol-69-1-i1.jpg",
+    "ol-69-1-i2.jpg",
+    "ol-69-1-i4.jpg"
+   ],
+   "status": "ship_now"
+  },
+  "ol-25-1": {
+   "ok": true,
+   "note": "hero=OL-25-1_main.jpg; predicted_thumbnail=ol-25-1-i2.jpg | live_angles_kept=3/3 | problems: mixed_foreground_aspect:OL-25-1_gallery_04.jpg",
+   "kept_basenames": [
+    "OL-25-1_main.jpg",
+    "ol-25-1-i2.jpg",
+    "OL-25-1_gallery_04.jpg"
+   ],
+   "dropped_basenames": [
+    "OL-25-1_gallery_01.jpg",
+    "OL-25-1_gallery_02.jpg",
+    "OL-25-1_gallery_03.jpg",
+    "OL-25-1_gallery_04.jpg",
+    "OL-25-1_main.jpg",
+    "ol-25-1-ab.jpg",
+    "ol-25-1-i1.jpg",
+    "ol-25-1-i2.jpg",
+    "ol-25-1-i3.jpg"
+   ],
+   "status": "hold"
+  },
+  "pv-05-2": {
+   "ok": true,
+   "note": "hero=PV-05-2_gallery_01.jpg; predicted_thumbnail=pv-05-2-i2.jpg | white kept: PV-05-2_gallery_01.jpg, pv-05-2-i2.jpg | variant keys cream+wood present | live_angles_kept=4/4 | problems: provence_dual_finish_not_detected_by_backend; provence_slot_bucket_mismatch",
+   "kept_basenames": [
+    "PV-05-2_gallery_01.jpg",
+    "pv-05-2-i2.jpg",
+    "PV-05-2_main.jpg",
+    "PV-05-2_gallery_03.jpg"
+   ],
+   "dropped_basenames": [
+    "PV-05-2_gallery_01.jpg",
+    "PV-05-2_gallery_02.jpg",
+    "PV-05-2_gallery_03.jpg",
+    "PV-05-2_main.jpg",
+    "pv-05-2-i1.jpg",
+    "pv-05-2-i2.jpg",
+    "pv-05-2-i3.jpg",
+    "pv-05-2-i4.jpg"
+   ],
+   "status": "hold"
+  },
+  "pv-06-2": {
+   "ok": true,
+   "note": "hero=PV-06-2_gallery_01.jpg; predicted_thumbnail=pv-06-2-i2.jpg | white kept: PV-06-2_gallery_01.jpg, pv-06-2-i2.jpg | variant keys cream+wood present | live_angles_kept=5/5 | problems: provence_dual_finish_not_detected_by_backend; provence_slot_bucket_mismatch",
+   "kept_basenames": [
+    "PV-06-2_gallery_01.jpg",
+    "pv-06-2-i2.jpg",
+    "PV-06-2_main.jpg",
+    "PV-06-2_gallery_04.jpg",
+    "PV-06-2_gallery_03.jpg"
+   ],
+   "dropped_basenames": [
+    "PV-06-2_gallery_01.jpg",
+    "PV-06-2_gallery_02.jpg",
+    "PV-06-2_gallery_03.jpg",
+    "PV-06-2_gallery_04.jpg",
+    "PV-06-2_main.jpg",
+    "pv-06-2-i1.jpg",
+    "pv-06-2-i2.jpg",
+    "pv-06-2-i3.jpg",
+    "pv-06-2-i4.jpg",
+    "pv-06-2-i5.jpg"
+   ],
+   "status": "hold"
+  },
+  "pv-02-1": {
+   "ok": true,
+   "note": "hero=PV-02-1_main.jpg; predicted_thumbnail=pv-02-1-i2.jpg | live_angles_kept=3/3",
+   "kept_basenames": [
+    "PV-02-1_main.jpg",
+    "pv-02-1-i2.jpg",
+    "PV-02-1_gallery_01.jpg"
+   ],
+   "dropped_basenames": [
+    "PV-02-1_gallery_01.jpg",
+    "PV-02-1_gallery_02.jpg",
+    "PV-02-1_main.jpg",
+    "Provence_White_p10_i0_694x374.png",
+    "Provence_White_p10_i1_781x1074.png",
+    "Provence_White_p10_i2_550x262.png",
+    "Provence_White_p10_i3_428x288.png",
+    "Provence_White_p12_i0_1142x761.png",
+    "Provence_White_p1_i0_1016x936.png",
+    "Provence_White_p2_i0_1303x1267.png",
+    "Provence_White_p3_i0_687x718.png",
+    "Provence_White_p3_i1_499x708.png",
+    "Provence_White_p3_i2_1224x851.png",
+    "Provence_White_p4_i0_435x726.png",
+    "Provence_White_p4_i1_491x726.png",
+    "Provence_White_p4_i2_1043x696.png",
+    "Provence_White_p5_i0_1227x850.png",
+    "Provence_White_p5_i1_1011x615.png",
+    "Provence_White_p6_i0_968x954.png",
+    "Provence_White_p6_i1_685x685.png",
+    "Provence_White_p6_i2_378x591.png",
+    "Provence_White_p7_i0_733x465.png",
+    "Provence_White_p7_i1_562x383.png",
+    "Provence_White_p7_i2_1218x953.png",
+    "Provence_White_p8_i0_971x957.png",
+    "Provence_White_p8_i1_433x433.png",
+    "Provence_White_p8_i2_814x898.png",
+    "Provence_White_p9_i0_616x616.png",
+    "Provence_White_p9_i1_455x455.png",
+    "Provence_White_p9_i2_1026x951.png",
+    "Provence_White_page_01.png",
+    "Provence_White_page_02.png",
+    "Provence_White_page_03.png",
+    "Provence_White_page_04.png",
+    "Provence_White_page_05.png",
+    "Provence_White_page_06.png",
+    "Provence_White_page_07.png",
+    "Provence_White_page_08.png",
+    "Provence_White_page_09.png",
+    "Provence_White_page_10.png",
+    "Provence_White_page_11.png",
+    "Provence_White_page_12.png",
+    "pv-02-1-i1.jpg",
+    "pv-02-1-i2.jpg",
+    "pv-02-1-i3.jpg",
+    "pv-42-1-i2.jpg",
+    "pv-81-1-i1.jpg",
+    "pv-81-1-i2.jpg"
+   ],
+   "status": "ship_now"
+  },
+  "pv-09-1": {
+   "ok": true,
+   "note": "hero=PV-09-1_gallery_01.jpg; predicted_thumbnail=pv-09-1-i2.jpg | live_angles_kept=3/3 | problems: provence_dual_finish_not_detected_by_backend; provence_slot_bucket_mismatch",
+   "kept_basenames": [
+    "PV-09-1_gallery_01.jpg",
+    "pv-09-1-i2.jpg",
+    "PV-09-1_main.jpg"
+   ],
+   "dropped_basenames": [
+    "PV-09-1_gallery_01.jpg",
+    "PV-09-1_gallery_02.jpg",
+    "PV-09-1_main.jpg",
+    "pv-09-1-i1.jpg",
+    "pv-09-1-i2.jpg",
+    "pv-09-1-i3.jpg"
+   ],
+   "status": "hold"
+  },
+  "pv-23-1": {
+   "ok": true,
+   "note": "hero=PV-23-1_gallery_03.jpg; predicted_thumbnail=pv-23-1-i2.jpg | live_angles_kept=3/3",
+   "kept_basenames": [
+    "PV-23-1_gallery_03.jpg",
+    "pv-23-1-i2.jpg",
+    "PV-23-1_gallery_01.jpg"
+   ],
+   "dropped_basenames": [
+    "PV-23-1_gallery_01.jpg",
+    "PV-23-1_gallery_02.jpg",
+    "PV-23-1_gallery_03.jpg",
+    "PV-23-1_main.jpg",
+    "pv-23-1-i1.jpg",
+    "pv-23-1-i2.jpg",
+    "pv-23-1-i3.jpg",
+    "pv-23-1-i4.jpg"
+   ],
+   "status": "ship_now"
+  },
+  "pv-65-5": {
+   "ok": true,
+   "note": "hero=PV-65-5_gallery_01.jpg; predicted_thumbnail=pv-65-5-i2.jpg | live_angles_kept=2/2",
+   "kept_basenames": [
+    "PV-65-5_gallery_01.jpg",
+    "pv-65-5-i2.jpg"
+   ],
+   "dropped_basenames": [
+    "PV-65-5_gallery_01.jpg",
+    "PV-65-5_gallery_02.jpg",
+    "pv-65-5-i1.jpg",
+    "pv-65-5-i2.jpg"
+   ],
+   "status": "ship_now"
+  },
+  "pv-65-8": {
+   "ok": true,
+   "note": "hero=PV-65-8_gallery_01.jpg; predicted_thumbnail=pv-65-8-i2.jpg | live_angles_kept=3/3 | problems: provence_dual_finish_not_detected_by_backend",
+   "kept_basenames": [
+    "PV-65-8_gallery_01.jpg",
+    "PV-65-8_main.jpg",
+    "pv-65-8-i2.jpg"
+   ],
+   "dropped_basenames": [
+    "PV-65-8_gallery_01.jpg",
+    "PV-65-8_gallery_02.jpg",
+    "PV-65-8_main.jpg",
+    "pv-65-8-i1.jpg",
+    "pv-65-8-i2.jpg",
+    "pv-65-8-i3.jpg"
+   ],
+   "status": "hold"
+  }
+ },
+ "inputs": {
+  "inventory": "/Users/leonidmbp/.woodright/worktrees/media-sku-auto-triage-20260910/data/normalized/legacy-media-inventory.json",
+  "candidate_map": "/Users/leonidmbp/.woodright/worktrees/media-sku-auto-triage-20260910/data/normalized/legacy-media-product-candidate-map.json",
+  "seed": "/Users/leonidmbp/Documents/projects/furniture-commerce/data/normalized/seed-products.json",
+  "collapse": "/Users/leonidmbp/.woodright/worktrees/media-sku-auto-triage-20260910/apps/storefront/src/lib/data/media-near-dup-collapse.json",
+  "clp_gold": "/Users/leonidmbp/Documents/projects/furniture-commerce/tmp/country-assignment-v2-2026-06-23/operator-assignment-v2-export.json",
+  "image_roots_read_only": [
+   "/Users/leonidmbp/.woodright/worktrees/media-sku-auto-triage-20260910",
+   "/Users/leonidmbp/Documents/projects/furniture-commerce"
+  ]
+ },
+ "apply_contract": {
+  "script": "apps/backend/src/scripts/apply-legacy-assign-prefill.ts",
+  "shape": "{version, savedAt, productStates: {handle: {handle, activeVariantKey, rolesByVariant, galleriesByVariant, rejectedIds, roleOverrides}}}",
+  "note": "apply reads only the fixed prefill paths; Grok must place ship-now JSON at one of them (e.g. pilot-assign-prefill/pilot-v2board-state.json) or point a scoped override. Files under data/raw are copied into apps/backend/static/products/<collection_hint>/ by the apply script."
+ }
+}

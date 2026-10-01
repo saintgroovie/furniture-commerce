@@ -1,0 +1,673 @@
+{
+ "generated_at": "2026-09-10T09:52:25Z",
+ "count": 45,
+ "handles": [
+  {
+   "handle": "co-02-1",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-05-1",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-08-1",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-14-2",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-15-2",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-61-1",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-62-1",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-62-2",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-62-3",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-65-1",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-65-2",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-66-1",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "co-69-1",
+   "collection": "country-london-paris",
+   "reasons": [
+    "clp_operator_gold_2026-06-23_do_not_override"
+   ]
+  },
+  {
+   "handle": "ol-05-н",
+   "collection": "oliver",
+   "reasons": [
+    "handle_non_latin_data_issue_skip_photo_apply"
+   ],
+   "kept_basenames": [
+    "OL-05-Н_main.jpg"
+   ]
+  },
+  {
+   "handle": "ol-07-1",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:leona,lillian,linda,lorna"
+   ],
+   "kept_basenames": [
+    "OL-07-1_color_leona_01.jpg",
+    "OL-07-1_color_leona_02.jpg",
+    "OL-07-1_color_lillian_01.jpg",
+    "OL-07-1_color_linda_01.jpg",
+    "OL-07-1_color_lorna_01.jpg",
+    "ol-07-1-leona-010.jpg",
+    "ol-07-1-leona-050.jpg",
+    "ol-07-1-lillian-050.jpg",
+    "ol-07-1-linda-010.jpg",
+    "ol-07-1-lorna-010.jpg"
+   ]
+  },
+  {
+   "handle": "ol-14-1",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:cream,lillian,lorna"
+   ],
+   "kept_basenames": [
+    "OL-14-1_color_lillian_01.jpg",
+    "OL-14-1_color_lillian_02.jpg",
+    "OL-14-1_color_lillian_03.jpg",
+    "OL-14-1_color_lillian_04.jpg",
+    "OL-14-1_color_lillian_05.jpg",
+    "OL-14-1_gallery_01.jpg",
+    "OL-14-1_gallery_02.jpg",
+    "ol-14-1- lorna-090.jpg",
+    "ol-14-1- lorna-160.jpg",
+    "ol-14-1-lillian-050.jpg",
+    "ol-14-1-lillian-080.jpg",
+    "ol-14-1-lillian-090.jpg",
+    "ol-14-1-lillian-140.jpg",
+    "ol-14-1-lillian-160.jpg"
+   ]
+  },
+  {
+   "handle": "ol-14-2",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:lillian,lorna"
+   ],
+   "kept_basenames": [
+    "OL-14-2_color_lillian_01.jpg",
+    "OL-14-2_color_lillian_02.jpg",
+    "OL-14-2_color_lillian_03.jpg",
+    "OL-14-2_color_lillian_04.jpg",
+    "OL-14-2_color_lillian_05.jpg",
+    "OL-14-2_color_lorna_01.jpg",
+    "OL-14-2_color_lorna_02.jpg",
+    "OL-14-2_color_lorna_03.jpg",
+    "OL-14-2_color_lorna_04.jpg",
+    "ol-14-2-lillian-050.jpg",
+    "ol-14-2-lillian-080.jpg",
+    "ol-14-2-lillian-090.jpg",
+    "ol-14-2-lillian-140.jpg",
+    "ol-14-2-lillian-160.jpg",
+    "ol-14-2-lorna-050.jpg",
+    "ol-14-2-lorna-080.jpg",
+    "ol-14-2-lorna-090.jpg",
+    "ol-14-2-lorna-160.jpg"
+   ]
+  },
+  {
+   "handle": "ol-15-1",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:lorna"
+   ],
+   "kept_basenames": [
+    "OL-15-1_color_lorna_01.jpg",
+    "ol-15-1-lorna-050.jpg"
+   ]
+  },
+  {
+   "handle": "ol-15-2",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:lorna"
+   ],
+   "kept_basenames": [
+    "OL-15-2_color_lorna_01.jpg",
+    "ol-15-2-lorna-050.jpg"
+   ]
+  },
+  {
+   "handle": "ol-16-1",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:lillian,lorna"
+   ],
+   "kept_basenames": [
+    "OL-16-1_color_lillian_01.jpg",
+    "OL-16-1_color_lillian_02.jpg",
+    "OL-16-1_color_lillian_03.jpg",
+    "OL-16-1_color_lillian_04.jpg",
+    "OL-16-1_color_lillian_05.jpg",
+    "OL-16-1_color_lorna_01.jpg",
+    "OL-16-1_color_lorna_02.jpg",
+    "OL-16-1_color_lorna_03.jpg",
+    "OL-16-1_color_lorna_04.jpg",
+    "ol-16-1-lillian-050.jpg",
+    "ol-16-1-lillian-080.jpg",
+    "ol-16-1-lillian-090.jpg",
+    "ol-16-1-lillian-140.jpg",
+    "ol-16-1-lillian-160.jpg",
+    "ol-16-1-lorna-050.jpg",
+    "ol-16-1-lorna-080.jpg",
+    "ol-16-1-lorna-090.jpg",
+    "ol-16-1-lorna-160.jpg"
+   ]
+  },
+  {
+   "handle": "ol-16-2",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:lillian,lorna"
+   ],
+   "kept_basenames": [
+    "OL-16-2_color_lillian_01.jpg",
+    "OL-16-2_color_lillian_02.jpg",
+    "OL-16-2_color_lillian_03.jpg",
+    "OL-16-2_color_lillian_04.jpg",
+    "OL-16-2_color_lillian_05.jpg",
+    "OL-16-2_color_lorna_01.jpg",
+    "OL-16-2_color_lorna_02.jpg",
+    "OL-16-2_color_lorna_03.jpg",
+    "OL-16-2_color_lorna_04.jpg",
+    "ol-16-2-lillian-050.jpg",
+    "ol-16-2-lillian-080.jpg",
+    "ol-16-2-lillian-090.jpg",
+    "ol-16-2-lillian-140.jpg",
+    "ol-16-2-lillian-160.jpg",
+    "ol-16-2-lorna-050.jpg",
+    "ol-16-2-lorna-080.jpg",
+    "ol-16-2-lorna-090.jpg",
+    "ol-16-2-lorna-160.jpg"
+   ]
+  },
+  {
+   "handle": "ol-17-1",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:lillian,lorna"
+   ],
+   "kept_basenames": [
+    "OL-17-1_color_lillian_01.jpg",
+    "OL-17-1_color_lillian_02.jpg",
+    "OL-17-1_color_lillian_03.jpg",
+    "OL-17-1_color_lillian_04.jpg",
+    "OL-17-1_color_lillian_05.jpg",
+    "OL-17-1_color_lorna_01.jpg",
+    "OL-17-1_color_lorna_02.jpg",
+    "OL-17-1_color_lorna_03.jpg",
+    "OL-17-1_color_lorna_04.jpg",
+    "ol-17-1-lillian-050.jpg",
+    "ol-17-1-lillian-080.jpg",
+    "ol-17-1-lillian-090.jpg",
+    "ol-17-1-lillian-140.jpg",
+    "ol-17-1-lillian-160.jpg",
+    "ol-17-1-lorna-050.jpg",
+    "ol-17-1-lorna-080.jpg",
+    "ol-17-1-lorna-090.jpg",
+    "ol-17-1-lorna-160.jpg"
+   ]
+  },
+  {
+   "handle": "ol-17-2",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:lillian,lorna"
+   ],
+   "kept_basenames": [
+    "OL-17-2_color_lillian_01.jpg",
+    "OL-17-2_color_lillian_02.jpg",
+    "OL-17-2_color_lillian_03.jpg",
+    "OL-17-2_color_lillian_04.jpg",
+    "OL-17-2_color_lillian_05.jpg",
+    "OL-17-2_color_lorna_01.jpg",
+    "OL-17-2_color_lorna_02.jpg",
+    "OL-17-2_color_lorna_03.jpg",
+    "OL-17-2_color_lorna_04.jpg",
+    "ol-17-2-lillian-050.jpg",
+    "ol-17-2-lillian-080.jpg",
+    "ol-17-2-lillian-090.jpg",
+    "ol-17-2-lillian-140.jpg",
+    "ol-17-2-lillian-160.jpg",
+    "ol-17-2-lorna-050.jpg",
+    "ol-17-2-lorna-080.jpg",
+    "ol-17-2-lorna-090.jpg",
+    "ol-17-2-lorna-160.jpg"
+   ]
+  },
+  {
+   "handle": "ol-17-3",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:lillian,lorna"
+   ],
+   "kept_basenames": [
+    "OL-17-3_color_lillian_01.jpg",
+    "OL-17-3_color_lillian_02.jpg",
+    "OL-17-3_color_lorna_01.jpg",
+    "ol-17-3-lillian-050 1.jpg",
+    "ol-17-3-lillian-050.jpg",
+    "ol-17-3-lorna-050.jpg"
+   ]
+  },
+  {
+   "handle": "ol-18-1",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:lillian,lorna"
+   ],
+   "kept_basenames": [
+    "OL-18-1_color_lillian_01.jpg",
+    "OL-18-1_color_lillian_02.jpg",
+    "OL-18-1_color_lillian_03.jpg",
+    "OL-18-1_color_lillian_04.jpg",
+    "OL-18-1_color_lillian_05.jpg",
+    "OL-18-1_color_lorna_01.jpg",
+    "OL-18-1_color_lorna_02.jpg",
+    "OL-18-1_color_lorna_03.jpg",
+    "ol-18-1-lillian-050.jpg",
+    "ol-18-1-lillian-080.jpg",
+    "ol-18-1-lillian-090.jpg",
+    "ol-18-1-lillian-140.jpg",
+    "ol-18-1-lillian-160.jpg",
+    "ol-18-1-lorna-080.jpg",
+    "ol-18-1-lorna-090.jpg",
+    "ol-18-1-lorna-160.jpg"
+   ]
+  },
+  {
+   "handle": "ol-18-2",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:lillian,lorna"
+   ],
+   "kept_basenames": [
+    "OL-18-2_color_lillian_01.jpg",
+    "OL-18-2_color_lillian_02.jpg",
+    "OL-18-2_color_lillian_03.jpg",
+    "OL-18-2_color_lillian_04.jpg",
+    "OL-18-2_color_lillian_05.jpg",
+    "OL-18-2_color_lorna_01.jpg",
+    "OL-18-2_color_lorna_02.jpg",
+    "OL-18-2_color_lorna_03.jpg",
+    "OL-18-2_color_lorna_04.jpg",
+    "ol-18-2-lillian-050.jpg",
+    "ol-18-2-lillian-080.jpg",
+    "ol-18-2-lillian-090.jpg",
+    "ol-18-2-lillian-140.jpg",
+    "ol-18-2-lillian-160.jpg",
+    "ol-18-2-lorna-050.jpg",
+    "ol-18-2-lorna-080.jpg",
+    "ol-18-2-lorna-090.jpg",
+    "ol-18-2-lorna-160.jpg"
+   ]
+  },
+  {
+   "handle": "ol-23-1",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:leona,lillian,linda,lorna,torno"
+   ],
+   "kept_basenames": [
+    "OL-23-1_color_leona_01.jpg",
+    "OL-23-1_color_leona_02.jpg",
+    "OL-23-1_color_leona_03.jpg",
+    "OL-23-1_color_lillian_01.jpg",
+    "OL-23-1_color_lillian_02.jpg",
+    "OL-23-1_color_lillian_03.jpg",
+    "OL-23-1_color_lillian_04.jpg",
+    "OL-23-1_color_lillian_05.jpg",
+    "OL-23-1_color_lillian_06.jpg",
+    "OL-23-1_color_linda_01.jpg",
+    "OL-23-1_color_linda_02.jpg",
+    "OL-23-1_color_linda_03.jpg",
+    "OL-23-1_color_linda_04.jpg",
+    "OL-23-1_color_linda_05.jpg",
+    "OL-23-1_color_lorna_01.jpg",
+    "OL-23-1_color_lorna_02.jpg",
+    "OL-23-1_color_lorna_03.jpg",
+    "OL-23-1_color_lorna_04.jpg",
+    "OL-23-1_color_lorna_05.jpg",
+    "OL-23-1_color_lorna_06.jpg",
+    "OL-23-1_color_torno_01.jpg",
+    "OL-23-1_color_torno_02.jpg",
+    "OL-23-1_color_torno_03.jpg",
+    "OL-23-1_color_torno_04.jpg",
+    "OL-23-1_color_torno_05.jpg",
+    "OL-23-1_color_torno_06.jpg",
+    "ol-23-1-leona-010.jpg",
+    "ol-23-1-leona-050.jpg",
+    "ol-23-1-leona-140-hd-i1.jpg",
+    "ol-23-1-lillian-010.jpg",
+    "ol-23-1-lillian-050.jpg",
+    "ol-23-1-lillian-080-hd-i1.jpg",
+    "ol-23-1-lillian-090-hd-i1.jpg",
+    "ol-23-1-lillian-140-hd-i1.jpg",
+    "ol-23-1-lillian-160.jpg",
+    "ol-23-1-linda-010.jpg",
+    "ol-23-1-linda-080-hd-i1.jpg",
+    "ol-23-1-linda-090.jpg",
+    "ol-23-1-linda-140-hd-i1.jpg",
+    "ol-23-1-linda-160-hd-i1.jpg",
+    "ol-23-1-lorna-050.jpg",
+    "ol-23-1-lorna-080-hd-i1.jpg",
+    "ol-23-1-lorna-090-hd-i1.jpg",
+    "ol-23-1-lorna-140-hd-i1.jpg",
+    "ol-23-1-lorna-160.jpg",
+    "ol-23-1-torno-020-hd-i1.jpg",
+    "ol-23-1-torno-031.jpg",
+    "ol-23-1-torno-050-hd-i1.jpg",
+    "ol-23-1-torno-051.jpg",
+    "ol-23-1-torno-080-hd-i1.jpg",
+    "ol-23-1-torno-140-hd-i1.jpg"
+   ]
+  },
+  {
+   "handle": "ol-25-1",
+   "collection": "oliver",
+   "reasons": [
+    "mixed_foreground_aspect:OL-25-1_gallery_04.jpg"
+   ],
+   "kept_basenames": [
+    "ol-25-1-i2.jpg",
+    "OL-25-1_gallery_04.jpg",
+    "OL-25-1_main.jpg"
+   ]
+  },
+  {
+   "handle": "ol-55-1",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:leona,lorna,torno"
+   ],
+   "kept_basenames": [
+    "OL-55-1_color_leona_01.jpg",
+    "OL-55-1_color_lorna_01.jpg",
+    "OL-55-1_color_lorna_02.jpg",
+    "OL-55-1_color_torno_01.jpg",
+    "ol-55-1-leona-050.jpg",
+    "ol-55-1-lorna-050.jpg",
+    "ol-55-1-lorna-140.jpg",
+    "ol-55-1-torno-140.jpg"
+   ]
+  },
+  {
+   "handle": "ol-55-2",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:lorna"
+   ],
+   "kept_basenames": [
+    "OL-55-2_color_lorna_01.jpg",
+    "OL-55-2_color_lorna_02.jpg",
+    "ol-55-2-lorna-050.jpg",
+    "ol-55-2-lorna-160.jpg"
+   ]
+  },
+  {
+   "handle": "ol-56-1",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:cream,lillian"
+   ],
+   "kept_basenames": [
+    "OL-56-1_color_lillian_01.jpg",
+    "OL-56-1_gallery_01.jpg",
+    "ol-56-1-lillian-050.jpg"
+   ]
+  },
+  {
+   "handle": "ol-57-1",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:cream,lilian"
+   ],
+   "kept_basenames": [
+    "OL-57-1_color_lilian_01.jpg",
+    "OL-57-1_gallery_01.jpg"
+   ]
+  },
+  {
+   "handle": "ol-57-2",
+   "collection": "oliver",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:cream,lillian"
+   ],
+   "kept_basenames": [
+    "OL-57-2_color_lillian_01.jpg",
+    "ol-57-2-i4.jpg",
+    "ol-57-2-lillian-050.jpg"
+   ]
+  },
+  {
+   "handle": "ol-82-1",
+   "collection": "oliver-kids",
+   "reasons": [
+    "multi_color_token_workbook_needs_execution_contract:linda,lorna,torno"
+   ],
+   "kept_basenames": [
+    "OL-82-1_color_linda_01.jpg",
+    "OL-82-1_color_linda_02.jpg",
+    "OL-82-1_color_lorna_01.jpg",
+    "OL-82-1_color_lorna_02.jpg",
+    "OL-82-1_color_torno_01.jpg",
+    "OL-82-1_color_torno_02.jpg",
+    "OL-82-1_color_torno_03.jpg",
+    "OL-82-1_color_torno_04.jpg",
+    "ol-82-1-linda-080.jpg",
+    "ol-82-1-linda-090.jpg",
+    "ol-82-1-lorna-050.jpg",
+    "ol-82-1-lorna-080.jpg",
+    "ol-82-1-torno-020.jpg",
+    "ol-82-1-torno-031.jpg",
+    "ol-82-1-torno-051.jpg",
+    "ol-82-1-torno-140.jpg"
+   ]
+  },
+  {
+   "handle": "ol-83-1",
+   "collection": "oliver-kids",
+   "reasons": [
+    "mixed_foreground_aspect:OL-83-1_gallery_01.jpg",
+    "mixed_foreground_aspect:OL-83-1_gallery_02.jpg"
+   ],
+   "kept_basenames": [
+    "OL-83-1_gallery_01.jpg",
+    "OL-83-1_gallery_02.jpg",
+    "OL-83-1_main.jpg"
+   ]
+  },
+  {
+   "handle": "pv-05-2",
+   "collection": "provence",
+   "reasons": [
+    "provence_dual_finish_not_detected_by_backend",
+    "provence_slot_bucket_mismatch"
+   ],
+   "kept_basenames": [
+    "PV-05-2_gallery_01.jpg",
+    "pv-05-2-i2.jpg",
+    "PV-05-2_gallery_03.jpg",
+    "PV-05-2_main.jpg"
+   ]
+  },
+  {
+   "handle": "pv-06-2",
+   "collection": "provence",
+   "reasons": [
+    "provence_dual_finish_not_detected_by_backend",
+    "provence_slot_bucket_mismatch"
+   ],
+   "kept_basenames": [
+    "PV-06-2_gallery_01.jpg",
+    "pv-06-2-i2.jpg",
+    "PV-06-2_gallery_03.jpg",
+    "PV-06-2_gallery_04.jpg",
+    "PV-06-2_main.jpg"
+   ]
+  },
+  {
+   "handle": "pv-08-2",
+   "collection": "provence",
+   "reasons": [
+    "provence_dual_finish_not_detected_by_backend",
+    "provence_slot_bucket_mismatch"
+   ],
+   "kept_basenames": [
+    "PV-08-2_gallery_01.jpg",
+    "pv-08-2-i2.jpg",
+    "PV-08-2_gallery_03.jpg",
+    "PV-08-2_main.jpg"
+   ]
+  },
+  {
+   "handle": "pv-09-1",
+   "collection": "provence",
+   "reasons": [
+    "provence_dual_finish_not_detected_by_backend",
+    "provence_slot_bucket_mismatch"
+   ],
+   "kept_basenames": [
+    "PV-09-1_gallery_01.jpg",
+    "pv-09-1-i2.jpg",
+    "PV-09-1_main.jpg"
+   ]
+  },
+  {
+   "handle": "pv-14-1",
+   "collection": "provence",
+   "reasons": [
+    "no_live_hero"
+   ],
+   "kept_basenames": []
+  },
+  {
+   "handle": "pv-55-1",
+   "collection": "provence",
+   "reasons": [
+    "provence_dual_finish_not_detected_by_backend",
+    "provence_slot_bucket_mismatch"
+   ],
+   "kept_basenames": [
+    "pv-55-1-i2.jpg",
+    "PV-55-1_gallery_03.jpg",
+    "PV-55-1_main.jpg"
+   ]
+  },
+  {
+   "handle": "pv-61-1",
+   "collection": "provence",
+   "reasons": [
+    "provence_dual_finish_not_detected_by_backend",
+    "provence_slot_bucket_mismatch"
+   ],
+   "kept_basenames": [
+    "PV-61-1_gallery_01.jpg",
+    "PV-61-1_gallery_02.jpg",
+    "PV-61-1_gallery_03.jpg",
+    "PV-61-1_main.jpg"
+   ]
+  },
+  {
+   "handle": "pv-62-1",
+   "collection": "provence",
+   "reasons": [
+    "provence_dual_finish_not_detected_by_backend",
+    "provence_slot_bucket_mismatch"
+   ],
+   "kept_basenames": [
+    "PV-62-1_gallery_01.jpg",
+    "pv-62-1-i2.jpg",
+    "PV-62-1_gallery_03.jpg",
+    "PV-62-1_main.jpg"
+   ]
+  },
+  {
+   "handle": "pv-65-8",
+   "collection": "provence",
+   "reasons": [
+    "provence_dual_finish_not_detected_by_backend"
+   ],
+   "kept_basenames": [
+    "PV-65-8_gallery_01.jpg",
+    "pv-65-8-i2.jpg",
+    "PV-65-8_main.jpg"
+   ]
+  },
+  {
+   "handle": "pv-68-1",
+   "collection": "provence",
+   "reasons": [
+    "no_live_hero"
+   ],
+   "kept_basenames": []
+  }
+ ]
+}
