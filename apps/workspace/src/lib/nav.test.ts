@@ -8,6 +8,7 @@ test("working navigation has exactly five sections and no Inbox", () => {
     ["Сегодня", "Клиенты", "Заказы", "Товары", "Витрина"]
   )
   assert.ok(!NAV.some((item) => /входящ/i.test(item.label)))
+  assert.ok(!NAV.some((item) => item.href === "/inbox"))
 })
 
 test("mobile navigation keeps four sections, Витрина stays reachable by link", () => {

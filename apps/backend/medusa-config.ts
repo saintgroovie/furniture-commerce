@@ -304,5 +304,8 @@ export default defineConfig({
     {
       resolve: "./src/modules/crm",
     },
+    {
+      resolve: "./src/modules/communication",
+    },
   ],
 })

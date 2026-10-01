@@ -39,6 +39,23 @@ describe("decideDeskWrite", () => {
     assert.equal(accessAllows(access, "crm.assign"), true)
   })
 
+  it("does not give mailbox access to ordinary staff or to an owner who is not on the mail list", () => {
+    const staff = decideDeskWrite({ actorId: "user_1", email: "seller@woodright.ru", action: "mail.view" })
+    assert.equal(staff.ok, false)
+    const owner = resolveStaffAccess({
+      email: "owner@woodright.ru",
+      ownerEmailsRaw: "owner@woodright.ru",
+    })
+    assert.equal(owner.capabilities.view_mail, false)
+    assert.equal(accessAllows(owner, "mail.reply"), false)
+    const listed = resolveStaffAccess({
+      email: "desk@woodright.ru",
+      mailEmailsRaw: "desk@woodright.ru",
+    })
+    assert.equal(listed.capabilities.view_mail, true)
+    assert.equal(accessAllows(listed, "mail.admin"), true)
+  })
+
   it("keeps the Medusa escape hatch off for ordinary staff", () => {
     const decision = decideDeskWrite({
       actorId: "user_1",

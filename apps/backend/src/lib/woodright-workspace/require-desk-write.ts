@@ -26,6 +26,7 @@ export async function requireDeskWrite(
     email,
     action,
     ownerEmailsRaw: process.env.WOODRIGHT_WORKSPACE_OWNER_EMAILS,
+    mailEmailsRaw: process.env.WOODRIGHT_WORKSPACE_MAIL_EMAILS,
   })
   if (!decision.ok) {
     res.status(decision.status).json({ message: decision.message })
@@ -54,9 +55,10 @@ export async function requireDeskWriteAny(
     }
   }
   const ownerEmailsRaw = process.env.WOODRIGHT_WORKSPACE_OWNER_EMAILS
+  const mailEmailsRaw = process.env.WOODRIGHT_WORKSPACE_MAIL_EMAILS
   let denied: DeskWriteDecision | null = null
   for (const action of actions) {
-    const decision = decideDeskWrite({ actorId, email, action, ownerEmailsRaw })
+    const decision = decideDeskWrite({ actorId, email, action, ownerEmailsRaw, mailEmailsRaw })
     if (decision.ok) return { actorId: actorId as string, email: decision.email }
     denied = decision
   }

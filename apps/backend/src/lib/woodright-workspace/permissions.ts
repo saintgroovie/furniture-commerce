@@ -13,6 +13,10 @@ export const STAFF_CAPABILITIES = [
   "link_customer",
   "assign_crm",
   "follow_up",
+  "view_mail",
+  "reply_mail",
+  "assign_mail",
+  "admin_mail",
   "view_sensitive_settings",
   "developer_escape_hatch",
 ] as const
@@ -66,14 +70,21 @@ export function parseOwnerEmails(raw: string | null | undefined): string[] {
 export function resolveStaffAccess(input: {
   email?: string | null
   ownerEmailsRaw?: string | null
+  mailEmailsRaw?: string | null
 }): StaffAccess {
   const email = input.email?.trim().toLowerCase() || null
   const owners = parseOwnerEmails(input.ownerEmailsRaw)
+  const mailboxes = parseOwnerEmails(input.mailEmailsRaw)
   const isOwner = Boolean(email && owners.includes(email))
+  const hasMail = Boolean(email && mailboxes.includes(email))
   const capabilities = blank(false)
   for (const key of OPERATIONAL) capabilities[key] = true
   capabilities.view_sensitive_settings = isOwner
   capabilities.developer_escape_hatch = isOwner
+  capabilities.view_mail = hasMail
+  capabilities.reply_mail = hasMail
+  capabilities.assign_mail = hasMail
+  capabilities.admin_mail = hasMail
   return {
     role: isOwner ? "owner" : "staff",
     email,

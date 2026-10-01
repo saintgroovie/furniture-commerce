@@ -18,6 +18,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const access = resolveStaffAccess({
     email,
     ownerEmailsRaw: process.env.WOODRIGHT_WORKSPACE_OWNER_EMAILS,
+    mailEmailsRaw: process.env.WOODRIGHT_WORKSPACE_MAIL_EMAILS,
   })
   res.json({
     access,

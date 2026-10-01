@@ -171,6 +171,11 @@ export const fixturePerson = {
   crm_available: false,
 }
 
+export const fixtureMailStatus = {
+  visible: false,
+  reason: "not_configured" as const,
+}
+
 export const fixtureCompanies = {
   companies: [] as Array<{ id: string; name: string; type: string | null; type_label: string | null; people_count: number }>,
 }

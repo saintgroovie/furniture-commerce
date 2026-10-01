@@ -13,6 +13,10 @@ export const DESK_ACTIONS = [
   "crm.link_customer",
   "crm.assign",
   "crm.follow_up",
+  "mail.view",
+  "mail.reply",
+  "mail.assign",
+  "mail.admin",
   "catalog.view",
   "catalog.edit",
   "catalog.media",
@@ -37,6 +41,10 @@ const ACTION_CAPABILITY: Record<DeskAction, StaffCapability> = {
   "crm.link_customer": "link_customer",
   "crm.assign": "assign_crm",
   "crm.follow_up": "follow_up",
+  "mail.view": "view_mail",
+  "mail.reply": "reply_mail",
+  "mail.assign": "assign_mail",
+  "mail.admin": "admin_mail",
   "catalog.view": "view_catalog",
   "catalog.edit": "edit_catalog",
   "catalog.media": "edit_catalog",
@@ -64,6 +72,7 @@ export function decideDeskWrite(input: {
   email?: string | null
   action: DeskAction
   ownerEmailsRaw?: string | null
+  mailEmailsRaw?: string | null
 }): DeskWriteDecision {
   if (!input.actorId) {
     return { ok: false, status: 401, message: "Нужен вход" }
@@ -71,6 +80,7 @@ export function decideDeskWrite(input: {
   const access = resolveStaffAccess({
     email: input.email,
     ownerEmailsRaw: input.ownerEmailsRaw,
+    mailEmailsRaw: input.mailEmailsRaw,
   })
   if (!accessAllows(access, input.action)) {
     return { ok: false, status: 403, message: "Недостаточно прав" }

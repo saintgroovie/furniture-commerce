@@ -5,6 +5,7 @@ import {
   fixtureAccess,
   fixtureCompanies,
   fixtureCompany,
+  fixtureMailStatus,
   fixtureContacts,
   fixtureOrder,
   fixtureOrders,
@@ -77,6 +78,9 @@ export function loadCompanies() {
 }
 export function loadCompany(id: string) {
   return load(`/admin/woodright/companies/${encodeURIComponent(id)}`, fixtureCompany)
+}
+export function loadMailStatus() {
+  return load("/admin/woodright/mail/status", fixtureMailStatus)
 }
 export function loadProducts() {
   return load("/admin/woodright/products", fixtureProducts)
