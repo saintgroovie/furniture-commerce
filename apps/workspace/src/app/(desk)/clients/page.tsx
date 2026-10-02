@@ -6,25 +6,25 @@ import { personRole, requestState } from "@/lib/person-presentation"
 import { loadCompanies, loadLeads, loadPeople, loadRequests } from "@/server/loaders"
 
 const MODES = [
+  { id: "requests", label: "Обращения", href: "/clients?mode=requests" },
   { id: "people", label: "Люди", href: "/clients?mode=people" },
-  { id: "requests", label: "Заявки", href: "/clients?mode=requests" },
   { id: "companies", label: "Компании", href: "/clients?mode=companies" },
 ]
 
 const TITLES = {
   people: ["Люди", "Покупатели, дизайнеры и их заявки в одном месте"],
-  requests: ["Заявки", "Обращения с сайта. Заявка остаётся своей записью, человек - своей"],
+  requests: ["Обращения", "Новые и текущие обращения. Заявка остаётся своей записью, человек - своей"],
   companies: ["Компании", "Студии и бюро. Человек остаётся человеком, компания - компанией"],
 } as const
 
 export default async function ClientsPage({ searchParams }: { searchParams: Promise<{ mode?: string; filter?: string }> }) {
   const params = await searchParams
-  const mode = params.mode === "requests" ? "requests" : params.mode === "companies" ? "companies" : "people"
+  const mode = params.mode === "people" ? "people" : params.mode === "companies" ? "companies" : "requests"
   const [title, lead] = TITLES[mode]
   return (
     <>
       <PageHeader
-        kicker="Клиенты"
+        kicker="Продажи"
         title={title}
         lead={lead}
         right={<ModeTabs items={MODES} active={mode} />}
@@ -110,8 +110,14 @@ async function RequestsList({ filter }: { filter?: string }) {
   if (!requests.ok) return <ErrorBlock message={requests.message} />
   const leadById = new Map((leads.ok ? leads.data.leads : []).map((lead) => [lead.id, lead]))
   const rows = requests.data.bespoke_requests.filter((request) => {
+    if (filter === "new") return request.status === "new"
     if (filter === "open") return request.status === "new" || request.status === "contacted"
     if (filter === "waiting") return request.status === "quote_sent"
+    if (filter === "overdue") {
+      if (request.status !== "new" && request.status !== "contacted") return false
+      if (!request.created_at) return false
+      return Date.now() - new Date(request.created_at).getTime() > 2 * 60 * 60 * 1000
+    }
     if (filter === "done") return request.status === "completed"
     return true
   })
@@ -120,8 +126,10 @@ async function RequestsList({ filter }: { filter?: string }) {
       <nav className="filters" aria-label="Фильтр заявок">
         {[
           ["all", "Все"],
-          ["open", "Без ответа"],
+          ["new", "Новые"],
+          ["open", "Требуют ответа"],
           ["waiting", "Ждём клиента"],
+          ["overdue", "Просроченные"],
           ["done", "Завершённые"],
         ].map(([id, label]) => (
           <a key={id} href={id === "all" ? "/clients?mode=requests" : `/clients?mode=requests&filter=${id}`} aria-current={(filter ?? "all") === id ? "page" : undefined}>

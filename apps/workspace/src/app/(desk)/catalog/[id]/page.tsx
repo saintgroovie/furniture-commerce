@@ -34,7 +34,7 @@ export default async function ProductPage({
   const { id } = await params
   const query = await searchParams
   const result = await loadProduct(id)
-  if (!result.ok) return <><ObjectHeader back="Товары" backHref="/catalog" title="Товар" /><ErrorBlock message={result.message} /></>
+  if (!result.ok) return <><ObjectHeader back="Каталог" backHref="/catalog" title="Товар" /><ErrorBlock message={result.message} /></>
   const product = result.data.product
   const siteUrl = (result.data as { site_url?: string | null }).site_url ?? null
   const promoAvailable = (result.data as { promo_price_available?: boolean }).promo_price_available !== false
@@ -52,7 +52,7 @@ export default async function ProductPage({
   return (
     <>
       <ObjectHeader
-        back="Товары"
+        back="Каталог"
         backHref="/catalog"
         title={product.title}
         meta={[product.skus?.join(", ") || "SKU нет", classificationLabel(product.classification), product.collection_label || null, product.kids_nav ? "детская навигация" : null].filter(Boolean).join(" · ")}

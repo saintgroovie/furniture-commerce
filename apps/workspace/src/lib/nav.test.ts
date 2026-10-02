@@ -5,7 +5,7 @@ import { activeNavId, LEGACY_REDIRECTS, NAV } from "./nav.ts"
 test("working navigation has exactly five sections and no Inbox", () => {
   assert.deepEqual(
     NAV.map((item) => item.label),
-    ["Сегодня", "Клиенты", "Заказы", "Товары", "Витрина"]
+    ["Сегодня", "Продажи", "Заказы", "Каталог", "Витрина"]
   )
   assert.ok(!NAV.some((item) => /входящ/i.test(item.label)))
   assert.ok(!NAV.some((item) => item.href === "/inbox"))

@@ -17,8 +17,8 @@ export const NAV: readonly NavItem[] = [
   { id: "today", label: "Сегодня", href: "/today", glyph: "◆", matches: ["/today"], mobile: true },
   {
     id: "clients",
-    label: "Клиенты",
-    href: "/clients",
+    label: "Продажи",
+    href: "/clients?mode=requests",
     glyph: "◯",
     matches: ["/clients", "/people", "/requests", "/companies"],
     mobile: true,
@@ -26,7 +26,7 @@ export const NAV: readonly NavItem[] = [
   { id: "orders", label: "Заказы", href: "/orders", glyph: "▭", matches: ["/orders"], mobile: true },
   {
     id: "products",
-    label: "Товары",
+    label: "Каталог",
     href: "/catalog",
     glyph: "▣",
     matches: ["/catalog", "/rooms", "/products", "/media"],

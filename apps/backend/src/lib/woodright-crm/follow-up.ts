@@ -19,12 +19,13 @@ export function addCalendarDays(isoDate: string, days: number): string {
   return utc.toISOString().slice(0, 10)
 }
 
-export type FollowUpPreset = "today" | "tomorrow" | "in_3_days"
+export type FollowUpPreset = "today" | "tomorrow" | "in_3_days" | "in_7_days"
 
 export function dueOnFromPreset(preset: FollowUpPreset, now: Date): string {
   const today = moscowCalendarDate(now)
   if (preset === "today") return today
   if (preset === "tomorrow") return addCalendarDays(today, 1)
+  if (preset === "in_7_days") return addCalendarDays(today, 7)
   return addCalendarDays(today, 3)
 }
 

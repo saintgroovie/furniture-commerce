@@ -7,6 +7,7 @@ const AUDIT_FIELDS = new Set([
   "counterparty_lead_id",
   "follow_up_id",
   "note_id",
+  "kind",
   "status",
   "entity_type",
   "content_changed",
