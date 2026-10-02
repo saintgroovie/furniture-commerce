@@ -19,14 +19,14 @@ export default async function CompanyPage({
   const { id } = await params
   const query = await searchParams
   const result = await loadCompany(id)
-  if (!result.ok) return <><ObjectHeader back="Клиенты · Компании" backHref="/clients?mode=companies" title="Компания" /><ErrorBlock message={result.message} /></>
+  if (!result.ok) return <><ObjectHeader back="Продажи · Компании" backHref="/clients?mode=companies" title="Компания" /><ErrorBlock message={result.message} /></>
   const company = result.data.company
   const people = result.data.people
   const requests = result.data.requests.filter((request) => request.status !== "completed")
   return (
     <>
       <ObjectHeader
-        back="Клиенты · Компании"
+        back="Продажи · Компании"
         backHref="/clients?mode=companies"
         title={company.name}
         meta={[company.type_label, `${people.length} человек`].filter(Boolean).join(" · ")}

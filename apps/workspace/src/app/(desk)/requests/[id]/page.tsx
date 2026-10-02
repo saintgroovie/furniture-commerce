@@ -29,9 +29,9 @@ export default async function RequestPage({
     loadCompanies(),
     loadPeople(),
   ])
-  if (!requests.ok) return <><ObjectHeader back="Клиенты · Заявки" backHref="/clients?mode=requests" title="Заявка" /><ErrorBlock message={requests.message} /></>
+  if (!requests.ok) return <><ObjectHeader back="Продажи · Обращения" backHref="/clients?mode=requests" title="Заявка" /><ErrorBlock message={requests.message} /></>
   const request = requests.data.bespoke_requests.find((row) => row.id === id)
-  if (!request) return <><ObjectHeader back="Клиенты · Заявки" backHref="/clients?mode=requests" title="Заявка" /><EmptyState title="Заявка не найдена" /></>
+  if (!request) return <><ObjectHeader back="Продажи · Обращения" backHref="/clients?mode=requests" title="Заявка" /><EmptyState title="Заявка не найдена" /></>
   const lead = leads.ok ? leads.data.leads.find((row) => row.id === request.lead_id) : undefined
   const person = lead ? await loadPerson(lead.id) : null
   const staff = person?.ok ? (person.data.staff as Array<{ id: string; email: string | null }>) : []
@@ -45,7 +45,7 @@ export default async function RequestPage({
   return (
     <>
       <ObjectHeader
-        back="Клиенты · Заявки"
+        back="Продажи · Обращения"
         backHref="/clients?mode=requests"
         title={`Заявка · ${lead?.name || "Без имени"}`}
         meta={[lead?.phone, lead?.email, lead?.source ? `источник: ${lead.source}` : null, `${ageLabel(request.created_at)} назад`].filter(Boolean).join(" · ")}

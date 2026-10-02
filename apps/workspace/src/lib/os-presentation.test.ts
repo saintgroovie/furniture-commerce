@@ -21,7 +21,7 @@ describe("navigation", () => {
   it("ships the approved five sections and keeps Входящие out until mail exists", () => {
     assert.deepEqual(
       NAV.map((item) => item.label),
-      ["Сегодня", "Клиенты", "Заказы", "Товары", "Витрина"]
+      ["Сегодня", "Продажи", "Заказы", "Каталог", "Витрина"]
     )
     assert.equal(NAV.some((item) => /входящие|inbox|crm|medusa/i.test(item.label)), false)
   })

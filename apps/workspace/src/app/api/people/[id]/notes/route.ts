@@ -7,6 +7,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   return writeAndReturn(request, `/people/${id}#notes`, async () => {
     await medusaSend(`/admin/woodright/people/${id}/notes`, "POST", {
       text: String(form.get("text") ?? ""),
+      kind: String(form.get("kind") ?? "note"),
     })
   })
 }

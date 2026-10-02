@@ -163,7 +163,7 @@ export const fixturePerson = {
   staff: [],
   roles: [] as Array<{ role: string; label: string | null }>,
   companies: [] as Array<{ id: string; name: string; type: string | null; type_label: string | null; linked_at?: string | null }>,
-  notes: [] as Array<{ id: string; body: string; created_at: string | null }>,
+  notes: [] as Array<{ id: string; body: string; kind?: string | null; created_at: string | null }>,
   follow_ups: [] as Array<{ id: string; entity_type: string | null; entity_id: string | null; assignee_id: string | null; due_at: string | null; summary: string; status: string }>,
   follow_ups_truncated: false,
   request_orders: [] as Array<{ id: string; request_id: string | null; order_id: string | null }>,

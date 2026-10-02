@@ -45,7 +45,7 @@ export default async function CatalogPage({
   const anchor = filter === "missing_price" ? "#price" : filter === "missing_media" ? "#media" : filter === "drafts" || filter === "published_invisible" ? "#publish" : ""
   return (
     <>
-      <PageHeader kicker="Товары" title="Товары" lead={result.ok ? `${products.length} в этом срезе` : undefined} right={<ModeTabs items={CATALOG_MODES} active="products" />} />
+      <PageHeader kicker="Каталог" title="Товары" lead={result.ok ? `${products.length} в этом срезе` : undefined} right={<ModeTabs items={CATALOG_MODES} active="products" />} />
       <form className="filters" action="/catalog" role="search">
         {filter !== "all" ? <input type="hidden" name="filter" value={filter} /> : null}
         <input name="q" defaultValue={params.q || ""} aria-label="Поиск по товарам" placeholder="Название или SKU" />

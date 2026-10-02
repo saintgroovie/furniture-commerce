@@ -50,7 +50,7 @@ export default async function PromoPage({ searchParams }: { searchParams: Promis
               <div className="list">
                 {promo.data.products.map((product) => (
                   <div key={product.product_id} className="object-row">
-                    <Thumb src={product.thumbnail} />
+                    <Thumb src={product.thumbnail} size="stage" />
                     <div className="object-row-main">
                       <Link href={`/catalog/${product.product_id}`} className="object-row-title" style={{ textDecoration: "none" }}>
                         {product.title}

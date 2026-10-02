@@ -1,5 +1,6 @@
 export type ActivitySourceName =
   | "note"
+  | "contact"
   | "follow_up"
   | "request"
   | "order"
@@ -25,6 +26,7 @@ const AUDIT_TEXT: Record<string, string> = {
   follow_up_opened: "Напоминание поставлено",
   follow_up_updated: "Напоминание обновлено",
   person_note_added: "Заметка добавлена",
+  person_contact_logged: "Контакт зафиксирован",
   request_updated: "Заявка обновлена",
 }
 

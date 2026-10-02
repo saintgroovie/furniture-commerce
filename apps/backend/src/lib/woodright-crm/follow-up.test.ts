@@ -13,6 +13,7 @@ describe("follow-up due dates", () => {
     assert.equal(dueOnFromPreset("today", now), "2026-10-02")
     assert.equal(dueOnFromPreset("tomorrow", now), "2026-10-03")
     assert.equal(dueOnFromPreset("in_3_days", now), "2026-10-05")
+    assert.equal(dueOnFromPreset("in_7_days", now), "2026-10-09")
   })
 
   it("shows a follow-up on Сегодня only when its date has arrived", () => {

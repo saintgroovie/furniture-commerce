@@ -7,9 +7,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const gate = await requireDeskWrite(req, res, "crm.edit")
   if (!gate) return
   const leadId = req.params.id as string
-  const text = String((req.body as { text?: string } | undefined)?.text ?? "").trim()
+  const body = (req.body ?? {}) as { text?: string; kind?: string }
+  const text = String(body.text ?? "").trim()
+  const kind = ["note", "call", "meeting", "message", "other"].includes(body.kind ?? "") ? body.kind! : "note"
   if (!text) {
-    res.status(400).json({ message: "Напишите заметку" })
+    res.status(400).json({ message: kind === "note" ? "Напишите заметку" : "Напишите, чем закончился контакт" })
     return
   }
   let service: {
@@ -25,6 +27,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const created = await service.createPersonNotes({
       lead_id: leadId,
       body: text.slice(0, 2000),
+      kind,
       created_by: gate.actorId,
     })
     const row = Array.isArray(created) ? created[0] : created
@@ -33,8 +36,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       actorEmail: gate.email,
       entityType: "person",
       entityId: leadId,
-      action: "person_note_added",
-      after: { note_id: row?.id ? String(row.id) : null },
+      action: kind === "note" ? "person_note_added" : "person_contact_logged",
+      after: { note_id: row?.id ? String(row.id) : null, kind },
     })
     res.json({ ok: true, id: row?.id ? String(row.id) : null })
   } catch {
