@@ -33,7 +33,6 @@ export function isMedusaCanonicalSeedDemoProduct(product: Record<string, unknown
 }
 
 const PAUSED_COLLECTION_KEYS = new Set([
-  "princess-rose",
   "country-london-paris",
   "oxford",
   "provence",
@@ -46,6 +45,7 @@ export const WOODRIGHT_ACTIVE_COLLECTION_KEYS = [
   "oliver-kids",
   "willie-winkie",
   "monchelsea",
+  "princess-rose",
 ] as const
 
 export type WoodrightActiveCollectionKey = (typeof WOODRIGHT_ACTIVE_COLLECTION_KEYS)[number]

@@ -73,6 +73,7 @@ const COLLECTION_FILTER_LABELS: Record<string, string> = {
   "oliver-kids": "Оливер · детская",
   "willie-winkie": "Вилли Винки",
   monchelsea: "Мончелси",
+  "princess-rose": "Принцесса Роза",
   provence: "Прованс",
   country: "Кантри",
   "country-london-paris": "Кантри",
@@ -176,6 +177,7 @@ export function normalizeCollectionFilterKey(raw: string): string {
   }
   if (key === "гринвич" || key === "greenwich") return "greenwich"
   if (key === "мончелси" || key === "monchelsea") return "monchelsea"
+  if (key === "принцесса-роза" || key === "princess-rose" || key === "princess rose") return "princess-rose"
   if (key === "прованс" || key === "provence") return "provence"
   if (key === "molly") return "willie-winkie"
   if (

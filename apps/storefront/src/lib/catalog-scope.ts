@@ -43,7 +43,6 @@ export function isMedusaCanonicalSeedDemoProduct(product: Record<string, unknown
 }
 
 const PAUSED_COLLECTION_KEYS = new Set([
-  "princess-rose",
   "country-london-paris",
   "oxford",
   "provence",
@@ -56,6 +55,7 @@ const ACTIVE_COLLECTION_KEYS = new Set([
   "oliver-kids",
   "willie-winkie",
   "monchelsea",
+  "princess-rose",
 ])
 
 export function isProductInActiveCatalogScope(product: Record<string, unknown>): boolean {

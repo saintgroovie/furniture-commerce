@@ -138,6 +138,7 @@ export function normalizeMerchandisingCollectionKey(
   }
   if (key === "гринвич" || key === "greenwich") return "greenwich"
   if (key === "мончелси" || key === "monchelsea") return "monchelsea"
+  if (key === "принцесса-роза" || key === "princess-rose") return "princess-rose"
   if (key === "прованс" || key === "provence") return "provence"
   return key
 }

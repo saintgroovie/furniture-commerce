@@ -10,6 +10,7 @@ const COLLECTION_DISPLAY_LABELS: Record<string, string> = {
   "oliver-kids": "Оливер · детская",
   greenwich: "Гринвич",
   monchelsea: "Мончелси",
+  "princess-rose": "Принцесса Роза",
   provence: "Прованс",
   "willie-winkie": "Вилли Винки",
 }
@@ -25,6 +26,9 @@ const TITLE_ALIASES: Record<string, string> = {
   гринвич: "Гринвич",
   monchelsea: "Мончелси",
   мончелси: "Мончелси",
+  "princess-rose": "Принцесса Роза",
+  "princess rose": "Принцесса Роза",
+  "принцесса-роза": "Принцесса Роза",
   provence: "Прованс",
   прованс: "Прованс",
   "willie-winkie": "Вилли Винки",
