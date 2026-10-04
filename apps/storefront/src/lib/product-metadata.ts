@@ -56,6 +56,7 @@ const COLLECTION_SLUG_LABELS: Record<string, string> = {
   "oliver-kids": "Оливер · детская",
   "willie-winkie": "Вилли Винки",
   monchelsea: "Мончелси",
+  "princess-rose": "Принцесса Роза",
   provence: "Прованс",
 }
 
@@ -74,6 +75,9 @@ const COLLECTION_TITLE_ALIASES: Record<string, string> = {
   "willie-winkie-kids": "Вилли Винки",
   monchelsea: "Мончелси",
   мончелси: "Мончелси",
+  "princess-rose": "Принцесса Роза",
+  "princess rose": "Принцесса Роза",
+  "принцесса-роза": "Принцесса Роза",
   provence: "Прованс",
   прованс: "Прованс",
   country: "Кантри",
@@ -150,7 +154,8 @@ function collectionFromHandle(handle: string): string | null {
   }
   if (h.startsWith("pv-")) return COLLECTION_SLUG_LABELS.provence!
   if (h.startsWith("greenwich-") || h.startsWith("gr-")) return COLLECTION_SLUG_LABELS.greenwich!
-  if (h.startsWith("mn-") || h.startsWith("monchelsea-")) return COLLECTION_SLUG_LABELS.monchelsea!
+  if (h.startsWith("mn-") || h.startsWith("mnm-") || h.startsWith("monchelsea-")) return COLLECTION_SLUG_LABELS.monchelsea!
+  if (h.startsWith("pr-") || h.startsWith("princess-rose-")) return COLLECTION_SLUG_LABELS["princess-rose"]!
   return null
 }
 

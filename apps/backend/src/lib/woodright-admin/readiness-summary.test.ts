@@ -79,11 +79,21 @@ describe("summarizeProductReadiness", () => {
   it("uses existing visibility rules for published but invisible products", () => {
     const summary = summarizeProductReadiness(
       baseStandard({
-        metadata: { collection: "princess-rose" },
+        metadata: { collection: "oxford" },
       })
     )
     assert.equal(summary.published, true)
     assert.equal(summary.visible, false)
     assert.equal(summary.codes.includes("published_invisible"), true)
+  })
+
+  it("treats princess-rose as a visible catalog collection", () => {
+    const summary = summarizeProductReadiness(
+      baseStandard({
+        metadata: { collection: "princess-rose" },
+      })
+    )
+    assert.equal(summary.visible, true)
+    assert.equal(summary.codes.includes("published_invisible"), false)
   })
 })

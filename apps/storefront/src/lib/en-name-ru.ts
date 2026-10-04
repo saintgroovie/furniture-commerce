@@ -79,6 +79,7 @@ const EXACT_NAME_RU: Record<string, string> = {
   "brigantine blue": "Бригантина",
   "brigantine ivory": "Бригантина",
   "princess rose": "Принцесса Роза",
+  "princess-rose": "Принцесса Роза",
   "royal guardsmen": "Королевская стража",
   "black isle": "Чёрный остров",
   lorna: "Лорна",
