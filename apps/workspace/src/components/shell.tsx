@@ -42,6 +42,14 @@ export function Shell({
           <span className="mobile-brand">Стол</span>
           <CommandPalette />
           <span className="topbar-date">{todayLabel()} · MSK</span>
+          <details className="quick-create">
+            <summary>+ Создать</summary>
+            <div className="user-menu-panel">
+              <a href="/clients?mode=requests&create=1#new">Обращение</a>
+              <a href="/clients?mode=people&create=1#new">Человек</a>
+              <a href="/clients?mode=companies&create=1#new">Компания</a>
+            </div>
+          </details>
         </div>
         {preview ? <div className="preview-banner">Пример данных. Medusa к этому экрану не подключена</div> : null}
         <div className="content">{children}</div>

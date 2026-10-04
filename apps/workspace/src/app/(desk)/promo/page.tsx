@@ -9,7 +9,7 @@ import { formatRub } from "@/lib/format"
 import { loadContacts, loadProducts, loadPromo } from "@/server/loaders"
 
 const BLOCKER_TEXT: Record<string, string> = {
-  no_sale_price: "В слоте, но акционной цены нет. Карточка не станет акционной",
+  no_sale_price: "Карточка показывается без скидки",
   unpublished: "Черновик. Покупатель эту карточку не увидит",
   no_image: "Нет кадра, карточка не выйдет",
   bespoke: "Товар по проекту в карточку не ставится",
@@ -30,7 +30,7 @@ export default async function PromoPage({ searchParams }: { searchParams: Promis
       <ResultToast saved={query.saved} error={query.error} />
       {!promo.ok ? <ErrorBlock message={promo.message} /> : null}
       {promo.ok ? (
-        <div className="two-col">
+        <div className="workspace">
           <div className="stack-lg">
             <Card
               title="Показываем на витрине"
@@ -59,7 +59,8 @@ export default async function PromoPage({ searchParams }: { searchParams: Promis
                         {product.sku || "SKU нет"} · обычная {product.base_price != null ? formatRub(product.base_price) : "не задана"} · покупатель видит{" "}
                         {product.buyer_sale_price != null ? `${formatRub(product.buyer_sale_price)} (−${product.discount_percent ?? 0}%)` : product.buyer_base_price != null ? formatRub(product.buyer_base_price) : "цену не видит"}
                       </span>
-                      {product.blocker ? <Status tone="attention">{BLOCKER_TEXT[product.blocker] ?? "Слот не показывает эту карточку"}</Status> : <Status tone="positive">Покупатель видит карточку</Status>}
+                      {product.blocker ? <Status tone={product.blocker === "no_sale_price" ? "neutral" : "attention"}>{BLOCKER_TEXT[product.blocker] ?? "Слот не показывает эту карточку"}</Status> : <Status tone="positive">Покупатель видит карточку</Status>}
+                      {!product.blocker && product.buyer_sale_price == null && product.buyer_base_price != null ? <span className="meta">Карточка показывается без скидки</span> : null}
                     </div>
                     <div className="object-row-end">
                       <ConfirmAction

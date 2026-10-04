@@ -61,7 +61,7 @@ export function PriceEditor({
       <div className="row" style={{ justifyContent: "space-between" }}>
         <span className="object-row-title">{name}</span>
         {!promoAvailable ? (
-          <Status tone="critical">Акция: нет данных</Status>
+          <Status tone="waiting">Данные акционной цены временно недоступны</Status>
         ) : state.promo && state.promoValid ? (
           <Status tone="attention">Акция −{state.percent}%</Status>
         ) : state.promo ? (
@@ -91,8 +91,8 @@ export function PriceEditor({
         {!promoAvailable ? (
           <div className="price-col">
             <span className="meta">Акционная цена</span>
-            <Status tone="critical" size="lg">Акционную цену не удалось загрузить</Status>
-            <span className="meta">Обновите страницу. Пока не меняйте акцию вслепую</span>
+            <Status tone="waiting" size="lg">Данные акционной цены временно недоступны</Status>
+            <span className="meta">Формы нет, пока сервер не подтвердит акционную цену</span>
           </div>
         ) : (
         <PendingForm action={action} className="price-col">

@@ -23,10 +23,16 @@ export async function medusaGet<T>(path: string): Promise<T> {
   }
   const base = medusaBaseUrl()
   if (!base) throw new DeskHttpError(500, "Сервер Medusa не настроен")
-  const response = await fetch(new URL(path, base), {
-    headers: { authorization: `Bearer ${session.token}`, accept: "application/json" },
-    cache: "no-store",
-  })
+  let response: Response
+  try {
+    response = await fetch(new URL(path, base), {
+      headers: { authorization: `Bearer ${session.token}`, accept: "application/json" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(12_000),
+    })
+  } catch {
+    throw new DeskHttpError(504, "Сервер не ответил. Попробуйте ещё раз")
+  }
   if (response.status === 401) throw new DeskHttpError(401, "Сессия закончилась")
   if (!response.ok) {
     throw new DeskHttpError(response.status, "Не удалось загрузить данные")
@@ -39,16 +45,22 @@ export async function medusaSend<T>(path: string, method: "POST" | "PUT" | "PATC
   if (!session || session.kind !== "medusa") throw new DeskHttpError(401, "Нужен вход")
   const base = medusaBaseUrl()
   if (!base) throw new DeskHttpError(500, "Сервер Medusa не настроен")
-  const response = await fetch(new URL(path, base), {
-    method,
-    headers: {
-      authorization: `Bearer ${session.token}`,
-      accept: "application/json",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(body),
-    cache: "no-store",
-  })
+  let response: Response
+  try {
+    response = await fetch(new URL(path, base), {
+      method,
+      headers: {
+        authorization: `Bearer ${session.token}`,
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(body),
+      cache: "no-store",
+      signal: AbortSignal.timeout(12_000),
+    })
+  } catch {
+    throw new DeskHttpError(504, "Сервер не подтвердил сохранение. Проверьте список, прежде чем отправлять ещё раз")
+  }
   if (!response.ok) {
     let message = humanStatusMessage(response.status)
     let code: string | null = null

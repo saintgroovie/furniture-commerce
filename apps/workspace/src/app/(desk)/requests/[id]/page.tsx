@@ -89,7 +89,7 @@ export default async function RequestPage({
         }
       />
       <ResultToast saved={query.saved} error={query.error} />
-      <div className="two-col">
+      <div className="workspace">
         <div className="stack-lg">
           <Card title="Этап">
             <div className="mode-tabs" aria-label="Этапы заявки">
@@ -108,9 +108,6 @@ export default async function RequestPage({
                 <p>{String(request.internal_notes)}</p>
               </div>
             ) : null}
-          </Card>
-          <Card title="Напомнить">
-            <FollowUpForm action="/api/follow-ups" back={`/requests/${request.id}`} entityType="request" entityId={request.id} />
           </Card>
           <Card title="История">
             <Timeline
@@ -183,6 +180,30 @@ export default async function RequestPage({
               {companiesResult.ok || peopleResult.ok ? <button className="btn btn-secondary sm" type="submit">Сохранить связь</button> : null}
             </PendingForm>
             <p className="meta">Дизайнер - роль человека, не отдельный покупатель. Заказы не копируются</p>
+          </Card>
+          {lead ? (
+            <Card title="Контакт">
+              <PendingForm action={`/api/people/${lead.id}/notes`} className="stack">
+                <input type="hidden" name="back" value={`/requests/${request.id}`} />
+                <label className="field">
+                  <span>Что было</span>
+                  <select name="kind" defaultValue="call">
+                    <option value="call">Звонок</option>
+                    <option value="meeting">Встреча</option>
+                    <option value="message">Сообщение</option>
+                    <option value="other">Другое</option>
+                  </select>
+                </label>
+                <label className="field">
+                  <span>Что произошло</span>
+                  <textarea name="text" rows={3} required placeholder="Дозвонились, договорились о сроке" />
+                </label>
+                <button className="btn btn-secondary sm" type="submit">Зафиксировать контакт</button>
+              </PendingForm>
+            </Card>
+          ) : null}
+          <Card title="Напомнить">
+            <FollowUpForm action="/api/follow-ups" back={`/requests/${request.id}`} entityType="request" entityId={request.id} />
           </Card>
           <Card title="Ответственный">
             {lead && person?.ok && person.data.links_available ? (

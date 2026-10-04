@@ -187,6 +187,18 @@ export default async function PersonPage({
             </div>
             {doneRequests.length > 0 ? <p className="meta">Завершённых заявок: {doneRequests.length}</p> : null}
             {link?.customer_id ? null : <p className="meta">Заказы покупателя появятся после подтверждённой связи</p>}
+            <details className="disclosure">
+              <summary>Новое обращение</summary>
+              <PendingForm action="/api/requests" className="stack">
+                <input type="hidden" name="lead_id" value={id} />
+                <input type="hidden" name="back" value={`/people/${id}`} />
+                <label className="field">
+                  <span>О чём обращение</span>
+                  <textarea name="comment" rows={3} required placeholder="Стол у окна, срок, бюджет" />
+                </label>
+                <button className="btn btn-secondary sm" type="submit">Создать обращение</button>
+              </PendingForm>
+            </details>
           </section>
           <section className="section" id="history">
             <h2 className="section-title">История</h2>
@@ -271,13 +283,16 @@ export default async function PersonPage({
               {roles.length === 0 ? <span className="meta">Роль не указана</span> : null}
             </div>
             {result.data.crm_available ? (
-              <PendingForm action={`/api/people/${person.id}/roles`}>
-                <div className="chips">
-                  {ROLE_OPTIONS.filter(([value]) => !heldRoles.has(value)).map(([value, label]) => (
-                    <button key={value} className="chip" type="submit" name="role" value={value}>+ {label}</button>
-                  ))}
-                </div>
-              </PendingForm>
+              <details className="disclosure">
+                <summary>Добавить роль</summary>
+                <PendingForm action={`/api/people/${person.id}/roles`}>
+                  <div className="chips">
+                    {ROLE_OPTIONS.filter(([value]) => !heldRoles.has(value)).map(([value, label]) => (
+                      <button key={value} className="chip" type="submit" name="role" value={value}>{label}</button>
+                    ))}
+                  </div>
+                </PendingForm>
+              </details>
             ) : null}
           </div>
           <div className="inspector-block">
@@ -289,28 +304,39 @@ export default async function PersonPage({
               </Link>
             ))}
             {result.data.crm_available ? (
-              <PendingForm action={`/api/people/${person.id}/company`} className="stack">
+              <>
                 {directory.length > 0 ? (
-                  <label className="field">
-                    <span>Уже есть</span>
-                    <select name="company_id" defaultValue="">
-                      <option value="">Новая компания</option>
-                      {directory.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
-                    </select>
-                  </label>
+                  <details className="disclosure">
+                    <summary>Связать существующую</summary>
+                    <PendingForm action={`/api/people/${person.id}/company`} className="stack">
+                      <label className="field">
+                        <span>Компания</span>
+                        <select name="company_id" required defaultValue="">
+                          <option value="" disabled>Выберите</option>
+                          {directory.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
+                        </select>
+                      </label>
+                      <button className="btn btn-secondary sm" type="submit">Связать</button>
+                    </PendingForm>
+                  </details>
                 ) : null}
-                <label className="field">
-                  <span>Название</span>
-                  <input name="name" placeholder="Студия или бюро" />
-                </label>
-                <label className="field">
-                  <span>Тип</span>
-                  <select name="type" defaultValue="other">
-                    {COMPANY_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                  </select>
-                </label>
-                <button className="btn btn-secondary sm" type="submit">Связать</button>
-              </PendingForm>
+                <details className="disclosure">
+                  <summary>Новая компания</summary>
+                  <PendingForm action={`/api/people/${person.id}/company`} className="stack">
+                    <label className="field">
+                      <span>Название</span>
+                      <input name="name" required placeholder="Студия или бюро" />
+                    </label>
+                    <label className="field">
+                      <span>Тип</span>
+                      <select name="type" defaultValue="other">
+                        {COMPANY_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                      </select>
+                    </label>
+                    <button className="btn btn-secondary sm" type="submit">Создать и связать</button>
+                  </PendingForm>
+                </details>
+              </>
             ) : (
               <p className="meta">Компании появятся после миграции CRM</p>
             )}

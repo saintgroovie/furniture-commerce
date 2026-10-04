@@ -3,7 +3,7 @@ import { Modules } from "@medusajs/framework/utils"
 import { BESPOKE_REQUEST_MODULE } from "../../../../../modules/bespoke-request"
 import { LEAD_MODULE } from "../../../../../modules/lead"
 import { PERSON_LINK_MODULE } from "../../../../../modules/person-link"
-import { auditActionText, manufacturingText, projectActivity } from "../../../../../lib/woodright-crm/activity"
+import { auditActionText, manufacturingText, noteActivity, projectActivity } from "../../../../../lib/woodright-crm/activity"
 import { readPersonCrm } from "../../../../../lib/woodright-crm/read-person-crm"
 import { matchCandidates, normalizeEmail, withholdIncompleteLookup } from "../../../../../lib/woodright-workspace/identity"
 import { listDeskAuditActions } from "../../../../../lib/woodright-workspace/desk-audit"
@@ -181,16 +181,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     ...(requests ?? []).map((row) => ({ entityType: "request", entityId: String(row.id) })),
   ])
   const activity = projectActivity([
-    ...(crm?.notes ?? []).map((note) => {
-      const kind = note.kind ?? "note"
-      const label = kind === "call" ? "Звонок" : kind === "meeting" ? "Встреча" : kind === "message" ? "Сообщение" : kind === "other" ? "Контакт" : null
-      return {
-        id: `note:${note.id}`,
-        at: note.created_at,
-        source: label ? ("contact" as const) : ("note" as const),
-        text: label ? `${label}. ${note.body}` : note.body,
-      }
-    }),
+    ...(crm?.notes ?? []).map((note) => noteActivity(note)),
     ...(crm?.follow_ups ?? []).map((item) => ({ id: `fu:${item.id}`, at: item.due_at, source: "follow_up" as const, text: item.summary || "Напоминание" })),
     ...(crm?.companies ?? []).map((company) => ({ id: `co:${company.id}`, at: company.linked_at, source: "company" as const, text: company.name })),
     ...(requests ?? []).map((row) => ({ id: `req:${row.id}`, at: text(row.created_at), source: "request" as const, text: "Заявка" })),

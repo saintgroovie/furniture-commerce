@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { OrderAxesCells, OrderAxesInline } from "@/components/order-axes"
-import { Card, EmptyState, ErrorBlock, ModeTabs, PageHeader } from "@/components/page"
+import { EmptyState, ErrorBlock, ModeTabs, PageHeader } from "@/components/page"
 import { Status } from "@/components/status"
 import { ageLabel, formatRub } from "@/lib/format"
 import { nextOrderAction, orderAxes } from "@/lib/order-presentation"
@@ -23,19 +23,20 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   const result = await loadOrders(filter)
   return (
     <>
-      <PageHeader kicker="Заказы" title="Заказы" lead="Деньги, доставка и изготовление - три отдельные оси. Строка подсвечена, если нужно ваше действие" right={<ModeTabs items={ORDER_MODES} active="list" />} />
-      <nav className="filters" aria-label="Фильтр заказов">
-        {FILTERS.map(([id, label]) => (
-          <Link key={id} href={id === "all" ? "/orders" : `/orders?filter=${id}`} aria-current={filter === id ? "page" : undefined}>
-            {label}
-          </Link>
-        ))}
-      </nav>
+      <PageHeader kicker="Заказы" title="Заказы" lead="Деньги, доставка и изготовление - три отдельные оси. Строка подсвечена, если нужно ваше действие" />
+      <div className="toolbar">
+        <nav className="filters" aria-label="Фильтр заказов">
+          {FILTERS.map(([id, label]) => (
+            <Link key={id} href={id === "all" ? "/orders" : `/orders?filter=${id}`} aria-current={filter === id ? "page" : undefined}>
+              {label}
+            </Link>
+          ))}
+        </nav>
+        <ModeTabs items={ORDER_MODES} active="list" />
+      </div>
       {!result.ok ? <ErrorBlock message={result.message} /> : null}
       {result.ok && result.data.orders.length === 0 ? (
-        <Card>
-          <EmptyState title="Заказов в этом срезе нет" href="/orders" linkLabel="Все заказы" />
-        </Card>
+        <EmptyState title="Заказов в этом срезе нет" href="/orders" linkLabel="Все заказы" />
       ) : null}
       {result.ok && result.data.orders.length > 0 ? (
         <>

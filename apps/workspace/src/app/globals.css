@@ -95,6 +95,12 @@ ul { padding: 0; list-style: none; }
   z-index: 5;
 }
 .topbar-date { margin-left: auto; color: var(--text-2); font-size: 12px; white-space: nowrap; }
+.quick-create { position: relative; }
+.quick-create > summary { list-style: none; cursor: pointer; height: 40px; padding: 0 14px; border-radius: 8px; background: var(--ink); color: var(--on-ink); display: flex; align-items: center; font-weight: 560; }
+.quick-create > summary::-webkit-details-marker { display: none; }
+.quick-create .user-menu-panel { top: calc(100% + 8px); bottom: auto; left: auto; right: 0; }
+.toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.toolbar .filters { flex: 1; min-width: 0; }
 .content { padding: 20px 28px 56px; width: 100%; max-width: none; display: flex; flex-direction: column; gap: 20px; }
 .preview-banner { background: var(--gold-soft); color: var(--ink); padding: 8px 32px; font-size: 13px; border-bottom: 1px solid var(--stroke); }
 .mobile-nav { display: none; }

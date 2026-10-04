@@ -32,7 +32,7 @@ export default async function CompanyPage({
         meta={[company.type_label, `${people.length} человек`].filter(Boolean).join(" · ")}
       />
       <ResultToast saved={query.saved} error={query.error} savedLabel="Сохранено" />
-      <div className="two-col">
+      <div className="workspace">
         <div className="stack-lg">
           <Card title="Люди">
             {people.length === 0 ? <EmptyState title="Пока никого нет" /> : null}

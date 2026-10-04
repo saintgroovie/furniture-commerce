@@ -41,6 +41,24 @@ export function manufacturingText(eventType: string): string {
   return "Событие заказа"
 }
 
+const CONTACT_LABEL: Record<string, string> = {
+  call: "Звонок",
+  meeting: "Встреча",
+  message: "Сообщение",
+  other: "Контакт",
+}
+
+/** A note stays an internal note. A contact kind becomes a contact line. */
+export function noteActivity(note: { id: string; body: string; kind?: string | null; created_at: string | null }): ActivityLine {
+  const label = CONTACT_LABEL[note.kind ?? ""] ?? null
+  return {
+    id: `note:${note.id}`,
+    at: note.created_at,
+    source: label ? "contact" : "note",
+    text: label ? `${label}. ${note.body}` : note.body,
+  }
+}
+
 /** Read projection. Does not persist a second activity log. */
 export function projectActivity(lines: ActivityLine[]): ActivityLine[] {
   return lines
