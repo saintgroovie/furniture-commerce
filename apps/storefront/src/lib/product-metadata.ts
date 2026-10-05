@@ -10,6 +10,13 @@ type Dimensions = {
   width_mm?: number
   depth_mm?: number
   height_mm?: number
+  axis_states?: DimensionAxisState[]
+}
+
+export type DimensionAxisState = {
+  axis: BuyerFacingDimensionAxis
+  values_mm: number[]
+  note: string | null
 }
 
 /** Buyer-facing axis order. Storage schema stays width_mm / height_mm / depth_mm. */
@@ -21,7 +28,9 @@ export const BUYER_FACING_DIMENSION_ORDER: readonly BuyerFacingDimensionAxis[] =
   "depth",
 ] as const
 
-const AXIS_TO_MM_KEY: Record<BuyerFacingDimensionAxis, keyof Dimensions> = {
+type ScalarDimensionKey = "height_mm" | "width_mm" | "depth_mm"
+
+const AXIS_TO_MM_KEY: Record<BuyerFacingDimensionAxis, ScalarDimensionKey> = {
   height: "height_mm",
   width: "width_mm",
   depth: "depth_mm",
@@ -247,23 +256,80 @@ function normalizeAxisMm(raw: unknown): number | undefined {
   return undefined
 }
 
+function readAxisStates(raw: Record<string, unknown>): DimensionAxisState[] {
+  const list = raw.axis_states
+  if (!Array.isArray(list)) return []
+  const out: DimensionAxisState[] = []
+  const seen = new Set<BuyerFacingDimensionAxis>()
+  for (const item of list) {
+    if (!item || typeof item !== "object") continue
+    const obj = item as Record<string, unknown>
+    const axis = obj.axis
+    if (axis !== "height" && axis !== "width" && axis !== "depth") continue
+    if (seen.has(axis)) continue
+    if (!Array.isArray(obj.values_mm) || obj.values_mm.length < 2) continue
+    const values: number[] = []
+    let valid = true
+    for (const value of obj.values_mm) {
+      const mm = normalizeAxisMm(value)
+      if (mm == null || values.includes(mm)) {
+        valid = false
+        break
+      }
+      values.push(mm)
+    }
+    if (!valid || values.length < 2) continue
+    seen.add(axis)
+    out.push({
+      axis,
+      values_mm: values,
+      note: typeof obj.note === "string" && obj.note.trim() ? obj.note.trim() : null,
+    })
+  }
+  return out
+}
+
+function dimensionBagHasValues(raw: Record<string, unknown> | undefined): boolean {
+  if (!raw) return false
+  if (readAxisStates(raw).length > 0) return true
+  return (
+    normalizeAxisMm(raw.height_mm) != null ||
+    normalizeAxisMm(raw.width_mm) != null ||
+    normalizeAxisMm(raw.depth_mm) != null
+  )
+}
+
 function readEntityDimensions(
   entity: ProductLike | null | undefined
 ): Dimensions | null {
   if (!entity) return null
   const m = (entity.metadata as Record<string, unknown> | undefined) ?? {}
-  const raw = (m.dimensions ?? m.dimensions_normalized) as
-    | Record<string, unknown>
-    | undefined
+  const primary =
+    m.dimensions && typeof m.dimensions === "object"
+      ? (m.dimensions as Record<string, unknown>)
+      : undefined
+  const fallback =
+    m.dimensions_normalized && typeof m.dimensions_normalized === "object"
+      ? (m.dimensions_normalized as Record<string, unknown>)
+      : undefined
+  const raw = dimensionBagHasValues(primary) ? primary : fallback
   if (!raw || typeof raw !== "object") return null
+  const states = readAxisStates(raw)
   const dim: Dimensions = {}
-  const h = normalizeAxisMm(raw.height_mm)
-  const w = normalizeAxisMm(raw.width_mm)
-  const d = normalizeAxisMm(raw.depth_mm)
+  const h = states.some((state) => state.axis === "height")
+    ? undefined
+    : normalizeAxisMm(raw.height_mm)
+  const w = states.some((state) => state.axis === "width")
+    ? undefined
+    : normalizeAxisMm(raw.width_mm)
+  const d = states.some((state) => state.axis === "depth")
+    ? undefined
+    : normalizeAxisMm(raw.depth_mm)
   if (h != null) dim.height_mm = h
   if (w != null) dim.width_mm = w
   if (d != null) dim.depth_mm = d
-  if (dim.height_mm == null && dim.width_mm == null && dim.depth_mm == null) {
+  if (states.length) dim.axis_states = states
+  if (dim.height_mm == null && dim.width_mm == null && dim.depth_mm == null && !states.length) {
     return null
   }
   return dim
@@ -293,14 +359,56 @@ export function getDimensions(
   if (!fromVariant && !fromProduct) return null
 
   const out: Dimensions = {}
-  for (const key of ["height_mm", "width_mm", "depth_mm"] as const) {
+  const states: DimensionAxisState[] = []
+  for (const axis of BUYER_FACING_DIMENSION_ORDER) {
+    const variantState = fromVariant?.axis_states?.find((state) => state.axis === axis)
+    const key = AXIS_TO_MM_KEY[axis]
     const v = fromVariant?.[key]
+    if (variantState) {
+      states.push(variantState)
+      continue
+    }
+    if (typeof v === "number" && v > 0) {
+      out[key] = v
+      continue
+    }
+    const productState = fromProduct?.axis_states?.find((state) => state.axis === axis)
+    if (productState) {
+      states.push(productState)
+      continue
+    }
     const p = fromProduct?.[key]
-    if (typeof v === "number" && v > 0) out[key] = v
-    else if (typeof p === "number" && p > 0) out[key] = p
+    if (typeof p === "number" && p > 0) out[key] = p
   }
-  if (out.height_mm == null && out.width_mm == null && out.depth_mm == null) {
+  if (states.length) out.axis_states = states
+  if (out.height_mm == null && out.width_mm == null && out.depth_mm == null && !states.length) {
     return null
+  }
+  return out
+}
+
+export type PdpDimensionCell = {
+  axis: BuyerFacingDimensionAxis
+  mm?: number
+  values_mm?: number[]
+  note: string | null
+}
+
+/** Height → width → depth. A state list replaces the single number for that axis. */
+export function pdpDimensionCells(dim: Dimensions): PdpDimensionCell[] {
+  const out: PdpDimensionCell[] = []
+  for (const axis of BUYER_FACING_DIMENSION_ORDER) {
+    const state = dim.axis_states?.find((item) => item.axis === axis)
+    if (state) {
+      out.push({
+        axis,
+        values_mm: state.values_mm,
+        note: state.note,
+      })
+      continue
+    }
+    const mm = dim[AXIS_TO_MM_KEY[axis]]
+    if (typeof mm === "number" && mm > 0) out.push({ axis, mm, note: null })
   }
   return out
 }
@@ -324,7 +432,16 @@ export function formatDimensionsCompact(dim: Dimensions): string {
   // Narrow no-break spaces around × - a touch of air, still one unbreakable
   // run. Order matches PDP: height → width → depth.
   const cm = (mm: number) => String(Math.round(mm / 10))
-  const parts = orderedBuyerFacingDimensions(dim).map(({ mm }) => cm(mm))
+  const parts: string[] = []
+  for (const axis of BUYER_FACING_DIMENSION_ORDER) {
+    const state = dim.axis_states?.find((item) => item.axis === axis)
+    if (state) {
+      parts.push(state.values_mm.map(cm).join("/"))
+      continue
+    }
+    const mm = dim[AXIS_TO_MM_KEY[axis]]
+    if (typeof mm === "number" && mm > 0) parts.push(cm(mm))
+  }
   return parts.join("\u202F×\u202F")
 }
 

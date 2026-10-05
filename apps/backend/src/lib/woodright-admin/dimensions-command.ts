@@ -1,3 +1,5 @@
+import { readDimensionAxisStates } from "../woodright-dimensions/normalize"
+
 export type DimensionAxis = "height" | "width" | "depth"
 
 export type DimensionsCmInput = {
@@ -138,12 +140,29 @@ export function applyDimensionsToMetadata(
   }
 
   const metadata: Record<string, unknown> = { ...(existing ?? {}) }
-  if (Object.keys(mm).length === 0) {
+  const primaryStates = readDimensionAxisStates(existing?.dimensions)
+  const keptSource = primaryStates.length
+    ? primaryStates
+    : readDimensionAxisStates(existing?.dimensions_normalized)
+  const keptStates = keptSource.filter((state) => mm[AXIS_MM_KEY[state.axis]] == null)
+  if (Object.keys(mm).length === 0 && keptStates.length === 0) {
     delete metadata.dimensions
     delete metadata.dimensions_normalized
   } else {
-    metadata.dimensions = { ...mm }
-    metadata.dimensions_normalized = { ...mm }
+    const bag = {
+      ...mm,
+      ...(keptStates.length
+        ? {
+            axis_states: keptStates.map((state) => ({
+              axis: state.axis,
+              values_mm: state.values_mm,
+              ...(state.note ? { note: state.note } : {}),
+            })),
+          }
+        : {}),
+    }
+    metadata.dimensions = bag
+    metadata.dimensions_normalized = bag
   }
 
   return { ok: true, mm, metadata }

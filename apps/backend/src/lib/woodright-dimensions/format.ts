@@ -2,6 +2,18 @@ import { AXIS_OWNER_LABEL, DIMENSION_AXIS_ORDER, type DimensionAxis } from "./ty
 import type { ResolvedDimensionsMm } from "./types"
 import { AXIS_TO_MM_KEY } from "./types"
 
+/** Discrete positions, source order. Slash, not a range. */
+export function formatAxisStateValues(
+  values: readonly number[],
+  unit: "cm" | "mm"
+): string {
+  return values
+    .map((value) =>
+      unit === "mm" ? String(value) : String(Math.round(value / 10))
+    )
+    .join(" / ")
+}
+
 function knownAxes(
   mm: ResolvedDimensionsMm
 ): Array<{ axis: DimensionAxis; value: number }> {

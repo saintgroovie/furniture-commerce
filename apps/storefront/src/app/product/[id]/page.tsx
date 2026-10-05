@@ -77,7 +77,7 @@ import {
   getArticle,
   getDimensions,
   getPdpHeroObjectPosition,
-  orderedBuyerFacingDimensions,
+  pdpDimensionCells,
 } from "@/lib/product-metadata"
 import { layoutBuyerFacingTitle } from "@/lib/en-name-ru"
 import { formatRuInline } from "@/lib/format-ru-copy"
@@ -411,16 +411,20 @@ export default async function ProductPage({
     depth: pdpCopy.dimensionDepth,
   } as const
   const dimensionCells = dim
-    ? orderedBuyerFacingDimensions(dim).map(({ axis, mm }) => ({
-        label: dimensionLabelByAxis[axis],
-        mm,
+    ? pdpDimensionCells(dim).map((cell) => ({
+        label: dimensionLabelByAxis[cell.axis],
+        mm: cell.mm,
+        values_mm: cell.values_mm,
+        note: cell.note,
       }))
     : []
 
   const specRows = [
     ...dimensionCells.map((c) => ({
       label: c.label,
-      value: `${c.mm} ${pdpCopy.unitMm}`,
+      value: c.values_mm
+        ? `${c.values_mm.join(" / ")} ${pdpCopy.unitMm}${c.note ? ` - ${c.note}` : ""}`
+        : `${c.mm} ${pdpCopy.unitMm}`,
     })),
     ...(article ? [{ label: pdpCopy.specArticle, value: article }] : []),
     ...(collectionLabel
@@ -658,7 +662,13 @@ export default async function ProductPage({
                     <div key={c.label} className="pdp-dimension-cell">
                       <dt>{c.label}</dt>
                       <dd>
-                        {mmToCmLabel(c.mm)}&nbsp;{pdpCopy.unitCm}
+                        {c.values_mm
+                          ? c.values_mm.map((mm) => mmToCmLabel(mm)).join(" / ")
+                          : mmToCmLabel(c.mm ?? 0)}
+                        &nbsp;{pdpCopy.unitCm}
+                        {c.note ? (
+                          <span className="pdp-dimension-note">{c.note}</span>
+                        ) : null}
                       </dd>
                     </div>
                   ))}
