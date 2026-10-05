@@ -245,4 +245,43 @@ assert.equal((execMerged[1] as { unknown_keep: number }).unknown_keep, 42)
 assert.ok(te.dimensions.compact_mm?.startsWith("900"))
 assert.match(te.dimensions.display_lines[0] ?? "", /900/)
 
+const statesOnly = buildAdminProductProjection({
+  id: "prod_states_only",
+  handle: "states-only",
+  metadata: {
+    dimensions: {
+      axis_states: [
+        { axis: "height", values_mm: [850, 1140], note: "два положения" },
+        { axis: "width", values_mm: [400, 500] },
+        { axis: "depth", values_mm: [300, 360] },
+      ],
+    },
+  },
+  variants: [{ sku: "XX-STATES" }],
+})
+assert.equal(statesOnly.dimensions.display_lines[0], "Высота: 850 / 1140 мм")
+assert.equal(statesOnly.dimensions.display_lines[1], "два положения")
+assert.equal(statesOnly.dimensions.display_lines[2], "Ширина: 400 / 500 мм")
+assert.equal(statesOnly.dimensions.display_lines[3], "Глубина: 300 / 360 мм")
+assert.ok(!statesOnly.dimensions.display_lines.some((line) => line.includes("Размеры не указаны")))
+assert.deepEqual(statesOnly.dimensions.missing_axes, [])
+
+const mixed = buildAdminProductProjection({
+  id: "prod_states_mixed",
+  handle: "states-mixed",
+  metadata: {
+    dimensions: {
+      width_mm: 1202,
+      depth_mm: 502,
+      axis_states: [{ axis: "height", values_mm: [850, 1140] }],
+    },
+  },
+  variants: [{ sku: "XX-MIXED" }],
+})
+assert.deepEqual(mixed.dimensions.display_lines, [
+  "Высота: 850 / 1140 мм",
+  "Ширина: 1202 мм",
+  "Глубина: 502 мм",
+])
+
 console.log("catalog-admin.fidelity.test.ts: PASS")

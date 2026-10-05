@@ -105,6 +105,46 @@ describe("dimensions command", () => {
     assert.deepEqual(result.metadata.material_tiers, { solid_full: { key: "solid_full" } })
   })
 
+  it("keeps a fallback state list when the scalar axis is left blank", () => {
+    const result = applyDimensionsToMetadata(
+      {
+        dimensions: {},
+        dimensions_normalized: {
+          width_mm: 1202,
+          depth_mm: 502,
+          axis_states: [{ axis: "height", values_mm: [850, 1140], note: "два положения" }],
+        },
+      },
+      { height_cm: null, width_cm: 120.2, depth_cm: 50.2 }
+    )
+    assert.equal(result.ok, true)
+    if (!result.ok) return
+    const saved = result.metadata.dimensions as {
+      axis_states: Array<{ values_mm: number[] }>
+      height_mm?: number
+    }
+    assert.equal(saved.height_mm, undefined)
+    assert.deepEqual(saved.axis_states[0].values_mm, [850, 1140])
+  })
+
+  it("replaces a state list when that axis is saved as one number", () => {
+    const result = applyDimensionsToMetadata(
+      {
+        dimensions: {
+          width_mm: 1202,
+          depth_mm: 502,
+          axis_states: [{ axis: "height", values_mm: [850, 1140] }],
+        },
+      },
+      { height_cm: 90, width_cm: 120.2, depth_cm: 50.2 }
+    )
+    assert.equal(result.ok, true)
+    if (!result.ok) return
+    const saved = result.metadata.dimensions as { height_mm?: number; axis_states?: unknown }
+    assert.equal(saved.height_mm, 900)
+    assert.equal(saved.axis_states, undefined)
+  })
+
   it("canonicalizes 10.0 cm to the same saved display as 10", () => {
     assert.equal(mmToSellerCm(cmToMm(10.0)), "10")
     assert.equal(mmToSellerCm(cmToMm(10)), mmToSellerCm(cmToMm(10.0)))
