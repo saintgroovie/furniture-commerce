@@ -215,7 +215,7 @@ export function buildAdminProductProjection(
         continue
       }
       const v = dims.mm[AXIS_TO_MM_KEY[axis]]
-      if (v == null && display.mode !== "missing") {
+      if (v == null) {
         display_lines.push(`${AXIS_OWNER_LABEL[axis]}: нет данных`)
       }
     }
