@@ -2431,6 +2431,7 @@ main:has(.contacts-page).page-section {
   .contacts-page-stage,
   .contacts-page-col--showroom,
   .contacts-page-col--channels,
+  .contacts-page-gallery,
   .contacts-page-cta {
     width: 100%;
   }
@@ -14596,16 +14597,95 @@ a.btn.bsp-final-btn:hover:not(:disabled),
   grid-column: 1 / -1;
   width: 100vw;
   max-width: 100vw;
+  margin-top: 3.5rem;
   margin-left: calc(50% - 50vw);
-  margin-bottom: 1.5rem;
+  margin-bottom: 0;
   overflow: clip;
 }
 
 .contacts-page-media img {
+  display: block;
   width: 100%;
-  height: min(42vh, 26rem);
+  height: auto;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
-  object-position: 50% 45%;
+  object-position: center;
+}
+
+.contacts-page-gallery {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.contacts-page-shot {
+  margin: 0;
+  min-width: 0;
+}
+
+.contacts-page-shot--lead {
+  grid-column: 1 / -1;
+}
+
+.contacts-page-shot--wardrobe {
+  grid-column: 1 / span 7;
+}
+
+.contacts-page-shot--cream {
+  grid-column: 8 / -1;
+}
+
+.contacts-page-shot--bed {
+  grid-column: 1 / span 5;
+}
+
+.contacts-page-shot--kids {
+  grid-column: 6 / -1;
+}
+
+.contacts-page-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .contacts-page-media,
+  .contacts-page-shot {
+    animation: contacts-podium-in 680ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .contacts-page-shot:nth-child(2) {
+    animation-delay: 70ms;
+  }
+
+  .contacts-page-shot:nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .contacts-page-shot:nth-child(4) {
+    animation-delay: 160ms;
+  }
+
+  .contacts-page-shot:nth-child(5) {
+    animation-delay: 200ms;
+  }
+}
+
+@keyframes contacts-podium-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .legal-page {
@@ -14707,8 +14787,26 @@ a.btn.bsp-final-btn:hover:not(:disabled),
     font-size: clamp(2.6rem, 16vw, 4.5rem);
   }
 
+  .contacts-page-media {
+    margin-top: 2.5rem;
+  }
+
   .contacts-page-media img {
-    height: 11rem;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .contacts-page-gallery {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .contacts-page-shot--lead,
+  .contacts-page-shot--wardrobe,
+  .contacts-page-shot--cream,
+  .contacts-page-shot--bed,
+  .contacts-page-shot--kids {
+    grid-column: auto;
   }
 }
 
