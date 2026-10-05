@@ -39,10 +39,22 @@ export type DimensionSourceLayer = "variant" | "product" | "none"
 /** Internal diagnostics only - never expose in buyer Store DTO. */
 export type DimensionProvenance = Record<DimensionAxis, DimensionSourceLayer>
 
+/**
+ * Discrete positions of one axis. Source order, not a min/max range.
+ * Lives inside the same `dimensions` object as scalar axes.
+ */
+export type DimensionAxisState = {
+  axis: DimensionAxis
+  values_mm: number[]
+  note: string | null
+}
+
 export type ResolveDimensionsResult = {
   mm: ResolvedDimensionsMm
   provenance: DimensionProvenance
-  /** True when at least one axis is a positive finite mm. */
+  /** Axes whose size is a list of positions. Scalar mm for that axis is omitted. */
+  axis_states: DimensionAxisState[]
+  /** True when at least one axis is a positive finite mm or a state list. */
   has_any: boolean
 }
 

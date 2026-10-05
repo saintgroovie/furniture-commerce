@@ -1,4 +1,9 @@
-import type { DimensionMmKey, ResolvedDimensionsMm } from "./types"
+import type {
+  DimensionAxis,
+  DimensionAxisState,
+  DimensionMmKey,
+  ResolvedDimensionsMm,
+} from "./types"
 
 /**
  * Normalize a single axis value.
@@ -47,6 +52,49 @@ export function readLegacyDimensionsSnapshot(
   raw: unknown
 ): ResolvedDimensionsMm {
   return readStructuredDimensionsMm(raw)
+}
+
+const AXES: readonly DimensionAxis[] = ["height", "width", "depth"]
+
+function isAxis(value: unknown): value is DimensionAxis {
+  return value === "height" || value === "width" || value === "depth"
+}
+
+/**
+ * Read discrete axis positions from the same dimensions object as scalars.
+ * An entry needs two or more distinct positive millimetre values.
+ * Malformed entries are dropped. Order is kept. This is not a range.
+ */
+export function readDimensionAxisStates(raw: unknown): DimensionAxisState[] {
+  if (!raw || typeof raw !== "object") return []
+  const list = (raw as Record<string, unknown>).axis_states
+  if (!Array.isArray(list)) return []
+  const out: DimensionAxisState[] = []
+  const seen = new Set<DimensionAxis>()
+  for (const item of list) {
+    if (!item || typeof item !== "object") continue
+    const obj = item as Record<string, unknown>
+    if (!isAxis(obj.axis) || seen.has(obj.axis)) continue
+    if (!Array.isArray(obj.values_mm) || obj.values_mm.length < 2) continue
+    const values: number[] = []
+    let valid = true
+    for (const value of obj.values_mm) {
+      const mm = normalizeDimensionMm(value)
+      if (mm == null || values.includes(mm)) {
+        valid = false
+        break
+      }
+      values.push(mm)
+    }
+    if (!valid || values.length < 2) continue
+    const note =
+      typeof obj.note === "string" && obj.note.trim() ? obj.note.trim() : null
+    seen.add(obj.axis)
+    out.push({ axis: obj.axis, values_mm: values, note })
+  }
+  return out.sort(
+    (a, b) => AXES.indexOf(a.axis) - AXES.indexOf(b.axis)
+  )
 }
 
 export function hasAnyDimension(mm: ResolvedDimensionsMm): boolean {

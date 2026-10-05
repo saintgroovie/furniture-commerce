@@ -6,7 +6,10 @@
 import { resolvePublicProductTitle } from "../catalog-normalization/public-title"
 import { isMedusaStubOptionTitle } from "../catalog-normalization/option-taxonomy"
 import { resolveFurnitureDimensions } from "../woodright-dimensions/resolve"
-import { formatDimensionsForDisplay } from "../woodright-dimensions/format"
+import {
+  formatAxisStateValues,
+  formatDimensionsForDisplay,
+} from "../woodright-dimensions/format"
 import { AXIS_OWNER_LABEL, DIMENSION_AXIS_ORDER, AXIS_TO_MM_KEY } from "../woodright-dimensions/types"
 import {
   DIMENSIONS_TRUST_STATE_LABEL_RU,
@@ -59,6 +62,11 @@ export type AdminProductProjection = {
     height_mm: number | null
     width_mm: number | null
     depth_mm: number | null
+    axis_states: Array<{
+      axis: "height" | "width" | "depth"
+      values_mm: number[]
+      note: string | null
+    }>
     display_lines: string[]
     compact_mm: string | null
     trust_state: DimensionsTrustState
@@ -160,8 +168,26 @@ export function buildAdminProductProjection(
     audience: "admin",
   })
 
+  const stateByAxis = new Map(dims.axis_states.map((state) => [state.axis, state]))
   const display_lines: string[] = []
-  if (display.mode === "compact" && display.compact) {
+  if (dims.axis_states.length > 0) {
+    for (const axis of DIMENSION_AXIS_ORDER) {
+      const state = stateByAxis.get(axis)
+      if (state) {
+        display_lines.push(
+          `${AXIS_OWNER_LABEL[axis]}: ${formatAxisStateValues(state.values_mm, "mm")} мм`
+        )
+        if (state.note) display_lines.push(state.note)
+        continue
+      }
+      const value = dims.mm[AXIS_TO_MM_KEY[axis]]
+      if (value != null) {
+        display_lines.push(`${AXIS_OWNER_LABEL[axis]}: ${value} мм`)
+      } else {
+        display_lines.push(`${AXIS_OWNER_LABEL[axis]}: нет данных`)
+      }
+    }
+  } else if (display.mode === "compact" && display.compact) {
     display_lines.push(`${display.compact} мм`)
   } else if (display.mode === "partial") {
     display_lines.push(...display.lines)
@@ -171,14 +197,25 @@ export function buildAdminProductProjection(
 
   const missing_axes: Array<"H" | "W" | "D"> = []
   for (const axis of DIMENSION_AXIS_ORDER) {
-    if (dims.mm[AXIS_TO_MM_KEY[axis]] == null) missing_axes.push(axisLetter(axis))
+    if (dims.mm[AXIS_TO_MM_KEY[axis]] == null && !stateByAxis.has(axis)) {
+      missing_axes.push(axisLetter(axis))
+    }
   }
 
-  // Per-axis labeled detail for partial/conflict clarity
-  if (display.mode !== "missing") {
+  // Per-axis labeled detail for partial/conflict clarity.
+  // State lists already filled every axis above, in height → width → depth order.
+  if (dims.axis_states.length === 0 && display.mode !== "missing") {
     for (const axis of DIMENSION_AXIS_ORDER) {
+      const state = stateByAxis.get(axis)
+      if (state) {
+        display_lines.push(
+          `${AXIS_OWNER_LABEL[axis]}: ${formatAxisStateValues(state.values_mm, "mm")} мм`
+        )
+        if (state.note) display_lines.push(state.note)
+        continue
+      }
       const v = dims.mm[AXIS_TO_MM_KEY[axis]]
-      if (v == null) {
+      if (v == null && display.mode !== "missing") {
         display_lines.push(`${AXIS_OWNER_LABEL[axis]}: нет данных`)
       }
     }
@@ -268,6 +305,7 @@ export function buildAdminProductProjection(
       height_mm: dims.mm.height_mm,
       width_mm: dims.mm.width_mm,
       depth_mm: dims.mm.depth_mm,
+      axis_states: dims.axis_states,
       display_lines,
       compact_mm: display.mode === "compact" ? display.compact : null,
       trust_state: trust.state,

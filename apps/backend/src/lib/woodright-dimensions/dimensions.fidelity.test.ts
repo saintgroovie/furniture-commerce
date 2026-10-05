@@ -5,6 +5,7 @@
  */
 import assert from "node:assert/strict"
 import {
+  formatAxisStateValues,
   formatDimensionsForDisplay,
   normalizeDimensionMm,
   readLegacyDimensionsSnapshot,
@@ -231,6 +232,90 @@ assert.equal(normalizeDimensionMm(null), null)
     product: { metadata: {} },
   })
   assert.equal(r.has_any, false)
+}
+
+// Scalar product is unchanged: no state list, one height.
+{
+  const r = resolveFurnitureDimensions({
+    product: {
+      metadata: {
+        dimensions: { height_mm: 900, width_mm: 1200, depth_mm: 450 },
+      },
+    },
+  })
+  assert.deepEqual(r.mm, { height_mm: 900, width_mm: 1200, depth_mm: 450 })
+  assert.deepEqual(r.axis_states, [])
+  assert.equal(formatAxisStateValues([900], "cm"), "90")
+}
+
+// Two height positions stay discrete. They do not become one number or a range.
+{
+  const r = resolveFurnitureDimensions({
+    product: {
+      metadata: {
+        dimensions: {
+          width_mm: 1202,
+          depth_mm: 502,
+          height_mm: 1,
+          axis_states: [
+            {
+              axis: "height",
+              values_mm: [850, 1140],
+              note: "два положения зеркального блока",
+            },
+          ],
+        },
+      },
+    },
+  })
+  assert.equal(r.mm.height_mm, null)
+  assert.equal(r.mm.width_mm, 1202)
+  assert.equal(r.mm.depth_mm, 502)
+  assert.equal(r.axis_states.length, 1)
+  assert.deepEqual(r.axis_states[0].values_mm, [850, 1140])
+  assert.equal(r.axis_states[0].note, "два положения зеркального блока")
+  assert.equal(formatAxisStateValues(r.axis_states[0].values_mm, "cm"), "85 / 114")
+  assert.equal(formatAxisStateValues(r.axis_states[0].values_mm, "mm"), "850 / 1140")
+  const shown = formatDimensionsForDisplay(r.mm, { unit: "cm" })
+  assert.equal(shown.mode, "partial")
+  assert.ok(!JSON.stringify(r.axis_states).includes("min"))
+}
+
+// A one-value list is not a state. Malformed input is ignored.
+{
+  const r = resolveFurnitureDimensions({
+    product: {
+      metadata: {
+        dimensions: {
+          height_mm: 780,
+          axis_states: [{ axis: "height", values_mm: [780] }],
+        },
+      },
+    },
+  })
+  assert.equal(r.mm.height_mm, 780)
+  assert.deepEqual(r.axis_states, [])
+}
+
+// Variant scalar wins over a product state list for the same axis.
+{
+  const r = resolveFurnitureDimensions({
+    variant: {
+      metadata: { dimensions: { height_mm: 800, width_mm: 1000, depth_mm: 400 } },
+    },
+    product: {
+      metadata: {
+        dimensions: {
+          axis_states: [{ axis: "height", values_mm: [850, 1140] }],
+          width_mm: 1202,
+          depth_mm: 502,
+        },
+      },
+    },
+  })
+  assert.equal(r.mm.height_mm, 800)
+  assert.deepEqual(r.axis_states, [])
+  assert.equal(r.provenance.height, "variant")
 }
 
 console.log("dimensions.fidelity.test.ts: ok")
