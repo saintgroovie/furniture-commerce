@@ -28,7 +28,9 @@ export const BUYER_FACING_DIMENSION_ORDER: readonly BuyerFacingDimensionAxis[] =
   "depth",
 ] as const
 
-const AXIS_TO_MM_KEY: Record<BuyerFacingDimensionAxis, keyof Dimensions> = {
+type ScalarDimensionKey = "height_mm" | "width_mm" | "depth_mm"
+
+const AXIS_TO_MM_KEY: Record<BuyerFacingDimensionAxis, ScalarDimensionKey> = {
   height: "height_mm",
   width: "width_mm",
   depth: "depth_mm",
