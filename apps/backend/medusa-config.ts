@@ -280,5 +280,8 @@ export default defineConfig({
     {
       resolve: "./src/modules/promotion-slot",
     },
+    {
+      resolve: "./src/modules/product-compatibility",
+    },
   ],
 })

@@ -72,6 +72,37 @@ export async function getCatalogProducts() {
 
 export const NOT_FOUND = "NOT_FOUND"
 
+export type ProductCompatibilityCard = {
+  id: string
+  title: string
+  handle: string
+}
+
+/** Links only. Empty when the product has no published matches. */
+export async function getProductCompatibility(productId: string): Promise<{
+  accessories: ProductCompatibilityCard[]
+  compatible_with: ProductCompatibilityCard[]
+}> {
+  const empty = { accessories: [], compatible_with: [] }
+  const base = getBaseUrl()
+  try {
+    const res = await medusaFetch(
+      `${base}/store/products/${encodeURIComponent(productId)}/compatibility`
+    )
+    if (!res.ok) return empty
+    const data = (await res.json()) as {
+      accessories?: ProductCompatibilityCard[]
+      compatible_with?: ProductCompatibilityCard[]
+    }
+    return {
+      accessories: Array.isArray(data.accessories) ? data.accessories : [],
+      compatible_with: Array.isArray(data.compatible_with) ? data.compatible_with : [],
+    }
+  } catch {
+    return empty
+  }
+}
+
 async function listStoreProductByHandle(
   base: string,
   handle: string
