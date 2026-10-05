@@ -3,7 +3,8 @@ import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
 import { getSiteUrl } from "@/lib/api/base"
-import { getCatalogProducts, getProduct, NOT_FOUND } from "@/lib/api/products"
+import { getCatalogProducts, getProduct, getProductCompatibility, NOT_FOUND } from "@/lib/api/products"
+import { PdpCompatibility } from "@/components/pdp-compatibility"
 import { getMotifContext } from "@/lib/api/motif-themes"
 import { formatRub, getPrice } from "@/lib/format"
 import { indexingCanonical } from "@/lib/indexing-policy"
@@ -188,6 +189,10 @@ export default async function ProductPage({
   if (!product) {
     notFound()
   }
+
+  const compatibility = product.id
+    ? await getProductCompatibility(String(product.id))
+    : { accessories: [], compatible_with: [] }
 
   const base = getSiteUrl()
   const handle = String(product.handle ?? "")
@@ -767,6 +772,11 @@ export default async function ProductPage({
           </div>
         </div>
       </section>
+
+      <PdpCompatibility
+        accessories={compatibility.accessories}
+        compatibleWith={compatibility.compatible_with}
+      />
 
       {/* Below the first screen: editorial description + full specs */}
       {(description || specRows.length > 0) && (
