@@ -1,3 +1,4 @@
+import { PasswordField } from "@/components/password-field"
 import { previewAllowed } from "@/lib/runtime-boundary"
 
 export default async function LoginPage({
@@ -25,10 +26,7 @@ export default async function LoginPage({
           <span>Почта</span>
           <input name="email" type="email" autoComplete="username" required />
         </label>
-        <label className="field">
-          <span>Пароль</span>
-          <input name="password" type="password" autoComplete="current-password" required />
-        </label>
+        <PasswordField />
         <button className="btn btn-primary full" type="submit">Войти</button>
         {previewAllowed() ? (
           <button className="btn btn-ghost full" type="submit" name="intent" value="preview" formNoValidate>

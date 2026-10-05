@@ -13,25 +13,26 @@ export type InboxItem = {
 export type QueueGroup = { id: string; title: string; items: InboxItem[] }
 
 /**
- * Backend inbox → action groups. Nothing is recomputed: the group follows
- * `kind`, the reason stays the backend hint, the href stays the backend href.
+ * One highest-priority group per row. Overdue wins over waiting and catalog,
+ * so the same record is not listed twice. Empty groups are omitted.
+ * Unassigned is not a group: the inbox has no assignee of its own.
  */
+export function inboxGroup(item: InboxItem): "overdue" | "today" | "waiting" | "catalog" {
+  if (item.overdue) return "overdue"
+  if (item.kind === "production") return "waiting"
+  if (item.kind === "catalog") return "catalog"
+  return "today"
+}
+
 export function groupInbox(items: InboxItem[]): QueueGroup[] {
   const groups: QueueGroup[] = [
-    { id: "requests", title: "Требует ответа", items: [] },
-    { id: "follow_ups", title: "Напоминания", items: [] },
-    { id: "production", title: "Заказы", items: [] },
-    { id: "catalog", title: "Каталог", items: [] },
+    { id: "overdue", title: "Просрочено", items: [] },
+    { id: "today", title: "На сегодня", items: [] },
+    { id: "waiting", title: "Ждём клиента", items: [] },
+    { id: "catalog", title: "Блокеры каталога", items: [] },
   ]
-  for (const item of items) {
-    const target =
-      item.kind === "request" ? groups[0]
-      : item.kind === "follow_up" ? groups[1]
-      : item.kind === "production" ? groups[2]
-      : item.kind === "catalog" ? groups[3]
-      : null
-    if (target) target.items.push(item)
-  }
+  const byId = new Map(groups.map((group) => [group.id, group]))
+  for (const item of items) byId.get(inboxGroup(item))?.items.push(item)
   return groups.filter((group) => group.items.length > 0)
 }
 

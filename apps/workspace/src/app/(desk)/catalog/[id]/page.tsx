@@ -3,6 +3,7 @@ import { ConfirmAction } from "@/components/confirm-action"
 import { ConflictPanel } from "@/components/conflict-panel"
 import { MediaGallery } from "@/components/media-gallery"
 import { MediaUpload } from "@/components/media-upload"
+import { Thumb } from "@/components/object-row"
 import { Card, ErrorBlock, ObjectHeader } from "@/components/page"
 import { PendingForm } from "@/components/pending-form"
 import { PriceEditor } from "@/components/price-editor"
@@ -10,18 +11,17 @@ import { ReadinessChecklist } from "@/components/readiness-checklist"
 import { ResultToast } from "@/components/result-toast"
 import { SidePanel } from "@/components/side-panel"
 import { StateBadge, Status } from "@/components/status"
+import { formatRub } from "@/lib/format"
 import { parsePriceConflict } from "@/lib/price-presentation"
 import { classificationLabel, primaryProductAction, publicationState, readinessChecklist, readinessSummary, toCm } from "@/lib/product-presentation"
 import { loadProduct } from "@/server/loaders"
 
 const SECTIONS = [
-  ["#overview", "Обзор"],
   ["#profile", "Основное"],
   ["#dimensions", "Размеры"],
-  ["#price", "Цена"],
   ["#media", "Медиа"],
-  ["#publish", "Публикация"],
-  ["#links", "Связи"],
+  ["#price", "Цена"],
+  ["#state", "Состояние"],
 ] as const
 
 export default async function ProductPage({
@@ -34,7 +34,7 @@ export default async function ProductPage({
   const { id } = await params
   const query = await searchParams
   const result = await loadProduct(id)
-  if (!result.ok) return <><ObjectHeader back="Товары" backHref="/catalog" title="Товар" /><ErrorBlock message={result.message} /></>
+  if (!result.ok) return <><ObjectHeader back="Каталог" backHref="/catalog" title="Товар" /><ErrorBlock message={result.message} /></>
   const product = result.data.product
   const siteUrl = (result.data as { site_url?: string | null }).site_url ?? null
   const promoAvailable = (result.data as { promo_price_available?: boolean }).promo_price_available !== false
@@ -52,9 +52,9 @@ export default async function ProductPage({
   return (
     <>
       <ObjectHeader
-        back="Товары"
+        back="Каталог"
         backHref="/catalog"
-        title={product.title}
+        title={<span className="row"><Thumb src={product.thumbnail} />{product.title}</span>}
         meta={[product.skus?.join(", ") || "SKU нет", classificationLabel(product.classification), product.collection_label || null, product.kids_nav ? "детская навигация" : null].filter(Boolean).join(" · ")}
         states={
           <>
@@ -99,12 +99,8 @@ export default async function ProductPage({
           <a key={href} href={href}>{label}</a>
         ))}
       </nav>
-      <div className="two-col">
+      <div className="workspace">
         <div className="stack-lg">
-          <Card id="overview" title="Обзор">
-            <ReadinessChecklist items={checklist} />
-            {bespoke ? <p className="meta">По проекту: корзина закрыта, покупатель оставляет заявку</p> : null}
-          </Card>
           <Card id="profile" title="Основное" trailing={<span className="meta">адрес страницы не меняется</span>}>
             <PendingForm action={`/api/catalog/${id}`} className="stack">
               <input type="hidden" name="intent" value="profile" />
@@ -148,7 +144,23 @@ export default async function ProductPage({
             <MediaUpload productId={id} />
           </Card>
         </div>
-        <aside className="stack-lg context">
+        <aside className="inspector" id="state">
+          <div className="inspector-block">
+            <h2 className="section-title">Готовность</h2>
+            <ReadinessChecklist items={checklist} />
+            {primary.kind !== "published" ? <p className="meta">Осталось: {primary.label}</p> : null}
+            {bespoke ? <p className="meta">Продажа: по проекту. В корзину не кладётся</p> : null}
+          </div>
+          <div className="inspector-block">
+            <h2 className="section-title">Цена</h2>
+            {bespoke ? <p>По проекту. Цена обсуждается в заявке</p> : product.variants[0] ? (
+              <>
+                <p>Обычная {product.variants[0].rub_price ? formatRub(product.variants[0].rub_price.amount) : "Цена не задана"}</p>
+                <p>{!promoAvailable ? "Данные акционной цены временно недоступны" : product.variants[0].promo_price ? `Акционная ${formatRub(product.variants[0].promo_price.amount)}` : "Без скидки"}</p>
+                <a href="#price">Изменить цену</a>
+              </>
+            ) : <p>Цена не задана</p>}
+          </div>
           <Card id="publish" title="Публикация">
             <StateBadge size="lg" state={publication} />
             <p className="meta">{product.readiness.visible ? "Покупатель видит товар на витрине" : published ? "Опубликован, но витрина его не отдаёт. Проверьте цену, фото и коллекцию" : "Покупатель пока не видит товар"}</p>

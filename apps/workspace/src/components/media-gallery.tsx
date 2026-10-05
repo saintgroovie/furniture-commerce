@@ -11,7 +11,12 @@ export function MediaGallery({ productId, images, thumbnail }: { productId: stri
   const action = `/api/catalog/${productId}`
   const expected = images.map((item) => item.url).join("\n")
   if (images.length === 0) {
-    return <Status tone="attention" size="lg">Кадров нет. Загруженный файл сам не становится главным</Status>
+    return (
+      <div className="media-empty">
+        <p>Главное изображение не добавлено</p>
+        <p className="meta">Без него товар не готов к публикации. Загруженный файл сам не становится главным</p>
+      </div>
+    )
   }
   const hero = images.find((image) => image.url === thumbnail) ?? null
   return (

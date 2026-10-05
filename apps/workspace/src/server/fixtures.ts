@@ -163,7 +163,7 @@ export const fixturePerson = {
   staff: [],
   roles: [] as Array<{ role: string; label: string | null }>,
   companies: [] as Array<{ id: string; name: string; type: string | null; type_label: string | null; linked_at?: string | null }>,
-  notes: [] as Array<{ id: string; body: string; created_at: string | null }>,
+  notes: [] as Array<{ id: string; body: string; kind?: string | null; created_at: string | null }>,
   follow_ups: [] as Array<{ id: string; entity_type: string | null; entity_id: string | null; assignee_id: string | null; due_at: string | null; summary: string; status: string }>,
   follow_ups_truncated: false,
   request_orders: [] as Array<{ id: string; request_id: string | null; order_id: string | null }>,
@@ -182,7 +182,7 @@ export const fixtureCompanies = {
 
 export const fixtureCompany = {
   company: { id: "comp_sample", name: "Студия", type: "design_studio", type_label: "Дизайн-студия", internal_note: null as string | null, created_at: null as string | null },
-  people: [] as Array<{ id: string; name: string | null; email: string | null; phone: string | null }>,
+  people: [] as Array<{ id: string; name: string | null; email: string | null; phone: string | null; role_label?: string | null; active_request?: boolean }>,
   requests: [] as Array<{ id: string; lead_id: string | null; status: string | null; comment: string | null; created_at: string | null }>,
   order_ids: [] as string[],
   follow_ups: [] as Array<{ id: string; status: string | null; summary: string | null; due_at: string | null }>,

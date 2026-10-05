@@ -1,3 +1,4 @@
+import { activityIcon, EventIcon, type EventIconName } from "@/components/event-icon"
 import { formatWhen } from "@/lib/format"
 
 export type TimelineEntry = {
@@ -7,6 +8,7 @@ export type TimelineEntry = {
   text: string
   detail?: string | null
   internal?: boolean
+  icon?: EventIconName
 }
 
 /**
@@ -20,15 +22,15 @@ export function Timeline({ items, empty }: { items: TimelineEntry[]; empty: stri
       {items.map((item, index) => (
         <li key={item.id} className="timeline-item">
           <div className="timeline-rail" aria-hidden="true">
-            <span className={`timeline-dot${item.internal ? " internal" : ""}`} />
+            <span className={`timeline-mark${item.internal ? " internal" : ""}`}>
+              <EventIcon name={item.icon ?? activityIcon(item.kind, item.text)} />
+            </span>
             {index < items.length - 1 ? <span className="timeline-line" /> : null}
           </div>
           <div className="timeline-body">
-            <span className="meta">
-              {formatWhen(item.at)} · {item.kind}
-            </span>
+            <span className="timeline-title">{item.kind}</span>
             <span className={item.internal ? "internal-note" : undefined}>{item.text}</span>
-            {item.detail ? <span className="meta">{item.detail}</span> : null}
+            <span className="meta">{[item.detail, formatWhen(item.at)].filter(Boolean).join(" · ")}</span>
           </div>
         </li>
       ))}

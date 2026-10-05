@@ -15,8 +15,8 @@ export function Avatar({ name, size }: { name: string | null | undefined; size?:
   )
 }
 
-export function Thumb({ src, hero, size }: { src: string | null | undefined; hero?: boolean; size?: "sm" }) {
-  const className = `thumb${size === "sm" ? " sm" : ""}${hero ? " hero" : ""}`
+export function Thumb({ src, hero, size }: { src: string | null | undefined; hero?: boolean; size?: "sm" | "stage" }) {
+  const className = `thumb${size === "sm" ? " sm" : ""}${size === "stage" ? " stage" : ""}${hero ? " hero" : ""}`
   if (!src) return <span className={className} aria-hidden="true" />
   // eslint-disable-next-line @next/next/no-img-element
   return <img className={className} src={src} alt="" />

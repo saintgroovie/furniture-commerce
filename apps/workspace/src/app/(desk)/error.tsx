@@ -10,7 +10,7 @@ export default function DeskError({
     <div>
       <h1 className="page-title">Страница не открылась</h1>
       <p className="error" role="alert">Данные не загрузились</p>
-      <button className="primary" type="button" onClick={() => reset()}>
+      <button className="btn btn-primary" type="button" onClick={() => reset()}>
         Повторить
       </button>
     </div>

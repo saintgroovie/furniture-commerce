@@ -25,6 +25,7 @@ export function FollowUpForm({
         <button className="btn btn-secondary sm" type="submit" name="preset" value="today">Сегодня</button>
         <button className="btn btn-secondary sm" type="submit" name="preset" value="tomorrow">Завтра</button>
         <button className="btn btn-secondary sm" type="submit" name="preset" value="in_3_days">Через 3 дня</button>
+        <button className="btn btn-secondary sm" type="submit" name="preset" value="in_7_days">Через неделю</button>
       </div>
       <label className="field">
         <span>Или дата</span>

@@ -9,7 +9,7 @@ export default async function RoomsPage() {
   const result = await loadRooms()
   return (
     <>
-      <PageHeader kicker="Товары" title="Комнаты" lead="Набор - отдельная сущность, не товар. Состав и порядок меняются в технической админке" right={<ModeTabs items={CATALOG_MODES} active="rooms" />} />
+      <PageHeader kicker="Каталог" title="Комнаты" lead="Набор - отдельная сущность, не товар. Состав и порядок меняются в технической админке" right={<ModeTabs items={CATALOG_MODES} active="rooms" />} />
       {!result.ok ? <ErrorBlock message={result.message} /> : null}
       {result.ok ? (
         <div className="card list">

@@ -14,7 +14,7 @@ type Body = {
   assignee_id?: string | null
 }
 
-const PRESETS = new Set(["today", "tomorrow", "in_3_days"])
+const PRESETS = new Set(["today", "tomorrow", "in_3_days", "in_7_days"])
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const gate = await requireDeskWrite(req, res, "crm.follow_up")

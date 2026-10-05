@@ -1,8 +1,8 @@
 import Link from "next/link"
-import { AssigneeControl, findSelf } from "@/components/assignee-control"
+import { AssigneeControl } from "@/components/assignee-control"
 import { FollowUpForm } from "@/components/follow-up-form"
 import { Avatar, ObjectRow } from "@/components/object-row"
-import { Card, EmptyState, ErrorBlock, ObjectHeader } from "@/components/page"
+import { EmptyState, ErrorBlock, ObjectHeader } from "@/components/page"
 import { PendingForm } from "@/components/pending-form"
 import { PersonMatch } from "@/components/person-actions"
 import { ResultToast } from "@/components/result-toast"
@@ -22,6 +22,29 @@ const ROLE_OPTIONS = [
   ["partner", "Партнёр"],
 ] as const
 
+const SOURCE_LABEL: Record<string, string> = {
+  site: "Сайт",
+  website: "Сайт",
+  bespoke: "Заявка с сайта",
+  designer: "Дизайнер",
+  call: "Звонок",
+  phone: "Звонок",
+  referral: "Рекомендация",
+  other: "Другое",
+}
+
+function sourceLabel(value: string | null | undefined) {
+  if (!value) return "не указан"
+  return SOURCE_LABEL[value] ?? "указан"
+}
+
+function contactLabel(kind: string | null | undefined) {
+  if (kind === "call") return "Звонок"
+  if (kind === "meeting") return "Встреча"
+  if (kind === "message") return "Сообщение"
+  return "Контакт"
+}
+
 const COMPANY_TYPES = [
   ["design_studio", "Дизайн-студия"],
   ["architecture_bureau", "Архитектурное бюро"],
@@ -39,7 +62,7 @@ export default async function PersonPage({
   const { id } = await params
   const query = await searchParams
   const [result, session, companiesResult] = await Promise.all([loadPerson(id), requireSession(), loadCompanies()])
-  if (!result.ok) return <><ObjectHeader back="Клиенты" backHref="/clients" title="Человек" /><ErrorBlock message={result.message} /></>
+  if (!result.ok) return <><ObjectHeader back="Продажи" backHref="/clients?mode=people" title="Человек" /><ErrorBlock message={result.message} /></>
   const person = result.data.person
   const link = result.data.link
   const matchView = personMatchView({
@@ -51,12 +74,14 @@ export default async function PersonPage({
   const staff = result.data.staff as Array<{ id: string; email: string | null }>
   const assigneeId = link?.assignee_id ?? null
   const assignee = staff.find((member) => member.id === assigneeId) ?? null
-  const self = findSelf(staff, session.email)
   const requests = result.data.requests as Array<{ id: string; status: string; comment?: string | null; created_at?: string | null }>
   const orders = result.data.orders as Array<{ id: string; display_id?: string | number | null; total?: number | string | null; payment_status?: string | null; created_at?: string | null }>
   const roles = result.data.roles ?? []
   const companies = result.data.companies ?? []
   const notes = result.data.notes ?? []
+  const teamNotes = notes.filter((note) => !note.kind || note.kind === "note")
+  const contacts = notes.filter((note) => Boolean(note.kind && note.kind !== "note"))
+  const heldRoles = new Set(roles.map((role) => role.role))
   const followUps = (result.data.follow_ups ?? []).filter((item) => item.status === "open")
   const activeRequests = requests.filter((request) => request.status !== "completed")
   const doneRequests = requests.filter((request) => request.status === "completed")
@@ -70,8 +95,10 @@ export default async function PersonPage({
     ? result.data.activity.map((item) => ({
         id: item.id,
         at: item.at,
-        kind: item.source === "note" ? "Заметка" : item.source === "follow_up" ? "Напоминание" : item.source === "order" ? "Заказ" : item.source === "request" ? "Заявка" : item.source === "company" ? "Компания" : "Событие",
-        text: item.text,
+        kind: item.source === "contact"
+          ? (item.text.startsWith("Звонок") ? "Звонок" : item.text.startsWith("Встреча") ? "Встреча" : item.text.startsWith("Сообщение") ? "Сообщение" : "Контакт")
+          : item.source === "note" ? "Заметка" : item.source === "follow_up" ? "Напоминание" : item.source === "order" ? "Заказ" : item.source === "request" ? "Заявка" : item.source === "company" ? "Компания" : item.source === "audit" ? "Событие" : "Событие",
+        text: item.source === "contact" ? item.text.replace(/^(Звонок|Встреча|Сообщение|Контакт)\.\s*/, "") : item.text,
         internal: item.source === "note" || item.source === "audit",
       }))
     : [
@@ -97,7 +124,7 @@ export default async function PersonPage({
   return (
     <>
       <ObjectHeader
-        back="Клиенты · Люди"
+        back="Продажи · Люди"
         backHref="/clients?mode=people"
         title={<><Avatar name={person.name} />{person.name || "Без имени"}</>}
         meta={[roleLine, companyLine, person.phone, person.email].filter(Boolean).join(" · ")}
@@ -127,35 +154,18 @@ export default async function PersonPage({
       />
       <ResultToast saved={query.saved === "1" ? "1" : undefined} error={query.error || legacySaved || undefined} savedLabel="Сохранено" />
       {matchView.kind === "ambiguous" ? (
-        <Card title="Нужно проверить связь" trailing={<span className="meta">Автоматически не объединяем</span>}>
-          <PersonMatch personId={person.id} view={matchView} />
-        </Card>
+        <div className="alert-banner">
+          <div>
+            <strong>Нужно проверить покупателя</strong>
+            <p className="meta">Несколько совпадений. Автоматически не объединяем</p>
+          </div>
+          <a className="btn btn-primary sm" href="#match">Проверить</a>
+        </div>
       ) : null}
-      <div className="two-col">
+      <div className="workspace">
         <div className="stack-lg">
-          <Card title="Дальше" id="follow-up">
-            {result.data.follow_ups_truncated ? <p className="meta">Показаны не все напоминания</p> : null}
-            {followUps.length === 0 ? <p className="meta">Открытых напоминаний нет</p> : null}
-            {followUps.map((item) => (
-              <div key={item.id} className="row" style={{ justifyContent: "space-between" }}>
-                <div>
-                  <div>{item.summary || "Напоминание"}</div>
-                  <span className="meta">{item.due_at ? new Date(item.due_at).toLocaleDateString("ru-RU", { timeZone: "Europe/Moscow" }) : "дата не указана"}</span>
-                </div>
-                <PendingForm action={`/api/follow-ups/${item.id}`}>
-                  <input type="hidden" name="back" value={`/people/${person.id}`} />
-                  <input type="hidden" name="status" value="done" />
-                  <button className="btn btn-ghost sm" type="submit">Готово</button>
-                </PendingForm>
-              </div>
-            ))}
-            {result.data.crm_available ? (
-              <FollowUpForm action="/api/follow-ups" back={`/people/${person.id}`} entityType="person" entityId={person.id} />
-            ) : (
-              <p className="meta">Напоминания появятся после миграции CRM</p>
-            )}
-          </Card>
-          <Card title="Сейчас">
+          <section className="section" id="work">
+            <h2 className="section-title">Активная работа</h2>
             {activeRequests.length === 0 && orders.length === 0 ? <EmptyState title="Активной работы нет" /> : null}
             <div className="list">
               {activeRequests.map((request) => (
@@ -179,50 +189,116 @@ export default async function PersonPage({
             </div>
             {doneRequests.length > 0 ? <p className="meta">Завершённых заявок: {doneRequests.length}</p> : null}
             {link?.customer_id ? null : <p className="meta">Заказы покупателя появятся после подтверждённой связи</p>}
-          </Card>
-          <Card title="Заметки" id="notes">
-            {notes.length === 0 ? <p className="meta">Внутренних заметок нет</p> : null}
-            {notes.map((note) => (
+            <details className="disclosure">
+              <summary>Новое обращение</summary>
+              <PendingForm action="/api/requests" className="stack">
+                <input type="hidden" name="lead_id" value={id} />
+                <input type="hidden" name="back" value={`/people/${id}`} />
+                <label className="field">
+                  <span>О чём обращение</span>
+                  <textarea name="comment" rows={3} required placeholder="Стол у окна, срок, бюджет" />
+                </label>
+                <button className="btn btn-secondary sm" type="submit">Создать обращение</button>
+              </PendingForm>
+            </details>
+          </section>
+          <section className="section" id="history">
+            <h2 className="section-title">История</h2>
+            <Timeline items={timeline} empty="Истории пока нет" />
+          </section>
+          <section className="section" id="notes">
+            <h2 className="section-title">Заметка команде</h2>
+            {teamNotes.length === 0 ? <p className="meta">Внутренних заметок нет</p> : null}
+            {teamNotes.map((note) => (
               <div key={note.id} className="internal-note">
                 <p>{note.body}</p>
               </div>
             ))}
+            {contacts.map((note) => (
+              <p key={note.id} className="meta">{contactLabel(note.kind)} · {note.body}</p>
+            ))}
             {person.comment ? <p className="meta">Из заявки: {person.comment}</p> : null}
             {result.data.crm_available ? (
-              <PendingForm action={`/api/people/${person.id}/notes`} className="stack">
-                <label className="field">
-                  <span>Заметка команде</span>
-                  <textarea name="text" rows={3} placeholder="Что важно помнить" />
-                </label>
-                <button className="btn btn-secondary sm" type="submit">Сохранить заметку</button>
-              </PendingForm>
+              <>
+                <PendingForm action={`/api/people/${person.id}/notes`} className="stack">
+                  <label className="field">
+                    <span>Зафиксировать контакт</span>
+                    <select name="kind" defaultValue="call">
+                      <option value="call">Звонок</option>
+                      <option value="meeting">Встреча</option>
+                      <option value="message">Сообщение</option>
+                      <option value="other">Другое</option>
+                    </select>
+                  </label>
+                  <label className="field">
+                    <span>Чем закончилось</span>
+                    <textarea name="text" rows={2} placeholder="Короткий результат" />
+                  </label>
+                  <button className="btn btn-secondary sm" type="submit">Зафиксировать контакт</button>
+                </PendingForm>
+                <PendingForm action={`/api/people/${person.id}/notes`} className="stack">
+                  <input type="hidden" name="kind" value="note" />
+                  <label className="field">
+                    <span>Заметка команде</span>
+                    <textarea name="text" rows={2} placeholder="Что важно помнить. Это не письмо клиенту" />
+                  </label>
+                  <button className="btn btn-ghost sm" type="submit">Сохранить заметку</button>
+                </PendingForm>
+              </>
             ) : null}
-          </Card>
-          <Card title="История">
-            <Timeline items={timeline} empty="Подтверждённых событий пока нет" />
-          </Card>
+          </section>
         </div>
-        <aside className="stack-lg context">
-          <Card title="Роли">
-            {roles.length === 0 ? <p className="meta">Роль не указана</p> : null}
-            <div className="row">
-              {roles.map((role) => (
-                <Status key={role.role} tone="neutral">{role.label || role.role}</Status>
-              ))}
+        <aside className="inspector">
+          <div className="inspector-block">
+            <h2 className="section-title">Контакты</h2>
+            <p>{person.phone || "Телефон не указан"}</p>
+            <p>{person.email || "Почта не указана"}</p>
+            <p className="meta">Источник: {sourceLabel(person.source)}</p>
+          </div>
+          <div className="inspector-block" id="follow-up">
+            <h2 className="section-title">Дальше</h2>
+            {result.data.follow_ups_truncated ? <p className="meta">Показаны не все напоминания</p> : null}
+            {followUps.length === 0 ? <p className="meta">Открытых напоминаний нет</p> : null}
+            {followUps.map((item) => (
+              <div key={item.id} className="row" style={{ justifyContent: "space-between" }}>
+                <div>
+                  <div>{item.summary || "Напоминание"}</div>
+                  <span className="meta">{item.due_at ? new Date(item.due_at).toLocaleDateString("ru-RU", { timeZone: "Europe/Moscow" }) : "дата не указана"}</span>
+                </div>
+                <PendingForm action={`/api/follow-ups/${item.id}`}>
+                  <input type="hidden" name="back" value={`/people/${person.id}`} />
+                  <input type="hidden" name="status" value="done" />
+                  <button className="btn btn-ghost sm" type="submit">Готово</button>
+                </PendingForm>
+              </div>
+            ))}
+            {result.data.crm_available ? (
+              <FollowUpForm action="/api/follow-ups" back={`/people/${person.id}`} entityType="person" entityId={person.id} />
+            ) : (
+              <p className="meta">Напоминания появятся после миграции CRM</p>
+            )}
+          </div>
+          <div className="inspector-block">
+            <h2 className="section-title">Роли</h2>
+            <div className="chips">
+              {roles.map((role) => <span key={role.role} className="chip">{role.label || role.role}</span>)}
+              {roles.length === 0 ? <span className="meta">Роль не указана</span> : null}
             </div>
             {result.data.crm_available ? (
-              <PendingForm action={`/api/people/${person.id}/roles`} className="stack">
-                <label className="field">
-                  <span>Добавить роль</span>
-                  <select name="role" defaultValue="buyer">
-                    {ROLE_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                  </select>
-                </label>
-                <button className="btn btn-secondary sm" type="submit">Добавить</button>
-              </PendingForm>
+              <details className="disclosure">
+                <summary>Добавить роль</summary>
+                <PendingForm action={`/api/people/${person.id}/roles`}>
+                  <div className="chips">
+                    {ROLE_OPTIONS.filter(([value]) => !heldRoles.has(value)).map(([value, label]) => (
+                      <button key={value} className="chip" type="submit" name="role" value={value}>{label}</button>
+                    ))}
+                  </div>
+                </PendingForm>
+              </details>
             ) : null}
-          </Card>
-          <Card title="Компания">
+          </div>
+          <div className="inspector-block">
+            <h2 className="section-title">Компания</h2>
             {companies.length === 0 ? <p className="meta">Компания не связана</p> : null}
             {companies.map((company) => (
               <Link key={company.id} href={`/companies/${company.id}`} className="object-row-title" style={{ display: "block" }}>
@@ -230,42 +306,55 @@ export default async function PersonPage({
               </Link>
             ))}
             {result.data.crm_available ? (
-              <PendingForm action={`/api/people/${person.id}/company`} className="stack">
+              <>
                 {directory.length > 0 ? (
-                  <label className="field">
-                    <span>Уже есть</span>
-                    <select name="company_id" defaultValue="">
-                      <option value="">Новая компания</option>
-                      {directory.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
-                    </select>
-                  </label>
+                  <details className="disclosure">
+                    <summary>Связать существующую</summary>
+                    <PendingForm action={`/api/people/${person.id}/company`} className="stack">
+                      <label className="field">
+                        <span>Компания</span>
+                        <select name="company_id" required defaultValue="">
+                          <option value="" disabled>Выберите</option>
+                          {directory.map((company) => <option key={company.id} value={company.id}>{company.name}</option>)}
+                        </select>
+                      </label>
+                      <button className="btn btn-secondary sm" type="submit">Связать</button>
+                    </PendingForm>
+                  </details>
                 ) : null}
-                <label className="field">
-                  <span>Название</span>
-                  <input name="name" placeholder="Студия или бюро" />
-                </label>
-                <label className="field">
-                  <span>Тип</span>
-                  <select name="type" defaultValue="other">
-                    {COMPANY_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                  </select>
-                </label>
-                <button className="btn btn-secondary sm" type="submit">Связать</button>
-              </PendingForm>
+                <details className="disclosure">
+                  <summary>Новая компания</summary>
+                  <PendingForm action={`/api/people/${person.id}/company`} className="stack">
+                    <label className="field">
+                      <span>Название</span>
+                      <input name="name" required placeholder="Студия или бюро" />
+                    </label>
+                    <label className="field">
+                      <span>Тип</span>
+                      <select name="type" defaultValue="other">
+                        {COMPANY_TYPES.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                      </select>
+                    </label>
+                    <button className="btn btn-secondary sm" type="submit">Создать и связать</button>
+                  </PendingForm>
+                </details>
+              </>
             ) : (
               <p className="meta">Компании появятся после миграции CRM</p>
             )}
-          </Card>
-          <Card title="Связь с покупателем">
-            {matchView.kind === "ambiguous" ? <p className="meta">Кандидаты показаны выше</p> : <PersonMatch personId={person.id} view={matchView} />}
-          </Card>
-          <Card title="Ответственный">
+          </div>
+          <div className="inspector-block" id="match">
+            <h2 className="section-title">Покупатель</h2>
+            <PersonMatch personId={person.id} view={matchView} />
+          </div>
+          <div className="inspector-block">
+            <h2 className="section-title">Ответственный</h2>
             {result.data.links_available ? (
-              <AssigneeControl action={`/api/people/${person.id}/assignee`} assigneeId={assigneeId} staff={staff} selfEmail={self ? session.email : session.email} />
+              <AssigneeControl action={`/api/people/${person.id}/assignee`} assigneeId={assigneeId} staff={staff} selfEmail={session.email} />
             ) : (
               <p className="meta">Назначение появится после миграции связи</p>
             )}
-          </Card>
+          </div>
         </aside>
       </div>
     </>

@@ -21,7 +21,7 @@ describe("navigation", () => {
   it("ships the approved five sections and keeps Входящие out until mail exists", () => {
     assert.deepEqual(
       NAV.map((item) => item.label),
-      ["Сегодня", "Клиенты", "Заказы", "Товары", "Витрина"]
+      ["Сегодня", "Продажи", "Заказы", "Каталог", "Витрина"]
     )
     assert.equal(NAV.some((item) => /входящие|inbox|crm|medusa/i.test(item.label)), false)
   })
@@ -197,13 +197,15 @@ describe("today queue", () => {
       { id: "cat:1", kind: "catalog", title: "Комод", hint: "Нет цены", action: "Поставить цену", overdue: true, href: "/catalog/1#price" },
       { id: "ord:1", kind: "production", title: "Заказ 1042", hint: "Ждём клиента", action: "Открыть этап", overdue: false, href: "/orders/1" },
     ])
-    assert.deepEqual(groups.map((group) => group.title), ["Требует ответа", "Заказы", "Каталог"])
+    assert.deepEqual(groups.map((group) => group.title), ["Просрочено", "Ждём клиента"])
+    assert.equal(groups[0]!.items.length, 2)
     const withFollowUp = groupInbox([
       { id: "fu:1", kind: "follow_up", title: "Анна", hint: "Позвонить", action: "Открыть", overdue: false, href: "/people/1" },
       { id: "cat:1", kind: "catalog", title: "Комод", hint: "Нет цены", action: "Поставить цену", overdue: true, href: "/catalog/1#price" },
+      { id: "cat:2", kind: "catalog", title: "Полка", hint: "Нет фото", action: "Открыть карточку", overdue: false, href: "/catalog/2#media" },
     ])
-    assert.deepEqual(withFollowUp.map((group) => group.title), ["Напоминания", "Каталог"])
-    assert.equal(groups[2]!.items[0]!.href, "/catalog/1#price")
+    assert.deepEqual(withFollowUp.map((group) => group.title), ["Просрочено", "На сегодня", "Блокеры каталога"])
+    assert.equal(groups[0]!.items.find((item) => item.id === "cat:1")!.href, "/catalog/1#price")
   })
   it("links every counter to a real filtered list", () => {
     for (const link of ATTENTION_LINKS) assert.ok(link.href.includes("?"), link.href)

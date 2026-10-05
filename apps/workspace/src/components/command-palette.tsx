@@ -97,7 +97,7 @@ export function CommandPalette() {
     <>
       <button type="button" className="search-trigger" onClick={() => setOpen(true)} aria-label="Поиск и команды">
         <SearchGlyph />
-        <span className="search-hint">Найти человека, заказ, товар или команду</span>
+        <span className="search-hint">Найти человека, заказ, товар…</span>
         <kbd className="kbd">⌘K</kbd>
       </button>
       <dialog

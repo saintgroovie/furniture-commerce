@@ -20,6 +20,14 @@ export function formatWhen(iso: string | null | undefined): string {
   }).format(date)
 }
 
+/** Request SLA for the sales queue. Clock stays outside the page component. */
+export function olderThanHours(iso: string | null | undefined, hours: number): boolean {
+  if (!iso) return false
+  const at = new Date(iso).getTime()
+  if (!Number.isFinite(at)) return false
+  return Date.now() - at > hours * 60 * 60 * 1000
+}
+
 export function ageLabel(iso: string | null | undefined, now = Date.now()): string {
   if (!iso) return "Возраст неизвестен"
   const then = Date.parse(iso)

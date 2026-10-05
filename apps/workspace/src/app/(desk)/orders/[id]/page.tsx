@@ -117,10 +117,10 @@ export default async function OrderPage({
         }
       />
       <ResultToast saved={query.saved} error={query.error} />
-      <div className="two-col">
+      <div className="workspace">
         <div className="stack-lg">
           <div className="three-col">
-            <Card title="Деньги">
+            <Card title="Оплата">
               <StateBadge size="lg" state={axes.money} />
               <p className="money">{formatRub(order.total)}</p>
               <p className="meta">Статус оплаты приходит из Medusa. Здесь он не меняется</p>
@@ -163,7 +163,7 @@ export default async function OrderPage({
                 detail: event.detail,
                 internal: event.kind === "note" || event.kind === "note_changed",
               }))}
-              empty="Событий пока нет"
+              empty="Истории пока нет"
             />
           </Card>
         </div>

@@ -73,6 +73,7 @@ export async function readPersonCrm(crm: CrmReader, leadId: string, requestIds: 
     notes: notes.map((row) => ({
       id: String(row.id),
       body: text(row.body) ?? "",
+      kind: text(row.kind) ?? "note",
       created_at: time(row.created_at),
     })),
     follow_ups: relevantFollowUps.map((row) => ({
