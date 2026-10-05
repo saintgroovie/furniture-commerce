@@ -11,7 +11,7 @@ import { loadContacts, loadProducts, loadPromo } from "@/server/loaders"
 const BLOCKER_TEXT: Record<string, string> = {
   no_sale_price: "Карточка показывается без скидки",
   unpublished: "Черновик. Покупатель эту карточку не увидит",
-  no_image: "Нет кадра, карточка не выйдет",
+  no_image: "У товара нет главного изображения",
   bespoke: "Товар по проекту в карточку не ставится",
 }
 
@@ -50,7 +50,13 @@ export default async function PromoPage({ searchParams }: { searchParams: Promis
               <div className="list">
                 {promo.data.products.map((product) => (
                   <div key={product.product_id} className="object-row">
-                    <Thumb src={product.thumbnail} size="stage" />
+                    {product.thumbnail && product.blocker !== "no_image" ? <Thumb src={product.thumbnail} size="stage" /> : (
+                      <div className="media-empty">
+                        <p>У товара нет главного изображения</p>
+                        <Link href={`/catalog/${product.product_id}#media`}>Открыть товар</Link>
+                        <p className="meta">Покупатель эту карточку не увидит, пока нет кадра</p>
+                      </div>
+                    )}
                     <div className="object-row-main">
                       <Link href={`/catalog/${product.product_id}`} className="object-row-title" style={{ textDecoration: "none" }}>
                         {product.title}

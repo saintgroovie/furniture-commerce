@@ -1,4 +1,5 @@
 import "server-only"
+import { deskExchange, DESK_READ_TIMEOUT_MS, READ_FAILURE, WRITE_UNCERTAIN } from "@/lib/desk-bound"
 import { medusaBaseUrl } from "@/lib/runtime-boundary"
 import { readSession } from "@/server/session"
 
@@ -23,21 +24,22 @@ export async function medusaGet<T>(path: string): Promise<T> {
   }
   const base = medusaBaseUrl()
   if (!base) throw new DeskHttpError(500, "Сервер Medusa не настроен")
-  let response: Response
-  try {
-    response = await fetch(new URL(path, base), {
+  const { status, text } = await deskExchange(
+    (signal) => fetch(new URL(path, base), {
       headers: { authorization: `Bearer ${session.token}`, accept: "application/json" },
       cache: "no-store",
-      signal: AbortSignal.timeout(12_000),
-    })
+      signal,
+    }),
+    DESK_READ_TIMEOUT_MS,
+    () => new DeskHttpError(504, READ_FAILURE)
+  )
+  if (status === 401) throw new DeskHttpError(401, "Сессия закончилась")
+  if (status < 200 || status >= 300) throw new DeskHttpError(status, READ_FAILURE)
+  try {
+    return JSON.parse(text) as T
   } catch {
-    throw new DeskHttpError(504, "Сервер не ответил. Попробуйте ещё раз")
+    throw new DeskHttpError(502, READ_FAILURE)
   }
-  if (response.status === 401) throw new DeskHttpError(401, "Сессия закончилась")
-  if (!response.ok) {
-    throw new DeskHttpError(response.status, "Не удалось загрузить данные")
-  }
-  return (await response.json()) as T
 }
 
 export async function medusaSend<T>(path: string, method: "POST" | "PUT" | "PATCH", body: unknown): Promise<T> {
@@ -45,9 +47,8 @@ export async function medusaSend<T>(path: string, method: "POST" | "PUT" | "PATC
   if (!session || session.kind !== "medusa") throw new DeskHttpError(401, "Нужен вход")
   const base = medusaBaseUrl()
   if (!base) throw new DeskHttpError(500, "Сервер Medusa не настроен")
-  let response: Response
-  try {
-    response = await fetch(new URL(path, base), {
+  const exchanged = await deskExchange(
+    (signal) => fetch(new URL(path, base), {
       method,
       headers: {
         authorization: `Bearer ${session.token}`,
@@ -56,26 +57,30 @@ export async function medusaSend<T>(path: string, method: "POST" | "PUT" | "PATC
       },
       body: JSON.stringify(body),
       cache: "no-store",
-      signal: AbortSignal.timeout(12_000),
-    })
-  } catch {
-    throw new DeskHttpError(504, "Сервер не подтвердил сохранение. Проверьте список, прежде чем отправлять ещё раз")
-  }
-  if (!response.ok) {
-    let message = humanStatusMessage(response.status)
+      signal,
+    }),
+    DESK_READ_TIMEOUT_MS,
+    () => new DeskHttpError(504, WRITE_UNCERTAIN)
+  )
+  if (exchanged.status < 200 || exchanged.status >= 300) {
+    let message = humanStatusMessage(exchanged.status)
     let code: string | null = null
     let payload: Record<string, unknown> | null = null
     try {
-      const json = (await response.json()) as Record<string, unknown>
+      const json = JSON.parse(exchanged.text) as Record<string, unknown>
       payload = json
       if (typeof json.message === "string" && json.message.trim()) message = json.message
       if (typeof json.code === "string") code = json.code
     } catch {
       payload = null
     }
-    throw new DeskHttpError(response.status, message, code, payload)
+    throw new DeskHttpError(exchanged.status, message, code, payload)
   }
-  return (await response.json()) as T
+  try {
+    return JSON.parse(exchanged.text) as T
+  } catch {
+    throw new DeskHttpError(502, WRITE_UNCERTAIN)
+  }
 }
 
 /** Known HTTP statuses → Woodright wording. Unknown errors stay visible, not hidden. */

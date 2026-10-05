@@ -1,8 +1,7 @@
-import Link from "next/link"
 import { FollowUpForm } from "@/components/follow-up-form"
 import { PendingForm } from "@/components/pending-form"
 import { Avatar, ObjectRow } from "@/components/object-row"
-import { Card, EmptyState, ErrorBlock, ObjectHeader } from "@/components/page"
+import { EmptyState, ErrorBlock, ObjectHeader } from "@/components/page"
 import { ResultToast } from "@/components/result-toast"
 import { StateBadge } from "@/components/status"
 import { Timeline } from "@/components/timeline"
@@ -34,7 +33,8 @@ export default async function CompanyPage({
       <ResultToast saved={query.saved} error={query.error} savedLabel="Сохранено" />
       <div className="workspace">
         <div className="stack-lg">
-          <Card title="Люди">
+          <section className="section">
+            <h2 className="section-title">Люди</h2>
             {people.length === 0 ? <EmptyState title="Пока никого нет" /> : null}
             <div className="list">
               {people.map((person) => (
@@ -43,42 +43,46 @@ export default async function CompanyPage({
                   href={`/people/${person.id}`}
                   leading={<Avatar name={person.name} />}
                   title={person.name || "Без имени"}
-                  meta={person.email || person.phone || "контакт не указан"}
+                  meta={[
+                    person.role_label,
+                    [person.email, person.phone].filter(Boolean).join(" · ") || "контакт не указан",
+                    person.active_request ? "Есть обращение" : null,
+                  ].filter(Boolean).join(" · ")}
                 />
               ))}
             </div>
-          </Card>
-          <Card title="Заявки">
-            {requests.length === 0 ? <EmptyState title="Активных заявок нет" /> : null}
+          </section>
+          <section className="section">
+            <h2 className="section-title">Обращения</h2>
+            {requests.length === 0 ? <EmptyState title="Активных обращений нет" /> : null}
             <div className="list">
               {requests.map((request) => (
                 <ObjectRow
                   key={request.id}
                   href={`/requests/${request.id}`}
-                  title={request.comment || "Заявка"}
-                  meta="Открыть заявку"
+                  title={request.comment || "Обращение"}
+                  meta="Открыть обращение"
                   end={<StateBadge state={requestState(request.status)} />}
                 />
               ))}
             </div>
-            {result.data.order_ids.length > 0 ? (
-              <p className="meta">Связанные заказы: {result.data.order_ids.length}. Сами заказы остаются в разделе Заказы</p>
-            ) : null}
-          </Card>
-          <Card title="История">
+          </section>
+          <section className="section">
+            <h2 className="section-title">История</h2>
             <Timeline
               items={result.data.activity.map((item) => ({ id: item.id, at: item.at, kind: "Событие", text: item.text }))}
-              empty="Событий пока нет"
+              empty="Истории пока нет"
             />
-          </Card>
+          </section>
         </div>
-        <aside className="stack-lg context">
-          {company.internal_note ? (
-            <Card title="Заметка">
-              <p>{company.internal_note}</p>
-            </Card>
-          ) : null}
-          <Card title="Напомнить">
+        <aside className="inspector">
+          <div className="inspector-block">
+            <h2 className="section-title">Компания</h2>
+            <p>{company.type_label || "Тип не указан"}</p>
+            {company.internal_note ? <p>{company.internal_note}</p> : <p className="meta">Заметки нет</p>}
+          </div>
+          <div className="inspector-block">
+            <h2 className="section-title">Дальше</h2>
             {result.data.follow_ups.filter((item) => item.status === "open").map((item) => (
               <div key={item.id} className="row" style={{ justifyContent: "space-between" }}>
                 <div>
@@ -93,10 +97,7 @@ export default async function CompanyPage({
               </div>
             ))}
             <FollowUpForm action="/api/follow-ups" back={`/companies/${company.id}`} entityType="company" entityId={company.id} />
-          </Card>
-          <p className="meta">
-            <Link href="/clients?mode=people">К людям</Link>
-          </p>
+          </div>
         </aside>
       </div>
     </>

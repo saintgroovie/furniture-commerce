@@ -95,8 +95,10 @@ export default async function PersonPage({
     ? result.data.activity.map((item) => ({
         id: item.id,
         at: item.at,
-        kind: item.source === "note" ? "Заметка" : item.source === "contact" ? "Контакт" : item.source === "follow_up" ? "Напоминание" : item.source === "order" ? "Заказ" : item.source === "request" ? "Заявка" : item.source === "company" ? "Компания" : "Событие",
-        text: item.text,
+        kind: item.source === "contact"
+          ? (item.text.startsWith("Звонок") ? "Звонок" : item.text.startsWith("Встреча") ? "Встреча" : item.text.startsWith("Сообщение") ? "Сообщение" : "Контакт")
+          : item.source === "note" ? "Заметка" : item.source === "follow_up" ? "Напоминание" : item.source === "order" ? "Заказ" : item.source === "request" ? "Заявка" : item.source === "company" ? "Компания" : item.source === "audit" ? "Событие" : "Событие",
+        text: item.source === "contact" ? item.text.replace(/^(Звонок|Встреча|Сообщение|Контакт)\.\s*/, "") : item.text,
         internal: item.source === "note" || item.source === "audit",
       }))
     : [
@@ -202,7 +204,7 @@ export default async function PersonPage({
           </section>
           <section className="section" id="history">
             <h2 className="section-title">История</h2>
-            <Timeline items={timeline} empty="Подтверждённых событий пока нет" />
+            <Timeline items={timeline} empty="Истории пока нет" />
           </section>
           <section className="section" id="notes">
             <h2 className="section-title">Заметка команде</h2>

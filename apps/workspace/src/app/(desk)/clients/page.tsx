@@ -3,7 +3,7 @@ import { PendingForm } from "@/components/pending-form"
 import { ResultToast } from "@/components/result-toast"
 import { Avatar, ObjectRow } from "@/components/object-row"
 import { StateBadge, Status } from "@/components/status"
-import { ageLabel } from "@/lib/format"
+import { ageLabel, olderThanHours } from "@/lib/format"
 import { personRole, requestState } from "@/lib/person-presentation"
 import { loadCompanies, loadLeads, loadPeople, loadRequests } from "@/server/loaders"
 
@@ -62,7 +62,7 @@ async function PeopleList({ filter, creating, draft }: { filter?: string; creati
         <summary>Новый человек</summary>
         <PendingForm action="/api/people" className="stack">
           {(draft?.matches ?? "").split(",").filter((id) => /^[A-Za-z0-9]+$/.test(id)).map((id) => (
-            <a key={id} href={`/people/${id}`}>Открыть существующего</a>
+            <a key={id} className="btn btn-secondary sm" href={`/people/${id}`}>Открыть</a>
           ))}
           <label className="field"><span>Имя</span><input name="name" required placeholder="Имя и фамилия" defaultValue={draft?.name ?? ""} /></label>
           <div className="field-row">
@@ -71,7 +71,7 @@ async function PeopleList({ filter, creating, draft }: { filter?: string; creati
           </div>
           <label className="check">
             <input type="checkbox" name="confirm" value="1" />
-            <span>Это другой человек, даже если почта или телефон уже есть</span>
+            <span>Это другой человек</span>
           </label>
           <button className="btn btn-primary sm" type="submit">Создать человека</button>
           <p className="meta">Это человек в продажах, не покупатель магазина. Совпадения не объединяются сами</p>
@@ -156,8 +156,7 @@ async function RequestsList({ filter, creating }: { filter?: string; creating?: 
     if (filter === "waiting") return request.status === "quote_sent"
     if (filter === "overdue") {
       if (request.status !== "new" && request.status !== "contacted") return false
-      if (!request.created_at) return false
-      return Date.now() - new Date(request.created_at).getTime() > 2 * 60 * 60 * 1000
+      return olderThanHours(request.created_at, 2)
     }
     if (filter === "done") return request.status === "completed"
     return true

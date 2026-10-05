@@ -1,5 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { COMPANY_TYPE_LABEL, type CompanyType } from "../../../../../lib/woodright-crm/constants"
+import { COMPANY_TYPE_LABEL, PERSON_ROLE_LABEL, type CompanyType, type PersonRole } from "../../../../../lib/woodright-crm/constants"
 import { auditActionText, projectActivity } from "../../../../../lib/woodright-crm/activity"
 import { requireDeskWrite } from "../../../../../lib/woodright-workspace/require-desk-write"
 import { BESPOKE_REQUEST_MODULE } from "../../../../../modules/bespoke-request"
@@ -21,6 +21,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   let crm: {
     retrieveCompany: (id: string) => Promise<Record<string, unknown> | null>
     listPersonCompanies: (filters: object) => Promise<Array<Record<string, unknown>>>
+    listPersonRoleRows: (filters: object) => Promise<Array<Record<string, unknown>>>
     listFollowUps: (filters: object) => Promise<Array<Record<string, unknown>>>
     listRequestOrders: (filters: object) => Promise<Array<Record<string, unknown>>>
   }
@@ -43,6 +44,14 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       }).listLeads({}, { take: 200 })
     : []
   const leads = leadRows.filter((lead) => leadIds.includes(String(lead.id)))
+  const roleRows = leadIds.length > 0 ? await crm.listPersonRoleRows({ lead_id: leadIds }) : []
+  const roleByLead = new Map<string, string>()
+  for (const row of roleRows) {
+    const leadId = text(row.lead_id)
+    const role = text(row.role) as PersonRole | null
+    if (!leadId || !role || roleByLead.has(leadId)) continue
+    roleByLead.set(leadId, role in PERSON_ROLE_LABEL ? PERSON_ROLE_LABEL[role] : role)
+  }
   let requests: Array<Record<string, unknown>> = []
   try {
     requests = await (req.scope.resolve(BESPOKE_REQUEST_MODULE) as {
@@ -89,6 +98,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       name: text(lead.name),
       email: text(lead.email),
       phone: text(lead.phone),
+      role_label: roleByLead.get(String(lead.id)) ?? null,
+      active_request: requests.some((row) => text(row.lead_id) === String(lead.id) && text(row.status) !== "completed"),
     })),
     requests: requests.map((row) => ({
       id: String(row.id),

@@ -182,7 +182,7 @@ export const fixtureCompanies = {
 
 export const fixtureCompany = {
   company: { id: "comp_sample", name: "Студия", type: "design_studio", type_label: "Дизайн-студия", internal_note: null as string | null, created_at: null as string | null },
-  people: [] as Array<{ id: string; name: string | null; email: string | null; phone: string | null }>,
+  people: [] as Array<{ id: string; name: string | null; email: string | null; phone: string | null; role_label?: string | null; active_request?: boolean }>,
   requests: [] as Array<{ id: string; lead_id: string | null; status: string | null; comment: string | null; created_at: string | null }>,
   order_ids: [] as string[],
   follow_ups: [] as Array<{ id: string; status: string | null; summary: string | null; due_at: string | null }>,

@@ -91,7 +91,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     res.status(409).json({
       code: "existing_person",
       ids: plan.ids,
-      message: "Уже есть человек с этой почтой или телефоном. Откройте его или отметьте, что это другой человек",
+      message: "Похожий человек уже есть",
     })
     return
   }
