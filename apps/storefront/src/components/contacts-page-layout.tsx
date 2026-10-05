@@ -5,10 +5,11 @@ import {
   ContactPhoneAction,
 } from "@/components/contact-action"
 import { ContactMessengerActions } from "@/components/contact-messenger-actions"
+import { ContactsPodiumPhoto } from "@/components/contacts-podium-photo"
 import { CopyLines } from "@/components/copy-lines"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { contactsCopy } from "@/lib/woodright-copy"
-import { editorialMedia } from "@/lib/editorial-media"
+import { showroomPodiumMedia } from "@/lib/showroom-podium-media"
 import { showroomContacts } from "@/lib/showroom-contacts"
 
 /**
@@ -21,12 +22,6 @@ import { showroomContacts } from "@/lib/showroom-contacts"
 export function ContactsPageLayout() {
   return (
     <div className="contacts-page">
-      <figure className="contacts-page-media">
-        <img
-          src={editorialMedia.contactsMaterial.src}
-          alt={editorialMedia.contactsMaterial.alt}
-        />
-      </figure>
       <header className="contacts-page-masthead">
         <h1 className="contacts-page-title">{contactsCopy.h1}</h1>
         <p className="contacts-page-intro">{formatRuInline(contactsCopy.lead)}</p>
@@ -111,6 +106,47 @@ export function ContactsPageLayout() {
           </div>
         </section>
       </div>
+
+      <figure className="contacts-page-media">
+        <ContactsPodiumPhoto
+          frame={showroomPodiumMedia.hero}
+          sizes="100vw"
+          priority
+        />
+      </figure>
+
+      <section className="contacts-page-gallery" aria-label="Подиум в шоуруме">
+        <figure className="contacts-page-shot contacts-page-shot--lead">
+          <ContactsPodiumPhoto
+            frame={showroomPodiumMedia.alcove}
+            sizes="(min-width: 1200px) 1200px, 100vw"
+          />
+        </figure>
+        <figure className="contacts-page-shot contacts-page-shot--wardrobe">
+          <ContactsPodiumPhoto
+            frame={showroomPodiumMedia.wardrobe}
+            sizes="(min-width: 1100px) 680px, 100vw"
+          />
+        </figure>
+        <figure className="contacts-page-shot contacts-page-shot--cream">
+          <ContactsPodiumPhoto
+            frame={showroomPodiumMedia.creamBedroom}
+            sizes="(min-width: 1100px) 460px, 100vw"
+          />
+        </figure>
+        <figure className="contacts-page-shot contacts-page-shot--bed">
+          <ContactsPodiumPhoto
+            frame={showroomPodiumMedia.bed}
+            sizes="(min-width: 1100px) 460px, 100vw"
+          />
+        </figure>
+        <figure className="contacts-page-shot contacts-page-shot--kids">
+          <ContactsPodiumPhoto
+            frame={showroomPodiumMedia.kids}
+            sizes="(min-width: 1100px) 680px, 100vw"
+          />
+        </figure>
+      </section>
 
       <section className="contacts-page-cta" aria-labelledby="contacts-cta-heading">
         <div className="contacts-page-cta-copy">
