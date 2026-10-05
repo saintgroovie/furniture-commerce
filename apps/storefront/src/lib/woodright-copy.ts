@@ -1076,6 +1076,8 @@ export const pdpCopy = {
   fabricChipWith: "С тканью",
   fabricChipWithout: "Без ткани",
   articleLabel: "Арт.",
+  fitsThisProduct: "Подходит к этому товару",
+  compatibleWith: "Совместим с",
   dimensionHeight: "Высота",
   dimensionWidth: "Ширина",
   dimensionDepth: "Глубина",
