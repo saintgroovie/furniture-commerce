@@ -96,11 +96,10 @@ export function DeckViewer({
 
   useEffect(() => {
     if (!onClose) return
-    if (!window.history.state?.pxDeck) window.history.pushState({ pxDeck: true }, "")
-    const onPop = () => onClose()
-    window.addEventListener("popstate", onPop)
-    return () => window.removeEventListener("popstate", onPop)
-  }, [onClose])
+    const current = window.history.state as { pxDeck?: boolean; index?: number } | null
+    if (!current?.pxDeck || current.index === index) return
+    window.history.replaceState({ ...current, index }, "")
+  }, [index, onClose])
 
   if (!slide) return null
 
