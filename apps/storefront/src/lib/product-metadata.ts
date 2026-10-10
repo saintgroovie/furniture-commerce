@@ -527,6 +527,17 @@ export function getMattressSize(
   return readMattressBag(meta(product).mattress_size)
 }
 
+/**
+ * Size shown on the PDP. The cart button buys the first variant, so that
+ * variant is the one whose bag can hide a product-level size.
+ */
+export function getPdpMattressSize(product: ProductLike): MattressSize | null {
+  const variants = Array.isArray(product.variants)
+    ? (product.variants as ProductLike[])
+    : []
+  return getMattressSize(product, variants[0] ?? null)
+}
+
 /** Resolve dimensions for a specific variant id on a product payload. */
 export function getDimensionsForVariantId(
   product: ProductLike,

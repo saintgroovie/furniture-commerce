@@ -77,7 +77,7 @@ import {
   getBuyerFacingProductTitleLayout,
   getArticle,
   getDimensions,
-  getMattressSize,
+  getPdpMattressSize,
   getPdpHeroObjectPosition,
   pdpDimensionCells,
 } from "@/lib/product-metadata"
@@ -426,13 +426,7 @@ export default async function ProductPage({
       }))
     : []
 
-  const productVariants = Array.isArray(product.variants)
-    ? (product.variants as Record<string, unknown>[])
-    : []
-  const mattress = getMattressSize(
-    product,
-    productVariants.length === 1 ? productVariants[0] : null
-  )
+  const mattress = getPdpMattressSize(product)
 
   const specRows = [
     ...(mattress

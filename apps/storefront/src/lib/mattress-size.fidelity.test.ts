@@ -4,7 +4,7 @@
  *   npx --yes tsx src/lib/mattress-size.fidelity.test.ts
  */
 import assert from "node:assert/strict"
-import { getDimensions, getMattressSize } from "./product-metadata"
+import { getDimensions, getMattressSize, getPdpMattressSize } from "./product-metadata"
 
 const body = { depth_mm: 965, width_mm: 576, height_mm: 900 }
 
@@ -137,5 +137,44 @@ const mismatched = getMattressSize({
   },
 })
 assert.equal(mismatched, null)
+
+const productLevel = {
+  key: "90x200",
+  width_cm: 90,
+  length_cm: 200,
+  display: "90 × 200 см",
+}
+const multiVariantUnknown = getPdpMattressSize({
+  metadata: { mattress_size: productLevel },
+  variants: [
+    {
+      metadata: {
+        mattress_size: { status: "MATTRESS_SIZE_UNKNOWN", width_cm: null, length_cm: null },
+      },
+    },
+    {
+      metadata: { mattress_size: { key: "140x200", width_cm: 140, length_cm: 200, display: "140 × 200 см" } },
+    },
+  ],
+})
+assert.equal(multiVariantUnknown, null)
+
+const multiVariantMismatch = getPdpMattressSize({
+  metadata: { mattress_size: productLevel },
+  variants: [
+    {
+      metadata: {
+        mattress_size: { key: "90x190", width_cm: 90, length_cm: 200, display: "90 × 200 см" },
+      },
+    },
+  ],
+})
+assert.equal(multiVariantMismatch, null)
+
+const multiVariantWithoutBag = getPdpMattressSize({
+  metadata: { mattress_size: productLevel },
+  variants: [{ metadata: {} }, { metadata: { mattress_size: productLevel } }],
+})
+assert.equal(multiVariantWithoutBag?.key, "90x200")
 
 console.log("mattress-size.fidelity.test.ts: ok")
