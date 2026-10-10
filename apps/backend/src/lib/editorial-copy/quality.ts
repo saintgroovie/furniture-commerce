@@ -114,6 +114,48 @@ export function findCopyIssues(
   return issues
 }
 
+/**
+ * Editorial style signals the hard checks miss: telegraphic «Наверху - фронтон» lists,
+ * dash-heavy syntax, sentence fragments, caption-like openings and thin copy.
+ */
+export type StyleIssue = "telegraphic" | "dash_overuse" | "fragment" | "caption_opening" | "thin"
+
+/** Accessories and small pieces read fine at a shorter length. */
+export const SMALL_PRODUCT_TYPES = new Set([
+  "Полка",
+  "Зеркало",
+  "Часы",
+  "Бортик",
+  "Балдахин",
+  "Столешница",
+  "Ступени",
+  "Этажерка",
+  "Банкетка",
+  "Стул",
+])
+
+const TELEGRAPH_RE =
+  /(?:^|[,:;]\s)(?:(?:а|и|но)\s)?(?:наверху|внизу|сверху|снизу|слева|справа|посередине|внутри|снаружи|днём|днем|ночью|по краям|по бокам|в центре|в основании|в подстолье|под столешницей|под ним|под ней|под ними|между ними|между тумбами|(?:в|на|под|над|по|между)\s[\p{L}-]+)(?:\s[\p{L}-]+){0,2}\s-\s/iu
+/** Dash standing in for a dropped verb after a 1-2 word clause subject: «боковины - в филёнках», «Её место - у столика». */
+const ELLIPSIS_DASH_RE = /(?:^|[,:;]\s)[\p{L}-]+(?:\s[\p{L}-]+)?\s-\s(?:в|во|на|за|под|над|по|из|у|с|со|между|для)\s/iu
+
+export function findStyleIssues(text: string | null | undefined, ctx: { productType?: string } = {}): StyleIssue[] {
+  if (typeof text !== "string" || !text.trim()) return []
+  const issues: StyleIssue[] = []
+  const add = (i: StyleIssue) => {
+    if (!issues.includes(i)) issues.push(i)
+  }
+  const sentences = splitSentences(text)
+  if (sentences.some((s) => TELEGRAPH_RE.test(s) || ELLIPSIS_DASH_RE.test(s))) add("telegraphic")
+  const dashes = (s: string) => (s.match(/\s-\s/g) ?? []).length
+  if (dashes(text) >= 3 || sentences.some((s) => dashes(s) >= 2)) add("dash_overuse")
+  if (sentences.some((s) => words(s).length <= 4)) add("fragment")
+  if ((sentences[0] ?? "").length < 50) add("caption_opening")
+  const len = text.replace(/\s+/g, " ").trim().length
+  if (len < (ctx.productType && SMALL_PRODUCT_TYPES.has(ctx.productType) ? 110 : 200)) add("thin")
+  return issues
+}
+
 export function splitParagraphs(text: string): string[] {
   return text
     .split(/\n{2,}/)

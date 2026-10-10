@@ -31,7 +31,7 @@ import {
   parseFamilyFile,
   type FamilyFile,
 } from "./families"
-import { findCopyIssues } from "./quality"
+import { findCopyIssues, findStyleIssues } from "./quality"
 
 const BEFORE_A = "Комод. Цены в прайс-листе"
 const AFTER_A = "Комод с 3 ящиками.\n\nЦвет выбирается из 4 вариантов."
@@ -274,6 +274,34 @@ const liveClean = (): LiveProductRow[] => [
   assert.ok(codes("Комод — с ящиками и круглыми ручками на высоких точёных ножках, у окна или в простенке спальни.").includes("long_dash"))
 }
 
+/* ---------- editorial style checks ---------- */
+{
+  const style = (t: string, productType?: string) => findStyleIssues(t, { productType })
+  const telegraph =
+    "Спинка высокая, боковины - в филёнках. Внизу спрятана выкатная кровать: днём это место для сидения, ночью - второе спальное место."
+  assert.ok(style(telegraph).includes("telegraphic"))
+  assert.ok(style("Корпус - в одном из 12 цветов, рама светлая или тёмная, а ящики выдвигаются на направляющих до упора.").includes("telegraphic"))
+  assert.ok(!style("Нижнего корпуса нет - под тумбой видно пол, и спальня кажется просторнее, чем с обычной тумбой.").includes("telegraphic"))
+  assert.ok(style("Днём это диван со спинкой и подлокотниками, а ночью - второе спальное место для гостя или ребёнка.").includes("telegraphic"), "conjunction before the clause")
+  assert.ok(style("Ящик внизу - для белья, дверцы сверху - для одежды, а ручки - круглые, как у комода.").includes("dash_overuse"))
+  assert.ok(style("Наверху - фронтон, в основании - 2 ящика, между ними - 2 дверцы. Дверцы служат полем для росписи на всю высоту.").includes("telegraphic"))
+  assert.ok(style("Комод с 3 ящиками на изогнутых ножках, с филёнками на боковинах и волной по нижнему краю. Тумба справа.").includes("fragment"))
+  assert.ok(style("Кровать с арочным изголовьем. Мягкая волна царги обходит её по всему периметру, а короткие изогнутые ножки повторяют комоды серии.").includes("caption_opening"))
+  assert.ok(style("Мягкое сиденье на изогнутых ножках, под которым проходит резной подзор.").includes("thin"))
+  assert.ok(
+    !style("Мягкое сиденье на изогнутых ножках, под которым проходит резной подзор и волнистая царга по всему периметру банкетки.", "Банкетка").includes("thin")
+  )
+  const finished =
+    "У дивана высокая филёнчатая спинка и такие же филёнчатые боковины, а внизу спрятана выкатная кровать. Днём это место для сидения, а ночью выкатная часть даёт второе спальное место.\n\nТакой диван уместен в детской, кабинете или гостевой комнате, где кровать нужна не каждый день."
+  assert.deepEqual(style(finished), [])
+  assert.deepEqual(
+    style(
+      "Фасады и боковины комода покрыты рельефной сеткой, а по низу корпуса проходит резной подзор с волнистым краем. Комод с 3 ящиками стоит на изогнутых ножках. Ручки ящиков - Сваровски, такие же, как у прикроватной тумбы серии."
+    ),
+    []
+  )
+}
+
 /* ---------- the committed packet ---------- */
 function findRepoRoot(start: string): string | null {
   let dir = resolve(start)
@@ -312,6 +340,8 @@ function findRepoRoot(start: string): string | null {
       if (a?.kind === "copy") assert.equal(item.after, a.description, `${item.handle} packet text drifted from family source`)
       const issues = findCopyIssues(item.after, {}).filter((i) => i !== "too_short")
       assert.deepEqual(issues, [], `${item.handle}: ${JSON.stringify(issues)}`)
+      const styleIssues = findStyleIssues(item.after, { productType: a?.kind === "copy" ? a.family.product_type : undefined })
+      assert.deepEqual(styleIssues, [], `${item.handle} style: ${JSON.stringify(styleIssues)}`)
     }
   }
 }

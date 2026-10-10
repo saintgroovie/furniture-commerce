@@ -9,8 +9,13 @@
  * Meta description is a deterministic snippet of the buyer description.
  * No runtime generation, no invented facts, no commercial promises.
  */
-import { motifBuyerDisplayName, MOTIF_BUYER_DISPLAY_NAMES_RU } from "../../../backend/src/lib/motif-theme"
+import {
+  isLegacyEnglishMotifTitle,
+  motifBuyerDisplayName,
+  MOTIF_BUYER_DISPLAY_NAMES_RU,
+} from "../../../backend/src/lib/motif-theme"
 import { sanitizeBuyerDescription } from "@/lib/catalog-normalization"
+import { exactEnNameRu } from "@/lib/en-name-ru"
 import { getBuyerFacingProductTitle } from "@/lib/product-metadata"
 
 type ProductLike = Record<string, unknown>
@@ -26,20 +31,34 @@ function rawTitle(product: ProductLike): string | null {
   return typeof product.title === "string" ? product.title : null
 }
 
-/** RU painting name only for canonical motif slugs (never the English legacy label). */
+/** RU painting name, never the English label. Canonical motifs resolve only through `motif_slug`. */
 export function productMotifDisplayName(product: ProductLike): string | null {
   const slug = meta(product).motif_slug
   if (typeof slug !== "string") return null
   const key = slug.trim().toLowerCase()
-  if (!(key in MOTIF_BUYER_DISPLAY_NAMES_RU)) return null
-  return motifBuyerDisplayName(key)
+  return key in MOTIF_BUYER_DISPLAY_NAMES_RU ? motifBuyerDisplayName(key) : null
+}
+
+/**
+ * RU name of a non-canonical `painting_name` (e.g. Albion) for a row without `motif_slug`, from the
+ * exact dictionary only. It is the RU form of the name in the product's own title, not proof that
+ * the piece is painted, so the SEO name shows it without the word «роспись».
+ */
+export function productPaintingNameRu(product: ProductLike): string | null {
+  const m = meta(product)
+  if (typeof m.motif_slug === "string") return null
+  const painting = m.painting_name
+  if (typeof painting !== "string" || isLegacyEnglishMotifTitle(painting)) return null
+  return exactEnNameRu(painting)
 }
 
 export function getProductSeoName(product: ProductLike): string {
   const title = getBuyerFacingProductTitle(product)
   const motif = productMotifDisplayName(product)
-  if (!motif || title.includes(`«${motif}»`)) return title
-  return `${title}, роспись «${motif}»`
+  if (motif) return title.includes(`«${motif}»`) ? title : `${title}, роспись «${motif}»`
+  const name = productPaintingNameRu(product)
+  if (!name || title.includes(`«${name}»`)) return title
+  return `${title}, «${name}»`
 }
 
 /** Description shown on the PDP: internal price-list lines removed, prose untouched. */
@@ -78,6 +97,9 @@ function splitSentences(text: string): string[] {
   }
   return out
 }
+
+/** Legacy subtitles still carry English series names («Country»); they lose to a Latin-free description sentence. */
+const LATIN_WORD_RE = /[A-Za-z]{3,}/
 
 function cutAtWord(s: string, max: number): string {
   if (s.length <= max) return s
@@ -140,7 +162,8 @@ function appendWholeSentences(lead: string, sentences: string[]): string {
 }
 
 /**
- * Order: entity name + whole leading description sentences that fit → subtitle →
+ * Order: entity name + whole leading description sentences that fit → subtitle (skipped when it has
+ * Latin words and the description sentence has none) →
  * entity name + first sentence cut at a word → factual fallback built from the entity name.
  *
  * The entity name leads because sizes and paintings of one piece share one editorial
@@ -169,8 +192,10 @@ export function buildProductMetaDescription(
     const withFirst = base ? `${base} ${first}` : first
     if (withFirst.length <= META_DESCRIPTION_MAX) return appendWholeSentences(base, sentences)
   }
-  const subtitle =
+  const subtitleRaw =
     typeof product.subtitle === "string" ? normalizeSnippetText(product.subtitle) : ""
+  const hasLatin = (s: string) => LATIN_WORD_RE.test(s.replace(/Woodright/g, ""))
+  const subtitle = first && hasLatin(subtitleRaw) && !hasLatin(first) ? "" : subtitleRaw
   if (subtitle) return cutAtWord(subtitle, META_DESCRIPTION_MAX)
   if (first) {
     if (merged) return cutAtWord(merged, META_DESCRIPTION_MAX)

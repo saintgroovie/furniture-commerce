@@ -67,6 +67,17 @@ const motifRow = {
   assert.equal(plain(getProductSeoName(recovered)), "Высокий комод Мончелси")
   const unknownMotif = { ...motifRow, metadata: { ...motifRow.metadata, motif_slug: "not-a-motif" } }
   assert.doesNotMatch(getProductSeoName(unknownMotif), /роспись/, "only canonical motif slugs")
+  const noSlug = (painting: string) => ({
+    handle: "al-40-2",
+    title: `Шкаф комбинированный 560 ${painting}`,
+    metadata: { collection: "willie-winkie", painting_name: painting },
+  })
+  assert.match(plain(getProductSeoName(noSlug("Albion"))), /, «Альбион»$/)
+  assert.match(plain(getProductSeoName(noSlug("Brigantine Blue"))), /, «Бригантина»$/)
+  assert.notEqual(getProductSeoName(noSlug("Albion")), getProductSeoName(noSlug("Brigantine Blue")))
+  assert.doesNotMatch(getProductSeoName(noSlug("Brigantine Ivory")), /роспись/, "a painting name without a slug is not a painting claim")
+  assert.doesNotMatch(getProductSeoName(noSlug("Zebra Parade")), /«/, "no transliterated name")
+  assert.doesNotMatch(getProductSeoName(noSlug("Fairies")), /«Феи»/, "canonical paintings need motif_slug")
 }
 
 /* Meta description: whole sentences, ≤160, no ASCII ellipsis, no promises. */
@@ -149,10 +160,15 @@ const motifRow = {
 
   const longFirst = {
     ...short,
-    subtitle: "Стул Oliver — высота по спинке 90,5 см.",
+    subtitle: "Стул Оливер — высота по спинке 90,5 см.",
     description: `${"Очень длинное первое предложение без точки ".repeat(6)}конец.`,
   }
-  assert.equal(buildProductMetaDescription(longFirst, priced), "Стул Oliver - высота по спинке 90,5 см.", "subtitle when the first sentence is too long")
+  assert.equal(buildProductMetaDescription(longFirst, priced), "Стул Оливер - высота по спинке 90,5 см.", "subtitle when the first sentence is too long")
+  const latinSubtitle = buildProductMetaDescription({ ...longFirst, subtitle: "Стул Oliver — высота по спинке 90,5 см." }, priced)
+  assert.doesNotMatch(latinSubtitle, /Oliver/, "a Latin subtitle loses to a Latin-free description sentence")
+  const latinBoth = { ...longFirst, subtitle: "Стул Oliver — высота по спинке 90,5 см.", description: `${"Стул Oliver очень длинное первое предложение ".repeat(5)}конец.` }
+  assert.equal(buildProductMetaDescription(latinBoth, priced), "Стул Oliver - высота по спинке 90,5 см.", "legacy rows keep the subtitle")
+  assert.ok(latinSubtitle.endsWith("…") && latinSubtitle.length <= META_DESCRIPTION_MAX)
 
   const noSubtitle = { ...longFirst, subtitle: null }
   const cut = buildProductMetaDescription(noSubtitle, priced)

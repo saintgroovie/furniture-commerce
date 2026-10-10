@@ -9,11 +9,15 @@
  *   # 2) regenerate boards from the committed snapshot
  *   yarn dlx -q tsx scripts/editorial-copy-board.ts --dir ../../docs/product-copy/editorial-pass-20261010 [--strict]
  *
- * Inputs under --dir: families/*.json, collections.json, categories.json, source/catalog-snapshot.json.
- * Outputs under --dir: *-board.csv, editorial-quality.json, editorial-report.md, apply/editorial-copy-packet.json.
- * --strict exits 1 on coverage errors or on any hard quality issue in proposed copy.
+ * Inputs under --dir: families/*.json, collections.json, categories.json, source/catalog-snapshot.json,
+ * optional final-polish-audit.json (editorial statuses before/after) with source/baseline-packet.json
+ * (frozen PR #305 packet; its canonical sha must match the audit's baseline.packet_sha256).
+ * Outputs under --dir: *-board.csv, editorial-quality.json, editorial-report.md, apply/editorial-copy-packet.json,
+ * owner-copy-review.md (when the audit is present).
+ * --strict exits 1 on coverage errors, on any hard quality issue or style flag in proposed copy,
+ * and on audit inconsistencies (unexplained change, unpolished non-GOOD family, missing audit entry).
  */
-import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { getBuyerFacingProductTitle } from "../src/lib/product-metadata"
 import { getBuyerDescription } from "../src/lib/product-seo"
@@ -33,10 +37,12 @@ import {
   duplicateGroups,
   findBannedPhrases,
   findCopyIssues,
+  findStyleIssues,
   repetitionReport,
   splitParagraphs,
   type CopyIssue,
   type CorpusEntry,
+  type StyleIssue,
 } from "../../backend/src/lib/editorial-copy/quality"
 
 type Row = Record<string, unknown>
@@ -166,6 +172,13 @@ type BoardRow = {
   current_class: CurrentCopyClass
   after_text: string
   family_name: string
+  editorial_quality_before: string
+  editorial_quality_after: string
+  changed_in_final_polish: string
+  polish_reason: string
+  style_flags_before: string
+  style_flags_after: string
+  baseline_text: string
 }
 
 const CURRENT_PROVENANCE: Record<CurrentCopyClass, string> = {
@@ -206,8 +219,117 @@ const rows: BoardRow[] = snapshot.map((p) => {
     current_class: currentClass,
     after_text: proposed ?? p.visible_description ?? "",
     family_name: a?.kind === "copy" ? a.family.family_name : "",
+    editorial_quality_before: "",
+    editorial_quality_after: "",
+    changed_in_final_polish: "",
+    polish_reason: "",
+    style_flags_before: "",
+    style_flags_after: "",
+    baseline_text: "",
   }
 })
+
+/* ---------- final polish audit ---------- */
+
+const AUDIT_STATUSES = ["GOOD", "POLISH", "TOO_THIN", "TOO_TECHNICAL", "GENERIC", "AWKWARD", "FACT_RISK", "NEW", "HOLD"] as const
+const UNPOLISHED_AFTER = new Set(["POLISH", "TOO_TECHNICAL", "GENERIC", "AWKWARD", "FACT_RISK"])
+type AuditEntry = { quality_before: string[]; quality_after: string[]; polish_reason: string; after_note?: string }
+type AuditFile = {
+  pass_id: string
+  baseline: { ref: string; packet_sha256: string; items: number }
+  families: Array<AuditEntry & { family_id: string }>
+  holds: Array<AuditEntry & { handle: string; family_id: string }>
+  statuses: Record<string, string>
+  owner_review_examples: string[]
+}
+const auditPath = resolve(root, "final-polish-audit.json")
+const audit = existsSync(auditPath) ? readJson<AuditFile>(auditPath) : null
+const styleHardFailures: string[] = []
+const productTypeOf = (r: BoardRow) => r.product_type || undefined
+const styleOf = (text: string, r: BoardRow): StyleIssue[] => (text ? findStyleIssues(text, { productType: productTypeOf(r) }) : [])
+
+for (const r of rows) {
+  const afterFlags = styleOf(r.proposed_description, r)
+  r.style_flags_after = afterFlags.join(" ")
+  if (afterFlags.length) styleHardFailures.push(`${r.handle}: style ${afterFlags.join(", ")}`)
+}
+
+/** Baseline texts come only from the frozen baseline packet whose canonical sha the audit declares. */
+function loadBaselineTexts(declared: AuditFile["baseline"]): Map<string, string> {
+  const path = resolve(root, "source/baseline-packet.json")
+  if (!existsSync(path)) {
+    errors.push("audit: source/baseline-packet.json missing")
+    return new Map()
+  }
+  const raw = readJson<unknown>(path)
+  const sha = computeArtifactSha(raw)
+  if (sha !== declared.packet_sha256) errors.push(`audit: baseline packet sha ${sha} != declared ${declared.packet_sha256}`)
+  const parsed = parseEditorialCopyPacket(raw)
+  if (!parsed.ok) {
+    errors.push(`audit: baseline packet invalid: ${(parsed as { errors: string[] }).errors.join("; ")}`)
+    return new Map()
+  }
+  if (parsed.value.items.length !== declared.items) errors.push(`audit: baseline packet has ${parsed.value.items.length} items, declared ${declared.items}`)
+  return new Map(parsed.value.items.map((i) => [i.handle, i.after]))
+}
+
+if (audit) {
+  const baselineTexts = loadBaselineTexts(audit.baseline)
+  const dupes = (keys: string[]) => keys.filter((k, i) => keys.indexOf(k) !== i)
+  for (const id of new Set(dupes(audit.families.map((f) => f.family_id)))) errors.push(`audit: duplicate family entry ${id}`)
+  for (const h of new Set(dupes(audit.holds.map((x) => x.handle)))) errors.push(`audit: duplicate hold entry ${h}`)
+  const famAudit = new Map(audit.families.map((f) => [f.family_id, f]))
+  const holdAudit = new Map(audit.holds.map((h) => [h.handle, h]))
+  const knownFamilies = new Set(files.flatMap((f) => f.families.map((fam) => fam.family_id)))
+  for (const id of famAudit.keys()) if (!knownFamilies.has(id)) errors.push(`audit: unknown family ${id}`)
+  for (const h of baselineTexts.keys()) if (!snapshotHandles.has(h)) errors.push(`audit: baseline handle not in snapshot: ${h}`)
+  const checkStatuses = (where: string, e: AuditEntry) => {
+    for (const s of [...e.quality_before, ...e.quality_after]) {
+      if (!(AUDIT_STATUSES as readonly string[]).includes(s)) errors.push(`audit ${where}: unknown status ${s}`)
+    }
+    if (!e.quality_before.length || !e.quality_after.length) errors.push(`audit ${where}: empty status list`)
+    if (e.quality_before.some((s) => s !== "GOOD") && !e.polish_reason.trim()) errors.push(`audit ${where}: polish_reason required`)
+    const unpolished = e.quality_after.filter((s) => UNPOLISHED_AFTER.has(s))
+    if (unpolished.length) errors.push(`audit ${where}: unpolished after-status ${unpolished.join(" ")}`)
+    if (e.quality_after.includes("TOO_THIN") && !e.after_note?.trim()) errors.push(`audit ${where}: TOO_THIN after needs after_note`)
+  }
+  for (const [id, e] of famAudit) checkStatuses(`family ${id}`, e)
+  for (const [h, e] of holdAudit) checkStatuses(`hold ${h}`, e)
+
+  const familyChanged = new Map<string, boolean>()
+  for (const r of rows) {
+    const base = baselineTexts.get(r.handle)
+    if (base === undefined) continue
+    if (r.content_family_id && r.proposed_description && r.proposed_description !== base) familyChanged.set(r.content_family_id, true)
+  }
+  for (const r of rows) {
+    const base = baselineTexts.get(r.handle)
+    r.baseline_text = base ?? ""
+    const e = r.action === "HOLD" ? holdAudit.get(r.handle) : famAudit.get(r.content_family_id)
+    if (!e) {
+      errors.push(`audit: no entry for ${r.action === "HOLD" ? `hold ${r.handle}` : `family ${r.content_family_id}`}`)
+      continue
+    }
+    const isNew = e.quality_before.includes("NEW")
+    if (r.action !== "HOLD") {
+      if (isNew && base !== undefined) errors.push(`audit: ${r.handle} marked NEW but has a baseline text`)
+      if (!isNew && base === undefined) errors.push(`audit: ${r.handle} has no baseline text and is not marked NEW`)
+    }
+    const changed = base === undefined ? (r.proposed_description ? "new" : "no") : r.proposed_description !== base ? "yes" : "no"
+    const famChanged = familyChanged.get(r.content_family_id) ?? false
+    if (r.action !== "HOLD" && !isNew) {
+      const good = e.quality_before.every((s) => s === "GOOD")
+      if (good && famChanged) errors.push(`audit: family ${r.content_family_id} changed but quality_before is GOOD`)
+      if (!good && !famChanged) errors.push(`audit: family ${r.content_family_id} is ${e.quality_before.join(" ")} but text is unchanged`)
+    }
+    r.editorial_quality_before = e.quality_before.join(" ")
+    r.editorial_quality_after = e.quality_after.join(" ")
+    r.changed_in_final_polish = changed
+    r.polish_reason = [e.polish_reason, e.after_note].filter(Boolean).join(" | ")
+    r.style_flags_before = styleOf(base ?? "", r).join(" ")
+  }
+  for (const h of audit.owner_review_examples) if (!snapshotHandles.has(h)) errors.push(`audit: review example not in snapshot: ${h}`)
+}
 
 /* ---------- quality ---------- */
 
@@ -280,6 +402,7 @@ for (const r of rows) {
   const hard = (after.issues.get(r.handle) ?? []).filter((i) => HARD_ISSUES.includes(i))
   if (hard.length) hardFailures.push(`${r.handle}: ${hard.join(", ")}`)
 }
+hardFailures.push(...styleHardFailures)
 
 /* ---------- families board ---------- */
 
@@ -413,6 +536,9 @@ const PRODUCT_COLUMNS = [
   "confidence",
   "provenance",
   "reviewer_notes",
+  ...(audit
+    ? ["editorial_quality_before", "editorial_quality_after", "changed_in_final_polish", "polish_reason", "style_flags_before", "style_flags_after"]
+    : []),
 ]
 writeFileSync(resolve(root, "product-editorial-copy-board.csv"), csv(rows as unknown as Array<Record<string, string>>, PRODUCT_COLUMNS))
 writeFileSync(
@@ -470,6 +596,48 @@ const familySummary = {
   ),
 }
 
+function tally(values: string[]): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const v of values) out[v] = (out[v] ?? 0) + 1
+  return Object.fromEntries(Object.entries(out).sort())
+}
+const splitList = (s: string) => s.split(" ").filter(Boolean)
+const openingKey = (text: string) => (text.toLowerCase().match(/[\p{L}\d-]+/gu) ?? []).slice(0, 2).join(" ")
+function crossFamilyOpenings(list: Array<{ family: string; text: string }>) {
+  const byOpening = new Map<string, Set<string>>()
+  for (const e of list) {
+    if (!e.text) continue
+    const k = openingKey(e.text)
+    byOpening.set(k, (byOpening.get(k) ?? new Set()).add(e.family))
+  }
+  return [...byOpening]
+    .filter(([, fams]) => fams.size >= 3)
+    .map(([opening, fams]) => ({ opening, families: fams.size }))
+    .sort((a, b) => b.families - a.families || (a.opening < b.opening ? -1 : 1))
+}
+const copyRows = rows.filter((r) => r.action !== "HOLD")
+const finalPolish = audit
+  ? {
+      pass_id: audit.pass_id,
+      baseline: audit.baseline,
+      families_quality_before: tally(audit.families.flatMap((f) => f.quality_before)),
+      families_quality_after: tally(audit.families.flatMap((f) => f.quality_after)),
+      products_quality_before: tally(rows.flatMap((r) => splitList(r.editorial_quality_before))),
+      products_quality_after: tally(rows.flatMap((r) => splitList(r.editorial_quality_after))),
+      products_good_at_once: copyRows.filter((r) => r.editorial_quality_before === "GOOD").length,
+      products_changed: rows.filter((r) => r.changed_in_final_polish === "yes").length,
+      products_new: rows.filter((r) => r.changed_in_final_polish === "new").length,
+      products_unchanged: copyRows.filter((r) => r.changed_in_final_polish === "no").length,
+      holds: rows.filter((r) => r.action === "HOLD").map((r) => r.handle),
+      style_flags_before: tally(rows.flatMap((r) => splitList(r.style_flags_before))),
+      style_flags_after: tally(rows.flatMap((r) => splitList(r.style_flags_after))),
+      products_with_style_flags_before: rows.filter((r) => r.style_flags_before).length,
+      products_with_style_flags_after: rows.filter((r) => r.style_flags_after).length,
+      openings_in_3plus_families_before: crossFamilyOpenings(rows.map((r) => ({ family: familyOf(r), text: r.baseline_text }))),
+      openings_in_3plus_families_after: crossFamilyOpenings(copyRows.map((r) => ({ family: familyOf(r), text: r.proposed_description }))),
+    }
+  : null
+
 const quality = {
   packet_id: PACKET_ID,
   snapshot_sha256: snapshotSha,
@@ -480,6 +648,7 @@ const quality = {
   families: familySummary,
   before: before.metrics,
   after: after.metrics,
+  final_polish: finalPolish,
   hard_failures: hardFailures,
   coverage_errors: errors,
   after_duplicates_cross_family: after.duplicates.crossFamily,
@@ -557,7 +726,85 @@ for (const r of rows) {
   paragraphDistribution[n] = (paragraphDistribution[n] ?? 0) + 1
 }
 md.push("## Абзацы в новых текстах", "", "| абзацев | PDP |", "|---|---|", ...Object.entries(paragraphDistribution).sort().map(([k, v]) => `| ${k} | ${v} |`))
+
+function statusTable(fp: NonNullable<typeof finalPolish>): string[] {
+  const keys = [...new Set([...Object.keys(fp.families_quality_before), ...Object.keys(fp.families_quality_after)])]
+  const order = (k: string) => (AUDIT_STATUSES as readonly string[]).indexOf(k)
+  keys.sort((a, b) => order(a) - order(b))
+  return [
+    "| статус | семейств до | семейств после | PDP до | PDP после |",
+    "|---|---|---|---|---|",
+    ...keys.map(
+      (k) =>
+        `| ${k} | ${fp.families_quality_before[k] ?? 0} | ${fp.families_quality_after[k] ?? 0} | ${fp.products_quality_before[k] ?? 0} | ${fp.products_quality_after[k] ?? 0} |`
+    ),
+  ]
+}
+if (finalPolish) {
+  md.push("", "## Финальная редакторская шлифовка", "")
+  md.push(`База: ${finalPolish.baseline.ref}, packet sha256 \`${finalPolish.baseline.packet_sha256}\` (${finalPolish.baseline.items} строк).`, "")
+  md.push("Статусы ставятся на семейство (общий текст вариантов). Один текст может иметь несколько статусов, поэтому суммы больше числа семейств.", "")
+  md.push(...statusTable(finalPolish), "")
+  md.push(
+    `- GOOD сразу (PDP): ${finalPolish.products_good_at_once}`,
+    `- изменено в шлифовке (PDP): ${finalPolish.products_changed}`,
+    `- новых PDP: ${finalPolish.products_new}`,
+    `- без изменений (PDP): ${finalPolish.products_unchanged}`,
+    `- HOLD: ${finalPolish.holds.join(", ") || "нет"}`,
+    `- стилевые флаги (телеграф, обрывки, перегруз тире, подпись вместо начала, слишком коротко): до ${finalPolish.products_with_style_flags_before} PDP, после ${finalPolish.products_with_style_flags_after} PDP`,
+    ""
+  )
+  md.push("| флаг | до | после |", "|---|---|---|")
+  for (const k of [...new Set([...Object.keys(finalPolish.style_flags_before), ...Object.keys(finalPolish.style_flags_after)])].sort()) {
+    md.push(`| ${k} | ${finalPolish.style_flags_before[k] ?? 0} | ${finalPolish.style_flags_after[k] ?? 0} |`)
+  }
+  md.push("", "Одинаковые первые 2 слова в 3+ семействах (монотонность):", "")
+  md.push(`- до: ${finalPolish.openings_in_3plus_families_before.map((o) => `«${o.opening}» ×${o.families}`).join(", ") || "нет"}`)
+  md.push(`- после: ${finalPolish.openings_in_3plus_families_after.map((o) => `«${o.opening}» ×${o.families}`).join(", ") || "нет"}`)
+}
 writeFileSync(resolve(root, "editorial-report.md"), `${md.join("\n")}\n`)
+
+if (audit && finalPolish) {
+  const byHandle = new Map(rows.map((r) => [r.handle, r]))
+  const quote = (text: string) => splitParagraphs(text).map((p) => `> ${p}`).join("\n>\n")
+  const review: string[] = []
+  review.push("# Owner copy review - финальная редакторская шлифовка", "")
+  review.push(
+    "Что это: тексты описаний PDP после финальной шлифовки PR #305. Факты не менялись, менялась форма: телеграфные протоколы, обрывки и подписи к фото переписаны в связный каталожный текст. Утверждения без опоры на evidence убраны.",
+    "",
+    `Пакет: \`apply/editorial-copy-packet.json\`, ${packet.items.length} строк, sha256 \`${packetSha}\`. Snapshot sha256 \`${snapshotSha}\`.`,
+    "",
+    "Статус: READY_FOR_OWNER_COPY_APPROVAL. Production не изменялся, apply выполняется только после отдельного решения владельца.",
+    ""
+  )
+  review.push("## Сводка", "", ...statusTable(finalPolish), "")
+  review.push(
+    `- GOOD сразу: ${finalPolish.products_good_at_once} PDP`,
+    `- изменено в шлифовке: ${finalPolish.products_changed} PDP`,
+    `- новые PDP из свежего snapshot: ${finalPolish.products_new}`,
+    `- HOLD: ${finalPolish.holds.length}`,
+    ""
+  )
+  review.push(`## Примеры до → после (${audit.owner_review_examples.length})`, "")
+  review.push("«Было» - текст из пакета PR #305 до шлифовки. ADD - на сайте сейчас пусто, REWRITE - текст заменяет текущий.", "")
+  for (const h of audit.owner_review_examples) {
+    const r = byHandle.get(h)
+    if (!r) continue
+    review.push(`### ${r.canonical_title} (\`${r.handle}\`)`, "")
+    review.push(
+      `- коллекция: ${r.collection}; тип: ${r.product_type}; действие: ${r.action}; семейство \`${r.content_family_id}\``,
+      `- статус: ${r.editorial_quality_before} → ${r.editorial_quality_after}${r.changed_in_final_polish === "no" ? " (без изменений)" : ""}`
+    )
+    if (r.polish_reason) review.push(`- почему: ${r.polish_reason}`)
+    review.push("", "Было:", "", r.baseline_text ? quote(r.baseline_text) : "> (PDP не было в пакете PR #305)", "", "Стало:", "", quote(r.proposed_description), "")
+  }
+  review.push("## HOLD", "", "Эти PDP остаются без изменений до ответа владельца.", "")
+  for (const r of rows.filter((x) => x.action === "HOLD")) {
+    review.push(`- \`${r.handle}\` ${r.canonical_title}: ${r.polish_reason}`)
+  }
+  review.push("", "## Статусы", "", ...Object.entries(audit.statuses).map(([k, v]) => `- ${k} - ${v}`))
+  writeFileSync(resolve(root, "owner-copy-review.md"), `${review.join("\n")}\n`)
+}
 
 console.log(JSON.stringify({ actionCounts, packet_items: packet.items.length, packetSha, before: before.metrics, after: after.metrics }, null, 1))
 if (errors.length) console.error(`coverage errors:\n${errors.join("\n")}`)

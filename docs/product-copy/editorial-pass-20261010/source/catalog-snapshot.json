@@ -1,6 +1,149 @@
 {
  "products": [
   {
+   "product_id": "prod_WW359211B3D8BDC2D36EBEF0",
+   "handle": "al-08-1",
+   "sku": "al-08-1",
+   "status": "published",
+   "raw_title": "Тумбочка прикроватная Albion",
+   "canonical_title": "Прикроватная тумба Вилли Винки",
+   "category": "krovati",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW6B5FC43C1785C240EAA2FD",
+   "handle": "al-14-1",
+   "sku": "al-14-1",
+   "status": "published",
+   "raw_title": "Кровать 1-сп. Albion (90*190)",
+   "canonical_title": "Односпальная кровать Вилли Винки (90 × 190)",
+   "category": "krovati",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW041EE16B73C03948F30086",
+   "handle": "al-14-2",
+   "sku": "al-14-2",
+   "status": "published",
+   "raw_title": "Кровать 1-сп. (90*190) с ящиками Albion",
+   "canonical_title": "Односпальная кровать Вилли Винки (90 × 190) с ящиками",
+   "category": "krovati",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WWC6A9107D26C33C98251BFF",
+   "handle": "al-15-1",
+   "sku": "al-15-1",
+   "status": "published",
+   "raw_title": "Кровать 1,5-сп. Albion (120*190)",
+   "canonical_title": "Полутораспальная кровать Вилли Винки (120 × 190)",
+   "category": "krovati",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WWE1FAF547DDD9A422EE9D79",
+   "handle": "al-23-1",
+   "sku": "al-23-1",
+   "status": "published",
+   "raw_title": "Стул Albion",
+   "canonical_title": "Стул Вилли Винки",
+   "category": "stulya",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW477E415152D3624438EBC7",
+   "handle": "al-40-2",
+   "sku": "al-40-2",
+   "status": "published",
+   "raw_title": "Шкаф комбинированный 560 Albion",
+   "canonical_title": "Шкаф комбинированный Вилли Винки, 560",
+   "category": "shkafy",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WWR59FEF4BD0A827B226F1C7E",
+   "handle": "al-42-1",
+   "sku": "al-42-1",
+   "status": "published",
+   "raw_title": "Тумба для телевизора Albion",
+   "canonical_title": "Тумба для телевизора Вилли Винки",
+   "category": "tumby",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW806A2A2B00BF5D555CDD09",
+   "handle": "al-57-1",
+   "sku": "al-57-1",
+   "status": "published",
+   "raw_title": "Диван малый Albion (80*150)",
+   "canonical_title": "Малый диван Вилли Винки (80 × 150)",
+   "category": "divany",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WWRE875A4A0641D92E12B64F3",
+   "handle": "al-66-1",
+   "sku": "al-66-1",
+   "status": "published",
+   "raw_title": "Стол письменный 2-тумб. Albion",
+   "canonical_title": "Двухтумбовый письменный стол Вилли Винки",
+   "category": "stoly",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW5F9FEADA295C656D33B01A",
+   "handle": "al-69-1",
+   "sku": "al-69-1",
+   "status": "published",
+   "raw_title": "Полка книжная Albion",
+   "canonical_title": "Книжная полка Вилли Винки",
+   "category": "polki",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WWAF867E08FC00D719C4F4A6",
+   "handle": "al-82-1",
+   "sku": "al-82-1",
+   "status": "published",
+   "raw_title": "Стульчик детский Albion",
+   "canonical_title": "Детский стульчик Вилли Винки",
+   "category": "stulya",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW639599C4E9115A8CFF6630",
+   "handle": "al-85-1",
+   "sku": "al-85-1",
+   "status": "published",
+   "raw_title": "Кроватка для новорожденного Albion (60*120)",
+   "canonical_title": "Кроватка для новорождённого Вилли Винки (60 × 120)",
+   "category": "krovati",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW10BCDD3AF1496A43D1611D",
+   "handle": "al-95-1",
+   "sku": "al-95-1",
+   "status": "published",
+   "raw_title": "Кровать-трансформер (80*150) с рисунком Albion",
+   "canonical_title": "Кровать-трансформер Вилли Винки (80 × 150) с рисунком",
+   "category": "krovati",
+   "description": "",
+   "visible_description": null
+  },
+  {
    "product_id": "prod_01KV69A7AKTR1KH8GH90KC8YAJ",
    "handle": "av-05-1",
    "sku": "av-05-1",
@@ -10,6 +153,50 @@
    "category": "komody",
    "description": "Комод стандартного формата с росписью Ant's Village. Глубина 44 см - уменьшенная относительно полноглубоких комодов серии (56 см), проходы детской остаются свободнее.\n\nРоспись совпадает с другими предметами серии Ant's Village.\n\nЕсть варианты исполнения - уточним в заявке",
    "visible_description": "Комод стандартного формата с росписью Ant's Village. Глубина 44 см - уменьшенная относительно полноглубоких комодов серии (56 см), проходы детской остаются свободнее.\n\nРоспись совпадает с другими предметами серии Ant's Village.\n\nЕсть варианты исполнения - уточним в заявке"
+  },
+  {
+   "product_id": "prod_WWC1A334FBF1F3A30AFE39A5",
+   "handle": "av-09-1",
+   "sku": "av-09-1",
+   "status": "published",
+   "raw_title": "Зеркало навесное овальное Ant's Village",
+   "canonical_title": "Овальное навесное зеркало Вилли Винки",
+   "category": "zerkala",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW9D33A609FA56913C8F1863",
+   "handle": "av-09-2",
+   "sku": "av-09-2",
+   "status": "published",
+   "raw_title": "Зеркало напольное Ant's Village",
+   "canonical_title": "Напольное зеркало Вилли Винки",
+   "category": "zerkala",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW6A3C7459FE655349E62C5D",
+   "handle": "av-65-1",
+   "sku": "av-65-1",
+   "status": "published",
+   "raw_title": "Стол письменный 1-тумб. 0П Ant's Village",
+   "canonical_title": "Однотумбовый письменный стол Вилли Винки (тумба с полками справа)",
+   "category": "tumby",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WWA0C67FC2F4E9B0E7B2BA9D",
+   "handle": "av-66-2",
+   "sku": "av-66-2",
+   "status": "published",
+   "raw_title": "Стол письменный 2-тумб.ПЯ Ant's Village",
+   "canonical_title": "Двухтумбовый письменный стол Вилли Винки (полки слева, ящики справа)",
+   "category": "tumby",
+   "description": "",
+   "visible_description": null
   },
   {
    "product_id": "prod_01KV69A7AKYY759QG6FC8CQ7JA",
@@ -23,6 +210,17 @@
    "visible_description": "Высокий комод серии Ballet (Willie Winkie): вертикальная компоновка ящиков забирает меньше стены, чем стандартная, - в детской это освобождает место для игры. Глубина 44 см оставляет проходы свободнее.\n\nРоспись Ballet продолжает серию: комод можно дополнить другими предметами с тем же мотивом.\n\nЕсть варианты исполнения - уточним в заявке"
   },
   {
+   "product_id": "prod_WW2017D09E406B5E2A1082E7",
+   "handle": "ba-07-1",
+   "sku": "ba-07-1",
+   "status": "published",
+   "raw_title": "Ящик для игрушек с подъем. мех. Ballet",
+   "canonical_title": "Ящик для игрушек с подъем. мех",
+   "category": "toy-box",
+   "description": "",
+   "visible_description": null
+  },
+  {
    "product_id": "prod_01KV69A7AMZWW7MF8RG6A98292",
    "handle": "ba-62-1",
    "sku": "ba-62-1",
@@ -32,6 +230,39 @@
    "category": "stellazhi",
    "description": "Открытый книжный стеллаж серии Ballet (Willie Winkie). Открытые полки держат книги и коробки с играми на виду - содержимое остаётся частью облика комнаты.\n\nГлубина полок - 44 см. Роспись Ballet совпадает с другими предметами серии.\n\nЕсть варианты исполнения - уточним в заявке",
    "visible_description": "Открытый книжный стеллаж серии Ballet (Willie Winkie). Открытые полки держат книги и коробки с играми на виду - содержимое остаётся частью облика комнаты.\n\nГлубина полок - 44 см. Роспись Ballet совпадает с другими предметами серии.\n\nЕсть варианты исполнения - уточним в заявке"
+  },
+  {
+   "product_id": "prod_WWDBA4AD5E1CE0F1DA8B26AE",
+   "handle": "ba-85-1",
+   "sku": "ba-85-1",
+   "status": "published",
+   "raw_title": "Кроватка для новорожденного Ballet (60*120)",
+   "canonical_title": "Кроватка для новорождённого Вилли Винки (60 × 120)",
+   "category": "krovati",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW1907D2EA9F669BEF53FCB2",
+   "handle": "brb-40-2",
+   "sku": "brb-40-2",
+   "status": "published",
+   "raw_title": "Шкаф комбинированный 560 Brigantine Blue",
+   "canonical_title": "Шкаф комбинированный Вилли Винки, 560",
+   "category": "shkafy",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WWR460DEEFDFDF4D878E74A0A",
+   "handle": "bri-95-3",
+   "sku": "bri-95-3",
+   "status": "published",
+   "raw_title": "Кровать-трансформер Brigantine Ivory (80*150) с тканью",
+   "canonical_title": "Кровать-трансформер Вилли Винки (80 × 150) с тканью",
+   "category": "krovati",
+   "description": "",
+   "visible_description": null
   },
   {
    "product_id": "prod_01KNTBXADAKWN6BXHSYFRX0R2F",
@@ -199,6 +430,17 @@
    "visible_description": "Туалетный столик с зеркалом из серии Fairies коллекции Willie Winkie - «взрослый» предмет в детском масштабе: у ребёнка появляется своё зеркало и своя поверхность для заколок и мелочей. Роспись Fairies продолжает сюжет серии - столик естественно встаёт рядом с комодом и рабочим столом того же мотива.\n\nЕсть варианты исполнения - уточним в заявке"
   },
   {
+   "product_id": "prod_WW6D5940BE7E8C007A3A20E5",
+   "handle": "fa-40-1",
+   "sku": "fa-40-1",
+   "status": "published",
+   "raw_title": "Шкаф комбинированный 440 Fairies",
+   "canonical_title": "Шкаф комбинированный Вилли Винки, 440",
+   "category": "shkafy",
+   "description": "",
+   "visible_description": null
+  },
+  {
    "product_id": "prod_01KV69A7AMBRZPR11DCTPR7864",
    "handle": "fa-67-1",
    "sku": "fa-67-1",
@@ -230,6 +472,17 @@
    "category": "komody",
    "description": "Высокий комод серии Fantasy Kingdom (Willie Winkie): вертикальная компоновка ящиков при полной глубине 56 см занимает меньше стены, чем стандартный комод той же глубины. Роспись Fantasy Kingdom связывает его со стандартным комодом серии в одну комнату.\n\nЕсть варианты исполнения - уточним в заявке",
    "visible_description": "Высокий комод серии Fantasy Kingdom (Willie Winkie): вертикальная компоновка ящиков при полной глубине 56 см занимает меньше стены, чем стандартный комод той же глубины. Роспись Fantasy Kingdom связывает его со стандартным комодом серии в одну комнату.\n\nЕсть варианты исполнения - уточним в заявке"
+  },
+  {
+   "product_id": "prod_WWRFED4059B3BA92004D2462E",
+   "handle": "fk-83-1",
+   "sku": "fk-83-1",
+   "status": "published",
+   "raw_title": "Столешница пеленальная Fantasy Kingdom",
+   "canonical_title": "Столешница пеленальная Вилли Винки",
+   "category": "pelenalnye-stoleshnicy",
+   "description": "",
+   "visible_description": null
   },
   {
    "product_id": "prod_01KM1QHNHYQKVZHCN3SM9BY42Z",
@@ -1349,7 +1602,7 @@
    "status": "published",
    "raw_title": "Столешница пеленальная съемная",
    "canonical_title": "Съёмная пеленальная столешница Оливер",
-   "category": "stoly",
+   "category": "pelenalnye-stoleshnicy",
    "description": "Съёмная пеленальная столешница Oliver Kids: 88 × 75 см, борта высотой 18 см. Ставится на комод и превращает его в полноценное место для пеленания на уровне рук взрослого - отдельный пеленальный стол не нужен.\n\nКогда ребёнок вырастает, столешница просто снимается, и комод продолжает работать как обычный. Рациональная альтернатива мебели «на один год».\n\nЕсть варианты исполнения - уточним в заявке",
    "visible_description": "Съёмная пеленальная столешница Oliver Kids: 88 × 75 см, борта высотой 18 см. Ставится на комод и превращает его в полноценное место для пеленания на уровне рук взрослого - отдельный пеленальный стол не нужен.\n\nКогда ребёнок вырастает, столешница просто снимается, и комод продолжает работать как обычный. Рациональная альтернатива мебели «на один год».\n\nЕсть варианты исполнения - уточним в заявке"
   },
@@ -1527,6 +1780,17 @@
    "canonical_title": "Стандартный комод Принцесса Роза (ручки Сваровски)",
    "category": "komody",
    "description": "Комод стандартный (ручки Swarovski)\nВ названии прайса указаны ручки Swarovski\n902 × 900 × 572 мм\nПорядок: высота, ширина, глубина. Источник - ячейка прайса 18.09.2026",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_01KY5SGSEK6W5RAYMFER60Q6W5",
+   "handle": "pr-06-1",
+   "sku": "PR-06-1",
+   "status": "published",
+   "raw_title": "Столик туалетный (ручки Swarovski)",
+   "canonical_title": "Туалетный столик Принцесса Роза (ручки Сваровски)",
+   "category": "stoly",
+   "description": "",
    "visible_description": null
   },
   {
@@ -2201,6 +2465,28 @@
    "visible_description": "Высокий комод серии Royal Lilies (Willie Winkie): вертикальная компоновка ящиков при уменьшенной глубине 44 см - формат для небольшой детской, где комод должен быть вместительным, но не громоздким. Роспись Royal Lilies объединяет его с рабочим столом той же серии.\n\nЕсть варианты исполнения - уточним в заявке"
   },
   {
+   "product_id": "prod_WW11FFC0FCCC3564D7EB0E79",
+   "handle": "rl-13-2",
+   "sku": "rl-13-2",
+   "status": "published",
+   "raw_title": "Кровать детская (80*150) с ящиками Royal Lilies",
+   "canonical_title": "Кровать детская (80 × 150) Вилли Винки с ящиками",
+   "category": "krovati",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WWD7261C6C4F5021EA7CDEDF",
+   "handle": "rl-40-2",
+   "sku": "rl-40-2",
+   "status": "published",
+   "raw_title": "Шкаф комбинированный 560 Royal Lilies",
+   "canonical_title": "Шкаф комбинированный Вилли Винки, 560",
+   "category": "shkafy",
+   "description": "",
+   "visible_description": null
+  },
+  {
    "product_id": "prod_01KV69A7AMAN66BZ464F3B8W2P",
    "handle": "rl-67-1",
    "sku": "rl-67-1",
@@ -2289,6 +2575,17 @@
    "visible_description": "Рабочий стол серии Teddy Bear (Willie Winkie) - полноценное место для занятий в детской: роспись Teddy Bear связывает стол с комодом и стеллажом серии.\n\nЕсть варианты исполнения - уточним в заявке"
   },
   {
+   "product_id": "prod_WWR9899728A3C907C87012582",
+   "handle": "te-01-2",
+   "sku": "te-01-2",
+   "status": "published",
+   "raw_title": "Шкаф для одежды 1-дв. Templars",
+   "canonical_title": "Однодверный шкаф для одежды Вилли Винки",
+   "category": "shkafy",
+   "description": "",
+   "visible_description": null
+  },
+  {
    "product_id": "prod_01KV69A7ANEWZAQV2G0PG4B8H7",
    "handle": "te-02-2",
    "sku": "te-02-2",
@@ -2322,6 +2619,50 @@
    "visible_description": "Высокий комод серии Templars (Willie Winkie) с уменьшенной глубиной 44 см: ярусы ящиков вверх при щадящей глубине - вариант для небольшой детской, где стандартный комод с полной глубиной уже не встаёт. Роспись Templars связывает его с остальной серией.\n\nЕсть варианты исполнения - уточним в заявке"
   },
   {
+   "product_id": "prod_WWB2062D99C5FB729E0AFA7A",
+   "handle": "te-07-1",
+   "sku": "te-07-1",
+   "status": "published",
+   "raw_title": "Ящик для игрушек с подъем. мех. Templars",
+   "canonical_title": "Ящик для игрушек с подъем. мех",
+   "category": "toy-box",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW602984DF1919373C0A3AD6",
+   "handle": "te-40-2",
+   "sku": "te-40-2",
+   "status": "published",
+   "raw_title": "Шкаф комбинированный 560 Templars",
+   "canonical_title": "Шкаф комбинированный Вилли Винки, 560",
+   "category": "shkafy",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WWRAF4E9D57DD921D0BD1602C",
+   "handle": "te-55-1",
+   "sku": "te-55-1",
+   "status": "published",
+   "raw_title": "Банкетка малая Templars",
+   "canonical_title": "Малая банкетка Вилли Винки",
+   "category": "skameyki",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WWRB42927E49606FAD1D67030",
+   "handle": "te-57-2",
+   "sku": "te-57-2",
+   "status": "published",
+   "raw_title": "Диван большой Templars (90*190)",
+   "canonical_title": "Большой диван Вилли Винки (90 × 190)",
+   "category": "divany",
+   "description": "",
+   "visible_description": null
+  },
+  {
    "product_id": "prod_01KV69A7ANA0C0PJ40Y13HE005",
    "handle": "te-62-1",
    "sku": "te-62-1",
@@ -2331,6 +2672,39 @@
    "category": "stellazhi",
    "description": "Высокий книжный стеллаж серии Templars (Willie Winkie) - открытое хранение на всю высоту: книги, коробки с играми, корзины. Открытые полки держат содержимое на виду.\n\nРоспись Templars продолжает сюжет серии.\n\nЕсть варианты исполнения - уточним в заявке",
    "visible_description": "Высокий книжный стеллаж серии Templars (Willie Winkie) - открытое хранение на всю высоту: книги, коробки с играми, корзины. Открытые полки держат содержимое на виду.\n\nРоспись Templars продолжает сюжет серии.\n\nЕсть варианты исполнения - уточним в заявке"
+  },
+  {
+   "product_id": "prod_WWE7CD7DFC086F4B6F5761E8",
+   "handle": "te-65-2",
+   "sku": "te-65-2",
+   "status": "published",
+   "raw_title": "Стол письменный 1-тумб. П0 Templars",
+   "canonical_title": "Однотумбовый письменный стол Вилли Винки (тумба с полками слева)",
+   "category": "tumby",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WWR4D337ED665538BF3D8E171",
+   "handle": "te-66-1",
+   "sku": "te-66-1",
+   "status": "published",
+   "raw_title": "Стол письменный 2-тумб. Templars",
+   "canonical_title": "Двухтумбовый письменный стол Вилли Винки",
+   "category": "stoly",
+   "description": "",
+   "visible_description": null
+  },
+  {
+   "product_id": "prod_WW2AC17E547B8DD722DF4611",
+   "handle": "te-66-3",
+   "sku": "te-66-3",
+   "status": "published",
+   "raw_title": "Стол письменный 2-тумб.ЯП Templars",
+   "canonical_title": "Двухтумбовый письменный стол Вилли Винки (ящики слева, полки справа)",
+   "category": "tumby",
+   "description": "",
+   "visible_description": null
   },
   {
    "product_id": "prod_01KV69A7ANT2KEJ5QYJV4WGYVF",
