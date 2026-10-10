@@ -54,6 +54,22 @@ function hasFabricExecution(title: string): boolean {
   return title.toLowerCase().includes("с тканью")
 }
 
+/**
+ * Size-axis groups may differ only by mattress size.
+ * A fabric, footboard, or lift difference is another product.
+ */
+export function sizeAxisConstructionKey(title: string): string {
+  const text = title.toLowerCase().replace(/ё/g, "е")
+  const marks: string[] = []
+  if (text.includes("без изножья")) marks.push("no-foot")
+  if (text.includes("с тканью")) marks.push("fabric")
+  if (text.includes("подъемн")) marks.push("lift")
+  if (text.includes("трансформер")) marks.push("transformer")
+  if (text.includes("приставн")) marks.push("side-crib")
+  if (text.includes("без матраса")) marks.push("mattress-not-included")
+  return marks.join("+")
+}
+
 /** Owner-locked Provence mattress groups (OD-PROVENCE-GROUP-UX-01=B). */
 const EXECUTION_DISPLAY_GROUPS = new Set(["pv-15-bed", "pv-16-bed"])
 
@@ -147,6 +163,14 @@ export function groupProductsForDisplay(
     seen.add(dg)
 
     const members = sortDisplayGroupMembers(groupMembers.get(dg)!)
+    const axis = inferDisplayGroupAxis(members)
+    if (
+      axis === "size" &&
+      new Set(members.map((member) => sizeAxisConstructionKey(productTitle(member)))).size > 1
+    ) {
+      for (const member of members) result.push({ product: member })
+      continue
+    }
 
     const representative = members[0]
     const groupTitle =
@@ -160,7 +184,6 @@ export function groupProductsForDisplay(
       .map((m) => resolveCatalogCardPrice(m).amount ?? getPrice(m))
       .filter((v): v is number => v != null)
 
-    const axis = inferDisplayGroupAxis(members)
     const hint =
       axis === "execution"
         ? pluralizeExecutions(members.length)

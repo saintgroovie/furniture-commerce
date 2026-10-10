@@ -173,4 +173,27 @@ assert.equal(gwGrouped[0]!.displayGroup?.axis, "size")
 assert.equal(gwGrouped[0]!.displayGroup?.hint, "2 размера")
 assert.equal(gwGrouped[0]!.displayGroup?.memberChips, undefined)
 
+const mixedProvence = groupProductsForDisplay([
+  product({
+    id: "PV-15-1",
+    title: "Кровать 1,5-сп. (120×190) без изножья",
+    display_group: "pv-15-16-bed",
+    display_group_sort: 1,
+  }),
+  product({
+    id: "PV-15-2",
+    title: "Кровать 1,5-сп. (120×190) с тканью без изножья",
+    display_group: "pv-15-16-bed",
+    display_group_sort: 2,
+  }),
+  product({
+    id: "PV-16-1",
+    title: "Кровать 1,5-сп. (140×190) без изножья",
+    display_group: "pv-15-16-bed",
+    display_group_sort: 3,
+  }),
+])
+assert.equal(mixedProvence.length, 3)
+assert.equal(mixedProvence.every((entry) => entry.displayGroup == null), true)
+
 console.log("display-group.fidelity.test.ts: ok")
