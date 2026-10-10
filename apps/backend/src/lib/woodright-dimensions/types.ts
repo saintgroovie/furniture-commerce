@@ -39,14 +39,23 @@ export type DimensionSourceLayer = "variant" | "product" | "none"
 /** Internal diagnostics only - never expose in buyer Store DTO. */
 export type DimensionProvenance = Record<DimensionAxis, DimensionSourceLayer>
 
+/** One physical position of an axis. Not a point on a range. */
+export type DimensionPosition = {
+  value_mm: number
+  label: string
+}
+
 /**
  * Discrete positions of one axis. Source order, not a min/max range.
  * Lives inside the same `dimensions` object as scalar axes.
+ * `positions` binds each millimetre value to its own label.
+ * `values_mm` plus `note` remains the unlabeled list.
  */
 export type DimensionAxisState = {
   axis: DimensionAxis
   values_mm: number[]
   note: string | null
+  positions: DimensionPosition[] | null
 }
 
 export type ResolveDimensionsResult = {
