@@ -31,22 +31,27 @@ def main() -> None:
     # Non-secret fingerprint: names + presence flags only
     fp_src = "|".join(arg_names) + f"|site_url_set={bool(os.environ.get('NEXT_PUBLIC_SITE_URL_SET'))}"
     fingerprint = hashlib.sha256(fp_src.encode()).hexdigest()[:32]
+    release_mode = os.environ.get("RELEASE_MODE") or "main"
     aliases = []
     # Only record aliases when this build actually published them.
     pub = os.environ.get("PUBLISH_MUTABLE_ALIAS", "false")
     if pub in ("1", "true", "True"):
         aliases = [
             {
-                "repository": "ghcr.io/saintgroovie/woodright-backend",
-                "tag": f"mutable-sha-{sha}",
-                "mutable": True,
-            },
-            {
                 "repository": "ghcr.io/saintgroovie/woodright-storefront",
                 "tag": f"mutable-sha-{sha}",
                 "mutable": True,
             },
         ]
+        if release_mode != "isolated_storefront":
+            aliases.insert(
+                0,
+                {
+                    "repository": "ghcr.io/saintgroovie/woodright-backend",
+                    "tag": f"mutable-sha-{sha}",
+                    "mutable": True,
+                },
+            )
 
     # Image build profile evidence (ops/config/image-build-profiles/*.conf via
     # scripts/release/resolve-image-build-profile.cjs). Non-secret only - the
@@ -72,10 +77,29 @@ def main() -> None:
     contamination_scan = "pass" if build_profile else "not_run"
     launch_contract = "pass" if build_profile else "not_run"
 
+    if release_mode == "isolated_storefront":
+        source_branch = os.environ["RELEASE_REF"]
+        backend_revision = os.environ["BACKEND_REVISION"]
+        backend_image = {
+            "repository": "ghcr.io/saintgroovie/woodright-backend",
+            "unique_tag": f"reused-{backend_revision[:12]}",
+            "digest": be,
+            "oci_revision": backend_revision,
+            "reused": True,
+        }
+    else:
+        source_branch = os.environ.get("GITHUB_REF_NAME") or os.environ.get("SOURCE_BRANCH") or "main"
+        backend_image = {
+            "repository": "ghcr.io/saintgroovie/woodright-backend",
+            "unique_tag": unique,
+            "digest": be,
+            "oci_revision": sha,
+        }
+
     doc = {
         "schema_version": "1",
         "source_sha": sha,
-        "source_branch": os.environ.get("GITHUB_REF_NAME") or os.environ.get("SOURCE_BRANCH") or "main",
+        "source_branch": source_branch,
         "workflow_name": os.environ.get("GITHUB_WORKFLOW") or "Build staging images",
         "workflow_run_id": run_id,
         "workflow_run_attempt": attempt,
@@ -83,12 +107,7 @@ def main() -> None:
         "actor": os.environ.get("GITHUB_ACTOR"),
         "build_started_at": started,
         "build_completed_at": completed,
-        "backend": {
-            "repository": "ghcr.io/saintgroovie/woodright-backend",
-            "unique_tag": unique,
-            "digest": be,
-            "oci_revision": sha,
-        },
+        "backend": backend_image,
         "storefront": {
             "repository": "ghcr.io/saintgroovie/woodright-storefront",
             "unique_tag": unique,
@@ -107,6 +126,18 @@ def main() -> None:
         "release_authorized": False,
         "notes": "Build artifact only. Deploy requires separate release manifest + digest pin.",
     }
+    if release_mode == "isolated_storefront":
+        doc["release_mode"] = "isolated_storefront"
+        doc["production_base_sha"] = os.environ["PRODUCTION_BASE_SHA"]
+        doc["production_storefront_digest"] = os.environ["PRODUCTION_STOREFRONT_DIGEST"]
+        doc["main_sha"] = os.environ["MAIN_SHA"]
+        doc["migration_count"] = 0
+        doc["db_mutation"] = "forbidden"
+        doc["storefront_delta_scope"] = "apps/storefront"
+        doc["notes"] = (
+            "Isolated storefront bake. Backend image was reused, not built. "
+            "Candidate is not current main. Deploy requires a separate storefront-only cutover."
+        )
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {OUT}")

@@ -224,6 +224,7 @@ jobs:
           node scripts/release/validate-report-status.cjs --fixture-dir scripts/release/fixtures/reports
           node scripts/release/check-governance-no-deploy.cjs .github/workflows
           node scripts/release/deployment-owner-label.fidelity.test.cjs
+          node scripts/release/validate-isolated-storefront-bake.fidelity.test.cjs
           bash scripts/ops/test-runtime-discovery-fidelity.sh
           bash scripts/ops/test-media-gate-v2-fidelity.sh
           bash scripts/ops/test-public-demo-media-prepromote-fidelity.sh

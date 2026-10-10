@@ -50,6 +50,39 @@ on:
         required: false
         type: boolean
         default: true
+      release_mode:
+        description: "main keeps the default ancestry pair bake. isolated_storefront is an explicit fail-closed exception."
+        required: true
+        type: choice
+        default: main
+        options:
+          - main
+          - isolated_storefront
+      production_base_sha:
+        description: "Required for isolated_storefront. Live storefront OCI revision the candidate must descend from."
+        required: false
+        type: string
+        default: ""
+      release_ref:
+        description: "Required for isolated_storefront. Remote branch release/<name> whose tip is the candidate SHA."
+        required: false
+        type: string
+        default: ""
+      backend_digest:
+        description: "Required for isolated_storefront. Existing immutable backend digest to reuse. No backend image is built."
+        required: false
+        type: string
+        default: ""
+      backend_revision:
+        description: "Required for isolated_storefront. OCI revision of the reused backend digest."
+        required: false
+        type: string
+        default: ""
+      production_storefront_digest:
+        description: "Required for isolated_storefront. Published storefront digest whose OCI revision is production_base_sha."
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -75,7 +108,7 @@ jobs:
       source_sha: ${{ steps.sha.outputs.sha }}
       build_profile: ${{ inputs.build_profile }}
       unique_tag: ${{ steps.meta.outputs.unique_tag }}
-      backend_digest: ${{ steps.backend.outputs.digest }}
+      backend_digest: ${{ inputs.release_mode == 'isolated_storefront' && inputs.backend_digest || steps.backend.outputs.digest }}
       storefront_digest: ${{ steps.storefront.outputs.digest }}
     steps:
       - name: Validate source_sha format
@@ -142,6 +175,7 @@ jobs:
           fi
 
       - name: Restrict SHA to trusted deployment ancestry
+        if: ${{ inputs.release_mode != 'isolated_storefront' }}
         env:
           CANDIDATE_SHA: ${{ steps.sha.outputs.sha }}
         run: |
@@ -173,6 +207,63 @@ jobs:
             echo "Refusing SHA ${CANDIDATE_SHA}: not on trusted tips:${TRUSTED_TIPS}" >&2
             exit 1
           fi
+
+      - name: Validate isolated storefront bake
+        if: ${{ inputs.release_mode == 'isolated_storefront' }}
+        env:
+          RELEASE_MODE: ${{ inputs.release_mode }}
+          SOURCE_SHA: ${{ steps.sha.outputs.sha }}
+          PRODUCTION_BASE_SHA: ${{ inputs.production_base_sha }}
+          RELEASE_REF: ${{ inputs.release_ref }}
+          BACKEND_DIGEST: ${{ inputs.backend_digest }}
+          BACKEND_REVISION: ${{ inputs.backend_revision }}
+          PRODUCTION_STOREFRONT_DIGEST: ${{ inputs.production_storefront_digest }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "isolated_storefront must be dispatched from refs/heads/main" >&2
+            exit 1
+          fi
+          printf '%s\n' "${RELEASE_REF}" | grep -Eq '^release/[A-Za-z0-9][A-Za-z0-9._/-]*$'
+          printf '%s\n' "${RELEASE_REF}" | grep -q '\.\.' && { echo "release ref must not contain .." >&2; exit 1; }
+          printf '%s\n' "${PRODUCTION_STOREFRONT_DIGEST}" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          rm -rf trusted-governance
+          git fetch --no-tags origin "refs/heads/${RELEASE_REF}:refs/remotes/origin/${RELEASE_REF}"
+          git fetch --no-tags origin main
+
+      - name: Load isolated bake gate from the workflow SHA
+        if: ${{ inputs.release_mode == 'isolated_storefront' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: trusted-governance
+          persist-credentials: false
+          sparse-checkout: scripts/release/validate-isolated-storefront-bake.cjs
+          sparse-checkout-cone-mode: false
+
+      - name: Run trusted isolated bake gate
+        if: ${{ inputs.release_mode == 'isolated_storefront' }}
+        id: isolated
+        env:
+          RELEASE_MODE: ${{ inputs.release_mode }}
+          SOURCE_SHA: ${{ steps.sha.outputs.sha }}
+          PRODUCTION_BASE_SHA: ${{ inputs.production_base_sha }}
+          RELEASE_REF: ${{ inputs.release_ref }}
+          BACKEND_DIGEST: ${{ inputs.backend_digest }}
+          BACKEND_REVISION: ${{ inputs.backend_revision }}
+          PRODUCTION_STOREFRONT_DIGEST: ${{ inputs.production_storefront_digest }}
+        run: |
+          set -euo pipefail
+          test -f trusted-governance/scripts/release/validate-isolated-storefront-bake.cjs
+          node trusted-governance/scripts/release/validate-isolated-storefront-bake.cjs \
+            --release-mode "${RELEASE_MODE}" \
+            --source-sha "${SOURCE_SHA}" \
+            --production-base-sha "${PRODUCTION_BASE_SHA}" \
+            --release-ref "${RELEASE_REF}" \
+            --backend-digest "${BACKEND_DIGEST}" \
+            --backend-revision "${BACKEND_REVISION}" \
+            --repo "${GITHUB_WORKSPACE}" \
+            --github-output
 
       - name: Resolve image build profile (fail-closed)
         id: profile
@@ -219,8 +310,34 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Verify reused backend digest
+        if: ${{ inputs.release_mode == 'isolated_storefront' }}
+        env:
+          BACKEND_DIGEST: ${{ inputs.backend_digest }}
+          BACKEND_REVISION: ${{ inputs.backend_revision }}
+          PRODUCTION_STOREFRONT_DIGEST: ${{ inputs.production_storefront_digest }}
+          PRODUCTION_BASE_SHA: ${{ inputs.production_base_sha }}
+        run: |
+          set -euo pipefail
+          BE_REV="$(docker buildx imagetools inspect "${IMAGE_PREFIX}-backend@${BACKEND_DIGEST}" --format '{{index .Image.Config.Labels "org.opencontainers.image.revision"}}')"
+          if [ "${BE_REV}" != "${BACKEND_REVISION}" ]; then
+            echo "reused backend digest revision ${BE_REV} != declared ${BACKEND_REVISION}" >&2
+            exit 1
+          fi
+          OWNER="$(docker buildx imagetools inspect "${IMAGE_PREFIX}-backend@${BACKEND_DIGEST}" --format '{{index .Image.Config.Labels "com.woodright.deployment-owner"}}')"
+          if [ "${OWNER}" != "Dokploy" ]; then
+            echo "reused backend deployment-owner ${OWNER} != Dokploy" >&2
+            exit 1
+          fi
+          SF_BASE_REV="$(docker buildx imagetools inspect "${IMAGE_PREFIX}-storefront@${PRODUCTION_STOREFRONT_DIGEST}" --format '{{index .Image.Config.Labels "org.opencontainers.image.revision"}}')"
+          if [ "${SF_BASE_REV}" != "${PRODUCTION_BASE_SHA}" ]; then
+            echo "production storefront digest revision ${SF_BASE_REV} != declared base ${PRODUCTION_BASE_SHA}" >&2
+            exit 1
+          fi
+
       - name: Build and push backend (unique tag)
         id: backend
+        if: ${{ inputs.release_mode != 'isolated_storefront' }}
         uses: docker/build-push-action@v6
         with:
           context: ./apps/backend
@@ -338,7 +455,7 @@ jobs:
           echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
           echo "pushed ${REMOTE_TAG} @ ${DIGEST}"
       - name: Promote mutable-sha alias (optional, non-authoritative)
-        if: ${{ inputs.publish_mutable_sha_alias }}
+        if: ${{ inputs.publish_mutable_sha_alias && inputs.release_mode != 'isolated_storefront' }}
         env:
           SHA: ${{ steps.sha.outputs.sha }}
           BE_DIGEST: ${{ steps.backend.outputs.digest }}
@@ -353,8 +470,27 @@ jobs:
             "${IMAGE_PREFIX}-storefront@${SF_DIGEST}"
           echo "Published mutable convenience aliases mutable-sha-${SHA} (NOT deploy identity)"
 
+      - name: Promote storefront mutable-sha alias (isolated, non-authoritative)
+        if: ${{ inputs.publish_mutable_sha_alias && inputs.release_mode == 'isolated_storefront' }}
+        env:
+          SHA: ${{ steps.sha.outputs.sha }}
+          SF_DIGEST: ${{ steps.storefront.outputs.digest }}
+        run: |
+          set -euo pipefail
+          docker buildx imagetools create \
+            --tag "${IMAGE_PREFIX}-storefront:mutable-sha-${SHA}" \
+            "${IMAGE_PREFIX}-storefront@${SF_DIGEST}"
+          echo "Published storefront-only mutable alias mutable-sha-${SHA} (NOT deploy identity)"
+
       - name: SHA parity + write build manifest (release_authorized=false)
         env:
+          RELEASE_MODE: ${{ inputs.release_mode }}
+          RELEASE_REF: ${{ inputs.release_ref }}
+          ISOLATED_BACKEND_DIGEST: ${{ inputs.backend_digest }}
+          BACKEND_REVISION: ${{ inputs.backend_revision }}
+          PRODUCTION_BASE_SHA: ${{ inputs.production_base_sha }}
+          PRODUCTION_STOREFRONT_DIGEST: ${{ inputs.production_storefront_digest }}
+          MAIN_SHA: ${{ steps.isolated.outputs.main_sha }}
           BACKEND_DIGEST: ${{ steps.backend.outputs.digest }}
           STOREFRONT_DIGEST: ${{ steps.storefront.outputs.digest }}
           SHA: ${{ steps.sha.outputs.sha }}
@@ -378,6 +514,10 @@ jobs:
           BAKED_WOODRIGHT_ADMIN_EXPOSURE: ${{ steps.profile.outputs.WOODRIGHT_ADMIN_EXPOSURE }}
         run: |
           set -euo pipefail
+          RELEASE_MODE="${RELEASE_MODE:-main}"
+          if [ "${RELEASE_MODE}" = "isolated_storefront" ]; then
+            BACKEND_DIGEST="${ISOLATED_BACKEND_DIGEST}"
+          fi
           if [ -z "${BACKEND_DIGEST}" ] || [ -z "${STOREFRONT_DIGEST}" ]; then
             echo "Missing digests — partial pair not releasable" >&2
             exit 1
@@ -394,7 +534,12 @@ jobs:
             echo "OCI revision labels missing (fail-closed)" >&2
             exit 1
           fi
-          if [ "${BE_REV}" != "${SHA}" ] || [ "${SF_REV}" != "${SHA}" ]; then
+          if [ "${RELEASE_MODE}" = "isolated_storefront" ]; then
+            if [ "${SF_REV}" != "${SHA}" ] || [ "${BE_REV}" != "${BACKEND_REVISION}" ] || [ "${BE_REV}" = "${SHA}" ]; then
+              echo "isolated OCI mismatch SF=${SF_REV} expected_sf=${SHA} BE=${BE_REV} expected_be=${BACKEND_REVISION}" >&2
+              exit 1
+            fi
+          elif [ "${BE_REV}" != "${SHA}" ] || [ "${SF_REV}" != "${SHA}" ]; then
             echo "OCI revision mismatch BE=${BE_REV} SF=${SF_REV} expected=${SHA}" >&2
             exit 1
           fi
@@ -406,8 +551,12 @@ jobs:
           fi
           BE_PROFILE=$(docker buildx imagetools inspect "${IMAGE_PREFIX}-backend@${BACKEND_DIGEST}" --format '{{index .Image.Config.Labels "woodright.image.build_profile"}}')
           SF_PROFILE=$(docker buildx imagetools inspect "${IMAGE_PREFIX}-storefront@${STOREFRONT_DIGEST}" --format '{{index .Image.Config.Labels "woodright.image.build_profile"}}')
-          if [ "${BE_PROFILE}" != "${BUILD_PROFILE}" ] || [ "${SF_PROFILE}" != "${BUILD_PROFILE}" ]; then
-            echo "build_profile label mismatch BE=${BE_PROFILE} SF=${SF_PROFILE} expected=${BUILD_PROFILE}" >&2
+          if [ "${SF_PROFILE}" != "${BUILD_PROFILE}" ]; then
+            echo "storefront build_profile label mismatch SF=${SF_PROFILE} expected=${BUILD_PROFILE}" >&2
+            exit 1
+          fi
+          if [ "${RELEASE_MODE}" != "isolated_storefront" ] && [ "${BE_PROFILE}" != "${BUILD_PROFILE}" ]; then
+            echo "backend build_profile label mismatch BE=${BE_PROFILE} expected=${BUILD_PROFILE}" >&2
             exit 1
           fi
           mkdir -p release-artifacts
