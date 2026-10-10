@@ -84,9 +84,68 @@ const motifRow = {
     description: "Стул Oliver - 48 × 46 см в плане, высота по спинке 90,5 см. Спинка с филёнкой.\n\nЕсть варианты исполнения - уточним в заявке",
   }
   assert.equal(
-    buildProductMetaDescription(short, priced),
-    "Стул Oliver - 48 × 46 см в плане, высота по спинке 90,5 см. Спинка с филёнкой."
+    plain(buildProductMetaDescription(short, priced)),
+    `${plain(getProductSeoName(short))}. Стул Oliver - 48 × 46 см в плане, высота по спинке 90,5 см. Спинка с филёнкой.`
   )
+
+  // Sizes of one piece share one editorial description; the entity name keeps each meta unique.
+  const shared = "Кровать с невысоким арочным изголовьем и без изножья.\n\nЦарга по периметру вырезана мягкой волной."
+  const bed90 = { handle: "pv-14-1", title: "Кровать 90х190", metadata: { collection: "provence" }, description: shared }
+  const bed160 = { handle: "pv-17-1", title: "Кровать 160х200", metadata: { collection: "provence" }, description: shared }
+  const m90 = buildProductMetaDescription(bed90, priced)
+  const m160 = buildProductMetaDescription(bed160, priced)
+  assert.notEqual(m90, m160)
+  assert.ok(m90.startsWith(`${plain(getProductSeoName(bed90))}.`))
+  assert.ok(m90.endsWith("мягкой волной.") && m90.length <= META_DESCRIPTION_MAX)
+
+  // Shared leading item type merges with the name instead of being repeated.
+  const nightstand = { handle: "co-08-1", title: "Тумба прикроватная", metadata: { collection: "country" }, description: "Прикроватная тумба с 2 ящиками и круглыми ручками.\n\nСнизу корпус вырезан аркой." }
+  const nsName = plain(getProductSeoName(nightstand))
+  if (nsName.split(" ").length === 3 && nsName.startsWith("Прикроватная тумба ")) {
+    assert.equal(plain(buildProductMetaDescription(nightstand, priced)), `${nsName} с 2 ящиками и круглыми ручками. Снизу корпус вырезан аркой.`)
+  }
+  const shelving = { ...nightstand, title: "Стеллаж широкий", description: "Широкий стеллаж: наверху - открытые полки, внизу - дверцы." }
+  const shName = plain(getProductSeoName(shelving))
+  if (shName.startsWith("Широкий стеллаж ")) {
+    assert.equal(plain(buildProductMetaDescription(shelving, priced)), `${shName}: наверху - открытые полки, внизу - дверцы.`)
+  }
+  // A lowercase qualifier in the name is never re-attached to the sentence.
+  const vanity = { handle: "ol-06-1", title: "Туалетный столик с зеркалом", metadata: { collection: "oliver" }, description: "Туалетный столик с овальным зеркалом на стойках." }
+  const vm = plain(buildProductMetaDescription(vanity, priced))
+  assert.ok(vm.startsWith(`${plain(getProductSeoName(vanity))}. Туалетный столик с овальным`), vm)
+
+  // Word-cut path keeps the no-doubling rules.
+  const longTail = " ".repeat(1) + "и ещё очень длинное продолжение фразы без точки".repeat(4)
+  const stoolName = plain(getProductSeoName(short))
+  const longNamed = { ...short, subtitle: null, description: `${stoolName} с мягким сиденьем${longTail}.` }
+  const lnm = plain(buildProductMetaDescription(longNamed, priced))
+  assert.ok(lnm.startsWith(`${stoolName} с мягким сиденьем`) && !lnm.startsWith(`${stoolName}. ${stoolName}`), lnm)
+  assert.ok(lnm.endsWith("…") && lnm.length <= META_DESCRIPTION_MAX)
+  if (nsName.split(" ").length === 3 && nsName.startsWith("Прикроватная тумба ")) {
+    const longMerge = { ...nightstand, subtitle: null, description: `Прикроватная тумба с 2 ящиками${longTail}.` }
+    const lm = plain(buildProductMetaDescription(longMerge, priced))
+    assert.ok(lm.startsWith(`${nsName} с 2 ящиками`) && lm.endsWith("…"), lm)
+  }
+  // «Стул» is not «Стулья»: a prefix that is not a whole word is not treated as the name.
+  const plural = { ...short, description: `${stoolName}ья в ряд. Сиденья мягкие.` }
+  assert.ok(plain(buildProductMetaDescription(plural, priced)).startsWith(`${stoolName}. `))
+  // Non-breaking spaces in the description do not defeat the name match.
+  const nbsp = { ...short, description: `${stoolName.replace(" ", "\u00a0")} на точёных ножках. Сиденье мягкое.` }
+  assert.equal(plain(buildProductMetaDescription(nbsp, priced)), `${stoolName} на точёных ножках. Сиденье мягкое.`)
+
+  const named = { ...short, description: `${plain(getProductSeoName(short))} на точёных ножках. Сиденье мягкое.` }
+  assert.equal(plain(buildProductMetaDescription(named, priced)), `${plain(getProductSeoName(short))} на точёных ножках. Сиденье мягкое.`, "no doubled name")
+
+  const longName = {
+    handle: "pr-66-6",
+    title: "Стол письменный двухтумбовый (полки слева, ящики справа, ручки Сваровски)",
+    metadata: { collection: "princess-rose" },
+    description: "Письменный стол на 2 тумбах: в одной - выдвижные ящики, в другой - полки за филёнчатой дверцей и ещё немного слов.",
+  }
+  const ml = buildProductMetaDescription(longName, priced)
+  assert.ok(ml.length <= META_DESCRIPTION_MAX)
+  assert.ok(plain(ml).startsWith(`${plain(getProductSeoName(longName))}. `), "long name still leads")
+  assert.ok(ml.endsWith("…"), "first sentence cut at a word after the name")
 
   const longFirst = {
     ...short,
@@ -117,8 +176,12 @@ const motifRow = {
   const twin = { ...motifRow, handle: "pa-05-3", title: "Комод высокий Patchwork (гл. 560)", metadata: { ...motifRow.metadata, motif_slug: "patchwork" } }
   const { summary } = auditCatalogSeo([motifRow, twin, recovered])
   assert.equal(summary.duplicate_seo_name, 0)
-  assert.equal(summary.duplicate_meta_description, 2, "same owner prose on two rows is reported, not hidden")
+  assert.equal(summary.duplicate_meta_description, 0, "shared prose stays unique: the painting is in the entity name")
   assert.equal(summary.description_internal_provenance, 0)
+
+  const clone = { ...motifRow, handle: "fa-05-3-copy" }
+  const dup = auditCatalogSeo([motifRow, clone]).summary
+  assert.equal(dup.duplicate_meta_description, 2, "true duplicates are still reported, not hidden")
 }
 
 /* Size chips inside one family show only what differs. */
