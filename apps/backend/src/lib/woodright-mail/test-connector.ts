@@ -4,6 +4,8 @@ type Script = {
   state?: "disabled" | "configured" | "error"
   failure?: ConnectorFailure | null
   headers?: MailHeader[]
+  body?: string | null
+  attachment?: "missing" | "ok"
   send?: { ok: true; providerMessageId: string } | { ok: false; failure: ConnectorFailure }
 }
 
@@ -25,6 +27,18 @@ export function createTestConnector(script: Script = {}): MailConnector & { call
       const headers = (script.headers ?? []).find((row) => row.uid === uid)
       if (!headers) throw new MailConnectorError("timeout")
       return { contentState: "metadata_only", headers }
+    },
+    async fetchBody(uid: string) {
+      calls.push(`body:${uid}`)
+      if (script.failure === "body_unavailable" || script.body == null) return { available: false, failure: "body_unavailable" }
+      return { available: true, text: script.body }
+    },
+    async loadAttachment(providerRef: string) {
+      calls.push(`attachment:${providerRef}`)
+      if (script.failure === "attachment_unavailable" || script.attachment === "missing") {
+        return { available: false, failure: "attachment_unavailable" }
+      }
+      return { available: true, filename: "plan.pdf", mime: "application/pdf", bytes: new Uint8Array() }
     },
     async sendReply() {
       calls.push("sendReply")

@@ -176,6 +176,20 @@ export const fixtureMailStatus = {
   reason: "not_configured" as const,
 }
 
+export const fixtureMailThreads = {
+  threads: [] as Array<{
+    id: string
+    subject: string | null
+    status: string
+    waiting_on: string
+    assignee_id: string | null
+    lead_id: string | null
+    request_id: string | null
+    order_id: string | null
+    last_message_at: string | null
+  }>,
+}
+
 export const fixtureCompanies = {
   companies: [] as Array<{ id: string; name: string; type: string | null; type_label: string | null; people_count: number }>,
 }

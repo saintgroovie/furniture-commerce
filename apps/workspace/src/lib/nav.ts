@@ -3,7 +3,7 @@
  * «Входящие» is DESIGN_FUTURE and must not appear here until mail is connected.
  */
 export type NavItem = {
-  id: "today" | "clients" | "orders" | "products" | "storefront"
+  id: "today" | "clients" | "orders" | "products" | "storefront" | "inbox"
   label: string
   href: string
   glyph: string
@@ -41,6 +41,20 @@ export const NAV: readonly NavItem[] = [
     mobile: false,
   },
 ]
+
+/** Inbox joins the shell only after the backend says the mailbox is usable. */
+export function visibleNav(mailReady: boolean): readonly NavItem[] {
+  if (!mailReady) return NAV
+  const inbox: NavItem = {
+    id: "inbox",
+    label: "Входящие",
+    href: "/inbox",
+    glyph: "▹",
+    matches: ["/inbox"],
+    mobile: false,
+  }
+  return [NAV[0]!, inbox, ...NAV.slice(1)]
+}
 
 export function activeNavId(pathname: string | null | undefined): NavItem["id"] | null {
   if (!pathname) return null
