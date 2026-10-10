@@ -10,11 +10,12 @@ import { getMotifThemes } from "@/lib/api/motif-themes"
 import { indexingCanonical } from "@/lib/indexing-policy"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
 import { seo, willieWinkieMotifsCopy } from "@/lib/woodright-copy"
+import { pageTitle } from "@/lib/page-title"
 
 const willieCanonical = indexingCanonical(`${getSiteUrl()}/kids/willie-winkie`)
 
 export const metadata: Metadata = {
-  title: seo.willieWinkieMotifs.title,
+  title: pageTitle(seo.willieWinkieMotifs.title),
   description: seo.willieWinkieMotifs.description,
   ...(willieCanonical ? { alternates: willieCanonical } : {}),
   openGraph: {

@@ -6,9 +6,10 @@ import { EditorialShell } from "@/components/editorial/editorial-shell"
 import { editorialMedia } from "@/lib/editorial-media"
 import { canonicalAlternates } from "@/lib/page-canonical"
 import { aboutMaterialsCopy, seo } from "@/lib/woodright-copy"
+import { pageTitle } from "@/lib/page-title"
 
 export const metadata: Metadata = {
-  title: seo.aboutMaterials.title,
+  title: pageTitle(seo.aboutMaterials.title),
   description: seo.aboutMaterials.description,
   openGraph: {
     title: seo.aboutMaterials.title,
