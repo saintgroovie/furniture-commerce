@@ -78,6 +78,11 @@ on:
         required: false
         type: string
         default: ""
+      production_storefront_digest:
+        description: "Required for isolated_storefront. Published storefront digest whose OCI revision is production_base_sha."
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -205,6 +210,39 @@ jobs:
 
       - name: Validate isolated storefront bake
         if: ${{ inputs.release_mode == 'isolated_storefront' }}
+        env:
+          RELEASE_MODE: ${{ inputs.release_mode }}
+          SOURCE_SHA: ${{ steps.sha.outputs.sha }}
+          PRODUCTION_BASE_SHA: ${{ inputs.production_base_sha }}
+          RELEASE_REF: ${{ inputs.release_ref }}
+          BACKEND_DIGEST: ${{ inputs.backend_digest }}
+          BACKEND_REVISION: ${{ inputs.backend_revision }}
+          PRODUCTION_STOREFRONT_DIGEST: ${{ inputs.production_storefront_digest }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_REF}" != "refs/heads/main" ]; then
+            echo "isolated_storefront must be dispatched from refs/heads/main" >&2
+            exit 1
+          fi
+          printf '%s\n' "${RELEASE_REF}" | grep -Eq '^release/[A-Za-z0-9][A-Za-z0-9._/-]*$'
+          printf '%s\n' "${RELEASE_REF}" | grep -q '\.\.' && { echo "release ref must not contain .." >&2; exit 1; }
+          printf '%s\n' "${PRODUCTION_STOREFRONT_DIGEST}" | grep -Eq '^sha256:[0-9a-f]{64}$'
+          rm -rf trusted-governance
+          git fetch --no-tags origin "refs/heads/${RELEASE_REF}:refs/remotes/origin/${RELEASE_REF}"
+          git fetch --no-tags origin main
+
+      - name: Load isolated bake gate from the workflow SHA
+        if: ${{ inputs.release_mode == 'isolated_storefront' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          path: trusted-governance
+          persist-credentials: false
+          sparse-checkout: scripts/release/validate-isolated-storefront-bake.cjs
+          sparse-checkout-cone-mode: false
+
+      - name: Run trusted isolated bake gate
+        if: ${{ inputs.release_mode == 'isolated_storefront' }}
         id: isolated
         env:
           RELEASE_MODE: ${{ inputs.release_mode }}
@@ -213,13 +251,11 @@ jobs:
           RELEASE_REF: ${{ inputs.release_ref }}
           BACKEND_DIGEST: ${{ inputs.backend_digest }}
           BACKEND_REVISION: ${{ inputs.backend_revision }}
+          PRODUCTION_STOREFRONT_DIGEST: ${{ inputs.production_storefront_digest }}
         run: |
           set -euo pipefail
-          printf '%s\n' "${RELEASE_REF}" | grep -Eq '^release/[A-Za-z0-9][A-Za-z0-9._/-]*$'
-          printf '%s\n' "${RELEASE_REF}" | grep -q '\.\.' && { echo "release ref must not contain .." >&2; exit 1; }
-          git fetch --no-tags origin "refs/heads/${RELEASE_REF}:refs/remotes/origin/${RELEASE_REF}"
-          git fetch --no-tags origin main
-          node scripts/release/validate-isolated-storefront-bake.cjs \
+          test -f trusted-governance/scripts/release/validate-isolated-storefront-bake.cjs
+          node trusted-governance/scripts/release/validate-isolated-storefront-bake.cjs \
             --release-mode "${RELEASE_MODE}" \
             --source-sha "${SOURCE_SHA}" \
             --production-base-sha "${PRODUCTION_BASE_SHA}" \
@@ -279,6 +315,8 @@ jobs:
         env:
           BACKEND_DIGEST: ${{ inputs.backend_digest }}
           BACKEND_REVISION: ${{ inputs.backend_revision }}
+          PRODUCTION_STOREFRONT_DIGEST: ${{ inputs.production_storefront_digest }}
+          PRODUCTION_BASE_SHA: ${{ inputs.production_base_sha }}
         run: |
           set -euo pipefail
           BE_REV="$(docker buildx imagetools inspect "${IMAGE_PREFIX}-backend@${BACKEND_DIGEST}" --format '{{index .Image.Config.Labels "org.opencontainers.image.revision"}}')"
@@ -289,6 +327,11 @@ jobs:
           OWNER="$(docker buildx imagetools inspect "${IMAGE_PREFIX}-backend@${BACKEND_DIGEST}" --format '{{index .Image.Config.Labels "com.woodright.deployment-owner"}}')"
           if [ "${OWNER}" != "Dokploy" ]; then
             echo "reused backend deployment-owner ${OWNER} != Dokploy" >&2
+            exit 1
+          fi
+          SF_BASE_REV="$(docker buildx imagetools inspect "${IMAGE_PREFIX}-storefront@${PRODUCTION_STOREFRONT_DIGEST}" --format '{{index .Image.Config.Labels "org.opencontainers.image.revision"}}')"
+          if [ "${SF_BASE_REV}" != "${PRODUCTION_BASE_SHA}" ]; then
+            echo "production storefront digest revision ${SF_BASE_REV} != declared base ${PRODUCTION_BASE_SHA}" >&2
             exit 1
           fi
 
@@ -446,6 +489,7 @@ jobs:
           ISOLATED_BACKEND_DIGEST: ${{ inputs.backend_digest }}
           BACKEND_REVISION: ${{ inputs.backend_revision }}
           PRODUCTION_BASE_SHA: ${{ inputs.production_base_sha }}
+          PRODUCTION_STOREFRONT_DIGEST: ${{ inputs.production_storefront_digest }}
           MAIN_SHA: ${{ steps.isolated.outputs.main_sha }}
           BACKEND_DIGEST: ${{ steps.backend.outputs.digest }}
           STOREFRONT_DIGEST: ${{ steps.storefront.outputs.digest }}

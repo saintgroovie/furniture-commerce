@@ -129,6 +129,7 @@ def main() -> None:
     if release_mode == "isolated_storefront":
         doc["release_mode"] = "isolated_storefront"
         doc["production_base_sha"] = os.environ["PRODUCTION_BASE_SHA"]
+        doc["production_storefront_digest"] = os.environ["PRODUCTION_STOREFRONT_DIGEST"]
         doc["main_sha"] = os.environ["MAIN_SHA"]
         doc["migration_count"] = 0
         doc["db_mutation"] = "forbidden"

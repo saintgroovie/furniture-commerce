@@ -36,6 +36,7 @@ const ALLOWED_ROOT = new Set([
   "notes",
   "release_mode",
   "production_base_sha",
+  "production_storefront_digest",
   "main_sha",
   "migration_count",
   "db_mutation",
@@ -44,6 +45,7 @@ const ALLOWED_ROOT = new Set([
 const ALLOWED_IMG = new Set(["repository", "unique_tag", "digest", "oci_revision", "reused"])
 const ISOLATED_ONLY_ROOT = [
   "production_base_sha",
+  "production_storefront_digest",
   "main_sha",
   "migration_count",
   "db_mutation",
@@ -215,6 +217,9 @@ function validate(doc, errors) {
     }
   } else {
     if (!SHA_RE.test(doc.production_base_sha || "")) fail("production_base_sha required", errors)
+    if (!DIGEST_RE.test(doc.production_storefront_digest || "")) {
+      fail("production_storefront_digest required", errors)
+    }
     if (!SHA_RE.test(doc.main_sha || "")) fail("main_sha required", errors)
     if (doc.migration_count !== 0) fail("migration_count must be 0", errors)
     if (doc.db_mutation !== "forbidden") fail("db_mutation must be forbidden", errors)

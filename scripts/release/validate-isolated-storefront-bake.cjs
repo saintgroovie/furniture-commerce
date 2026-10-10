@@ -36,11 +36,24 @@ function isMigrationPath(file) {
 }
 
 function rejectionReason(file) {
+  const base = file.split("/").pop() || ""
   if (isMigrationPath(file)) return `migration:${file}`
   if (file.startsWith("apps/backend/")) return `backend:${file}`
-  if (file.includes("docker-compose") || file.endsWith("Dockerfile")) return `runtime:${file}`
-  if (/(^|\/)\.env(\.|$)/.test(file) || file.endsWith(".env")) return `env:${file}`
-  if (file.endsWith("yarn.lock") || file.endsWith("package.json") || file.endsWith("pnpm-lock.yaml")) {
+  if (
+    file.includes("docker-compose") ||
+    /^Dockerfile/i.test(base) ||
+    /^(docker-)?compose\.ya?ml$/i.test(base)
+  ) {
+    return `runtime:${file}`
+  }
+  if (base === ".env" || base.startsWith(".env.") || file.endsWith(".env")) return `env:${file}`
+  if (
+    base === "yarn.lock" ||
+    base === "package.json" ||
+    base === "pnpm-lock.yaml" ||
+    base === "package-lock.json" ||
+    base === "npm-shrinkwrap.json"
+  ) {
     return `dependency:${file}`
   }
   if (file.startsWith("ops/") || file.startsWith("scripts/") || file.startsWith(".github/")) {
@@ -123,9 +136,11 @@ function validateIsolatedStorefrontBake(input) {
   const names = git(input.repo, [
     "diff",
     "--name-only",
+    "--no-renames",
+    "-z",
     `${input.productionBaseSha}...${input.sourceSha}`,
   ])
-  const files = names ? names.split("\n").filter(Boolean) : []
+  const files = names ? names.split("\0").filter(Boolean) : []
   const reasons = files.map(rejectionReason).filter(Boolean)
   if (reasons.length) fail(`scope rejected: ${reasons.join(", ")}`)
   if (files.some(isMigrationPath)) fail("migration count must be zero")

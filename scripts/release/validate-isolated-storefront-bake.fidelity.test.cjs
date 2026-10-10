@@ -106,6 +106,25 @@ rejectFile("apps/backend/src/modules/x/migrations/Migration20261005120000.ts", /
 rejectFile("ops/compose/docker-compose.yml", /runtime:|governance:/)
 rejectFile("apps/storefront/.env.production", /env:/)
 rejectFile("apps/storefront/yarn.lock", /dependency:/)
+rejectFile("apps/storefront/compose.yaml", /runtime:/)
+rejectFile("apps/storefront/package-lock.json", /dependency:/)
+
+const renamed = initRepo()
+mkdirSync(join(renamed.repo, "apps/backend/src"), { recursive: true })
+writeFileSync(join(renamed.repo, "apps/backend/src/index.ts"), "hidden\n")
+git(renamed.repo, ["add", "apps/backend/src/index.ts"])
+git(renamed.repo, ["commit", "-m", "backend in base"])
+const renamedBase = git(renamed.repo, ["rev-parse", "HEAD"])
+git(renamed.repo, ["mv", "apps/backend/src/index.ts", "apps/storefront/src/stolen.ts"])
+git(renamed.repo, ["commit", "-m", "rename"])
+const renamedSource = git(renamed.repo, ["rev-parse", "HEAD"])
+git(renamed.repo, ["update-ref", "refs/remotes/origin/release/partners-ok", renamedSource])
+git(renamed.repo, ["update-ref", "refs/remotes/origin/main", renamedBase])
+rejects(
+  () => accept({ ...renamed, base: renamedBase, source: renamedSource }),
+  /backend:/
+)
+rmSync(renamed.repo, { recursive: true, force: true })
 
 const db = initRepo()
 rejects(() => accept({ ...db, dbMutation: true }), /DB_MUTATION_FORBIDDEN/)
@@ -142,6 +161,10 @@ assert.match(workflow, /- main\n\s+- isolated_storefront/)
 assert.match(workflow, /inputs\.release_mode != 'isolated_storefront'/)
 assert.match(workflow, /Restrict SHA to trusted deployment ancestry/)
 assert.match(workflow, /Verify reused backend digest/)
+assert.match(workflow, /node trusted-governance\/scripts\/release\/validate-isolated-storefront-bake\.cjs/)
+assert.match(workflow, /refs\/heads\/main/)
+assert.match(workflow, /production storefront digest revision/)
+assert.doesNotMatch(workflow, /node scripts\/release\/validate-isolated-storefront-bake\.cjs/)
 assert.match(
   readFileSync(join(__dirname, "validate-isolated-storefront-bake.cjs"), "utf8"),
   /DB_MUTATION_FORBIDDEN/
@@ -205,6 +228,7 @@ const reusedOk = checkManifest(
     release_mode: "isolated_storefront",
     source_branch: "release/partners-ok",
     production_base_sha: other,
+    production_storefront_digest: "sha256:" + "33".repeat(32),
     main_sha: other,
     migration_count: 0,
     db_mutation: "forbidden",
@@ -224,6 +248,7 @@ const substituted = checkManifest(
     release_mode: "isolated_storefront",
     source_branch: "release/partners-ok",
     production_base_sha: other,
+    production_storefront_digest: "sha256:" + "33".repeat(32),
     main_sha: other,
     migration_count: 0,
     db_mutation: "forbidden",
