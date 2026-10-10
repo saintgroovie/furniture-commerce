@@ -77,6 +77,7 @@ import {
   getBuyerFacingProductTitleLayout,
   getArticle,
   getDimensions,
+  getMattressSize,
   getPdpHeroObjectPosition,
   pdpDimensionCells,
 } from "@/lib/product-metadata"
@@ -424,19 +425,42 @@ export default async function ProductPage({
       }))
     : []
 
+  const productVariants = Array.isArray(product.variants)
+    ? (product.variants as Record<string, unknown>[])
+    : []
+  const mattress = getMattressSize(
+    product,
+    productVariants.length === 1 ? productVariants[0] : null
+  )
+
   const specRows = [
+    ...(mattress
+      ? [
+          {
+            label: pdpCopy.mattressSize,
+            value: formatRuInline(mattress.display),
+            spec: "mattress-size",
+          },
+        ]
+      : []),
     ...dimensionCells.map((c) => ({
       label: c.label,
-      value: c.values_mm
-        ? `${c.values_mm.join(" / ")} ${pdpCopy.unitMm}${c.note ? ` - ${c.note}` : ""}`
-        : `${c.mm} ${pdpCopy.unitMm}`,
+      value: formatRuInline(
+        c.values_mm
+          ? `${c.values_mm.join(" / ")} ${pdpCopy.unitMm}${c.note ? ` - ${c.note}` : ""}`
+          : `${c.mm} ${pdpCopy.unitMm}`
+      ),
+      spec: `dimension-${c.label}`,
     })),
-    ...(article ? [{ label: pdpCopy.specArticle, value: article }] : []),
+    ...(article
+      ? [{ label: pdpCopy.specArticle, value: article, spec: "article" }]
+      : []),
     ...(collectionLabel
       ? [
           {
             label: pdpCopy.specCollection,
             value: [collectionLabel, subcollectionLabel].filter(Boolean).join(" · "),
+            spec: "collection",
           },
         ]
       : []),
@@ -825,7 +849,7 @@ export default async function ProductPage({
               <h2>{pdpCopy.specsHeading}</h2>
               <dl className="pdp-specs-list">
                 {specRows.map((row) => (
-                  <div key={row.label} className="pdp-specs-row">
+                  <div key={row.label} className="pdp-specs-row" data-spec={row.spec}>
                     <dt>{row.label}</dt>
                     <dd>{row.value}</dd>
                   </div>

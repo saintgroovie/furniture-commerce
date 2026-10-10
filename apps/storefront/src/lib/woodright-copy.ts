@@ -1081,6 +1081,7 @@ export const pdpCopy = {
   dimensionHeight: "Высота",
   dimensionWidth: "Ширина",
   dimensionDepth: "Глубина",
+  mattressSize: "Размер спального места",
   unitCm: "см",
   unitMm: "мм",
   descriptionHeading: "Описание",

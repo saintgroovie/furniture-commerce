@@ -413,6 +413,56 @@ export function pdpDimensionCells(dim: Dimensions): PdpDimensionCell[] {
   return out
 }
 
+export type MattressSize = {
+  key: string
+  widthCm: number
+  lengthCm: number
+  display: string
+}
+
+function positiveCm(value: unknown): number | null {
+  if (typeof value === "number" && Number.isInteger(value) && value > 0) return value
+  if (typeof value === "string" && /^\d{2,3}$/.test(value.trim())) {
+    const parsed = Number(value)
+    if (parsed > 0) return parsed
+  }
+  return null
+}
+
+/**
+ * Structured sleeping size. Body height/width/depth are never a source.
+ * Unknown and mismatched key/display stay hidden.
+ */
+function readMattressBag(raw: unknown): MattressSize | null {
+  if (!raw || typeof raw !== "object") return null
+  const bag = raw as Record<string, unknown>
+  if (bag.status === "MATTRESS_SIZE_UNKNOWN") return null
+  const widthCm = positiveCm(bag.width_cm)
+  const lengthCm = positiveCm(bag.length_cm)
+  if (widthCm == null || lengthCm == null) return null
+  const key = `${widthCm}x${lengthCm}`
+  if (bag.key != null && bag.key !== key) return null
+  const display = `${widthCm} × ${lengthCm} см`
+  if (bag.display != null && bag.display !== display) return null
+  return { key, widthCm, lengthCm, display }
+}
+
+/**
+ * Variant mattress size wins.
+ * An explicit unknown or inconsistent variant bag stays hidden.
+ * Product size is used only when the variant has no mattress_size bag.
+ */
+export function getMattressSize(
+  product: ProductLike,
+  selectedVariant?: ProductLike | null
+): MattressSize | null {
+  if (selectedVariant) {
+    const raw = meta(selectedVariant).mattress_size
+    if (raw != null) return readMattressBag(raw)
+  }
+  return readMattressBag(meta(product).mattress_size)
+}
+
 /** Resolve dimensions for a specific variant id on a product payload. */
 export function getDimensionsForVariantId(
   product: ProductLike,
