@@ -42,6 +42,7 @@ export function todayIcon(kind: string): EventIconName {
   if (kind === "request") return "request"
   if (kind === "production") return "order"
   if (kind === "catalog") return "catalog"
+  if (kind === "mail") return "message"
   return "alert"
 }
 

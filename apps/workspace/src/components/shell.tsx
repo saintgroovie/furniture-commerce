@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { DeskNav, MobileNav } from "@/components/desk-nav"
 import { CommandPalette } from "@/components/command-palette"
 import { UserMenu } from "@/components/user-menu"
+import { NAV, type NavItem } from "@/lib/nav"
 
 function todayLabel(now = new Date()): string {
   return new Intl.DateTimeFormat("ru-RU", {
@@ -17,12 +18,14 @@ export function Shell({
   preview,
   escapeHref,
   todayCount,
+  navItems = NAV,
   children,
 }: {
   email: string
   preview: boolean
   escapeHref: string | null
   todayCount?: number | null
+  navItems?: readonly NavItem[]
   children: ReactNode
 }) {
   return (
@@ -32,7 +35,7 @@ export function Shell({
           <span className="brand-mark">Стол</span>
           <span className="brand-sub">WOODRIGHT</span>
         </div>
-        <DeskNav todayCount={todayCount} />
+        <DeskNav todayCount={todayCount} items={navItems} />
         <footer className="sidebar-footer">
           <UserMenu email={email} escapeHref={escapeHref} />
         </footer>

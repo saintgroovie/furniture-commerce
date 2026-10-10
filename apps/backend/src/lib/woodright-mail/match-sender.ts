@@ -3,11 +3,12 @@ import { matchCandidates, type MatchResult } from "../woodright-workspace/identi
 export type IncomingPlan =
   | { action: "link_thread"; lead_id: string }
   | { action: "needs_review"; lead_ids: string[] }
-  | { action: "create_contact" }
+  | { action: "unresolved" }
 
 /**
- * Exact From address can attach a thread to one existing person.
- * It never merges people and never creates a Medusa customer.
+ * Exact From address can suggest one existing person.
+ * It never merges people, never creates a Medusa customer,
+ * and does not create a Person by itself.
  */
 export function planIncomingSender(result: MatchResult): IncomingPlan {
   if (result.status === "linked" && result.ids.length === 1) {
@@ -16,7 +17,7 @@ export function planIncomingSender(result: MatchResult): IncomingPlan {
   if (result.status === "needs_review" || result.ids.length > 1) {
     return { action: "needs_review", lead_ids: result.ids }
   }
-  return { action: "create_contact" }
+  return { action: "unresolved" }
 }
 
 export function matchSenderAddress(

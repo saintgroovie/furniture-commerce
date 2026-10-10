@@ -2,15 +2,25 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { activeNavId, NAV } from "@/lib/nav"
+import { activeNavId, NAV, type NavItem } from "@/lib/nav"
+
+function sectionId(pathname: string | null, items: readonly NavItem[]): NavItem["id"] | null {
+  if (!pathname) return null
+  for (const item of items) {
+    if (item.matches.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`) || pathname.startsWith(`${prefix}?`))) {
+      return item.id
+    }
+  }
+  return null
+}
 
 export const OPEN_SEARCH_EVENT = "wr-desk:open-search"
 
-export function DeskNav({ todayCount }: { todayCount?: number | null }) {
-  const active = activeNavId(usePathname())
+export function DeskNav({ todayCount, items = NAV }: { todayCount?: number | null; items?: readonly NavItem[] }) {
+  const active = sectionId(usePathname(), items)
   return (
     <nav className="nav" aria-label="Разделы">
-      {NAV.map((item) => (
+      {items.map((item) => (
         <Link key={item.id} href={item.href} aria-current={item.id === active ? "page" : undefined} title={item.label}>
           <span className="nav-glyph" aria-hidden="true">{item.glyph}</span>
           <span className="nav-label">{item.label}</span>

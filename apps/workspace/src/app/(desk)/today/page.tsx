@@ -2,18 +2,24 @@ import Link from "next/link"
 import { EventIcon, todayIcon } from "@/components/event-icon"
 import { EmptyState, ErrorBlock, PageHeader } from "@/components/page"
 import { StateBadge } from "@/components/status"
-import { ATTENTION_LINKS, groupInbox, queueState } from "@/lib/today-presentation"
-import { loadToday } from "@/server/loaders"
+import { mailRowsToInbox, todayMailThreads } from "@/lib/mail-presentation"
+import { ATTENTION_LINKS, groupInbox, queueState, type InboxItem } from "@/lib/today-presentation"
+import { loadMailQueue, loadMailStatus, loadToday } from "@/server/loaders"
 
 /**
  * Action inbox, not a dashboard. Every row: what happened (title + reason),
  * which object, and one action that leads straight into the object's state.
  */
 export default async function TodayPage() {
-  const result = await loadToday()
-  const groups = result.ok ? groupInbox(result.data.inbox) : []
-  const total = result.ok ? result.data.inbox.length : 0
-  const overdue = result.ok ? result.data.inbox.filter((item) => item.overdue).length : 0
+  const [result, mailStatus] = await Promise.all([loadToday(), loadMailStatus()])
+  const mailVisible = mailStatus.ok && mailStatus.data.visible
+  const mail = mailVisible ? await loadMailQueue() : null
+  const inbox: InboxItem[] = result.ok
+    ? [...result.data.inbox, ...mailRowsToInbox(todayMailThreads(mailVisible, mail?.ok ? mail.data.threads : []))]
+    : []
+  const groups = result.ok ? groupInbox(inbox) : []
+  const total = inbox.length
+  const overdue = inbox.filter((item) => item.overdue).length
   return (
     <>
       <PageHeader

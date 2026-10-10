@@ -6,6 +6,7 @@ import {
   fixtureCompanies,
   fixtureCompany,
   fixtureMailStatus,
+  fixtureMailThreads,
   fixtureContacts,
   fixtureOrder,
   fixtureOrders,
@@ -81,6 +82,26 @@ export function loadCompany(id: string) {
 }
 export function loadMailStatus() {
   return load("/admin/woodright/mail/status", fixtureMailStatus)
+}
+export function loadMailQueue(view = "needs_reply") {
+  return load(`/admin/woodright/mail/threads?view=${encodeURIComponent(view)}`, fixtureMailThreads)
+}
+export function loadMailThread(id: string) {
+  return load(`/admin/woodright/mail/threads/${encodeURIComponent(id)}`, {
+    thread: {
+      id,
+      subject: null as string | null,
+      status: "open",
+      waiting_on: "us",
+      assignee_id: null as string | null,
+      lead_id: null as string | null,
+      company_id: null as string | null,
+      request_id: null as string | null,
+      order_id: null as string | null,
+      mailbox: null as string | null,
+    },
+    messages: [] as Array<{ id: string; direction: string | null; sender: string | null; occurred_at: string | null; content_state: string }>,
+  })
 }
 export function loadProducts() {
   return load("/admin/woodright/products", fixtureProducts)

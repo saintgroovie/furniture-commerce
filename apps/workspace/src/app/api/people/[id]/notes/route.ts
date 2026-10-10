@@ -5,9 +5,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const { id } = await context.params
   const form = await request.formData()
   const requested = String(form.get("back") ?? "")
-  const back = requested.startsWith(`/requests/`) && !requested.includes("://") && !requested.includes("//")
-    ? requested
-    : `/people/${id}#notes`
+  const internal = (requested.startsWith("/requests/") || requested.startsWith("/inbox/")) && !requested.includes("://") && !requested.includes("//")
+  const back = internal ? requested : `/people/${id}#notes`
   return writeAndReturn(request, back, async () => {
     await medusaSend(`/admin/woodright/people/${id}/notes`, "POST", {
       text: String(form.get("text") ?? ""),
