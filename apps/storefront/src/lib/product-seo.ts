@@ -108,8 +108,43 @@ function fallbackMetaDescription(name: string, ctx: MetaDescriptionContext): str
 }
 
 /**
- * Order: whole leading description sentences that fit → subtitle →
- * first sentence cut at a word → factual fallback built from the entity name.
+ * «Прикроватная тумба Кантри» + «Прикроватная тумба с 2 ящиками…» →
+ * «Прикроватная тумба Кантри с 2 ящиками…». Only when the name is the shared leading
+ * words plus at most 2 capitalised words (the series), so qualifiers such as
+ * «с зеркалом», «(тумба слева)» or «, роспись …» are never re-attached to the sentence.
+ */
+function mergeNameIntoSentence(name: string, sentence: string): string | null {
+  const nw = name.split(" ")
+  const sw = sentence.split(" ")
+  const bare = (w: string) => w.replace(/[:,]+$/u, "").toLowerCase()
+  let k = 0
+  while (k < nw.length && k < sw.length && nw[k]!.toLowerCase() === bare(sw[k]!)) k++
+  if (k === 0 || k >= nw.length) return null
+  const tail = nw.slice(k)
+  if (tail.length > 2 || !tail.every((w) => /^[А-ЯЁ][а-яё-]+$/u.test(w))) return null
+  const last = sw[k - 1]!
+  const punct = last.length - last.replace(/[:,]+$/u, "").length
+  const rest = sentence.slice(sw.slice(0, k).join(" ").length - punct)
+  if (!/^(?:[:,]\s|\s[а-яё\d])/u.test(rest)) return null
+  return `${name}${rest}`
+}
+
+function appendWholeSentences(lead: string, sentences: string[]): string {
+  let out = lead
+  for (const s of sentences) {
+    const next = out ? `${out} ${s}` : s
+    if (next.length > META_DESCRIPTION_MAX) break
+    out = next
+  }
+  return out
+}
+
+/**
+ * Order: entity name + whole leading description sentences that fit → subtitle →
+ * entity name + first sentence cut at a word → factual fallback built from the entity name.
+ *
+ * The entity name leads because sizes and paintings of one piece share one editorial
+ * description; the name carries the size / version / painting that makes each page unique.
  */
 export function buildProductMetaDescription(
   product: ProductLike,
@@ -117,17 +152,31 @@ export function buildProductMetaDescription(
 ): string {
   const source = getSeoDescriptionSource(product)
   const sentences = source ? splitSentences(source) : []
-  if (sentences.length && sentences[0]!.length <= META_DESCRIPTION_MAX) {
-    let out = sentences[0]!
-    for (const s of sentences.slice(1)) {
-      if (out.length + 1 + s.length > META_DESCRIPTION_MAX) break
-      out = `${out} ${s}`
+  const name = normalizeSnippetText(getProductSeoName(product)).replace(/[.!?…]+$/u, "")
+  const lead = name ? `${name}.` : ""
+  const first = sentences[0]
+  const merged = first && name ? mergeNameIntoSentence(name, first) : null
+  const namedAlready =
+    !!first &&
+    !!name &&
+    first.toLowerCase().startsWith(name.toLowerCase()) &&
+    !/^[\p{L}\d]/u.test(first.slice(name.length))
+  if (first) {
+    if (merged && merged.length <= META_DESCRIPTION_MAX) {
+      return appendWholeSentences(merged, sentences.slice(1))
     }
-    return out
+    const base = namedAlready ? "" : lead
+    const withFirst = base ? `${base} ${first}` : first
+    if (withFirst.length <= META_DESCRIPTION_MAX) return appendWholeSentences(base, sentences)
   }
   const subtitle =
     typeof product.subtitle === "string" ? normalizeSnippetText(product.subtitle) : ""
   if (subtitle) return cutAtWord(subtitle, META_DESCRIPTION_MAX)
-  if (sentences.length) return cutAtWord(sentences[0]!, META_DESCRIPTION_MAX)
+  if (first) {
+    if (merged) return cutAtWord(merged, META_DESCRIPTION_MAX)
+    if (namedAlready) return cutAtWord(first, META_DESCRIPTION_MAX)
+    const room = META_DESCRIPTION_MAX - lead.length - 1
+    return lead && room >= 60 ? `${lead} ${cutAtWord(first, room)}` : cutAtWord(first, META_DESCRIPTION_MAX)
+  }
   return fallbackMetaDescription(getProductSeoName(product), ctx)
 }
