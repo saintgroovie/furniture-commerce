@@ -114,7 +114,7 @@ assert.equal(
 )
 
 const title = getBuyerFacingProductTitle(kidsWw)
-assert.equal(title, "Стеллаж для книг")
+assert.equal(title, "Стеллаж для книг Вилли Винки")
 assert.doesNotMatch(title, /Баллет|Ballet|гл\.|440/)
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..")

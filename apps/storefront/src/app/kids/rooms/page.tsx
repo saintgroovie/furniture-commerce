@@ -4,11 +4,12 @@ import { RoomSetCard } from "@/components/room-set-card"
 import { getRoomSets } from "@/lib/api/room-sets"
 import { KIDS_ROOM_TYPE } from "@/lib/kids"
 import { kidsRoomsCopy, seo } from "@/lib/woodright-copy"
+import { pageTitle } from "@/lib/page-title"
 import { CopyLines } from "@/components/copy-lines"
 import { canonicalAlternates } from "@/lib/page-canonical"
 
 export const metadata: Metadata = {
-  title: seo.kidsRooms.title,
+  title: pageTitle(seo.kidsRooms.title),
   description: seo.kidsRooms.description,
   openGraph: {
     title: seo.kidsRooms.title,

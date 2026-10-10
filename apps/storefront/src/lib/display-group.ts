@@ -1,6 +1,7 @@
 import { buildDisplayGroupColorVariants } from "./card-color-media"
 import { resolveCatalogCardPrice } from "./catalog-card-price"
 import { getPrice } from "./format"
+import { productCanonicalPath } from "./product-json-ld"
 import { pdpCopy } from "./woodright-copy"
 
 export type DisplayGroupAxis = "size" | "execution"
@@ -92,6 +93,43 @@ export function displayGroupMemberLabel(
   return title.trim() || "Вариант"
 }
 
+/**
+ * Size chips inside one family show only what differs: the size from the
+ * parenthetical plus its tail («90 × 200», «120 × 190 с тканью без изножья»),
+ * else the labels minus the shared leading words. Falls back to full labels
+ * when the short forms would collide or be empty.
+ */
+export function compactDisplayGroupChipLabels(labels: string[]): string[] {
+  if (labels.length < 2) return labels
+  const distinct = (out: string[]) => out.every(Boolean) && new Set(out).size === out.length
+
+  const SIZE_PAREN = /\(([^()]*\d[^()]*)\)\s*(.*)$/u
+  const bySize = labels.map((l) => {
+    const m = l.match(SIZE_PAREN)
+    return m ? `${m[1]!.trim()}${m[2] ? ` ${m[2].trim()}` : ""}` : ""
+  })
+  if (distinct(bySize)) return bySize
+
+  const split = labels.map((l) => l.trim().split(/\s+/))
+  let common = 0
+  for (;;) {
+    const word = split[0]![common]
+    if (word == null || split.some((w) => w[common] !== word)) break
+    common += 1
+  }
+  while (common > 0 && /^(с|со|без|на|для|под|по|из|и|в)$/iu.test(split[0]![common - 1]!)) common -= 1
+  if (common === 0) return labels
+  const out = split.map((words) =>
+    words
+      .slice(common)
+      .join(" ")
+      .replace(/^\(([^()]+)\)/u, "$1")
+      .replace(/^[,\s]+/u, "")
+      .trim()
+  )
+  return distinct(out) ? out : labels
+}
+
 export function displayGroupSelectorLabel(axis: DisplayGroupAxis): string {
   return axis === "execution"
     ? pdpCopy.fabricSelectorLabel
@@ -171,7 +209,7 @@ export function groupProductsForDisplay(
         ? members.map((m) => ({
             id: String(m.id ?? ""),
             label: displayGroupMemberLabel(m, axis),
-            href: `/product/${String(m.id ?? "")}`,
+            href: productCanonicalPath(m, String(m.id ?? "")),
             isRepresentative: m.id === representative.id,
           }))
         : undefined

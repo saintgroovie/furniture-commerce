@@ -52,6 +52,7 @@ import {
   resolveGreenwichPaintMedia,
 } from "@/lib/greenwich-paint-media"
 import {
+  compactDisplayGroupChipLabels,
   displayGroupMemberLabel,
   displayGroupSelectorLabel,
   getDisplayGroupMembers,
@@ -72,7 +73,6 @@ import { buildPdpBuyerFacingGallery } from "@/lib/pdp-buyer-gallery.server"
 import {
   getCollectionLabel,
   getSubcollectionLabel,
-  getCanonicalName,
   getBuyerFacingProductTitle,
   getBuyerFacingProductTitleLayout,
   getArticle,
@@ -80,7 +80,12 @@ import {
   getPdpHeroObjectPosition,
   pdpDimensionCells,
 } from "@/lib/product-metadata"
-import { layoutBuyerFacingTitle } from "@/lib/en-name-ru"
+import {
+  buildProductMetaDescription,
+  getBuyerDescription,
+  getProductSeoName,
+  getSeoDescriptionSource,
+} from "@/lib/product-seo"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import {
   isPdpCollectionContextSentence,
@@ -100,11 +105,6 @@ function pdpHeroThumbnail(product: Record<string, unknown>): string | undefined 
 /** OG / JSON-LD: same source as PDP hero (wardrobe closed front when `_main` is interior). */
 function primaryImageForMeta(product: Record<string, unknown>): string | undefined {
   return pdpHeroThumbnail(product)
-}
-
-function truncate(str: string, max: number): string {
-  if (str.length <= max) return str
-  return str.slice(0, max - 3).trim() + "..."
 }
 
 /** Short positioning line under the H1 — real Medusa `subtitle` only. */
@@ -136,8 +136,11 @@ export async function generateMetadata({
     }
     const canonicalPath = productCanonicalPath(product, id)
     const selfCanonical = indexingCanonical(`${base}${canonicalPath}`)
-    const title = getBuyerFacingProductTitle(product)
-    const desc = product.description ? truncate(String(product.description), 160) : "Товар из каталога Woodright."
+    const title = getProductSeoName(product)
+    const desc = buildProductMetaDescription(product, {
+      hasOptions: (buildMaterialTierOptions(product)?.length ?? 0) > 0,
+      priceMode: isRequestQuoteProduct(product) ? "quote" : "price",
+    })
     const imageUrl = primaryImageForMeta(product)
     return {
       title,
@@ -390,24 +393,12 @@ export default async function ProductPage({
 
   const titleLayout = getBuyerFacingProductTitleLayout(product)
   const titleStr = getBuyerFacingProductTitle(product)
-  const canonicalName = getCanonicalName(product)
-  const canonicalLayout = canonicalName
-    ? layoutBuyerFacingTitle(canonicalName)
-    : null
-  /* Hide workbook line when it only differs by Latin vs transcribed model. */
-  const showCanonicalLine =
-    canonicalLayout != null &&
-    canonicalLayout.text.toLowerCase() !== titleStr.trim().toLowerCase()
-
   const collectionLabel = getCollectionLabel(product)
   const subcollectionLabel = getSubcollectionLabel(product)
   const article = getArticle(product)
   const dim = getDimensions(product)
   const subtitle = getPdpSubtitle(product)
-  const description =
-    product.description != null && String(product.description).trim().length > 0
-      ? String(product.description).trim()
-      : null
+  const description = getBuyerDescription(product)
 
   /* Buyer-facing order is fixed: height → width → depth (cm hero + mm specs). */
   const dimensionLabelByAxis = {
@@ -449,7 +440,7 @@ export default async function ProductPage({
     product,
     ...displayGroupMembers,
   ])
-  const sizeChips =
+  const sizeChipsFull =
     displayGroupMembers.length > 0
       ? [
           {
@@ -466,6 +457,7 @@ export default async function ProductPage({
             const mMeta = m.metadata as Record<string, unknown> | undefined
             return {
               id: m.id as string,
+              href: productCanonicalPath(m, String(m.id ?? "")),
               label:
                 displayGroupAxis === "execution"
                   ? displayGroupMemberLabel(m, displayGroupAxis)
@@ -477,6 +469,13 @@ export default async function ProductPage({
           }),
         ].sort((a, b) => a.sort - b.sort)
       : []
+  const compactChipLabels =
+    displayGroupAxis === "size"
+      ? compactDisplayGroupChipLabels(sizeChipsFull.map((c) => c.label))
+      : null
+  const sizeChips = compactChipLabels
+    ? sizeChipsFull.map((c, i) => ({ ...c, label: compactChipLabels[i]! }))
+    : sizeChipsFull
   const displayGroupSelector = displayGroupSelectorLabel(displayGroupAxis)
 
   const isKidsProduct = isKidsStorefrontProduct(product)
@@ -497,8 +496,8 @@ export default async function ProductPage({
     displayedPriceRub: openingPrice,
   })
   const productJsonLd = buildProductJsonLd({
-    name: titleStr || "Товар",
-    description,
+    name: getProductSeoName(product) || "Товар",
+    description: getSeoDescriptionSource(product),
     url: canonicalUrl,
     image: mainImage,
     sku: article,
@@ -643,14 +642,6 @@ export default async function ProductPage({
                 />
                 {badgeLabel && <span className="badge">{badgeLabel}</span>}
               </div>
-              {showCanonicalLine && canonicalLayout && (
-                <CopyLines
-                  as="span"
-                  className="pdp-canonical-name"
-                  lines={canonicalLayout.lines}
-                />
-              )}
-
               {/* 3. Short positioning line (real `subtitle` field only).
                   Layout only: Woodright dashes + meaning breaks via CopyLines. */}
               {subtitle && (

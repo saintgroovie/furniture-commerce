@@ -15,6 +15,10 @@ import {
   extractPedestalDeskCode,
 } from "./pedestal-desk-codes"
 import {
+  phraseBuyerTitle,
+  resolveTitleCollectionSlug,
+} from "./buyer-title-phrasing"
+import {
   MOTIF_LEGACY_ENGLISH_TITLES,
   motifBuyerDisplayName,
 } from "../motif-theme"
@@ -86,6 +90,11 @@ function normalizeWhitespace(s: string): string {
 /** Presentation-only: digit*digit → × (matches storefront formatBuyerFacingMeasureText). */
 function polishMeasureStars(s: string): string {
   return s.replace(/(\d)\s*\*\s*(\d)/g, "$1 × $2")
+}
+
+/** Derived titles only: also space a bare «90×190» so sibling titles read the same. */
+function polishDerivedMeasures(s: string): string {
+  return s.replace(/(\d)\s*[*×]\s*(\d)/g, "$1 × $2")
 }
 
 function stripPedestalCode(s: string): string {
@@ -384,8 +393,17 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
     notes.push("stripped_hinge_side_parenthetical")
   }
 
+  const phrased = phraseBuyerTitle(
+    publicTitle,
+    resolveTitleCollectionSlug(product.handle, meta)
+  )
+  if (phrased.title !== publicTitle) {
+    publicTitle = phrased.title
+    notes.push(...phrased.notes)
+  }
+
   return {
-    public_title: polishMeasureStars(normalizeWhitespace(publicTitle)),
+    public_title: polishDerivedMeasures(normalizeWhitespace(publicTitle)),
     source,
     legacy_title: legacy,
     pedestal_code: expanded.code ?? extractPedestalDeskCode(base),
@@ -393,4 +411,4 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
   }
 }
 
-export const PUBLIC_TITLE_TRANSFORM_VERSION = "catalog-normalization-public-title-v3"
+export const PUBLIC_TITLE_TRANSFORM_VERSION = "catalog-normalization-public-title-v4"

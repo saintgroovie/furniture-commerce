@@ -5,9 +5,10 @@ import { ChecklistIcon, MeasureIcon } from "@/components/bespoke-help-icons"
 import { CopyLines } from "@/components/copy-lines"
 import { canonicalAlternates } from "@/lib/page-canonical"
 import { bespokeRequestCopy, seo } from "@/lib/woodright-copy"
+import { pageTitle } from "@/lib/page-title"
 
 export const metadata: Metadata = {
-  title: seo.bespokeRequest.title,
+  title: pageTitle(seo.bespokeRequest.title),
   description: seo.bespokeRequest.description,
   openGraph: {
     title: seo.bespokeRequest.title,
