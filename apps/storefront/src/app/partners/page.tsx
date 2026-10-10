@@ -1,12 +1,12 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { CopyLines } from "@/components/copy-lines"
-import { EditorialFigure } from "@/components/editorial/editorial-figure"
 import { EditorialShell } from "@/components/editorial/editorial-shell"
-import { PartnerIndex } from "@/components/partners/partner-index"
+import { PartnersEditorial } from "@/components/partners/partners-editorial"
 import { getPublicPartners } from "@/lib/api/partners"
 import { canonicalAlternates } from "@/lib/page-canonical"
 import { partnersCopy, seo } from "@/lib/woodright-copy"
+import "./partners-editorial.css"
 
 export const dynamic = "force-dynamic"
 
@@ -24,17 +24,19 @@ export const metadata: Metadata = {
 export default async function PartnersPage() {
   const partners = await getPublicPartners()
   const isEmpty = partners.length === 0
-  const heroPartner = partners.find((partner) => partner.images[0]) ?? partners[0]
-  const firstDeck = heroPartner?.presentations[0]
+  const heroSrc =
+    partners.find((partner) => partner.slug === "bolshoi")?.images[0] ??
+    partners.find((partner) => partner.images[0])?.images[0]
 
   return (
     <EditorialShell theme="partners">
-      <section className={isEmpty ? "ed-partners-hero ed-partners-hero--empty" : "ed-partners-hero"}>
-        <div className="ed-partners-hero-copy">
-          <p className="ed-eyebrow">Woodright</p>
-          <h1>{partnersCopy.h1}</h1>
-          <CopyLines className="ed-hero-lead" lines={partnersCopy.statement} />
-          {isEmpty ? (
+      {heroSrc ? <link rel="preload" as="image" href={heroSrc} fetchPriority="high" /> : null}
+      {isEmpty ? (
+        <section className="ed-partners-hero ed-partners-hero--empty">
+          <div className="ed-partners-hero-copy">
+            <p className="ed-eyebrow">Woodright</p>
+            <h1>{partnersCopy.h1}</h1>
+            <CopyLines className="ed-hero-lead" lines={partnersCopy.statement} />
             <div className="ed-partners-empty">
               <h2>{partnersCopy.emptyTitle}</h2>
               <CopyLines className="ed-body" lines={partnersCopy.emptyBody} />
@@ -42,25 +44,11 @@ export default async function PartnersPage() {
                 {partnersCopy.emptyCta}
               </Link>
             </div>
-          ) : firstDeck && heroPartner ? (
-            <Link
-              href={`/partners/${heroPartner.slug}/presentations/${firstDeck.id}`}
-              className="btn btn-primary ed-partners-hero-cta"
-            >
-              {partnersCopy.viewPresentation}
-            </Link>
-          ) : null}
-        </div>
-        {heroPartner?.images[0] ? (
-          <EditorialFigure
-            className="ed-partners-hero-media"
-            src={heroPartner.images[0]}
-            alt={heroPartner.name}
-          />
-        ) : null}
-      </section>
-
-      {isEmpty ? null : <PartnerIndex partners={partners} />}
+          </div>
+        </section>
+      ) : (
+        <PartnersEditorial partners={partners} />
+      )}
     </EditorialShell>
   )
 }
