@@ -1,0 +1,18 @@
+{
+ "base": "http://127.0.0.1:3157",
+ "pages": 239,
+ "status_200": 239,
+ "duplicate_title_groups": 0,
+ "duplicate_title_pages": 0,
+ "duplicate_meta_groups": 0,
+ "duplicate_meta_pages": 0,
+ "meta_ascii_ellipsis": 0,
+ "double_brand_title": 0,
+ "title_over_70": 30,
+ "h1_not_one": 0,
+ "noindex": 239,
+ "canonical_not_self": 0,
+ "product_pages": 214,
+ "product_with_offer": 198,
+ "ld_name_not_h1": 0
+}

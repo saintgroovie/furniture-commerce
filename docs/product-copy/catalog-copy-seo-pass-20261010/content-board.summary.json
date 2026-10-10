@@ -1,0 +1,18 @@
+{
+ "products": 214,
+ "action": {
+  "APPLY": 151,
+  "KEEP": 2,
+  "HOLD": 61
+ },
+ "confidence": {
+  "exact": 153,
+  "strong": 55,
+  "ambiguous": 6
+ },
+ "title_changed": 211,
+ "description_sanitized": 3,
+ "description_needs_owner_copy": 58,
+ "unique_seo_titles": 214,
+ "unique_meta_descriptions": 214
+}

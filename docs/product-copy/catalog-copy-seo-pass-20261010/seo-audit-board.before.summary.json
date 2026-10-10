@@ -1,0 +1,18 @@
+{
+ "base": "https://woodright.ru",
+ "pages": 239,
+ "status_200": 239,
+ "duplicate_title_groups": 36,
+ "duplicate_title_pages": 111,
+ "duplicate_meta_groups": 1,
+ "duplicate_meta_pages": 8,
+ "meta_ascii_ellipsis": 168,
+ "double_brand_title": 12,
+ "title_over_70": 6,
+ "h1_not_one": 0,
+ "noindex": 0,
+ "canonical_not_self": 0,
+ "product_pages": 214,
+ "product_with_offer": 198,
+ "ld_name_not_h1": 0
+}
