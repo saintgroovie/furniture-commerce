@@ -13,10 +13,16 @@ type Dimensions = {
   axis_states?: DimensionAxisState[]
 }
 
+export type DimensionPosition = {
+  value_mm: number
+  label: string
+}
+
 export type DimensionAxisState = {
   axis: BuyerFacingDimensionAxis
   values_mm: number[]
   note: string | null
+  positions: DimensionPosition[] | null
 }
 
 /** Buyer-facing axis order. Storage schema stays width_mm / height_mm / depth_mm. */
@@ -256,10 +262,35 @@ function normalizeAxisMm(raw: unknown): number | undefined {
   return undefined
 }
 
-function readAxisStates(raw: Record<string, unknown>): DimensionAxisState[] {
+function readLabeledPositions(
+  raw: unknown
+): { kind: "absent" } | { kind: "blocked" } | { kind: "ok"; positions: DimensionPosition[] } {
+  if (raw == null) return { kind: "absent" }
+  if (!Array.isArray(raw) || raw.length < 2) return { kind: "blocked" }
+  const positions: DimensionPosition[] = []
+  const values = new Set<number>()
+  const labels = new Set<string>()
+  for (const item of raw) {
+    if (!item || typeof item !== "object") return { kind: "blocked" }
+    const obj = item as Record<string, unknown>
+    const mm = normalizeAxisMm(obj.value_mm)
+    const label = typeof obj.label === "string" ? obj.label.trim() : ""
+    if (mm == null || !label || values.has(mm) || labels.has(label)) return { kind: "blocked" }
+    values.add(mm)
+    labels.add(label)
+    positions.push({ value_mm: mm, label })
+  }
+  return { kind: "ok", positions }
+}
+
+function readAxisStates(raw: Record<string, unknown>): {
+  states: DimensionAxisState[]
+  blocked: BuyerFacingDimensionAxis[]
+} {
   const list = raw.axis_states
-  if (!Array.isArray(list)) return []
-  const out: DimensionAxisState[] = []
+  if (!Array.isArray(list)) return { states: [], blocked: [] }
+  const states: DimensionAxisState[] = []
+  const blocked: BuyerFacingDimensionAxis[] = []
   const seen = new Set<BuyerFacingDimensionAxis>()
   for (const item of list) {
     if (!item || typeof item !== "object") continue
@@ -267,6 +298,35 @@ function readAxisStates(raw: Record<string, unknown>): DimensionAxisState[] {
     const axis = obj.axis
     if (axis !== "height" && axis !== "width" && axis !== "depth") continue
     if (seen.has(axis)) continue
+    const labeled = readLabeledPositions(obj.positions)
+    if (labeled.kind === "blocked") {
+      seen.add(axis)
+      blocked.push(axis)
+      continue
+    }
+    if (labeled.kind === "ok") {
+      const fromList = Array.isArray(obj.values_mm)
+        ? obj.values_mm.map((value) => normalizeAxisMm(value))
+        : null
+      if (
+        fromList &&
+        (fromList.some((value) => value == null) ||
+          fromList.length !== labeled.positions.length ||
+          fromList.some((value, index) => value !== labeled.positions[index].value_mm))
+      ) {
+        seen.add(axis)
+        blocked.push(axis)
+        continue
+      }
+      seen.add(axis)
+      states.push({
+        axis,
+        values_mm: labeled.positions.map((position) => position.value_mm),
+        note: null,
+        positions: labeled.positions,
+      })
+      continue
+    }
     if (!Array.isArray(obj.values_mm) || obj.values_mm.length < 2) continue
     const values: number[] = []
     let valid = true
@@ -280,18 +340,20 @@ function readAxisStates(raw: Record<string, unknown>): DimensionAxisState[] {
     }
     if (!valid || values.length < 2) continue
     seen.add(axis)
-    out.push({
+    states.push({
       axis,
       values_mm: values,
       note: typeof obj.note === "string" && obj.note.trim() ? obj.note.trim() : null,
+      positions: null,
     })
   }
-  return out
+  return { states, blocked }
 }
 
 function dimensionBagHasValues(raw: Record<string, unknown> | undefined): boolean {
   if (!raw) return false
-  if (readAxisStates(raw).length > 0) return true
+  const bag = readAxisStates(raw)
+  if (bag.states.length > 0 || bag.blocked.length > 0) return true
   return (
     normalizeAxisMm(raw.height_mm) != null ||
     normalizeAxisMm(raw.width_mm) != null ||
@@ -301,8 +363,8 @@ function dimensionBagHasValues(raw: Record<string, unknown> | undefined): boolea
 
 function readEntityDimensions(
   entity: ProductLike | null | undefined
-): Dimensions | null {
-  if (!entity) return null
+): { dim: Dimensions | null; blocked: BuyerFacingDimensionAxis[] } {
+  if (!entity) return { dim: null, blocked: [] }
   const m = (entity.metadata as Record<string, unknown> | undefined) ?? {}
   const primary =
     m.dimensions && typeof m.dimensions === "object"
@@ -313,26 +375,22 @@ function readEntityDimensions(
       ? (m.dimensions_normalized as Record<string, unknown>)
       : undefined
   const raw = dimensionBagHasValues(primary) ? primary : fallback
-  if (!raw || typeof raw !== "object") return null
-  const states = readAxisStates(raw)
+  if (!raw || typeof raw !== "object") return { dim: null, blocked: [] }
+  const bag = readAxisStates(raw)
   const dim: Dimensions = {}
-  const h = states.some((state) => state.axis === "height")
-    ? undefined
-    : normalizeAxisMm(raw.height_mm)
-  const w = states.some((state) => state.axis === "width")
-    ? undefined
-    : normalizeAxisMm(raw.width_mm)
-  const d = states.some((state) => state.axis === "depth")
-    ? undefined
-    : normalizeAxisMm(raw.depth_mm)
+  const occupied = (axis: BuyerFacingDimensionAxis) =>
+    bag.states.some((state) => state.axis === axis) || bag.blocked.includes(axis)
+  const h = occupied("height") ? undefined : normalizeAxisMm(raw.height_mm)
+  const w = occupied("width") ? undefined : normalizeAxisMm(raw.width_mm)
+  const d = occupied("depth") ? undefined : normalizeAxisMm(raw.depth_mm)
   if (h != null) dim.height_mm = h
   if (w != null) dim.width_mm = w
   if (d != null) dim.depth_mm = d
-  if (states.length) dim.axis_states = states
-  if (dim.height_mm == null && dim.width_mm == null && dim.depth_mm == null && !states.length) {
-    return null
+  if (bag.states.length) dim.axis_states = bag.states
+  if (dim.height_mm == null && dim.width_mm == null && dim.depth_mm == null && !bag.states.length) {
+    return { dim: bag.blocked.length ? { axis_states: [] } : null, blocked: bag.blocked }
   }
-  return dim
+  return { dim, blocked: bag.blocked }
 }
 
 /**
@@ -356,28 +414,32 @@ export function getDimensions(
 
   const fromVariant = readEntityDimensions(variant)
   const fromProduct = readEntityDimensions(product)
-  if (!fromVariant && !fromProduct) return null
+  if (!fromVariant.dim && !fromProduct.dim && fromVariant.blocked.length === 0 && fromProduct.blocked.length === 0) {
+    return null
+  }
 
   const out: Dimensions = {}
   const states: DimensionAxisState[] = []
   for (const axis of BUYER_FACING_DIMENSION_ORDER) {
-    const variantState = fromVariant?.axis_states?.find((state) => state.axis === axis)
+    const variantState = fromVariant.dim?.axis_states?.find((state) => state.axis === axis)
     const key = AXIS_TO_MM_KEY[axis]
-    const v = fromVariant?.[key]
+    const v = fromVariant.dim?.[key]
     if (variantState) {
       states.push(variantState)
       continue
     }
+    if (fromVariant.blocked.includes(axis)) continue
     if (typeof v === "number" && v > 0) {
       out[key] = v
       continue
     }
-    const productState = fromProduct?.axis_states?.find((state) => state.axis === axis)
+    const productState = fromProduct.dim?.axis_states?.find((state) => state.axis === axis)
     if (productState) {
       states.push(productState)
       continue
     }
-    const p = fromProduct?.[key]
+    if (fromProduct.blocked.includes(axis)) continue
+    const p = fromProduct.dim?.[key]
     if (typeof p === "number" && p > 0) out[key] = p
   }
   if (states.length) out.axis_states = states
@@ -391,6 +453,7 @@ export type PdpDimensionCell = {
   axis: BuyerFacingDimensionAxis
   mm?: number
   values_mm?: number[]
+  labels?: string[]
   note: string | null
 }
 
@@ -403,7 +466,8 @@ export function pdpDimensionCells(dim: Dimensions): PdpDimensionCell[] {
       out.push({
         axis,
         values_mm: state.values_mm,
-        note: state.note,
+        labels: state.positions?.map((position) => position.label),
+        note: state.positions?.length ? null : state.note,
       })
       continue
     }
