@@ -1285,6 +1285,9 @@ export const partnersCopy = {
     "Если просмотр не открылся",
     "Скачайте файл или откройте в новой вкладке",
   ],
+  /** Kind label for image decks extracted from owner project presentations. */
+  workKind: "Презентация проекта",
+  closeViewer: "Закрыть",
 }
 
 export const homeCopy = {

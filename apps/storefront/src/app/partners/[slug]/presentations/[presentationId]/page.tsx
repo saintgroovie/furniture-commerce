@@ -3,9 +3,11 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { CopyLines } from "@/components/copy-lines"
 import { EditorialShell } from "@/components/editorial/editorial-shell"
+import { DeckViewer } from "@/components/partners/deck-viewer"
 import { PresentationViewer } from "@/components/partners/presentation-viewer"
 import { getPublicPartnerBySlug } from "@/lib/api/partners"
 import { partnersCopy, seo } from "@/lib/woodright-copy"
+import "../../../partners-editorial.css"
 
 export const dynamic = "force-dynamic"
 
@@ -32,6 +34,20 @@ export default async function PresentationPage({ params }: { params: Promise<Par
   const deck = partner?.presentations.find((item) => item.id === presentationId)
   if (!partner || !deck) notFound()
 
+  if (deck.slides && deck.slides.length > 0) {
+    return (
+      <DeckViewer
+        title={deck.title}
+        kicker={partner.name}
+        slides={deck.slides}
+        fileUrl={deck.file_url || undefined}
+        mime={deck.mime}
+        backHref={`/partners/${partner.slug}`}
+        backLabel={partner.name}
+      />
+    )
+  }
+
   return (
     <EditorialShell theme="partners">
       <article className="ed-viewer ed-wrap">
@@ -40,12 +56,7 @@ export default async function PresentationPage({ params }: { params: Promise<Par
         </p>
         <h1>{deck.title}</h1>
         {deck.page_count ? <p className="ed-body">{partnersCopy.pages(deck.page_count)}</p> : null}
-        <PresentationViewer
-          src={deck.file_url}
-          title={deck.title}
-          mime={deck.mime}
-          slides={deck.slides}
-        />
+        <PresentationViewer src={deck.file_url} title={deck.title} mime={deck.mime} />
         {deck.slides?.length ? null : (
           <CopyLines className="ed-body ed-body--muted" lines={partnersCopy.viewerFallback} />
         )}
