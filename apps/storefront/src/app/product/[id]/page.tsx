@@ -420,6 +420,7 @@ export default async function ProductPage({
         label: dimensionLabelByAxis[cell.axis],
         mm: cell.mm,
         values_mm: cell.values_mm,
+        labels: cell.labels,
         note: cell.note,
       }))
     : []
@@ -428,7 +429,13 @@ export default async function ProductPage({
     ...dimensionCells.map((c) => ({
       label: c.label,
       value: c.values_mm
-        ? `${c.values_mm.join(" / ")} ${pdpCopy.unitMm}${c.note ? ` - ${c.note}` : ""}`
+        ? `${c.values_mm.join(" / ")} ${pdpCopy.unitMm}${
+            c.labels?.length
+              ? ` - ${c.labels.join(" / ")}`
+              : c.note
+                ? ` - ${c.note}`
+                : ""
+          }`
         : `${c.mm} ${pdpCopy.unitMm}`,
     })),
     ...(article ? [{ label: pdpCopy.specArticle, value: article }] : []),
@@ -671,7 +678,9 @@ export default async function ProductPage({
                           ? c.values_mm.map((mm) => mmToCmLabel(mm)).join(" / ")
                           : mmToCmLabel(c.mm ?? 0)}
                         &nbsp;{pdpCopy.unitCm}
-                        {c.note ? (
+                        {c.labels?.length ? (
+                          <span className="pdp-dimension-note">{c.labels.join(" / ")}</span>
+                        ) : c.note ? (
                           <span className="pdp-dimension-note">{c.note}</span>
                         ) : null}
                       </dd>

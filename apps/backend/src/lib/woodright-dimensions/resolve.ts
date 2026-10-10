@@ -1,6 +1,6 @@
 import {
   hasAnyDimension,
-  readDimensionAxisStates,
+  readDimensionAxisBag,
   readStructuredDimensionsMm,
   toPresenterDimensions,
   toSnapshotDimensions,
@@ -27,16 +27,19 @@ export type DimensionEntityLike = {
 function metaBag(entity: DimensionEntityLike | null | undefined): {
   mm: ResolvedDimensionsMm
   states: DimensionAxisState[]
+  blocked: DimensionAxis[]
 } {
   const m = (entity?.metadata ?? {}) as Record<string, unknown>
   const primaryMm = readStructuredDimensionsMm(m.dimensions)
-  const primaryStates = readDimensionAxisStates(m.dimensions)
-  if (hasAnyDimension(primaryMm) || primaryStates.length > 0) {
-    return { mm: primaryMm, states: primaryStates }
+  const primary = readDimensionAxisBag(m.dimensions)
+  if (hasAnyDimension(primaryMm) || primary.states.length > 0 || primary.blocked.length > 0) {
+    return { mm: primaryMm, states: primary.states, blocked: primary.blocked }
   }
+  const fallback = readDimensionAxisBag(m.dimensions_normalized)
   return {
     mm: readStructuredDimensionsMm(m.dimensions_normalized),
-    states: readDimensionAxisStates(m.dimensions_normalized),
+    states: fallback.states,
+    blocked: fallback.blocked,
   }
 }
 
@@ -80,6 +83,11 @@ export function resolveFurnitureDimensions(input: {
       mm[key] = null
       continue
     }
+    if (variantBag.blocked.includes(axis)) {
+      mm[key] = null
+      provenance[axis] = "none"
+      continue
+    }
     if (fromVariant != null) {
       mm[key] = fromVariant
       provenance[axis] = "variant"
@@ -90,6 +98,11 @@ export function resolveFurnitureDimensions(input: {
       axis_states.push(productState)
       provenance[axis] = "product"
       mm[key] = null
+      continue
+    }
+    if (productBag.blocked.includes(axis)) {
+      mm[key] = null
+      provenance[axis] = "none"
       continue
     }
     const fromProduct = productBag.mm[key]
