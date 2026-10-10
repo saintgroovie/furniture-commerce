@@ -1,8 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { useCallback, useEffect, useState, type CSSProperties, type MouseEvent } from "react"
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react"
 import { DeckViewer } from "@/components/partners/deck-viewer"
+import { deckHistoryState, isPlainDeckActivation, readDeckHistory } from "@/lib/deck-activation"
 import { isPartnerPdf } from "@/lib/partner-file"
 import { hasPartnerMark, PartnerMark } from "@/components/partners/partner-mark"
 import { bindPinProgress } from "@/components/partners/pin-progress"
@@ -53,6 +54,7 @@ function markReturn(event: MouseEvent<HTMLElement>) {
 
 export function PartnersEditorial({ partners }: { partners: StorePartner[] }) {
   const [open, setOpen] = useState<OpenDeck | null>(null)
+  const partnersRef = useRef(partners)
   const bySlug = new Map(partners.map((partner) => [partner.slug, partner]))
   const bolshoi = bySlug.get("bolshoi")
   const mariinsky = bySlug.get("mariinsky-palace")
@@ -80,11 +82,48 @@ export function PartnersEditorial({ partners }: { partners: StorePartner[] }) {
 
   const closeDeck = useCallback(() => setOpen(null), [])
 
+  useEffect(() => {
+    partnersRef.current = partners
+  }, [partners])
+
+  useEffect(() => {
+    const onPop = () => {
+      const restored = readDeckHistory(window.history.state)
+      if (!restored) {
+        setOpen(null)
+        return
+      }
+      const partner = partnersRef.current.find((item) => item.slug === restored.slug)
+      if (!partner || slidesOf(partner).length === 0) {
+        setOpen(null)
+        return
+      }
+      setOpen({ partner, index: restored.index })
+    }
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [])
+
   const openDeck = (event: MouseEvent<HTMLElement>, partner: StorePartner, index = 0) => {
     if (!slidesOf(partner).length) return
+    const anchor = event.currentTarget instanceof HTMLAnchorElement ? event.currentTarget : null
+    if (
+      !isPlainDeckActivation({
+        defaultPrevented: event.defaultPrevented,
+        button: event.button,
+        metaKey: event.metaKey,
+        ctrlKey: event.ctrlKey,
+        shiftKey: event.shiftKey,
+        altKey: event.altKey,
+        target: anchor?.getAttribute("target") ?? null,
+      })
+    ) {
+      return
+    }
     event.preventDefault()
     markReturn(event)
     setOpen({ partner, index })
+    window.history.pushState(deckHistoryState(partner.slug, index), "")
   }
 
   return (
@@ -214,6 +253,7 @@ export function PartnersEditorial({ partners }: { partners: StorePartner[] }) {
 
       {open && slidesOf(open.partner).length > 0 ? (
         <DeckViewer
+          key={`${open.partner.slug}:${open.index}`}
           title={deckOf(open.partner)?.title || open.partner.name}
           kicker={open.partner.name}
           slides={slidesOf(open.partner)}
