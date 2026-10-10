@@ -20,6 +20,8 @@ import { pdpCopy } from "@/lib/woodright-copy"
 export type PdpSizeChip = {
   id: string
   label: string
+  /** Canonical sibling URL (`/product/<handle>`); falls back to the id route. */
+  href?: string
   /** Full-solid (base) RUB price of the chip's product; null → no price shown. */
   basePrice: number | null
   isCurrent: boolean
@@ -99,7 +101,7 @@ export function PdpSizeChips({
               )}
             </span>
           ) : (
-            <Link key={chip.id} href={`/product/${chip.id}`} className="pdp-size-chip">
+            <Link key={chip.id} href={chip.href ?? `/product/${chip.id}`} className="pdp-size-chip">
               <span className="pdp-size-chip-label">{chip.label}</span>
               {priceLabel != null && (
                 <span className="pdp-size-chip-price">{priceLabel}</span>

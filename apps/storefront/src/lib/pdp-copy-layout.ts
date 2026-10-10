@@ -7,13 +7,15 @@
 
 import { transcribeEnNamesInRuText } from "@/lib/en-name-ru"
 
-/** Forbidden em/en dashes → Woodright ` - ` (words untouched). */
+/**
+ * Forbidden em/en dashes → Woodright ` - `. A hyphen inside a word or number
+ * («светло-серый», «90-сантиметровый», «Оксфорд-1», «Шкаф-витрина») is not a
+ * dash and stays; a hyphen with a space on either side is normalized.
+ */
 export function normalizeRuUiDashes(text: string): string {
   return text
-    .replace(/\u2014/g, "-")
-    .replace(/\u2013/g, "-")
-    .replace(/\u2212/g, "-")
-    .replace(/\s*-\s*/g, " - ")
+    .replace(/\s*[\u2014\u2013\u2212]\s*/g, " - ")
+    .replace(/\s+-\s*|\s*-\s+/g, " - ")
     /* «окна, - где» is a broken bridge: comma + dash. One Woodright dash. */
     .replace(/\s*,\s*-\s+/g, " - ")
     .replace(/ {2,}/g, " ")
