@@ -238,8 +238,6 @@ jobs:
           ref: ${{ github.sha }}
           path: trusted-governance
           persist-credentials: false
-          sparse-checkout: scripts/release/validate-isolated-storefront-bake.cjs
-          sparse-checkout-cone-mode: false
 
       - name: Run trusted isolated bake gate
         if: ${{ inputs.release_mode == 'isolated_storefront' }}
@@ -265,13 +263,26 @@ jobs:
             --repo "${GITHUB_WORKSPACE}" \
             --github-output
 
+      - name: Choose release script root
+        id: scripts
+        env:
+          RELEASE_MODE: ${{ inputs.release_mode }}
+        run: |
+          set -euo pipefail
+          if [ "${RELEASE_MODE}" = "isolated_storefront" ]; then
+            test -f trusted-governance/scripts/release/write-build-manifest.py
+            echo "root=trusted-governance" >> "${GITHUB_OUTPUT}"
+          else
+            echo "root=." >> "${GITHUB_OUTPUT}"
+          fi
+
       - name: Resolve image build profile (fail-closed)
         id: profile
         env:
           PROFILE: ${{ inputs.build_profile }}
         run: |
           set -euo pipefail
-          node scripts/release/resolve-image-build-profile.cjs \
+          node ${{ steps.scripts.outputs.root }}/scripts/release/resolve-image-build-profile.cjs \
             --profile "${PROFILE}" --validate --checksum --print-env >> "${GITHUB_OUTPUT}"
 
       - name: Echo non-secret resolved profile values
@@ -433,7 +444,7 @@ jobs:
           test -f /tmp/woodright-sf-gate/standalone/woodright-bake-evidence.json \
             || test -f /tmp/woodright-sf-gate/standalone/apps/storefront/woodright-bake-evidence.json \
             || { echo "woodright-bake-evidence.json missing from loaded image standalone tree" >&2; exit 1; }
-          node scripts/release/scan-storefront-contamination.cjs \
+          node ${{ steps.scripts.outputs.root }}/scripts/release/scan-storefront-contamination.cjs \
             --profile "${PROFILE}" \
             --path /tmp/woodright-sf-gate/standalone \
             --path /tmp/woodright-sf-gate/static
@@ -560,9 +571,9 @@ jobs:
             exit 1
           fi
           mkdir -p release-artifacts
-          python3 scripts/release/write-build-manifest.py
-          node scripts/release/validate-build-manifest.cjs release-artifacts/build-manifest.json
-          python3 scripts/release/write-release-manifest-partial.py || true
+          python3 ${{ steps.scripts.outputs.root }}/scripts/release/write-build-manifest.py
+          node ${{ steps.scripts.outputs.root }}/scripts/release/validate-build-manifest.cjs release-artifacts/build-manifest.json
+          python3 ${{ steps.scripts.outputs.root }}/scripts/release/write-release-manifest-partial.py || true
           echo "WARNING: mutable-sha aliases can drift — cutover MUST pin @digest; build is NOT release"
 
       - name: Upload build manifest artifact
