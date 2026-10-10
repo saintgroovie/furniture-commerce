@@ -54,6 +54,11 @@ const editorial = readFileSync(join(srcRoot, "components/partners/partners-edito
 const viewer = readFileSync(join(srcRoot, "components/partners/deck-viewer.tsx"), "utf8")
 
 assert.match(editorial, /isPlainDeckActivation/)
+const openDeckSource = editorial.slice(editorial.indexOf("const openDeck"), editorial.indexOf("return ("))
+const anchorAt = openDeckSource.indexOf("if (anchor)")
+const guardAt = openDeckSource.indexOf("isPlainDeckActivation")
+assert.ok(anchorAt >= 0 && guardAt > anchorAt, "modifier guard stays inside the anchor branch")
+assert.equal(openDeckSource.indexOf("isPlainDeckActivation", guardAt + 1), -1)
 assert.match(editorial, /deckHistoryState/)
 assert.match(editorial, /readDeckHistory/)
 assert.match(editorial, /popstate/)
