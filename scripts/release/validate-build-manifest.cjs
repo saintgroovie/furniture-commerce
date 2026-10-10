@@ -34,8 +34,21 @@ const ALLOWED_ROOT = new Set([
   "tests_summary",
   "release_authorized",
   "notes",
+  "release_mode",
+  "production_base_sha",
+  "main_sha",
+  "migration_count",
+  "db_mutation",
+  "storefront_delta_scope",
 ])
-const ALLOWED_IMG = new Set(["repository", "unique_tag", "digest", "oci_revision"])
+const ALLOWED_IMG = new Set(["repository", "unique_tag", "digest", "oci_revision", "reused"])
+const ISOLATED_ONLY_ROOT = [
+  "production_base_sha",
+  "main_sha",
+  "migration_count",
+  "db_mutation",
+  "storefront_delta_scope",
+]
 const ALLOWED_BUILD_PROFILE_NAMES = new Set(["public_demo", "production_candidate", "public_production"])
 const ALLOWED_BAKED_STOREFRONT_KEYS = new Set([
   "NEXT_PUBLIC_SITE_URL",
@@ -63,7 +76,7 @@ function scanSecrets(doc, errors) {
   if (SECRETISH.test(s)) fail("secret-looking values forbidden in build manifest", errors)
 }
 
-function validateImage(side, img, sourceSha, errors) {
+function validateImage(side, img, sourceSha, errors, opts = {}) {
   if (!img || typeof img !== "object") {
     fail(`${side} required`, errors)
     return
@@ -72,6 +85,17 @@ function validateImage(side, img, sourceSha, errors) {
   if (!img.repository) fail(`${side}.repository required`, errors)
   if (!DIGEST_RE.test(img.digest || "")) fail(`${side}.digest required`, errors)
   if (!SHA_RE.test(img.oci_revision || "")) fail(`${side}.oci_revision required`, errors)
+  if (opts.reused) {
+    if (img.reused !== true) fail(`${side}.reused must be true`, errors)
+    if (img.oci_revision === sourceSha) {
+      fail(`${side}.oci_revision must stay the reused revision, not the candidate source_sha`, errors)
+    }
+    if (!img.unique_tag || !String(img.unique_tag).startsWith("reused-")) {
+      fail(`${side}.unique_tag must start with reused-`, errors)
+    }
+    return
+  }
+  if (img.reused != null) fail(`${side}.reused is only valid for an isolated reused backend`, errors)
   if (img.oci_revision !== sourceSha) fail(`${side}.oci_revision must equal source_sha`, errors)
   if (!img.unique_tag || !String(img.unique_tag).startsWith("build-")) {
     fail(`${side}.unique_tag must start with build-`, errors)
@@ -181,9 +205,28 @@ function validate(doc, errors) {
     if (doc.baked_storefront_values != null) fail("baked_storefront_values set without build_profile", errors)
   }
 
-  validateImage("backend", doc.backend, doc.source_sha, errors)
+  const isolated = doc.release_mode === "isolated_storefront"
+  if (doc.release_mode != null && doc.release_mode !== "main" && !isolated) {
+    fail("release_mode must be main or isolated_storefront", errors)
+  }
+  if (!isolated) {
+    for (const key of ISOLATED_ONLY_ROOT) {
+      if (doc[key] != null) fail(`${key} is only valid for isolated_storefront`, errors)
+    }
+  } else {
+    if (!SHA_RE.test(doc.production_base_sha || "")) fail("production_base_sha required", errors)
+    if (!SHA_RE.test(doc.main_sha || "")) fail("main_sha required", errors)
+    if (doc.migration_count !== 0) fail("migration_count must be 0", errors)
+    if (doc.db_mutation !== "forbidden") fail("db_mutation must be forbidden", errors)
+    if (doc.storefront_delta_scope !== "apps/storefront") fail("storefront_delta_scope must be apps/storefront", errors)
+    if (!/^release\/[A-Za-z0-9]/.test(doc.source_branch || "")) {
+      fail("isolated source_branch must be a release ref, not main", errors)
+    }
+  }
+
+  validateImage("backend", doc.backend, doc.source_sha, errors, { reused: isolated })
   validateImage("storefront", doc.storefront, doc.source_sha, errors)
-  if (doc.backend?.oci_revision && doc.storefront?.oci_revision) {
+  if (!isolated && doc.backend?.oci_revision && doc.storefront?.oci_revision) {
     if (doc.backend.oci_revision !== doc.storefront.oci_revision) {
       fail("backend/storefront oci_revision mismatch", errors)
     }
@@ -196,7 +239,7 @@ function validate(doc, errors) {
 
   try {
     const expected = expectedUniqueTag(doc)
-    if (doc.backend?.unique_tag && doc.backend.unique_tag !== expected) {
+    if (!isolated && doc.backend?.unique_tag && doc.backend.unique_tag !== expected) {
       fail(`backend.unique_tag must equal ${expected}`, errors)
     }
     if (doc.storefront?.unique_tag && doc.storefront.unique_tag !== expected) {

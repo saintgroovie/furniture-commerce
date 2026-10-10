@@ -13,23 +13,34 @@ def main() -> int:
     be = os.environ["BACKEND_DIGEST"]
     sf = os.environ["STOREFRONT_DIGEST"]
     prefix = os.environ["IMAGE_PREFIX"]
+    release_mode = os.environ.get("RELEASE_MODE") or "main"
+    backend_revision = os.environ.get("BACKEND_REVISION") or sha
     if not be.startswith("sha256:") or not sf.startswith("sha256:"):
         print("digests must start with sha256:", file=sys.stderr)
         return 1
+    isolated = release_mode == "isolated_storefront"
+    if isolated and backend_revision == sha:
+        print("isolated backend revision must not equal the candidate SHA", file=sys.stderr)
+        return 1
+    backend = {
+        "repository": f"{prefix}-backend",
+        "tag": sha,
+        "digest": be,
+        "oci_revision": sha,
+        "oci_source": "https://github.com/saintgroovie/furniture-commerce",
+    }
+    if isolated:
+        backend["tag"] = "reused"
+        backend["oci_revision"] = backend_revision
+        backend["reused"] = True
     doc = {
         "schema_version": "1",
         "release_sha": sha,
-        "branch": os.environ.get("GITHUB_REF_NAME") or "",
+        "branch": os.environ["RELEASE_REF"] if isolated else (os.environ.get("GITHUB_REF_NAME") or ""),
         "pr_number": None,
         "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
         "build_timestamp": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "backend": {
-            "repository": f"{prefix}-backend",
-            "tag": sha,
-            "digest": be,
-            "oci_revision": sha,
-            "oci_source": "https://github.com/saintgroovie/furniture-commerce",
-        },
+        "backend": backend,
         "storefront": {
             "repository": f"{prefix}-storefront",
             "tag": sha,
@@ -67,11 +78,24 @@ def main() -> int:
         },
         "notes": "Mutable tags may drift; authorized identity is digest fields.",
     }
-    if doc["backend"]["oci_revision"] != doc["storefront"]["oci_revision"]:
-        print("sha mismatch", file=sys.stderr)
+    if isolated:
+        doc["release_mode"] = "isolated_storefront"
+        doc["notes"] = (
+            "Isolated storefront bake. Backend digest is reused. "
+            "Candidate is not current main. Mutable tags may drift; pin digests."
+        )
+    if not isolated:
+        if doc["backend"]["oci_revision"] != doc["storefront"]["oci_revision"]:
+            print("sha mismatch", file=sys.stderr)
+            return 1
+        if doc["backend"]["oci_revision"] != doc["release_sha"]:
+            print("revision != release_sha", file=sys.stderr)
+            return 1
+    elif doc["storefront"]["oci_revision"] != doc["release_sha"]:
+        print("storefront revision != release_sha", file=sys.stderr)
         return 1
-    if doc["backend"]["oci_revision"] != doc["release_sha"]:
-        print("revision != release_sha", file=sys.stderr)
+    elif doc["backend"]["oci_revision"] == doc["release_sha"]:
+        print("reused backend revision collided with candidate", file=sys.stderr)
         return 1
     os.makedirs("release-artifacts", exist_ok=True)
     path = "release-artifacts/release-manifest.partial.json"
