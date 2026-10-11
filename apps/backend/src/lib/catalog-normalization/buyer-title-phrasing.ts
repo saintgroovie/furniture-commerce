@@ -180,6 +180,7 @@ const HEAD_RULES: HeadRule[] = [
     head: "Увеличенная нижняя кровать",
     tail: "без матраса",
   },
+  { re: /^Нижняя кровать без матраса/u, head: "Нижняя кровать", tail: "без матраса" },
   { re: /^Диван-кровать малый/u, head: "Малый диван-кровать" },
   { re: /^Диван малый/u, head: "Малый диван" },
   { re: /^Диван большой/u, head: "Большой диван" },
@@ -302,6 +303,14 @@ function joinQualifiers(rest: string): string {
   return ` ${r}`
 }
 
+/**
+ * «Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)» sells the lower bed alone: its price
+ * row (OX-14-1, 29 000 ₽, height 257 mm) is the add-on bed, while the complex is OX-90-1
+ * (406 200 ₽, height 1930 mm). Owner decision 2026-10-11.
+ */
+const COMPLEX_LOWER_BED_RE =
+  /^Комплекс\s+\p{L}+-\d+\s*\(\s*нижняя кровать без матраса\s+(\d{2,3}\s*[*×xх]\s*\d{2,3})\s*\)$/u
+
 export type BuyerTitlePhrasingResult = {
   title: string
   notes: string[]
@@ -318,6 +327,11 @@ export function phraseBuyerTitle(
   const notes: string[] = []
   let title = repairLegacyTitleNoise(rawTitle)
   if (title !== rawTitle.trim()) notes.push("repaired_legacy_noise")
+  const lowerBed = title.match(COMPLEX_LOWER_BED_RE)
+  if (lowerBed) {
+    title = `Нижняя кровать без матраса (${lowerBed[1]})`
+    notes.push("complex_lower_bed_as_bed")
+  }
 
   const { body: bodyRaw, paren } = splitTrailingParen(title)
   const desk = extractDeskCodePhrases(bodyRaw)
