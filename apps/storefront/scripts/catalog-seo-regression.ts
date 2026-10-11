@@ -4,8 +4,8 @@
  *   yarn dlx -q tsx scripts/catalog-seo-regression.ts --products /path/products.json [--out dir] [--strict]
  *
  * Input: `{ "products": [...] }` from `/store/products?fields=*metadata,...` (any page merge).
- * Output: `<out>/catalog-seo-audit.{json,md}`. `--strict` exits 1 on any issue except
- * `duplicate_seo_name` rows listed in the HOLD set below.
+ * Output: `<out>/catalog-seo-audit.{json,md}`. `--strict` exits 1 if any row has an issue;
+ * there is no allowlist.
  */
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"

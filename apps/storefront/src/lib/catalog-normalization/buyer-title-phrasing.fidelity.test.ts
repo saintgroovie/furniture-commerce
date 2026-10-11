@@ -74,6 +74,8 @@ assert.equal(t("   ", null).trim(), "")
 
 /* Legacy noise repair. */
 assert.equal(repairLegacyTitleNoise("Кровать 1-сп. (90*190) с рисунком, без изн."), "Кровать 1-сп. (90*190) с рисунком, без изножья")
+assert.equal(repairLegacyTitleNoise("Ящик для игрушек с подъем. мех. Ballet"), "Ящик для игрушек с подъёмным механизмом Ballet")
+assert.equal(repairLegacyTitleNoise("Кровать с подъёмным механизмом"), "Кровать с подъёмным механизмом")
 assert.equal(repairLegacyTitleNoise("Кровать 1,5-сп. 120×190"), "Кровать 1,5-сп. (120×190)")
 assert.match(repairLegacyTitleNoise("Комод,белый"), /Комод, белый/)
 assert.match(repairLegacyTitleNoise("Кровать 1,5-сп."), /1,5-сп/, "decimal comma is not split")

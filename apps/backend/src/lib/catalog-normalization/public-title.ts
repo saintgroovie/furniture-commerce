@@ -113,6 +113,14 @@ function collectionFromHandle(handle: string | null | undefined): string | null 
 const TECH_DIM_TAIL_RE =
   /\s*\(\s*(?:гл|шир|выс)\.?\s*\d+(?:\s*мм)?\s*\)\s*$/iu
 
+/** «Шкаф комбинированный 560 Albion»: a bare number is dropped only when it equals the structured depth. */
+function structuredDepthMm(meta: Record<string, unknown>): number | null {
+  const dims = meta.dimensions
+  if (!dims || typeof dims !== "object" || Array.isArray(dims)) return null
+  const depth = (dims as Record<string, unknown>).depth_mm
+  return typeof depth === "number" && Number.isInteger(depth) && depth > 0 ? depth : null
+}
+
 function isWillieOrKidsTitleScope(meta: Record<string, unknown>): boolean {
   if (meta.storefront_section === "kids") return true
   return asString(meta.collection) === "willie-winkie"
@@ -228,6 +236,17 @@ export function stripLegacyKidsCatalogTitleNoise(
   if (withoutDim !== next) {
     next = withoutDim.trim()
     notes.push("stripped_technical_dimension_tail")
+  }
+  const depth = structuredDepthMm(meta)
+  if (depth) {
+    const withoutBareDepth = next.replace(
+      new RegExp(`(?<=\\p{L}\\s)${depth}(?=\\s+[A-Za-z]|\\s*$)(?!\\s*(?:мм|см|mm|cm)(?![\\p{L}]))`, "iu"),
+      " "
+    )
+    if (withoutBareDepth !== next) {
+      next = withoutBareDepth
+      notes.push("stripped_bare_depth_code")
+    }
   }
   if (hasSelectableMotif(meta)) {
     for (const phrase of collectSelectableMotifPhrases(meta)) {
