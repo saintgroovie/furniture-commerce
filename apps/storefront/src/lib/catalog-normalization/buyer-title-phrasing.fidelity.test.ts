@@ -45,7 +45,13 @@ assert.equal(
 /* Model already named → no second model; Greenwich nicknames stay. */
 assert.equal(t("Гардероб 2-дв. с ящиками Левел", "greenwich"), "Двухдверный гардероб с ящиками Левел")
 assert.equal(t("Комод Скейл", "greenwich"), "Комод Скейл")
-assert.equal(t("Комплекс Оксфорд-1 (нижняя кровать без матраса 90 × 185)", "oxford"), "Комплекс Оксфорд-1 (нижняя кровать без матраса 90 × 185)")
+/* Owner decision 2026-10-11: the Oxford-1 lower-bed row sells the bed alone, not the complex. */
+assert.equal(t("Комплекс Оксфорд-1 (нижняя кровать без матраса 90 × 185)", "oxford"), "Нижняя кровать Оксфорд без матраса (90 × 185)")
+assert.equal(t("Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)", "oxford"), "Нижняя кровать Оксфорд без матраса (90*185)")
+assert.equal(
+  t("Комплекс Оксфорд-1 с выдвижной столешницей без нижней кровати", "oxford"),
+  "Комплекс Оксфорд-1 с выдвижной столешницей без нижней кровати"
+)
 
 /* Unknown meaning stays verbatim (Monchelsea module codes are HOLD). */
 assert.equal(t("Шкаф для одежды 2-дв. (модуль/ЯШ)", "monchelsea"), "Двухдверный шкаф для одежды Мончелси (модуль/ЯШ)")

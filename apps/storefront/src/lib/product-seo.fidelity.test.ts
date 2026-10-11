@@ -14,6 +14,8 @@ import {
   getProductSeoName,
   getSeoDescriptionSource,
   META_DESCRIPTION_MAX,
+  productMotifDisplayName,
+  productPaintingNameRu,
 } from "./product-seo"
 
 const plain = (s: string) => s.replace(/[\u00a0\u202f]/g, " ")
@@ -78,6 +80,24 @@ const motifRow = {
   assert.doesNotMatch(getProductSeoName(noSlug("Brigantine Ivory")), /роспись/, "a painting name without a slug is not a painting claim")
   assert.doesNotMatch(getProductSeoName(noSlug("Zebra Parade")), /«/, "no transliterated name")
   assert.doesNotMatch(getProductSeoName(noSlug("Fairies")), /«Феи»/, "canonical paintings need motif_slug")
+
+  /* Owner exceptions: painting data the catalog contradicts is not shown; neighbours keep theirs. */
+  const bench = {
+    handle: "te-55-1",
+    title: "Банкетка малая Templars",
+    metadata: { collection: "willie-winkie", motif_slug: "templars", motif_title: "Templars" },
+  }
+  assert.equal(plain(getProductSeoName(bench)), "Малая банкетка Вилли Винки")
+  assert.equal(productMotifDisplayName(bench), null)
+  assert.match(plain(getProductSeoName({ ...bench, handle: "te-55-9" })), /, роспись «Рыцари»$/)
+  const ivory = {
+    handle: "bri-95-3",
+    title: "Кровать-трансформер Brigantine Ivory (80*150) с тканью",
+    metadata: { collection: "willie-winkie", painting_name: "Brigantine Ivory" },
+  }
+  assert.doesNotMatch(getProductSeoName(ivory), /Бригантина/)
+  assert.equal(productPaintingNameRu(ivory), null)
+  assert.match(plain(getProductSeoName({ ...noSlug("Brigantine Blue"), handle: "brb-40-2" })), /, «Бригантина»$/)
 }
 
 /* Meta description: whole sentences, ≤160, no ASCII ellipsis, no promises. */

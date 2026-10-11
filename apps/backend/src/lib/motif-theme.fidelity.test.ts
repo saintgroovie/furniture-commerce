@@ -10,12 +10,15 @@ import {
   buildMotifThemeDetail,
   buildMotifThemes,
   isLegacyEnglishMotifTitle,
+  isPaintingPresentationSuppressed,
+  isWillieWinkieMotifProduct,
   motifBuyerDisplayName,
   motifCtaKind,
   MOTIF_BUYER_DISPLAY_NAMES_RU,
   MOTIF_CANONICAL_SLUGS,
   MOTIF_CTA_LABELS,
   MOTIF_LEGACY_ENGLISH_TITLES,
+  PAINTING_PRESENTATION_SUPPRESSED,
 } from "./motif-theme"
 
 function ww(partial: {
@@ -274,6 +277,28 @@ assert.equal(
   const templars = themes.find((t) => t.motif_slug === "templars")!
   assert.equal(templars.motif_available_product_count, 3)
   assert.ok(!templars.preview_products.some((p) => p.handle === "te-bad"))
+}
+
+// Owner exception: a painting the catalog contradicts is not a motif product on any surface.
+{
+  const bench = ww({
+    handle: "te-55-1",
+    title: "Банкетка малая Templars",
+    motif_slug: "templars",
+    motif_title: "Templars",
+    family_key: "willie-winkie:body:55-1",
+    family_canonical_title: "Банкетка малая",
+  })
+  assert.equal(isPaintingPresentationSuppressed(bench), true)
+  assert.equal(isWillieWinkieMotifProduct(bench), false)
+  assert.equal(isWillieWinkieMotifProduct({ ...bench, handle: "te-55-9" }), true)
+  const withBench = [...sample, bench]
+  const templars = buildMotifThemes(withBench).find((t) => t.motif_slug === "templars")!
+  assert.equal(templars.motif_available_product_count, 3)
+  assert.ok(!buildMotifThemeDetail(withBench, "templars")!.products.some((p) => p.handle === "te-55-1"))
+  assert.equal(buildMotifContext({ products: withBench, handle: "te-55-1", motifQuery: null }), null)
+  assert.equal(isPaintingPresentationSuppressed({ handle: "constructor" }), false)
+  assert.ok(Object.isFrozen(PAINTING_PRESENTATION_SUPPRESSED))
 }
 
 console.log("motif-theme.fidelity.test.ts: ok")

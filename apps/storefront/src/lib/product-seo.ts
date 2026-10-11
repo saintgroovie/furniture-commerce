@@ -11,6 +11,7 @@
  */
 import {
   isLegacyEnglishMotifTitle,
+  isPaintingPresentationSuppressed,
   motifBuyerDisplayName,
   MOTIF_BUYER_DISPLAY_NAMES_RU,
 } from "../../../backend/src/lib/motif-theme"
@@ -31,8 +32,12 @@ function rawTitle(product: ProductLike): string | null {
   return typeof product.title === "string" ? product.title : null
 }
 
-/** RU painting name, never the English label. Canonical motifs resolve only through `motif_slug`. */
+/**
+ * RU painting name, never the English label. Canonical motifs resolve only through `motif_slug`.
+ * Pages whose painting data the catalog contradicts get no painting at all.
+ */
 export function productMotifDisplayName(product: ProductLike): string | null {
+  if (isPaintingPresentationSuppressed(product)) return null
   const slug = meta(product).motif_slug
   if (typeof slug !== "string") return null
   const key = slug.trim().toLowerCase()
@@ -45,6 +50,7 @@ export function productMotifDisplayName(product: ProductLike): string | null {
  * the piece is painted, so the SEO name shows it without the word «роспись».
  */
 export function productPaintingNameRu(product: ProductLike): string | null {
+  if (isPaintingPresentationSuppressed(product)) return null
   const m = meta(product)
   if (typeof m.motif_slug === "string") return null
   const painting = m.painting_name
