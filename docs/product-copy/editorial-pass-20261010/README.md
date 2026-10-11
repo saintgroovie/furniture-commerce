@@ -30,6 +30,8 @@ yarn dlx -q tsx scripts/editorial-copy-board.ts --dir ../../docs/product-copy/ed
 - `editorial-quality.json`, `editorial-report.md` - before/after metrics, repetition report, examples.
 - `apply/editorial-copy-packet.json` + `.sha256` - the only importer input.
 - `owner-copy-review.md` - before / final examples and the HOLD list for owner copy approval.
+- `owner-final-decision.md` - short owner gate: 12 full descriptions and the 4 open content decisions
+  (al-95-1, ox-14-1, bri-95-3, te-55-1 / painting_name policy). Hand-written, not generated.
 
 Style gate (`findStyleIssues` in `apps/backend/src/lib/editorial-copy/quality.ts`): telegraphic
 clauses and dashes standing in for a dropped verb, dash overuse, 1-4 word fragments, caption-like
