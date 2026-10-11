@@ -6,7 +6,12 @@ import { getSiteUrl } from "@/lib/api/base"
 import { getCatalogProducts, getProduct, getProductCompatibility, NOT_FOUND } from "@/lib/api/products"
 import { PdpCompatibility } from "@/components/pdp-compatibility"
 import { getMotifContext } from "@/lib/api/motif-themes"
-import { formatRub, getPrice } from "@/lib/format"
+import { formatRub, getPrice, priceOfVariant } from "@/lib/format"
+import {
+  buyerVariantAxis,
+  resolveBuyerVariantId,
+  variantChipTarget,
+} from "@/lib/buyer-variant-axis"
 import { indexingCanonical } from "@/lib/indexing-policy"
 import {
   buildBreadcrumbJsonLd,
@@ -77,6 +82,7 @@ import {
   getBuyerFacingProductTitleLayout,
   getArticle,
   getDimensions,
+  getMattressSize,
   getPdpMattressSize,
   getPdpHeroObjectPosition,
   pdpDimensionCells,
@@ -307,9 +313,23 @@ export default async function ProductPage({
 
   const useExecutionPdp =
     isGreenwichBed || hasPdpExecutionControls(executionSelectors)
-  const price = getPrice(product)
+  const variantAxis = buyerVariantAxis(product)
+  const requestedVariant = resolvedSearchParams?.variant
+  const requestedVariantId = Array.isArray(requestedVariant)
+    ? requestedVariant[0]
+    : requestedVariant
+  const selectedVariantId = resolveBuyerVariantId(variantAxis, requestedVariantId)
+  const selectedVariant =
+    selectedVariantId == null
+      ? null
+      : ((product.variants as Array<Record<string, unknown>> | undefined) ?? []).find(
+          (variant) => variant.id === selectedVariantId
+        ) ?? null
+  const price = selectedVariant
+    ? priceOfVariant(selectedVariant) ?? getPrice(product)
+    : getPrice(product)
   /* Material execution options from metadata.material_tiers (backend SoT). */
-  const materialTiers = buildMaterialTierOptions(product)
+  const materialTiers = buildMaterialTierOptions(product, price)
   const backendDefaultMin = (() => {
     const cfg = (product.metadata as Record<string, unknown> | undefined)
       ?.buyer_default_configuration
@@ -318,11 +338,17 @@ export default async function ProductPage({
     return typeof min === "number" && Number.isFinite(min) && min > 0 ? min : null
   })()
   /* Opening PDP amount = backend default, else cheapest tier, else solid_full. */
-  const openingPrice =
-    backendDefaultMin ??
-    (materialTiers?.[0]?.price != null && Number.isFinite(materialTiers[0].price)
+  const firstVariantId = (product.variants as Array<{ id?: string }> | undefined)?.[0]?.id
+  const selectedIsOpeningVariant =
+    selectedVariant == null || selectedVariant.id === firstVariantId
+  const openingPrice = selectedIsOpeningVariant
+    ? backendDefaultMin ??
+      (materialTiers?.[0]?.price != null && Number.isFinite(materialTiers[0].price)
+        ? materialTiers[0].price
+        : price)
+    : materialTiers?.[0]?.price != null && Number.isFinite(materialTiers[0].price)
       ? materialTiers[0].price
-      : price)
+      : price
   const requestQuotePrice = isRequestQuoteProduct(product)
     ? formatRequestQuotePriceLabel(product)
     : null
@@ -402,8 +428,11 @@ export default async function ProductPage({
 
   const collectionLabel = getCollectionLabel(product)
   const subcollectionLabel = getSubcollectionLabel(product)
-  const article = getArticle(product)
-  const dim = getDimensions(product)
+  const article =
+    selectedVariant && typeof selectedVariant.sku === "string"
+      ? selectedVariant.sku
+      : getArticle(product)
+  const dim = getDimensions(product, selectedVariant)
   const subtitle = getPdpSubtitle(product)
   const description =
     product.description != null && String(product.description).trim().length > 0
@@ -426,7 +455,9 @@ export default async function ProductPage({
       }))
     : []
 
-  const mattress = getPdpMattressSize(product)
+  const mattress = selectedVariant
+    ? getMattressSize(product, selectedVariant)
+    : getPdpMattressSize(product)
 
   const specRows = [
     ...(mattress
@@ -474,8 +505,22 @@ export default async function ProductPage({
     product,
     ...displayGroupMembers,
   ])
+  const handleForVariant = typeof product.handle === "string" ? product.handle : id
   const sizeChips =
-    displayGroupMembers.length > 0
+    variantAxis && selectedVariantId
+      ? variantAxis.choices.map((choice) => {
+          const variant = (
+            (product.variants as Array<Record<string, unknown>> | undefined) ?? []
+          ).find((item) => item.id === choice.id)
+          return {
+            id: variantChipTarget(handleForVariant, choice.id, resolvedSearchParams),
+            label: choice.label,
+            basePrice: priceOfVariant(variant),
+            sort: choice.sort,
+            isCurrent: choice.id === selectedVariantId,
+          }
+        })
+      : displayGroupMembers.length > 0
       ? [
           {
             id: product.id as string,
@@ -502,7 +547,9 @@ export default async function ProductPage({
           }),
         ].sort((a, b) => a.sort - b.sort)
       : []
-  const displayGroupSelector = displayGroupSelectorLabel(displayGroupAxis)
+  const displayGroupSelector = variantAxis
+    ? variantAxis.label
+    : displayGroupSelectorLabel(displayGroupAxis)
 
   const isKidsProduct = isKidsStorefrontProduct(product)
   const collectionFilterKey = getCollectionFilterKey(product)
@@ -785,6 +832,7 @@ export default async function ProductPage({
               {/* 7. CTA */}
               <ProductCta
                 product={product}
+                variantId={selectedVariantId ?? undefined}
                 requiresBuyerSelection={
                   useExecutionPdp &&
                   !isRequestQuoteProduct(product) &&

@@ -46,6 +46,8 @@ type Props = {
   requiresBuyerSelection?: boolean
   /** Ordered material tier options (position 0 = default) from metadata. */
   materialTiers?: MaterialTierOption[] | null
+  /** Sellable variant chosen on this PDP. Falls back to the first variant. */
+  variantId?: string
 }
 
 function getProductType(product: Record<string, unknown>): string | undefined {
@@ -65,6 +67,7 @@ export function ProductCta({
   product,
   requiresBuyerSelection = false,
   materialTiers = null,
+  variantId: variantIdProp,
 }: Props) {
   const [adding, setAdding] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -118,9 +121,13 @@ export function ProductCta({
   function managerAdaptationHref(): string {
     const title = typeof product.title === "string" ? product.title : undefined
     const handle = typeof product.handle === "string" ? product.handle : undefined
+    const skuSource =
+      variantForCart && typeof variantForCart === "object" && "sku" in variantForCart
+        ? variantForCart
+        : firstVariant
     const sku =
-      firstVariant && typeof firstVariant === "object" && "sku" in firstVariant
-        ? String((firstVariant as { sku?: unknown }).sku ?? "")
+      skuSource && typeof skuSource === "object" && "sku" in skuSource
+        ? String((skuSource as { sku?: unknown }).sku ?? "")
         : undefined
     return requestQuery({
       from: "pdp",
@@ -136,9 +143,20 @@ export function ProductCta({
   const isKids = isKidsStorefrontProduct(product)
   const variants = (product.variants as unknown[]) ?? []
   const firstVariant = Array.isArray(variants) ? variants[0] : undefined
+  const chosenVariant =
+    variantIdProp && Array.isArray(variants)
+      ? variants.find(
+          (item) =>
+            item &&
+            typeof item === "object" &&
+            "id" in item &&
+            (item as { id: string }).id === variantIdProp
+        )
+      : undefined
+  const variantForCart = chosenVariant ?? firstVariant
   const variantId =
-    firstVariant && typeof firstVariant === "object" && "id" in firstVariant
-      ? (firstVariant as { id: string }).id
+    variantForCart && typeof variantForCart === "object" && "id" in variantForCart
+      ? (variantForCart as { id: string }).id
       : undefined
   const productId = product.id as string | undefined
 

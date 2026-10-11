@@ -1,0 +1,16 @@
+{
+  "production": "NOT_MUTATED",
+  "prices_changed": false,
+  "rename_only": 0,
+  "already_applied_families": [
+    "greenwich/bed/mattress-size"
+  ],
+  "safe_variant_merges_not_yet_applied": [],
+  "keep_separate": 141,
+  "holds": 11,
+  "legacy_shells": 4,
+  "sku_rows": 157,
+  "sku_unique": true,
+  "price_mismatch": 0,
+  "mattress_families": 0
+}

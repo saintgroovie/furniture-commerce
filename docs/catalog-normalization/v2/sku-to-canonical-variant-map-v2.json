@@ -1,0 +1,1572 @@
+{
+  "av-05-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AKTR1KH8GH90KC8YAJ",
+    "variant_id": "variant_01KV69A7H4QG73VV860W96G182",
+    "family_key": "willie-winkie/title-is-motif/av-05-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "83820",
+    "expected_price": "83820",
+    "proposed_clean_title": "Комод стандартный Деревня муравьев (гл. 440)"
+  },
+  "ba-05-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AKYY759QG6FC8CQ7JA",
+    "variant_id": "variant_01KV69A7H410GASW313SSMWF4E",
+    "family_key": "willie-winkie/Балет/ba-05-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "113080",
+    "expected_price": "113080",
+    "proposed_clean_title": "Комод высокий Балет (гл. 440)"
+  },
+  "ba-62-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMZWW7MF8RG6A98292",
+    "variant_id": "variant_01KV69A7H48XE5C7YE56RBRDKP",
+    "family_key": "willie-winkie/Балет/ba-62-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "99390",
+    "expected_price": "99390",
+    "proposed_clean_title": "Стеллаж для книг Балет (гл. 440)"
+  },
+  "CO-02-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADAKWN6BXHSYFRX0R2F",
+    "variant_id": "variant_01KNTBXBM1QD7BHY4F4Q2DQER9",
+    "family_key": "standalone/CO-02-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "84600",
+    "expected_price": "84600",
+    "proposed_clean_title": "Шкаф для одежды 2-дв."
+  },
+  "CO-05-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADA9TM4A89YEGTRVFDR",
+    "variant_id": "variant_01KNTBXBM2HPD57RV9N3N0M8JQ",
+    "family_key": "standalone/CO-05-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "39200",
+    "expected_price": "39200",
+    "proposed_clean_title": "Комод"
+  },
+  "CO-08-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADAV2SBRCDYKZDNJJDB",
+    "variant_id": "variant_01KNTBXBM2W7T60NJ23CF8G1CX",
+    "family_key": "standalone/CO-08-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "16900",
+    "expected_price": "16900",
+    "proposed_clean_title": "Тумбочка прикроватная"
+  },
+  "CO-14-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADASA751ZC9C33QCE9M",
+    "variant_id": "variant_01KNTBXBM27TJJKBJMJBJX98FV",
+    "family_key": "country-london-paris/bed/lift",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "50100",
+    "expected_price": "50100",
+    "proposed_clean_title": "Кровать Кантри с подъёмным механизмом"
+  },
+  "CO-15-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADAMWN4PD2KMWP2E4MH",
+    "variant_id": "variant_01KNTBXBM3B5WB3BH9311NTWPT",
+    "family_key": "country-london-paris/bed/lift",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "62000",
+    "expected_price": "62000",
+    "proposed_clean_title": "Кровать Кантри с подъёмным механизмом"
+  },
+  "CO-61-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADAPWAQGMQG48P00R3M",
+    "variant_id": "variant_01KNTBXBM3DACK7TAXDFZQWVYE",
+    "family_key": "standalone/CO-61-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "82000",
+    "expected_price": "82000",
+    "proposed_clean_title": "Шкаф книжный со стеклом"
+  },
+  "CO-62-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADB4V43P4P0KDTHVDQR",
+    "variant_id": "variant_01KNTBXBM48P9ZSXZRK0QD1ZF6",
+    "family_key": "standalone/CO-62-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "64300",
+    "expected_price": "64300",
+    "proposed_clean_title": "Стеллаж широкий"
+  },
+  "CO-62-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADB2M4E381QSZ5X850S",
+    "variant_id": "variant_01KNTBXBM42648EXN9WWH69PPH",
+    "family_key": "standalone/CO-62-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "28300",
+    "expected_price": "28300",
+    "proposed_clean_title": "Стеллаж узкий с дверью"
+  },
+  "CO-62-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADBFHZ2C5MH2M4PVVT8",
+    "variant_id": "variant_01KNTBXBM43HK2RHHGFQG2FT2G",
+    "family_key": "standalone/CO-62-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "32100",
+    "expected_price": "32100",
+    "proposed_clean_title": "Стеллаж узкий с ящиком"
+  },
+  "CO-65-1": {
+    "result": "hold",
+    "product_id": "prod_01KNTBXADB5BFDKMSAB35J8Z0V",
+    "variant_id": "variant_01KNTBXBM5CSEXNSVAP31DAVPW",
+    "family_key": "standalone/CO-65-1",
+    "decision": "AMBIGUOUS_HOLD",
+    "current_price": "37500",
+    "expected_price": "37500",
+    "proposed_clean_title": "Стол письменный 1-тумб. 0П"
+  },
+  "CO-65-2": {
+    "result": "hold",
+    "product_id": "prod_01KNTBXADBCCE0GHPB33PVQXS2",
+    "variant_id": "variant_01KNTBXBM5JT70C71EY83C5K95",
+    "family_key": "standalone/CO-65-2",
+    "decision": "AMBIGUOUS_HOLD",
+    "current_price": "37500",
+    "expected_price": "37500",
+    "proposed_clean_title": "Стол письменный 1-тумб. П0"
+  },
+  "CO-66-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADCVEHH7HVB0ZGDS1KV",
+    "variant_id": "variant_01KNTBXBM5ZCCAWCV9WQ1DPBJG",
+    "family_key": "standalone/CO-66-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "52600",
+    "expected_price": "52600",
+    "proposed_clean_title": "Стол письменный двухтумбовый Кантри (ящики с обеих сторон)"
+  },
+  "CO-69-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADCDTMNKGW1C9XPD1YT",
+    "variant_id": "variant_01KNTBXBM6AH9D5CM1H7DST628",
+    "family_key": "standalone/CO-69-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "4300",
+    "expected_price": "4300",
+    "proposed_clean_title": "Полка книжная малая"
+  },
+  "fa-05-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AM91MJJVXPKQSNCGSK",
+    "variant_id": "variant_01KV69A7H5F18DCVE49431R0B8",
+    "family_key": "willie-winkie/Феи/fa-05-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "113080",
+    "expected_price": "113080",
+    "proposed_clean_title": "Комод высокий Феи (гл. 560)"
+  },
+  "fa-06-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMA53EWQH9MQK10H5K",
+    "variant_id": "variant_01KV69A7H5G52SZGAW6YR5PK7T",
+    "family_key": "willie-winkie/Феи/fa-06-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "59730",
+    "expected_price": "59730",
+    "proposed_clean_title": "Столик туалетный с зеркалом Феи"
+  },
+  "fa-67-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMBRZPR11DCTPR7864",
+    "variant_id": "variant_01KV69A7H5CMMHYFNHKXQJWE5N",
+    "family_key": "willie-winkie/Феи/fa-67-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "85250",
+    "expected_price": "85250",
+    "proposed_clean_title": "Стол рабочий Феи"
+  },
+  "fk-05-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMAEGVHR09A7ZXH062",
+    "variant_id": "variant_01KV69A7H6T0M8VR6SH10PKG79",
+    "family_key": "willie-winkie/Сказочное королевство/fk-05-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "83820",
+    "expected_price": "83820",
+    "proposed_clean_title": "Комод стандартный Сказочное королевство (гл. 440)"
+  },
+  "fk-05-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMKV353Y5WH6VYBABK",
+    "variant_id": "variant_01KV69A7H6WXSE9B2XV075CRS6",
+    "family_key": "willie-winkie/Сказочное королевство/fk-05-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "113080",
+    "expected_price": "113080",
+    "proposed_clean_title": "Комод высокий Сказочное королевство (гл. 560)"
+  },
+  "GR-02-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KM1QHNHYQKVZHCN3SM9BY42Z",
+    "variant_id": "variant_01KM1QHQ64656BGJV5H7Y5Y20W",
+    "family_key": "standalone/GR-02-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "169200",
+    "expected_price": "169200",
+    "proposed_clean_title": "Гардероб 2-дв. с ящиками"
+  },
+  "GR-02-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KM1QHNHZQSQM54A74VQJNH75",
+    "variant_id": "variant_01KM1QHQ65S146K0PMDM98AEMZ",
+    "family_key": "standalone/GR-02-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "167450",
+    "expected_price": "167450",
+    "proposed_clean_title": "Гардероб 2-дв."
+  },
+  "GR-05-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KM1QHNHNKSG173KZ6C2AZ5JR",
+    "variant_id": "variant_01KM1QHQ4MA4A0WS98GQMSPP56",
+    "family_key": "standalone/GR-05-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "109500",
+    "expected_price": "109500",
+    "proposed_clean_title": "Комод"
+  },
+  "GR-08-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KM1QHNHWH2M61Z8VR182RMJF",
+    "variant_id": "variant_01KM1QHQ5GXJP7ETEKYEVKXDQ0",
+    "family_key": "standalone/GR-08-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "36500",
+    "expected_price": "36500",
+    "proposed_clean_title": "Прикроватная тумба с 2 ящиками"
+  },
+  "GR-08-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KM1QHNHX9FDMX9RHBZAB7K1K",
+    "variant_id": "variant_01KM1QHQ5YNMC8J2Y5KPD3JBBJ",
+    "family_key": "standalone/GR-08-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "31200",
+    "expected_price": "31200",
+    "proposed_clean_title": "Прикроватная тумба с 1 ящиком"
+  },
+  "GR-09-1": {
+    "result": "canonical_variant",
+    "product_id": "prod_01KM1QHNHZXXSRPFEKAZRSFPDE",
+    "variant_id": "variant_01KM1QHQ65TXYKJN8PQJ5KM5JP",
+    "family_key": "greenwich/bed/mattress-size",
+    "decision": "ALREADY_APPLIED",
+    "current_price": "71900",
+    "expected_price": "71900",
+    "proposed_clean_title": "Кровать Гринвич"
+  },
+  "GR-12-1": {
+    "result": "canonical_variant",
+    "product_id": "prod_01KM1QHNHZXXSRPFEKAZRSFPDE",
+    "variant_id": "variant_01KM1QHQ6698TKR9XYZX09SFH6",
+    "family_key": "greenwich/bed/mattress-size",
+    "decision": "ALREADY_APPLIED",
+    "current_price": "81100",
+    "expected_price": "81100",
+    "proposed_clean_title": "Кровать Гринвич"
+  },
+  "GR-14-1": {
+    "result": "canonical_variant",
+    "product_id": "prod_01KM1QHNHZXXSRPFEKAZRSFPDE",
+    "variant_id": "variant_01KM1QHQ6791A8ZTF6SA4W47C6",
+    "family_key": "greenwich/bed/mattress-size",
+    "decision": "ALREADY_APPLIED",
+    "current_price": "89700",
+    "expected_price": "89700",
+    "proposed_clean_title": "Кровать Гринвич"
+  },
+  "GR-16-1": {
+    "result": "canonical_variant",
+    "product_id": "prod_01KM1QHNHZXXSRPFEKAZRSFPDE",
+    "variant_id": "variant_01KM1QHQ67950W0Q81TF7F51EM",
+    "family_key": "greenwich/bed/mattress-size",
+    "decision": "ALREADY_APPLIED",
+    "current_price": "94000",
+    "expected_price": "94000",
+    "proposed_clean_title": "Кровать Гринвич"
+  },
+  "GR-18-1": {
+    "result": "canonical_variant",
+    "product_id": "prod_01KM1QHNHZXXSRPFEKAZRSFPDE",
+    "variant_id": "variant_01KM1QHQ68EX7W37GWB0RQPQF9",
+    "family_key": "greenwich/bed/mattress-size",
+    "decision": "ALREADY_APPLIED",
+    "current_price": "110400",
+    "expected_price": "110400",
+    "proposed_clean_title": "Кровать Гринвич"
+  },
+  "GR-09-1-M": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KM1QHNHMVXN3YQ3JDZCYQTM5",
+    "variant_id": "variant_01KM1QHQ4FZA3QRN5WKKCCGRBJ",
+    "family_key": "standalone/GR-09-1-M",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "28400",
+    "expected_price": "28400",
+    "proposed_clean_title": "Зеркало навесное"
+  },
+  "GR-26-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KM1QHNHY2EE4PEMPKZ8YM3QZ",
+    "variant_id": "variant_01KM1QHQ627TXVC3XHV8SYXE5P",
+    "family_key": "standalone/GR-26-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "146650",
+    "expected_price": "146650",
+    "proposed_clean_title": "Шкаф-витрина Кристалл"
+  },
+  "GR-42-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KM1QHNHRHYFRQWV6H2B0YV2R",
+    "variant_id": "variant_01KM1QHQ5A4N3WWCZKE192N0XY",
+    "family_key": "standalone/GR-42-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "68800",
+    "expected_price": "68800",
+    "proposed_clean_title": "Тумба ТВ"
+  },
+  "GR-44-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KM1QHNHNR5R4YZKQERDE8EZ6",
+    "variant_id": "variant_01KM1QHQ4P4M9M0F7788346ZQ1",
+    "family_key": "standalone/GR-44-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "45900",
+    "expected_price": "45900",
+    "proposed_clean_title": "Консоль"
+  },
+  "GR-67-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KM1QHNHPTNKR0E7T538427YJ",
+    "variant_id": "variant_01KM1QHQ53TRVT9Z2HQC4KR994",
+    "family_key": "standalone/GR-67-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "77650",
+    "expected_price": "77650",
+    "proposed_clean_title": "Рабочий стол"
+  },
+  "in-67-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMA4R5CX5YG8SPTE5B",
+    "variant_id": "variant_01KV69A7H6QSCESM5YZW3FBVRT",
+    "family_key": "willie-winkie/title-is-motif/in-67-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "85250",
+    "expected_price": "85250",
+    "proposed_clean_title": "Стол рабочий Инфанта"
+  },
+  "mo-02-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMXJPFM3MR6GX0YJP8",
+    "variant_id": "variant_01KV69A7H7BNVCHVA1TA38GTPS",
+    "family_key": "willie-winkie/title-is-motif/mo-02-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "148280",
+    "expected_price": "148280",
+    "proposed_clean_title": "Шкаф для одежды 2-дв. Молли, высокий"
+  },
+  "mo-81-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMTWYR1CTV1G1RFFBC",
+    "variant_id": "variant_01KV69A7H75NQCJC0A66PE0PR5",
+    "family_key": "willie-winkie/title-is-motif/mo-81-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "22660",
+    "expected_price": "22660",
+    "proposed_clean_title": "Столик детский Молли"
+  },
+  "OL-00-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADCXPESM7CPF6NQGBDK",
+    "variant_id": "variant_01KNTBXBM6NDC0W5T0VRZAYFM6",
+    "family_key": "standalone/OL-00-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "119900",
+    "expected_price": "119900",
+    "proposed_clean_title": "Шкаф угловой (ручка слева/справа)"
+  },
+  "OL-01-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADCVVSRFRFK60X78V93",
+    "variant_id": "variant_01KNTBXBM63DDM3WTPYZA0SASQ",
+    "family_key": "standalone/OL-01-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "111900",
+    "expected_price": "111900",
+    "proposed_clean_title": "Шкаф для одежды 1-дв. с зеркалом (ручка слева/справа)"
+  },
+  "OL-02-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADCQ78KTFDG2CFXRDER",
+    "variant_id": "variant_01KNTBXBM7VPJHY3V0Z41RYZYQ",
+    "family_key": "standalone/OL-02-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "157900",
+    "expected_price": "157900",
+    "proposed_clean_title": "Шкаф для одежды 2-дв."
+  },
+  "OL-03-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADCYJKGNAPE1WGQJBQZ",
+    "variant_id": "variant_01KNTBXBM8R2J15MN970KWM0F9",
+    "family_key": "standalone/OL-03-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "258900",
+    "expected_price": "258900",
+    "proposed_clean_title": "Шкаф для одежды 3-дв."
+  },
+  "OL-05-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADDACBVH2BM1JSB2MWH",
+    "variant_id": "variant_01KNTBXBM89XVPXS24SKMB1DHB",
+    "family_key": "standalone/OL-05-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "89900",
+    "expected_price": "89900",
+    "proposed_clean_title": "Комод стандартный"
+  },
+  "OL-05-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADD48JACA24PC4TXVCC",
+    "variant_id": "variant_01KNTBXBM8WFHR81Z0RAWQZ1T5",
+    "family_key": "standalone/OL-05-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "123500",
+    "expected_price": "123500",
+    "proposed_clean_title": "Комод широкий"
+  },
+  "OL-05-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADDP2V5W6AKD074YRVF",
+    "variant_id": "variant_01KNTBXBM90FWBYY6MX268MJTT",
+    "family_key": "standalone/OL-05-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "119500",
+    "expected_price": "119500",
+    "proposed_clean_title": "Комод высокий"
+  },
+  "OL-05-Н": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADDBV29TSGTAFZN9W5J",
+    "variant_id": "variant_01KNTBXBM916QBNKP1B60BWPHM",
+    "family_key": "standalone/OL-05-Н",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "110000",
+    "expected_price": "110000",
+    "proposed_clean_title": "Комод высокий (ниже на 1 ярус ящиков)"
+  },
+  "OL-06-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADD0VJ53P78YSGNCRDG",
+    "variant_id": "variant_01KNTBXBM9TGVH38S6C26M5TK8",
+    "family_key": "standalone/OL-06-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "81950",
+    "expected_price": "81950",
+    "proposed_clean_title": "Столик туалетный с зеркалом"
+  },
+  "OL-07-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADDKNMB17WD6NVSNRCY",
+    "variant_id": "variant_01KNTBXBM9D0KFTWNJ3FKBXR9W",
+    "family_key": "standalone/OL-07-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "39900",
+    "expected_price": "39900",
+    "proposed_clean_title": "Сундук"
+  },
+  "OL-08-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADE04TT9T88M1SRC2T7",
+    "variant_id": "variant_01KNTBXBMA9QCFYFESKN9AP5ST",
+    "family_key": "standalone/OL-08-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "34950",
+    "expected_price": "34950",
+    "proposed_clean_title": "Тумбочка прикроватная"
+  },
+  "OL-08-1-MIR": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADE4BY5ASV1EEQ9SQHZ",
+    "variant_id": "variant_01KNTBXBMA7TEP1XF5PQPWJKE6",
+    "family_key": "standalone/OL-08-1-MIR",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "34950",
+    "expected_price": "34950",
+    "proposed_clean_title": "Зеркало навесное овальное"
+  },
+  "OL-08-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADECY5WKNET16F2ET5W",
+    "variant_id": "variant_01KNTBXBMAY8AB48VM5QEEKK2R",
+    "family_key": "standalone/OL-08-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "39950",
+    "expected_price": "39950",
+    "proposed_clean_title": "Тумбочка прикроватная с дверкой (ручка слева/справа)"
+  },
+  "OL-09-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADFZ5RFACJQDNSGM6D2",
+    "variant_id": "variant_01KNTBXBMAXY87DV3X740K4QGM",
+    "family_key": "standalone/OL-09-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "38900",
+    "expected_price": "38900",
+    "proposed_clean_title": "Зеркало напольное"
+  },
+  "OL-14-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADFFPGAVHK024D20MEQ",
+    "variant_id": "variant_01KNTBXBMB9XHDDS7MFKP5TYRE",
+    "family_key": "oliver/bed/unmarked",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "72900",
+    "expected_price": "72900",
+    "proposed_clean_title": "Кровать Оливер"
+  },
+  "OL-15-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADF36E724RQTW6Z73B0",
+    "variant_id": "variant_01KNTBXBMBX03GX9WTGQAA35HW",
+    "family_key": "oliver/bed/unmarked",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "91900",
+    "expected_price": "91900",
+    "proposed_clean_title": "Кровать Оливер"
+  },
+  "OL-16-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADGPHKZEWKKT477WNR7",
+    "variant_id": "variant_01KNTBXBMCHRJHHCED77MVCF82",
+    "family_key": "oliver/bed/unmarked",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "99900",
+    "expected_price": "99900",
+    "proposed_clean_title": "Кровать Оливер"
+  },
+  "OL-17-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADHWB8K6BN1ZBM7WEWG",
+    "variant_id": "variant_01KNTBXBMCDTGJ1G7N27Z6SMWD",
+    "family_key": "oliver/bed/unmarked",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "134900",
+    "expected_price": "134900",
+    "proposed_clean_title": "Кровать Оливер"
+  },
+  "OL-18-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADHE1YFJS2VEPCRJJBN",
+    "variant_id": "variant_01KNTBXBMDNYZ72376HJJXGAQ6",
+    "family_key": "oliver/bed/unmarked",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "149900",
+    "expected_price": "149900",
+    "proposed_clean_title": "Кровать Оливер"
+  },
+  "OL-14-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADFNYAQGPEQKCM4NPZE",
+    "variant_id": "variant_01KNTBXBMBTGQAE0VQC94SFJY6",
+    "family_key": "oliver/bed/no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "69900",
+    "expected_price": "69900",
+    "proposed_clean_title": "Кровать Оливер без изножья"
+  },
+  "OL-15-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADG6TFW8WB9SPQ4JTGD",
+    "variant_id": "variant_01KNTBXBMB81GA2HENQ4Q54NDZ",
+    "family_key": "oliver/bed/no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "98900",
+    "expected_price": "98900",
+    "proposed_clean_title": "Кровать Оливер без изножья"
+  },
+  "OL-16-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADGH3EK5BM3RAZ2Z7KT",
+    "variant_id": "variant_01KNTBXBMCT620T47GNE8ZKGH8",
+    "family_key": "oliver/bed/no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "91900",
+    "expected_price": "91900",
+    "proposed_clean_title": "Кровать Оливер без изножья"
+  },
+  "OL-17-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADHZ2MG5CDS4EAVG1RJ",
+    "variant_id": "variant_01KNTBXBMDKGQBDKVPG0T71PS3",
+    "family_key": "oliver/bed/no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "123900",
+    "expected_price": "123900",
+    "proposed_clean_title": "Кровать Оливер без изножья"
+  },
+  "OL-18-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADJ9A2N7GQFHZ4JTGD8",
+    "variant_id": "variant_01KNTBXBMD9G2WYEDTYHYHGMG5",
+    "family_key": "oliver/bed/no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "137900",
+    "expected_price": "137900",
+    "proposed_clean_title": "Кровать Оливер без изножья"
+  },
+  "OL-17-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADH2J4J6TDA5AHYNVV7",
+    "variant_id": "variant_01KNTBXBMD2EGBJM0R1221ZV3V",
+    "family_key": "oliver/bed/lift",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "156900",
+    "expected_price": "156900",
+    "proposed_clean_title": "Кровать Оливер с подъёмным механизмом"
+  },
+  "OL-21-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADJNM2C7N1WJDACRGR2",
+    "variant_id": "variant_01KNTBXBMEK1MTET6N7E4JK620",
+    "family_key": "standalone/OL-21-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "212000",
+    "expected_price": "212000",
+    "proposed_clean_title": "Стол обеденный раздвижной"
+  },
+  "OL-23-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADJHD78QK7PQ1FM260H",
+    "variant_id": "variant_01KNTBXBMEVBNYP1DHEDZN2HDB",
+    "family_key": "standalone/OL-23-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "27900",
+    "expected_price": "27900",
+    "proposed_clean_title": "Стул"
+  },
+  "OL-25-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADK9SGFKMJV82MA9F4S",
+    "variant_id": "variant_01KNTBXBME22QRQF4MJCE1RJGG",
+    "family_key": "standalone/OL-25-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "142900",
+    "expected_price": "142900",
+    "proposed_clean_title": "Комод столовый"
+  },
+  "OL-26-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADM9PT13B1VAYEPXEHE",
+    "variant_id": "variant_01KNTBXBMEJXR5RP3TBSX8FEGB",
+    "family_key": "standalone/OL-26-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "150650",
+    "expected_price": "150650",
+    "proposed_clean_title": "Шкаф буфетный со стеклом и филенками"
+  },
+  "OL-26-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADN9KCCPKCH27V1RRBF",
+    "variant_id": "variant_01KNTBXBMFBDW5DYXH6DH06SKM",
+    "family_key": "standalone/OL-26-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "159900",
+    "expected_price": "159900",
+    "proposed_clean_title": "Шкаф-витрина"
+  },
+  "OL-30-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADP6726CTE85A445K6N",
+    "variant_id": "variant_01KNTBXBMFQ76GDHDGZ6AZ6W1J",
+    "family_key": "standalone/OL-30-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "9950",
+    "expected_price": "9950",
+    "proposed_clean_title": "Часы"
+  },
+  "OL-42-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADQK0E63VFJ0KQPKRVX",
+    "variant_id": "variant_01KNTBXBMG4RFNR8K4TDRHSS37",
+    "family_key": "standalone/OL-42-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "55950",
+    "expected_price": "55950",
+    "proposed_clean_title": "Тумба для телевизора"
+  },
+  "OL-43-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADQK9VZ1N1X6CVH02J8",
+    "variant_id": "variant_01KNTBXBMGT9SFNVT299264BYS",
+    "family_key": "standalone/OL-43-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "19950",
+    "expected_price": "19950",
+    "proposed_clean_title": "Столик чайный круглый"
+  },
+  "OL-44-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADR7DXSVHCM6Q99129G",
+    "variant_id": "variant_01KNTBXBMGKE2BCAKARCM4RCGN",
+    "family_key": "standalone/OL-44-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "45900",
+    "expected_price": "45900",
+    "proposed_clean_title": "Консоль"
+  },
+  "OL-44-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADRDXMGB8JRMAB1JHPS",
+    "variant_id": "variant_01KNTBXBMGZEWN4405RK9P7D7X",
+    "family_key": "standalone/OL-44-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "70950",
+    "expected_price": "70950",
+    "proposed_clean_title": "Консоль с полками"
+  },
+  "OL-55-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADSNY1JKR33SC2FRJX5",
+    "variant_id": "variant_01KNTBXBMHZTDD70T6KVSW2KWV",
+    "family_key": "standalone/OL-55-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "14500",
+    "expected_price": "14500",
+    "proposed_clean_title": "Банкетка малая"
+  },
+  "OL-55-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADSBJMRQ63HAENWJ880",
+    "variant_id": "variant_01KNTBXBMHY23KPCJ1K5QP88HN",
+    "family_key": "standalone/OL-55-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "19900",
+    "expected_price": "19900",
+    "proposed_clean_title": "Банкетка большая"
+  },
+  "OL-56-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADV8375RHNBHRQMXQ87",
+    "variant_id": "variant_01KNTBXBMHMR3GP3KCXGHMW5JA",
+    "family_key": "standalone/OL-56-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "58900",
+    "expected_price": "58900",
+    "proposed_clean_title": "Кресло"
+  },
+  "OL-57-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADVZVCXPHMZ1K8VZAJS",
+    "variant_id": "variant_01KNTBXBMHT9GJQ0RY2ZK5GP7F",
+    "family_key": "standalone/OL-57-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "118000",
+    "expected_price": "118000",
+    "proposed_clean_title": "Диван малый"
+  },
+  "OL-57-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADVKWH122FJREKPT5GD",
+    "variant_id": "variant_01KNTBXBMJC0FFV0F9HYGKYW3T",
+    "family_key": "standalone/OL-57-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "145000",
+    "expected_price": "145000",
+    "proposed_clean_title": "Диван большой"
+  },
+  "OL-57-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADVAA49T6H127BKKJK1",
+    "variant_id": "variant_01KNTBXBMJ4V3HHG9RAHXTEN3P",
+    "family_key": "standalone/OL-57-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "125000",
+    "expected_price": "125000",
+    "proposed_clean_title": "Диван-кровать малый"
+  },
+  "OL-61-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADVBQXBYEJC03XRAF81",
+    "variant_id": "variant_01KNTBXBMJWN87P9BYPE5K67MX",
+    "family_key": "standalone/OL-61-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "137900",
+    "expected_price": "137900",
+    "proposed_clean_title": "Шкаф книжный со стеклом"
+  },
+  "OL-61-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADVQ5PEJPEQG5B9X3KX",
+    "variant_id": "variant_01KNTBXBMJRKGM3B5R2A6VXEXQ",
+    "family_key": "standalone/OL-61-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "121900",
+    "expected_price": "121900",
+    "proposed_clean_title": "Шкаф кабинетный"
+  },
+  "OL-62-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADV29H43B35KXJJBA18",
+    "variant_id": "variant_01KNTBXBMKFBAK3GXCAA1SE100",
+    "family_key": "standalone/OL-62-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "103900",
+    "expected_price": "103900",
+    "proposed_clean_title": "Стеллаж для книг"
+  },
+  "OL-62-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADWGB0430GYR8RJR7EM",
+    "variant_id": "variant_01KNTBXBMKPHHY9F0PY21ZV1GF",
+    "family_key": "standalone/OL-62-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "72900",
+    "expected_price": "72900",
+    "proposed_clean_title": "Стеллаж широкий"
+  },
+  "OL-64-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADW4RDEYGV3MPTD64ZR",
+    "variant_id": "variant_01KNTBXBMKC3J285V1A92C0M1E",
+    "family_key": "standalone/OL-64-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "188900",
+    "expected_price": "188900",
+    "proposed_clean_title": "Стол-бюро"
+  },
+  "OL-65-1": {
+    "result": "hold",
+    "product_id": "prod_01KNTBXADW0MYZ9SEBBAYPS5V4",
+    "variant_id": "variant_01KNTBXBMK8E3CDX35TG4AWGYN",
+    "family_key": "standalone/OL-65-1",
+    "decision": "AMBIGUOUS_HOLD",
+    "current_price": "89900",
+    "expected_price": "89900",
+    "proposed_clean_title": "Стол письменный 1-тумб. 0П"
+  },
+  "OL-65-2": {
+    "result": "hold",
+    "product_id": "prod_01KNTBXADWSAHM0DJV0SNH29AK",
+    "variant_id": "variant_01KNTBXBMMCN2HMK6TBHHHJ86S",
+    "family_key": "standalone/OL-65-2",
+    "decision": "AMBIGUOUS_HOLD",
+    "current_price": "89900",
+    "expected_price": "89900",
+    "proposed_clean_title": "Стол письменный 1-тумб. П0"
+  },
+  "OL-66-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADWTF7DF2JX8E3P9YYQ",
+    "variant_id": "variant_01KNTBXBMMKS1GY065KRZMMFGA",
+    "family_key": "standalone/OL-66-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "131900",
+    "expected_price": "131900",
+    "proposed_clean_title": "Стол письменный двухтумбовый Оливер (полки с обеих сторон)"
+  },
+  "OL-66-4": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADWW99PZJQFM2H9X7BK",
+    "variant_id": "variant_01KNTBXBMMNKRZEPYKAWD5VQGV",
+    "family_key": "standalone/OL-66-4",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "152600",
+    "expected_price": "152600",
+    "proposed_clean_title": "Стол кабинетный письменный двухтумбовый Оливер (полки с обеих сторон)"
+  },
+  "OL-67-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADW4ZCGJCC9RTC6Z5KC",
+    "variant_id": "variant_01KNTBXBMMJP1KCJVGYGXG74JE",
+    "family_key": "standalone/OL-67-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "69900",
+    "expected_price": "69900",
+    "proposed_clean_title": "Стол рабочий"
+  },
+  "OL-68-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADW6ZWB6HTCJ0C4XPY1",
+    "variant_id": "variant_01KNTBXBMNJ24B3E7Q06RB5FX5",
+    "family_key": "standalone/OL-68-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "24900",
+    "expected_price": "24900",
+    "proposed_clean_title": "Этажерка малая 3 полки"
+  },
+  "OL-68-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADW4A481E827ASE6FW3",
+    "variant_id": "variant_01KNTBXBMNW495R07XEBEZSJ3T",
+    "family_key": "standalone/OL-68-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "48900",
+    "expected_price": "48900",
+    "proposed_clean_title": "Этажерка большая 6 полок"
+  },
+  "OL-69-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADWPT0F9X7Y2SATPPGV",
+    "variant_id": "variant_01KNTBXBMNXM1S6P4KAGJPJ5B5",
+    "family_key": "standalone/OL-69-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "14900",
+    "expected_price": "14900",
+    "proposed_clean_title": "Полка книжная 1-ярусная"
+  },
+  "OL-69-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADX120D41J3EXQASJ8Q",
+    "variant_id": "variant_01KNTBXBMNTTFM5HMBYPNETM0Z",
+    "family_key": "standalone/OL-69-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "18000",
+    "expected_price": "18000",
+    "proposed_clean_title": "Полка книжная 2-ярусная"
+  },
+  "OL-69-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADXD2X796J2TJ8SAG74",
+    "variant_id": "variant_01KNTBXBMPJ1AKQNBQS1FNDTZ2",
+    "family_key": "standalone/OL-69-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "22900",
+    "expected_price": "22900",
+    "proposed_clean_title": "Полка книжная 3-ярусная"
+  },
+  "OL-69-4": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADXM4N27AGHDHCV5QQA",
+    "variant_id": "variant_01KNTBXBMPB2ZPP9F28GE6YC45",
+    "family_key": "standalone/OL-69-4",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "13900",
+    "expected_price": "13900",
+    "proposed_clean_title": "Полка книжная угловая"
+  },
+  "OL-81-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADXJVJEG9YNWFYXXGQV",
+    "variant_id": "variant_01KNTBXBMP0MA6YB8CA4K1BJ1Y",
+    "family_key": "standalone/OL-81-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "39900",
+    "expected_price": "39900",
+    "proposed_clean_title": "Столик детский"
+  },
+  "OL-82-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADX8CT1VKVV4SNQM2D7",
+    "variant_id": "variant_01KNTBXBMQWCCCBFT602TH6ZWK",
+    "family_key": "standalone/OL-82-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "14300",
+    "expected_price": "14300",
+    "proposed_clean_title": "Стульчик детский"
+  },
+  "OL-83-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADX6G2DX0ZK33HBQDSJ",
+    "variant_id": "variant_01KNTBXBMSS887TTBCPCY39TKQ",
+    "family_key": "standalone/OL-83-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "14950",
+    "expected_price": "14950",
+    "proposed_clean_title": "Столешница пеленальная съемная"
+  },
+  "OL-84-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADX1KA6WGTERRHPPEV7",
+    "variant_id": "variant_01KNTBXBMSYJF0DKCXR5XEJTRX",
+    "family_key": "standalone/OL-84-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "5500",
+    "expected_price": "5500",
+    "proposed_clean_title": "Бортик к кровати малый"
+  },
+  "OL-84-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADX813WWJT86D6J2E9W",
+    "variant_id": "variant_01KNTBXBMT206FEYP02V9TQAQT",
+    "family_key": "standalone/OL-84-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "7500",
+    "expected_price": "7500",
+    "proposed_clean_title": "Бортик к кровати большой"
+  },
+  "OL-85-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADY87EJBJ40E55JCJBS",
+    "variant_id": "variant_01KNTBXBMV4SC5H32W9XME5HDX",
+    "family_key": "oliver/bed/newborn",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "72700",
+    "expected_price": "72700",
+    "proposed_clean_title": "Кроватка Оливер для новорожденного"
+  },
+  "OL-85-2": {
+    "result": "hold",
+    "product_id": "prod_01KNTBXADY6TTYPEZ12QTDR456",
+    "variant_id": "variant_01KNTBXBMVD654NXYKHAVVEWD2",
+    "family_key": "oliver/bed/side-crib",
+    "decision": "AMBIGUOUS_HOLD",
+    "current_price": "33900",
+    "expected_price": "33900",
+    "proposed_clean_title": "Кроватка приставная + матрас"
+  },
+  "OL-86-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADYWQNNEVG1XK6EAFWP",
+    "variant_id": "variant_01KNTBXBMVNB60Q21XRREYVVS2",
+    "family_key": "standalone/OL-86-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "5500",
+    "expected_price": "5500",
+    "proposed_clean_title": "Каркас для балдахина"
+  },
+  "OL-95-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADY06DZQTG915QFY9BW",
+    "variant_id": "variant_01KNTBXBMW34VN5ZNM9V1W673D",
+    "family_key": "oliver/bed/transformer-drawing",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "118000",
+    "expected_price": "118000",
+    "proposed_clean_title": "Кровать Оливер трансформер с рисунком"
+  },
+  "OL-95-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADYET7AC1KCG28EK9RQ",
+    "variant_id": "variant_01KNTBXBMWT7JHF336KKKNYG8C",
+    "family_key": "oliver/bed/transformer-fabric",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "118700",
+    "expected_price": "118700",
+    "proposed_clean_title": "Кровать Оливер трансформер с тканью"
+  },
+  "OX-14-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KQCSHV3ZWD80DKG4ZFB175FP",
+    "variant_id": "variant_01KQCSHVHVT9ME59JNNRZSJT4R",
+    "family_key": "standalone/OX-14-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "29000",
+    "expected_price": "29000",
+    "proposed_clean_title": "Комплекс Оксфорд-1 (нижняя кровать без матраса"
+  },
+  "OX-14-11": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KQCSHV3ZHSW5J97NP8CE2FB7",
+    "variant_id": "variant_01KQCSHVHW5T86QM5PKDRZ9Y6D",
+    "family_key": "oxford/bed/lower-bed",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "37000",
+    "expected_price": "37000",
+    "proposed_clean_title": "Кровать Оксфорд нижняя"
+  },
+  "OX-90-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KQCSHV3ZJ5SB2ZYV4P6SJ2QR",
+    "variant_id": "variant_01KQCSHVHWK1XNM5JQBBTMRQ7W",
+    "family_key": "standalone/OX-90-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "406200",
+    "expected_price": "406200",
+    "proposed_clean_title": "Комплекс Оксфорд-1 с выдвижной столешницей без нижней кровати"
+  },
+  "pa-05-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMYW3Q4NJE3Q5WEFYR",
+    "variant_id": "variant_01KV69A7H7GT4WF22X1ZWBH0SZ",
+    "family_key": "willie-winkie/Полевые цветы/pa-05-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "83820",
+    "expected_price": "83820",
+    "proposed_clean_title": "Комод стандартный Полевые цветы (гл. 440)"
+  },
+  "pa-05-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AM3KD13Z7GRD68HJA2",
+    "variant_id": "variant_01KV69A7H7D6YMFGSRS2VR3PSF",
+    "family_key": "willie-winkie/Полевые цветы/pa-05-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "113080",
+    "expected_price": "113080",
+    "proposed_clean_title": "Комод высокий Полевые цветы (гл. 560)"
+  },
+  "pa-62-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMV6GA6WH9JQ23BANH",
+    "variant_id": "variant_01KV69A7H70TT0R987RVWGY4EH",
+    "family_key": "willie-winkie/Полевые цветы/pa-62-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "99390",
+    "expected_price": "99390",
+    "proposed_clean_title": "Стеллаж для книг Полевые цветы (гл. 560)"
+  },
+  "PV-02-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADY8MGT1TX966D4CEVJ",
+    "variant_id": "variant_01KNTBXBMWCA28ESZGK59BQCXK",
+    "family_key": "standalone/PV-02-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "141300",
+    "expected_price": "141300",
+    "proposed_clean_title": "Шкаф для одежды 2-дв."
+  },
+  "PV-03-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADY5TFY8ABDDZN9FQ0R",
+    "variant_id": "variant_01KNTBXBMW2V1NK579RXPPHVTC",
+    "family_key": "standalone/PV-03-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "205700",
+    "expected_price": "205700",
+    "proposed_clean_title": "Шкаф для одежды 3-дв."
+  },
+  "PV-05-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADY27NDFV0Y2HHSYP8H",
+    "variant_id": "variant_01KNTBXBMX8GMK41V8RS16R3ES",
+    "family_key": "standalone/PV-05-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "66600",
+    "expected_price": "66600",
+    "proposed_clean_title": "Комод стандартный"
+  },
+  "PV-06-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADYD2QEG17C5CVDACD0",
+    "variant_id": "variant_01KNTBXBMXQ60C4GX6MH09D7BB",
+    "family_key": "standalone/PV-06-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "47300",
+    "expected_price": "47300",
+    "proposed_clean_title": "Столик туалетный"
+  },
+  "PV-08-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADZ0N4TS4WY52563JDS",
+    "variant_id": "variant_01KNTBXBMXNH9DPWB52XF1MDMM",
+    "family_key": "standalone/PV-08-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "23300",
+    "expected_price": "23300",
+    "proposed_clean_title": "Тумбочка прикроватная"
+  },
+  "PV-09-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADZPXF7NK73PQ8W0ZBK",
+    "variant_id": "variant_01KNTBXBMYX1SV6577C20SDZS6",
+    "family_key": "standalone/PV-09-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "13600",
+    "expected_price": "13600",
+    "proposed_clean_title": "Зеркало навесное"
+  },
+  "PV-09-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADZRTE98AF3F3ZQKF8E",
+    "variant_id": "variant_01KNTBXBMYY5Y1EASFPCBNC8BV",
+    "family_key": "standalone/PV-09-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "48900",
+    "expected_price": "48900",
+    "proposed_clean_title": "Зеркало напольное"
+  },
+  "PV-14-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADZFWE9YRK0K60DDHR2",
+    "variant_id": "variant_01KNTBXBMYPPR2SKRZME3Y2WD3",
+    "family_key": "provence/bed/no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "57600",
+    "expected_price": "57600",
+    "proposed_clean_title": "Кровать Прованс без изножья"
+  },
+  "PV-15-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADZTNAKE49PYM4N1C8W",
+    "variant_id": "variant_01KNTBXBMYM0626YQFBN3P9PSD",
+    "family_key": "provence/bed/no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "70300",
+    "expected_price": "70300",
+    "proposed_clean_title": "Кровать Прованс без изножья"
+  },
+  "PV-16-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE066FZ9JPRECQ0GZMJ",
+    "variant_id": "variant_01KNTBXBMZ0Q9GKHY6ME76Y63H",
+    "family_key": "provence/bed/no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "77300",
+    "expected_price": "77300",
+    "proposed_clean_title": "Кровать Прованс без изножья"
+  },
+  "PV-17-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE02HB0SM89W0BM82A2",
+    "variant_id": "variant_01KNTBXBN03X7QZTXTKZ7TV9JP",
+    "family_key": "provence/bed/no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "79700",
+    "expected_price": "79700",
+    "proposed_clean_title": "Кровать Прованс без изножья"
+  },
+  "PV-18-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE0HEVEGEFCZTYRNDG2",
+    "variant_id": "variant_01KNTBXBN04TQYFZ43BRRG3AYE",
+    "family_key": "provence/bed/no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "82900",
+    "expected_price": "82900",
+    "proposed_clean_title": "Кровать Прованс без изножья"
+  },
+  "PV-15-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXADZV2X8RHE2JG709BTE",
+    "variant_id": "variant_01KNTBXBMZPCZSJ179AGEKAAB9",
+    "family_key": "provence/bed/fabric-no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "70300",
+    "expected_price": "70300",
+    "proposed_clean_title": "Кровать Прованс с тканью без изножья"
+  },
+  "PV-16-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KX1PJA6R9QNP7AQBG4NHWNED",
+    "variant_id": "variant_01KX1PJADDV8ER718D3PZ3A0B4",
+    "family_key": "provence/bed/fabric-no-footboard",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "77300",
+    "expected_price": "77300",
+    "proposed_clean_title": "Кровать Прованс с тканью без изножья"
+  },
+  "PV-23-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE0GEC1WW45XKYYC264",
+    "variant_id": "variant_01KNTBXBN0HMRNQXP4BAHBAH3F",
+    "family_key": "standalone/PV-23-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "24900",
+    "expected_price": "24900",
+    "proposed_clean_title": "Стул"
+  },
+  "PV-42-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE0TNXMTQHFTYAZZFQG",
+    "variant_id": "variant_01KNTBXBN0HN0CX3NSSDTK4DG0",
+    "family_key": "standalone/PV-42-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "47800",
+    "expected_price": "47800",
+    "proposed_clean_title": "Тумба для телевизора"
+  },
+  "PV-43-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE0HJGHFQ8P7HTHCGTR",
+    "variant_id": "variant_01KNTBXBN1Y6SCGSNP63V3H2A0",
+    "family_key": "standalone/PV-43-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "20500",
+    "expected_price": "20500",
+    "proposed_clean_title": "Столик чайный"
+  },
+  "PV-55-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE00AE9RHVB0G00DFGM",
+    "variant_id": "variant_01KNTBXBN102GKH7JKY9XETTWX",
+    "family_key": "standalone/PV-55-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "19900",
+    "expected_price": "19900",
+    "proposed_clean_title": "Банкетка малая"
+  },
+  "PV-55-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE0WHWW3GW89K4V2M88",
+    "variant_id": "variant_01KNTBXBN1XGHXRC7YDPXFKVTF",
+    "family_key": "standalone/PV-55-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "26700",
+    "expected_price": "26700",
+    "proposed_clean_title": "Банкетка большая"
+  },
+  "PV-61-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE04G57KM32H7ZV0T7H",
+    "variant_id": "variant_01KNTBXBN22KHBCH5P60X68ABE",
+    "family_key": "standalone/PV-61-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "122100",
+    "expected_price": "122100",
+    "proposed_clean_title": "Шкаф книжный"
+  },
+  "PV-62-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE026FENXYYPYARNHQN",
+    "variant_id": "variant_01KNTBXBN2H0GXTXRYEFB337WR",
+    "family_key": "standalone/PV-62-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "82100",
+    "expected_price": "82100",
+    "proposed_clean_title": "Стеллаж для книг"
+  },
+  "PV-65-5": {
+    "result": "hold",
+    "product_id": "prod_01KNTBXAE14DE7Z6FHFMT4X3XZ",
+    "variant_id": "variant_01KNTBXBN22DGSJKZEZ4R4WZZC",
+    "family_key": "standalone/PV-65-5",
+    "decision": "AMBIGUOUS_HOLD",
+    "current_price": "68300",
+    "expected_price": "68300",
+    "proposed_clean_title": "Стол письменный 1-тумб. 0П"
+  },
+  "PV-65-6": {
+    "result": "hold",
+    "product_id": "prod_01KNTBXAE1ESNNW5DA36PEES6R",
+    "variant_id": "variant_01KNTBXBN3M85D776RF4F0HKR4",
+    "family_key": "standalone/PV-65-6",
+    "decision": "AMBIGUOUS_HOLD",
+    "current_price": "68300",
+    "expected_price": "68300",
+    "proposed_clean_title": "Стол письменный 1-тумб. П0"
+  },
+  "PV-65-7": {
+    "result": "hold",
+    "product_id": "prod_01KNTBXAE1WDNJREW50KEKXGG2",
+    "variant_id": "variant_01KNTBXBN3QMHS0MQV3MGBKXMZ",
+    "family_key": "standalone/PV-65-7",
+    "decision": "AMBIGUOUS_HOLD",
+    "current_price": "83000",
+    "expected_price": "83000",
+    "proposed_clean_title": "Стол письменный 1-тумб. 0Я"
+  },
+  "PV-65-8": {
+    "result": "hold",
+    "product_id": "prod_01KNTBXAE15MWM65C2T93ZSGCW",
+    "variant_id": "variant_01KNTBXBN36TMKGCY0FAMXEXHE",
+    "family_key": "standalone/PV-65-8",
+    "decision": "AMBIGUOUS_HOLD",
+    "current_price": "83000",
+    "expected_price": "83000",
+    "proposed_clean_title": "Стол письменный 1-тумб. Я0"
+  },
+  "PV-66-6": {
+    "result": "hold",
+    "product_id": "prod_01KNTBXAE1NQA13JRXRBGF8S86",
+    "variant_id": "variant_01KNTBXBN4QH1H9BETK6TSGS8N",
+    "family_key": "standalone/PV-66-6",
+    "decision": "AMBIGUOUS_HOLD",
+    "current_price": "103700",
+    "expected_price": "103700",
+    "proposed_clean_title": "Стол письменный двухтумбовый Прованс (полки слева, ящики справа)"
+  },
+  "PV-66-7": {
+    "result": "hold",
+    "product_id": "prod_01KNTBXAE1SF1W6MBA9Q9XSRXF",
+    "variant_id": "variant_01KNTBXBN4ZYKDGVKZN39J1X9K",
+    "family_key": "standalone/PV-66-7",
+    "decision": "AMBIGUOUS_HOLD",
+    "current_price": "103700",
+    "expected_price": "103700",
+    "proposed_clean_title": "Стол письменный двухтумбовый Прованс (ящики слева, полки справа)"
+  },
+  "PV-68-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE12P62GNQEK14V0VTR",
+    "variant_id": "variant_01KNTBXBN48M8R5SXQ0ZK07W7D",
+    "family_key": "standalone/PV-68-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "17700",
+    "expected_price": "17700",
+    "proposed_clean_title": "Этажерка малая 3 полки"
+  },
+  "PV-68-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE1TDX5MN4PZH57HM6Y",
+    "variant_id": "variant_01KNTBXBN4383S02RTSAQQTC8Y",
+    "family_key": "standalone/PV-68-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "58600",
+    "expected_price": "58600",
+    "proposed_clean_title": "Этажерка большая 6 полок"
+  },
+  "PV-69-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KNTBXAE13M4M3KQ6CCE5NAMN",
+    "variant_id": "variant_01KNTBXBN5RNFRPK8VW1R1BF8P",
+    "family_key": "standalone/PV-69-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "7600",
+    "expected_price": "7600",
+    "proposed_clean_title": "Полка книжная"
+  },
+  "rl-05-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMQGCQMFGTXKY2VFPY",
+    "variant_id": "variant_01KV69A7H8D09CRXQG8HQ1DDN5",
+    "family_key": "willie-winkie/title-is-motif/rl-05-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "113080",
+    "expected_price": "113080",
+    "proposed_clean_title": "Комод высокий Королевские лилии (гл. 440)"
+  },
+  "rl-67-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMAN66BZ464F3B8W2P",
+    "variant_id": "variant_01KV69A7H8R6FSAA3JGFT02PMK",
+    "family_key": "willie-winkie/title-is-motif/rl-67-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "85250",
+    "expected_price": "85250",
+    "proposed_clean_title": "Стол рабочий Королевские лилии"
+  },
+  "rs-05-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMDV16WD9K03GKBJJ5",
+    "variant_id": "variant_01KV69A7H89HJH4JNGHYJ13RW5",
+    "family_key": "willie-winkie/title-is-motif/rs-05-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "113080",
+    "expected_price": "113080",
+    "proposed_clean_title": "Комод высокий Сельский пейзаж (гл. 560)"
+  },
+  "rs-62-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AN7P60FE081R6WCCFT",
+    "variant_id": "variant_01KV69A7H8B0ECEFX31WKRDXJQ",
+    "family_key": "willie-winkie/title-is-motif/rs-62-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "99390",
+    "expected_price": "99390",
+    "proposed_clean_title": "Стеллаж для книг Сельский пейзаж высокий"
+  },
+  "S-OX-05": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KQCSHV3ZRYAYT8GXPJAT6F4Q",
+    "variant_id": "variant_01KQCSHVHWTTK5Q5T7PB9Y61Q0",
+    "family_key": "standalone/S-OX-05",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "77100",
+    "expected_price": "77100",
+    "proposed_clean_title": "Ступени с перилами и ящиками Оксфорд"
+  },
+  "sh-81-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7ANP5VGMN2FSA70901M",
+    "variant_id": "variant_01KV69A7H8QXV0PCF7SHYJRQ1M",
+    "family_key": "willie-winkie/title-is-motif/sh-81-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "22660",
+    "expected_price": "22660",
+    "proposed_clean_title": "Столик детский Милый дом"
+  },
+  "tb-05-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7ANHZDE3RR57WJ4ESYP",
+    "variant_id": "variant_01KV69A7H9K268S1HBBXWJCN3G",
+    "family_key": "willie-winkie/title-is-motif/tb-05-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "113080",
+    "expected_price": "113080",
+    "proposed_clean_title": "Комод высокий Плюшевый мишка (гл. 560)"
+  },
+  "tb-62-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7ANWMNJCC3AA2RDR7MR",
+    "variant_id": "variant_01KV69A7H9T0TDDJDFZRFQCED7",
+    "family_key": "willie-winkie/title-is-motif/tb-62-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "99390",
+    "expected_price": "99390",
+    "proposed_clean_title": "Стеллаж для книг высокий Плюшевый мишка"
+  },
+  "tb-67-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7ANKBFQ8BGHW8SQ5CTY",
+    "variant_id": "variant_01KV69A7H9NA9PDPJBT2H5P929",
+    "family_key": "willie-winkie/title-is-motif/tb-67-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "85250",
+    "expected_price": "85250",
+    "proposed_clean_title": "Стол рабочий Плюшевый мишка"
+  },
+  "te-02-2": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7ANEWZAQV2G0PG4B8H7",
+    "variant_id": "variant_01KV69A7H9F35CYMGWDMHBNGFN",
+    "family_key": "willie-winkie/Рыцари/te-02-2",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "163450",
+    "expected_price": "163450",
+    "proposed_clean_title": "Шкаф для одежды 2-дв. Рыцари высокий"
+  },
+  "te-05-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AN5FGGQ0RRHQN9E460",
+    "variant_id": "variant_01KV69A7H9JE8E43N8X4FAQYK5",
+    "family_key": "willie-winkie/Рыцари/te-05-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "83820",
+    "expected_price": "83820",
+    "proposed_clean_title": "Комод стандартный Рыцари (гл. 560)"
+  },
+  "te-05-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7ANA9Q0RM9FGCPM9KMQ",
+    "variant_id": "variant_01KV69A7HAR5G3HAQ2M1CYR2VM",
+    "family_key": "willie-winkie/Рыцари/te-05-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "113080",
+    "expected_price": "113080",
+    "proposed_clean_title": "Комод высокий Рыцари (гл. 440)"
+  },
+  "te-62-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7ANA0C0PJ40Y13HE005",
+    "variant_id": "variant_01KV69A7HABNNFAHHZSBYMRX0J",
+    "family_key": "willie-winkie/Рыцари/te-62-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "99390",
+    "expected_price": "99390",
+    "proposed_clean_title": "Стеллаж для книг Рыцари высокий"
+  },
+  "to-62-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7ANT2KEJ5QYJV4WGYVF",
+    "variant_id": "variant_01KV69A7HBJ7FPNBNA8HZPP5CD",
+    "family_key": "willie-winkie/title-is-motif/to-62-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "99390",
+    "expected_price": "99390",
+    "proposed_clean_title": "Стеллаж для книг Томми высокий"
+  },
+  "tw-05-3": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AN1AF4AEJT3TS63Z0H",
+    "variant_id": "variant_01KV69A7HBCNQD5QT13XMYTZTS",
+    "family_key": "willie-winkie/title-is-motif/tw-05-3",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "113080",
+    "expected_price": "113080",
+    "proposed_clean_title": "Комод высокий Ежик (гл. 560)"
+  }
+}

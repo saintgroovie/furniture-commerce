@@ -30,3 +30,20 @@ export function getPrice(product: Record<string, unknown>): number | null {
   if (prices?.length && prices[0].amount != null) return Number(prices[0].amount)
   return null
 }
+
+/** Base RUB of one variant. A price-list row is not the mattress or size base. */
+export function priceOfVariant(
+  variant: Record<string, unknown> | null | undefined
+): number | null {
+  if (!variant) return null
+  const prices =
+    (variant.prices as Array<Record<string, unknown>> | undefined) ??
+    (variant.price_set as { prices?: Array<Record<string, unknown>> } | undefined)
+      ?.prices
+  const base = prices?.find((price) => price.price_list_id == null && price.amount != null)
+  if (base) return Number(base.amount)
+  const calculated = variant.calculated_price as Record<string, unknown> | undefined
+  if (calculated?.calculated_amount != null) return Number(calculated.calculated_amount)
+  if (prices?.length && prices[0].amount != null) return Number(prices[0].amount)
+  return null
+}
