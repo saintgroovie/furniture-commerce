@@ -12,6 +12,8 @@ import {
 function motifExactNames(): Record<string, string> {
   const out: Record<string, string> = {}
   for (const [slug, ru] of Object.entries(MOTIF_BUYER_DISPLAY_NAMES_RU)) {
+    // English motif labels must not replace the title transcription map.
+    if (!/[А-Яа-яЁё]/.test(ru)) continue
     out[slug] = ru
     out[slug.replace(/-/g, " ")] = ru
   }
