@@ -129,11 +129,37 @@ async function main() {
     await assert.rejects(runEditorialCopy(deps(noSha.mod, { EDITORIAL_COPY_MODE: "apply" }).d), /EDITORIAL_COPY_INPUT_SHA/)
     assert.equal(noSha.writes.length, 0)
 
+    const prodEnv = {
+      DATABASE_URL: "postgres://u:p@db:5432/woodright_public_production",
+      EDITORIAL_COPY_TARGET: "production",
+      EDITORIAL_COPY_MODE: "dry-run",
+      EDITORIAL_COPY_CONFIRM: "EDITORIAL_COPY_V1_PRODUCTION_OWNER_APPROVED",
+      EDITORIAL_COPY_PRODUCTION_ACK: "I_UNDERSTAND_THIS_WRITES_PRODUCTION",
+      WOODRIGHT_RUNTIME_ROLE: "public_production",
+      WOODRIGHT_DATABASE_IDENTITY: "public_production_db",
+    }
+    for (const [label, env] of [
+      ["candidate db", { ...prodEnv, DATABASE_URL: "postgres://u:p@db:5432/woodright_production" }],
+      ["no confirm", { ...prodEnv, EDITORIAL_COPY_CONFIRM: "" }],
+      ["no ack", { ...prodEnv, EDITORIAL_COPY_PRODUCTION_ACK: "" }],
+      ["demo runtime", { ...prodEnv, WOODRIGHT_RUNTIME_ROLE: "public_demo" }],
+    ] as const) {
+      const prod = fakeModule(rows())
+      let reads = 0
+      const counting: EditorialProductModule = { ...prod.mod, listProducts: (f, c) => (reads++, prod.mod.listProducts(f, c)) }
+      await assert.rejects(runEditorialCopy({ ...deps(counting, {}).d, env: env as unknown as NodeJS.ProcessEnv }), /FAIL_CLOSED/, label)
+      assert.equal(reads, 0, `${label}: refused before any read`)
+      assert.equal(prod.writes.length, 0, `${label}: nothing written`)
+    }
+
+    /* public production dry-run passes the gate, reads, and writes nothing */
     const prod = fakeModule(rows())
-    await assert.rejects(
-      runEditorialCopy({ ...deps(prod.mod, { EDITORIAL_COPY_MODE: "dry-run" }).d, env: { DATABASE_URL: "postgres://u:p@db:5432/woodright_production", EDITORIAL_COPY_TARGET: "production", EDITORIAL_COPY_MODE: "dry-run" } as NodeJS.ProcessEnv }),
-      /FAIL_CLOSED/
-    )
+    const prodRun = deps(prod.mod, {})
+    const pr = await runEditorialCopy({ ...prodRun.d, env: prodEnv as unknown as NodeJS.ProcessEnv })
+    assert.deepEqual(pr.counts, { update: 2, noop: 0, failed: 0 })
+    assert.equal(pr.written, 0)
+    assert.equal(prod.writes.length, 0)
+    assert.deepEqual([...prodRun.files.keys()], ["editorial-copy-dry-run-T.json"])
 
     const bad = fakeModule(rows())
     await assert.rejects(runEditorialCopy(deps(bad.mod, { EDITORIAL_COPY_MODE: "dry-run" }, { ...packet, extra: 1 }).d), /invalid packet/)

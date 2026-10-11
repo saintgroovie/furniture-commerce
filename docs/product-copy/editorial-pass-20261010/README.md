@@ -74,6 +74,16 @@ backend entity, so there is no page to put them on. Willie Winkie keeps its exis
 - Apply writes the rollback artifact first, updates `description` only, then re-reads and verifies.
 - Production (every mode, dry-run included) needs `EDITORIAL_COPY_CONFIRM` and
   `EDITORIAL_COPY_PRODUCTION_ACK`; apply / rollback need `EDITORIAL_COPY_INPUT_SHA`.
+- `EDITORIAL_COPY_TARGET=production` means the public buyer-facing runtime only
+  (`ops/config/runtime-environments/public_production.conf`): runtime role `public_production`,
+  database alias `public_production_db`, physical database `woodright_public_production`. The gate
+  compares the exact database name parsed from `DATABASE_URL` and requires the backend runtime
+  identity env (`WOODRIGHT_RUNTIME_ROLE`, `WOODRIGHT_DATABASE_IDENTITY` / `_ALIAS`), so run it with
+  `medusa exec` inside the public production backend container. libpq connection env (`PGHOST`,
+  `PGDATABASE`, `PGSERVICE`, `PGOPTIONS`, ...) must be unset.
+- `woodright_production` is the private production-candidate database (`production.conf`), not
+  public production. An earlier gate expected it by mistake; it is now refused for every target.
+  `woodright_public_production` is refused for local and staging targets.
 
 ```sh
 # dry-run (no writes)

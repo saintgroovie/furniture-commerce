@@ -3,24 +3,47 @@
  *
  *   EDITORIAL_COPY_TARGET=local|staging|production
  *   EDITORIAL_COPY_MODE=dry-run|apply|rollback-dry-run|rollback
- *   DATABASE_URL db name must match target:
+ *   DATABASE_URL db name (parsed path segment, exact, case-sensitive) must match target:
  *     staging    -> woodright_staging
- *     production -> woodright_production
- *     local      -> anything except the two above, on localhost / 127.0.0.1 / ::1
+ *     production -> woodright_public_production
+ *     local      -> any other name, on localhost / 127.0.0.1 / ::1
  *   apply and rollback require EDITORIAL_COPY_INPUT_SHA = canonical SHA-256 of the input file.
  *   production (every mode, dry-run included) additionally requires:
  *     EDITORIAL_COPY_CONFIRM=EDITORIAL_COPY_V1_PRODUCTION_OWNER_APPROVED
  *     EDITORIAL_COPY_PRODUCTION_ACK=I_UNDERSTAND_THIS_WRITES_PRODUCTION
+ *     WOODRIGHT_RUNTIME_ROLE=public_production
+ *     WOODRIGHT_DATABASE_IDENTITY and/or WOODRIGHT_DATABASE_IDENTITY_ALIAS=public_production_db
+ *       (every non-empty one must match; at least one must be set)
+ *     no libpq connection env (PGHOST, PGHOSTADDR, PGDATABASE, PGSERVICE, PGSERVICEFILE, PGOPTIONS)
  *
- * `woodright_public_production` is refused outright. Query parameters that can redirect the
- * connection (`host`, `dbname`, `options`, ...) and multi-host / socket-path hosts are refused;
- * only `sslmode`, `application_name`, `connect_timeout` are allowed.
+ * Production means the public buyer-facing runtime only. Its identity is defined in
+ * `ops/config/runtime-environments/public_production.conf`: role `public_production`, alias
+ * `public_production_db`, physical database `woodright_public_production`. The runtime identity
+ * env is the same one the backend container exposes as `x-woodright-*` headers, so the importer
+ * has to run inside that runtime (`medusa exec` in the backend container).
+ *
+ * `woodright_production` is the private PRODUCTION_CANDIDATE database
+ * (`ops/config/runtime-environments/production.conf`, alias `non_public_candidate_db`), not public
+ * production; it is refused for every target. `woodright_public_production` is refused for every
+ * target except production.
+ *
+ * Query parameters that can redirect the connection (`host`, `dbname`, `options`, ...) and
+ * multi-host / socket-path hosts are refused; only `sslmode`, `application_name`,
+ * `connect_timeout` are allowed.
  */
 import { parseDatabaseUrl } from "./seed-rooms-v1-target-gate"
 
 export const EDITORIAL_COPY_CONFIRM_EXPECTED = "EDITORIAL_COPY_V1_PRODUCTION_OWNER_APPROVED" as const
 export const EDITORIAL_COPY_PRODUCTION_ACK_EXPECTED = "I_UNDERSTAND_THIS_WRITES_PRODUCTION" as const
-export const EDITORIAL_COPY_REFUSED_DB = "woodright_public_production" as const
+export const EDITORIAL_COPY_PRODUCTION_DB = "woodright_public_production" as const
+export const EDITORIAL_COPY_PRODUCTION_RUNTIME_ROLE = "public_production" as const
+export const EDITORIAL_COPY_PRODUCTION_DB_IDENTITY = "public_production_db" as const
+export const EDITORIAL_COPY_CANDIDATE_DB = "woodright_production" as const
+export const EDITORIAL_COPY_STAGING_DB = "woodright_staging" as const
+
+const DB_IDENTITY_ENV = ["WOODRIGHT_DATABASE_IDENTITY", "WOODRIGHT_DATABASE_IDENTITY_ALIAS"] as const
+/** node-postgres / libpq read these from the process env; they must not steer a production run. */
+const LIBPQ_CONNECTION_ENV = ["PGHOST", "PGHOSTADDR", "PGDATABASE", "PGSERVICE", "PGSERVICEFILE", "PGOPTIONS"] as const
 
 export type EditorialCopyTarget = "local" | "staging" | "production"
 export type EditorialCopyMode = "dry-run" | "apply" | "rollback-dry-run" | "rollback"
@@ -95,19 +118,47 @@ export function assertEditorialCopyGate(input: {
   const parsed = parseDatabaseUrl(String(urlSource))
   if (!parsed.ok) return fail(parsed.code, parsed.message)
   const { dbName, hostname } = parsed
-  if (dbName === EDITORIAL_COPY_REFUSED_DB) return fail("refused_db", `${EDITORIAL_COPY_REFUSED_DB} is never a valid target`)
+  if (dbName === EDITORIAL_COPY_CANDIDATE_DB) {
+    return fail(
+      "candidate_db",
+      `${EDITORIAL_COPY_CANDIDATE_DB} is the private production-candidate database, never an editorial target`
+    )
+  }
 
-  if (target === "staging" && dbName !== "woodright_staging") {
-    return fail("db_target_mismatch", `target=staging requires woodright_staging (got "${dbName}")`)
-  }
-  if (target === "production" && dbName !== "woodright_production") {
-    return fail("db_target_mismatch", `target=production requires woodright_production (got "${dbName}")`)
-  }
-  if (target === "local") {
-    if (dbName === "woodright_staging" || dbName === "woodright_production") {
-      return fail("db_target_mismatch", `target=local must not point at ${dbName}`)
+  const runtimeRole = envRaw(env, "WOODRIGHT_RUNTIME_ROLE")
+  const dbIdentities = DB_IDENTITY_ENV.map((key) => envRaw(env, key)).filter((v): v is string => v !== undefined && v !== "")
+  const productionRuntime =
+    runtimeRole === EDITORIAL_COPY_PRODUCTION_RUNTIME_ROLE || dbIdentities.includes(EDITORIAL_COPY_PRODUCTION_DB_IDENTITY)
+
+  if (target === "production") {
+    if (dbName !== EDITORIAL_COPY_PRODUCTION_DB) {
+      return fail("db_target_mismatch", `target=production requires ${EDITORIAL_COPY_PRODUCTION_DB} (got "${dbName}")`)
     }
-    if (!LOCAL_HOSTS.has(hostname)) return fail("local_not_loopback", `target=local requires a loopback host (got "${hostname}")`)
+    if (runtimeRole !== EDITORIAL_COPY_PRODUCTION_RUNTIME_ROLE) {
+      return fail(
+        "runtime_role_mismatch",
+        `target=production requires WOODRIGHT_RUNTIME_ROLE=${EDITORIAL_COPY_PRODUCTION_RUNTIME_ROLE}`
+      )
+    }
+    if (dbIdentities.length === 0 || dbIdentities.some((v) => v !== EDITORIAL_COPY_PRODUCTION_DB_IDENTITY)) {
+      return fail(
+        "db_identity_mismatch",
+        `target=production requires WOODRIGHT_DATABASE_IDENTITY(_ALIAS)=${EDITORIAL_COPY_PRODUCTION_DB_IDENTITY}`
+      )
+    }
+    const libpq = LIBPQ_CONNECTION_ENV.find((key) => envRaw(env, key) !== undefined)
+    if (libpq) return fail("libpq_env_override", `target=production must not run with ${libpq} set`)
+  } else {
+    if (dbName === EDITORIAL_COPY_PRODUCTION_DB || productionRuntime) {
+      return fail("production_requires_production_target", `public production is reachable only through target=production`)
+    }
+    if (target === "staging" && dbName !== EDITORIAL_COPY_STAGING_DB) {
+      return fail("db_target_mismatch", `target=staging requires ${EDITORIAL_COPY_STAGING_DB} (got "${dbName}")`)
+    }
+    if (target === "local") {
+      if (dbName === EDITORIAL_COPY_STAGING_DB) return fail("db_target_mismatch", `target=local must not point at ${dbName}`)
+      if (!LOCAL_HOSTS.has(hostname)) return fail("local_not_loopback", `target=local requires a loopback host (got "${hostname}")`)
+    }
   }
 
   const writes = mode === "apply" || mode === "rollback"
