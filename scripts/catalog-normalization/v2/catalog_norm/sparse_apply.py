@@ -48,6 +48,36 @@ def _mattress_bag(source: dict[str, Any], display: str) -> dict[str, Any] | None
     }
 
 
+def align_buyer_public_title(
+    metadata: dict[str, Any] | None, clean_title: str
+) -> dict[str, Any] | None:
+    """Stored public_title wins over product.title in the storefront.
+
+    After a sparse merge the product title is the model name. A leftover
+    public_title can still name a variant axis (drawers, side, filling).
+    A leftover canonical_name is the muted line under the H1 and is removed
+    when it is not the clean title. Missing public_title stays missing so
+    the storefront keeps using product.title.
+    """
+    if not isinstance(metadata, dict):
+        return None
+    patched = dict(metadata)
+    changed = False
+    public = patched.get("public_title")
+    if isinstance(public, str) and public.strip() and public.strip() != clean_title:
+        patched["public_title"] = clean_title
+        changed = True
+    # Visible under the H1. A survivor's old size/axis name must not stay
+    # after the family title is the model name.
+    canonical = patched.get("canonical_name")
+    if isinstance(canonical, str) and canonical.strip() and canonical.strip() != clean_title:
+        patched.pop("canonical_name", None)
+        changed = True
+    if not changed:
+        return None
+    return patched
+
+
 def _id(kind: str, family: str, extra: str = "") -> str:
     digest = hashlib.sha1(f"{SPARSE_PASS}|{kind}|{family}|{extra}".encode()).hexdigest()[:18].upper()
     return f"{kind}_01CN2{digest}"
@@ -134,7 +164,30 @@ def _apply_family(cur, plan: dict[str, Any]) -> dict[str, Any]:
     survivor = by_sku[min(plan["skus"])]
     product_ids = {row["product_id"] for row in rows}
     if len(product_ids) == 1 and survivor["title"] == plan["title"]:
-        return {"family_key": plan["family_key"], "status": "already_applied", "skus": plan["skus"]}
+        patched = align_buyer_public_title(survivor["metadata"], plan["title"])
+        if patched is None:
+            return {
+                "family_key": plan["family_key"],
+                "status": "already_applied",
+                "skus": plan["skus"],
+                "public_title_aligned": False,
+            }
+        cur.execute(
+            """
+            UPDATE product
+            SET metadata = %s, updated_at = NOW()
+            WHERE id = %s AND deleted_at IS NULL AND title = %s
+            """,
+            (psycopg2.extras.Json(patched), survivor["product_id"], plan["title"]),
+        )
+        if cur.rowcount != 1:
+            raise SystemExit(f"public title align failed {plan['family_key']}")
+        return {
+            "family_key": plan["family_key"],
+            "status": "already_applied",
+            "skus": plan["skus"],
+            "public_title_aligned": True,
+        }
 
     cur.execute(
         """
@@ -310,7 +363,9 @@ def _apply_family(cur, plan: dict[str, Any]) -> dict[str, Any]:
         (survivor["product_id"], default_option_id),
     )
 
-    survivor_meta = dict(survivor["metadata"] or {})
+    survivor_meta = align_buyer_public_title(survivor["metadata"], plan["title"]) or dict(
+        survivor["metadata"] or {}
+    )
     survivor_meta["catalog_norm_v2"] = {
         "pass": SPARSE_PASS,
         "family_key": plan["family_key"],
