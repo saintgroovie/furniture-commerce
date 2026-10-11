@@ -63,6 +63,38 @@ class DecisionTest(unittest.TestCase):
         self.assertNotEqual(by["fk-05-1"]["axis_values"]["form"], by["fk-05-3"]["axis_values"]["form"])
         self.assertIn("Полевые цветы", by["pa-05-1"]["proposed_clean_title"])
 
+    def test_willie_unproven_motif_never_merges(self):
+        # Albion / Brigantine / character themes are not in motif_of: two paintings
+        # must not become one family through an empty motif key.
+        result = classify([
+            product("al-14-1", "Кровать Albion 90*190", "willie-winkie", ["krovati"],
+                    variants=[variant("al-14-1", "1000", (90, 190))]),
+            product("brb-14-2", "Кровать Brigantine Blue 120*190", "willie-winkie", ["krovati"],
+                    variants=[variant("brb-14-2", "2000", (120, 190))]),
+            product("bri-05-1", "Комод стандартный Brigantine Ivory", "willie-winkie", ["komody"]),
+            product("al-05-3", "Комод высокий Albion", "willie-winkie", ["komody"]),
+            product("av-05-1", "Комод стандартный Деревня муравьев", "willie-winkie", ["komody"]),
+            product("mo-02-1", "Шкаф для одежды 2-дв. Молли, высокий", "willie-winkie", ["shkafy"]),
+            product("to-02-1", "Шкаф для одежды 2-дв. Томми, высокий", "willie-winkie", ["shkafy"]),
+        ])
+        rows = result["rows"]
+        self.assertEqual(len({row["family_key"] for row in rows}), len(rows))
+        for row in rows:
+            self.assertEqual(row["decision"], "KEEP_SEPARATE_PRODUCTS", row["sku"])
+            self.assertEqual(row["family_key"], f"standalone/{row['sku']}", row["sku"])
+        self.assertEqual(result["summary"]["safe_families"], 0)
+        self.assertEqual(result["summary"]["rejected_combinations"], 0)
+
+    def test_willie_known_motif_does_not_absorb_unknown(self):
+        rows = classify([
+            product("te-05-1", "Комод стандартный Рыцари", "willie-winkie", ["komody"]),
+            product("al-05-3", "Комод высокий Albion", "willie-winkie", ["komody"]),
+        ])["rows"]
+        by = {row["sku"]: row for row in rows}
+        self.assertEqual(by["te-05-1"]["family_key"], "willie-winkie/CONFIGURABLE/willie-chest/Рыцари")
+        self.assertEqual(by["al-05-3"]["family_key"], "standalone/al-05-3")
+        self.assertEqual({row["decision"] for row in rows}, {"KEEP_SEPARATE_PRODUCTS"})
+
     def test_footboard_is_not_one_bed(self):
         rows = classify([
             product(

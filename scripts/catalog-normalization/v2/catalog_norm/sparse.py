@@ -108,6 +108,10 @@ def identify(product: dict[str, Any]) -> dict[str, Any] | None:
     classification = product.get("classification") or ""
     model = _model_name(collection)
     motif = motif_of(product) if collection == "willie-winkie" else ""
+    if collection == "willie-winkie" and not motif:
+        # A painting motif_of does not know (Albion, Brigantine, character themes)
+        # would share the empty motif key with every other one.
+        return None
     axes: dict[str, dict[str, Any]] = {}
     noun = ""
     clean = ""

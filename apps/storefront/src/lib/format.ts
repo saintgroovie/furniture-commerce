@@ -47,3 +47,11 @@ export function priceOfVariant(
   if (prices?.length && prices[0].amount != null) return Number(prices[0].amount)
   return null
 }
+
+/** PDP amount. A selected variant without its own price stays unpriced: never another SKU's price. */
+export function pdpVariantPrice(
+  product: Record<string, unknown>,
+  selectedVariant: Record<string, unknown> | null | undefined
+): number | null {
+  return selectedVariant ? priceOfVariant(selectedVariant) : getPrice(product)
+}

@@ -6,7 +6,7 @@ import { getSiteUrl } from "@/lib/api/base"
 import { getCatalogProducts, getProduct, getProductCompatibility, NOT_FOUND } from "@/lib/api/products"
 import { PdpCompatibility } from "@/components/pdp-compatibility"
 import { getMotifContext } from "@/lib/api/motif-themes"
-import { formatRub, getPrice, priceOfVariant } from "@/lib/format"
+import { formatRub, getPrice, pdpVariantPrice, priceOfVariant } from "@/lib/format"
 import {
   buyerVariantAxis,
   resolveBuyerVariantId,
@@ -336,9 +336,7 @@ export default async function ProductPage({
 
   const useExecutionPdp =
     isGreenwichBed || hasPdpExecutionControls(executionSelectors)
-  const price = selectedVariant
-    ? priceOfVariant(selectedVariant) ?? getPrice(product)
-    : getPrice(product)
+  const price = pdpVariantPrice(product, selectedVariant)
   /* Material execution options from metadata.material_tiers (backend SoT). */
   const materialTiers = buildMaterialTierOptions(viewProduct, price)
   const backendDefaultMin = (() => {

@@ -1,4 +1,14 @@
 {
+  "av-05-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AKTR1KH8GH90KC8YAJ",
+    "variant_id": "variant_01KV69A7H4QG73VV860W96G182",
+    "family_key": "standalone/av-05-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "83820",
+    "expected_price": "83820",
+    "proposed_clean_title": "Комод стандартный Деревня муравьев (гл. 440)"
+  },
   "ba-62-1": {
     "result": "canonical_standalone",
     "product_id": "prod_01KV69A7AMZWW7MF8RG6A98292",
@@ -268,6 +278,16 @@
     "current_price": "85250",
     "expected_price": "85250",
     "proposed_clean_title": "Стол рабочий Инфанта"
+  },
+  "mo-02-1": {
+    "result": "canonical_standalone",
+    "product_id": "prod_01KV69A7AMXJPFM3MR6GX0YJP8",
+    "variant_id": "variant_01KV69A7H7BNVCHVA1TA38GTPS",
+    "family_key": "standalone/mo-02-1",
+    "decision": "KEEP_SEPARATE_PRODUCTS",
+    "current_price": "148280",
+    "expected_price": "148280",
+    "proposed_clean_title": "Шкаф для одежды 2-дв. Молли, высокий"
   },
   "mo-81-1": {
     "result": "canonical_standalone",
@@ -1279,16 +1299,6 @@
     "expected_price": "113080",
     "proposed_clean_title": "Комод высокий Ежик (гл. 560)"
   },
-  "av-05-1": {
-    "result": "canonical_standalone",
-    "product_id": "prod_01KV69A7AKTR1KH8GH90KC8YAJ",
-    "variant_id": "variant_01KV69A7H4QG73VV860W96G182",
-    "family_key": "willie-winkie/CONFIGURABLE/chest/-",
-    "decision": "KEEP_SEPARATE_PRODUCTS",
-    "current_price": "83820",
-    "expected_price": "83820",
-    "proposed_clean_title": "Комод"
-  },
   "ba-05-3": {
     "result": "canonical_standalone",
     "product_id": "prod_01KV69A7AKYY759QG6FC8CQ7JA",
@@ -1378,16 +1388,6 @@
     "current_price": "45900",
     "expected_price": "45900",
     "proposed_clean_title": "Консоль Гринвич"
-  },
-  "mo-02-1": {
-    "result": "canonical_standalone",
-    "product_id": "prod_01KV69A7AMXJPFM3MR6GX0YJP8",
-    "variant_id": "variant_01KV69A7H7BNVCHVA1TA38GTPS",
-    "family_key": "willie-winkie/CONFIGURABLE/clothes-wardrobe/-",
-    "decision": "KEEP_SEPARATE_PRODUCTS",
-    "current_price": "148280",
-    "expected_price": "148280",
-    "proposed_clean_title": "Шкаф для одежды"
   },
   "OL-01-2": {
     "result": "canonical_standalone",

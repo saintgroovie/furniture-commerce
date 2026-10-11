@@ -9,6 +9,7 @@ from pathlib import Path
 
 from catalog_norm.decisions import classify, mattress_rows, write_outputs
 from catalog_norm.export_inventory import connect, export_products
+from catalog_norm.review_manifest import build_manifest, manifest_text
 
 
 def main() -> None:
@@ -32,6 +33,10 @@ def main() -> None:
     if result["summary"]["price_mismatch"]:
         raise SystemExit("price mismatch in a dry-run map")
     write_outputs(result, mattresses, str(out))
+    manifest = build_manifest(result["rows"], inventory["products"])
+    if manifest["rejected_combinations"] != result["summary"]["rejected_combinations"]:
+        raise SystemExit("manifest rejected combinations disagree with the summary")
+    (out / "catalog-normalization-v2-sku-manifest.json").write_text(manifest_text(manifest))
     (out / "catalog-normalization-v2-validation.json").write_text(
         json.dumps(
             {
