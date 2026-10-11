@@ -405,7 +405,9 @@ d = json.load(open(sys.argv[1]))
 assert d["component"] == "storefront", d
 assert d["retained_backend_revision"]
 assert d["backend_digest"] == d["expected_current_backend_digest"]
-assert d["expected_current_storefront_digest"] != d["storefront_digest"] 
+assert d["expected_current_storefront_digest"] != d["storefront_digest"]
+assert d["reservation_state"] == "reserved", d
+assert d["approval_generation"].startswith("apr1-"), d
 PY
 pass "staged storefront approval has component fields"
 # Pair staging must not grow a component key (historical files stay pair).
@@ -417,6 +419,8 @@ if bash "$WRITE_SF" --environment public_demo \
 import json, sys
 d = json.load(open(sys.argv[1]))
 assert "component" not in d, d
+assert d["reservation_state"] == "reserved", d
+assert d["approval_generation"].startswith("apr1-"), d
 PY
   pass "pair staging omits component"
 else
