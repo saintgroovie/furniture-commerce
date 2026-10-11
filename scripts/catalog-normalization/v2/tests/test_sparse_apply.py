@@ -17,6 +17,15 @@ class AlignBuyerPublicTitle(unittest.TestCase):
         meta = {"public_title": "Кровать Оливер"}
         self.assertIsNone(align_buyer_public_title(meta, "Кровать Оливер"))
 
+    def test_only_stale_canonical_name_returns_empty_patch(self):
+        meta = {"canonical_name": "Кровать 1-сп. (90*190)"}
+        patched = align_buyer_public_title(meta, "Кровать Оливер")
+        self.assertEqual(patched, {})
+        self.assertIsNotNone(patched)
+        survivor = dict(meta) if patched is None else patched
+        self.assertEqual(survivor, {})
+        self.assertEqual(meta["canonical_name"], "Кровать 1-сп. (90*190)")
+
     def test_stale_canonical_name_is_removed(self):
         meta = {
             "public_title": "Кровать Оливер",

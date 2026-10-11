@@ -363,9 +363,9 @@ def _apply_family(cur, plan: dict[str, Any]) -> dict[str, Any]:
         (survivor["product_id"], default_option_id),
     )
 
-    survivor_meta = align_buyer_public_title(survivor["metadata"], plan["title"]) or dict(
-        survivor["metadata"] or {}
-    )
+    patched_title = align_buyer_public_title(survivor["metadata"], plan["title"])
+    # {} is a real patch: the only stored key was a stale canonical_name.
+    survivor_meta = dict(survivor["metadata"] or {}) if patched_title is None else patched_title
     survivor_meta["catalog_norm_v2"] = {
         "pass": SPARSE_PASS,
         "family_key": plan["family_key"],
