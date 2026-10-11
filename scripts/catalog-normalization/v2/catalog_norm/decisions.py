@@ -181,147 +181,9 @@ def clean_generic_title(title: str) -> str:
 
 
 def classify(products: list[dict[str, Any]]) -> dict[str, Any]:
-    live = [p for p in products if not p.get("deleted_at")]
-    deleted = [p for p in products if p.get("deleted_at")]
-    rows: list[dict[str, Any]] = []
-    families: dict[str, list[dict[str, Any]]] = defaultdict(list)
-
-    for product in live:
-        variants = [v for v in product.get("variants") or [] if not v.get("deleted_at")]
-        mattresses = [mattress_of(v) for v in variants]
-        confirmed = [m for m in mattresses if m]
-        shell = product.get("status") == "draft" and (
-            not variants
-            or ((product.get("metadata") or {}).get("catalog_norm_v2") or {}).get("archived_shell")
-        )
-        if shell:
-            family = f"legacy-shell/{product.get('id')}"
-            decision = "LEGACY_SHELL"
-            axis = ""
-            clean = product.get("title") or ""
-            confidence = "high"
-            blocker = "draft shell kept, not deleted"
-        elif len(variants) >= 2 and len(confirmed) == len(variants) and is_bed(product):
-            family = f"{product.get('collection_handle') or 'collection'}/bed/mattress-size"
-            decision = "ALREADY_APPLIED"
-            axis = "mattress_size"
-            clean = product.get("title") or ""
-            confidence = "high"
-            blocker = ""
-        elif is_willie(product):
-            motif = motif_of(product) or "title-is-motif"
-            family = f"willie-winkie/{motif}/{sku_of(product) or product.get('handle')}"
-            decision = "KEEP_SEPARATE_PRODUCTS"
-            axis = ""
-            clean = product.get("title") or ""
-            confidence = "high"
-            blocker = ""
-        elif is_bed(product):
-            flags = "-".join(construction_flags(product.get("title") or "")) or "unmarked"
-            family = f"{product.get('collection_handle') or 'collection'}/bed/{flags}"
-            decision = "PENDING_GROUP"
-            axis = "mattress_size" if confirmed else ""
-            clean = proposed_bed_title(product) if confirmed else (product.get("title") or "")
-            confidence = "high" if confirmed else "low"
-            blocker = "" if confirmed else "MATTRESS_SIZE_UNKNOWN"
-        else:
-            family = f"standalone/{sku_of(product) or product.get('handle')}"
-            decision = "KEEP_SEPARATE_PRODUCTS"
-            axis = ""
-            clean = clean_generic_title(product.get("title") or "")
-            confidence = "high"
-            blocker = ""
-        record = {
-            "product": product,
-            "family_key": family,
-            "decision": decision,
-            "axis": axis,
-            "clean": clean,
-            "confidence": confidence,
-            "blocker": blocker,
-            "variants": variants,
-            "confirmed": confirmed,
-        }
-        families[family].append(record)
-
-    # Beds that share a construction family stay separate unless they pass
-    # the Greenwich gate: STANDARD, identical finishes, identical galleries,
-    # and the only buyer difference is mattress size. That gate already ran
-    # for Greenwich. A finish or gallery mismatch is not a merge.
-    for family, members in families.items():
-        if not members or members[0]["decision"] != "PENDING_GROUP":
-            continue
-        if len(members) == 1:
-            members[0]["decision"] = "KEEP_SEPARATE_PRODUCTS"
-            if members[0]["blocker"] == "MATTRESS_SIZE_UNKNOWN":
-                members[0]["decision"] = "AMBIGUOUS_HOLD"
-            continue
-        signatures = {finish_signature(m["product"]) for m in members}
-        galleries = {
-            tuple(m["product"].get("images") or [])
-            for m in members
-        }
-        classes = {(m["product"].get("classification") or "") for m in members}
-        if (
-            len(signatures) == 1
-            and len(galleries) == 1
-            and classes == {"STANDARD"}
-            and all(m["confirmed"] for m in members)
-            and all(finish_proven(m["product"]) for m in members)
-            and all(m["product"].get("images") for m in members)
-        ):
-            for member in members:
-                member["decision"] = "SAFE_VARIANT_FAMILY"
-                member["blocker"] = ""
-        else:
-            for member in members:
-                member["decision"] = "KEEP_SEPARATE_PRODUCTS"
-                member["blocker"] = (
-                    "construction family stays separate: finish, gallery, or classification "
-                    "is not the Greenwich gate"
-                )
-                member["confidence"] = "high"
-
-    # Orientation pairs are candidates only. Unequal finishes are a hold,
-    # not a merge. Legacy family_key is ignored.
-    _mark_orientation_holds(families)
-
-    for family, members in families.items():
-        for member in members:
-            product = member["product"]
-            if member["variants"]:
-                for variant in member["variants"]:
-                    rows.append(_sku_row(product, variant, member))
-            else:
-                rows.append(_sku_row(product, {}, member))
-
-    for product in deleted:
-        rows.append({
-            "sku": sku_of(product),
-            "product_id": product.get("id"),
-            "current_title": product.get("title") or "",
-            "proposed_clean_title": product.get("title") or "",
-            "collection": product.get("collection_handle") or "",
-            "product_type": ",".join(product.get("categories") or []),
-            "classification": product.get("classification") or "",
-            "family_key": f"deleted/{sku_of(product) or product.get('handle')}",
-            "decision": "INTENTIONALLY_EXCLUDED",
-            "variant_axis": "",
-            "mattress_width_cm": "",
-            "mattress_length_cm": "",
-            "current_price": "",
-            "expected_price": "",
-            "status": product.get("status") or "",
-            "media_count": len(product.get("images") or []),
-            "confidence": "high",
-            "evidence": "deleted_at set",
-            "blocker": "",
-            "legacy_family_key": (product.get("metadata") or {}).get("family_key") or "",
-            "title_apply": "no",
-        })
-
-    _unique_title_apply(rows)
-    return {"rows": rows, "summary": _summary(rows)}
+    """Sparse families. Finish differences do not block a merge."""
+    from catalog_norm.sparse import classify_products
+    return classify_products(products)
 
 
 def kind_of(product: dict[str, Any]) -> str:
@@ -536,6 +398,14 @@ def write_outputs(result: dict[str, Any], mattresses: list[dict[str, str]], dire
         writer = csv.DictWriter(handle, fieldnames=mattress_fields)
         writer.writeheader()
         writer.writerows(mattresses)
+    bed_nouns = {"bed", "lower-bed", "crib-newborn", "side-crib", "sofa-bed", "transformer"}
+    with (out / "beds-family-map-v2.csv").open("w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fields)
+        writer.writeheader()
+        for row in result["rows"]:
+            noun = (row.get("family_key") or "").split("/")
+            if len(noun) >= 3 and noun[2] in bed_nouns:
+                writer.writerow({key: row.get(key, "") for key in fields})
     sku_map = {}
     for row in result["rows"]:
         if not row["sku"]:
@@ -579,6 +449,8 @@ def write_outputs(result: dict[str, Any], mattresses: list[dict[str, str]], dire
         "sku_unique": summary["sku_unique"],
         "price_mismatch": summary["price_mismatch"],
         "mattress_families": 0,
+        "rejected_combinations": summary.get("rejected_combinations", 0),
+        "safe_families": summary.get("safe_families", 0),
     }
     (out / "catalog-normalization-v2-mutation-manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"

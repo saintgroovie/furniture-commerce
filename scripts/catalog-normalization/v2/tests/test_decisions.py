@@ -55,11 +55,13 @@ class DecisionTest(unittest.TestCase):
             product("pa-05-1", "Комод стандартный Полевые цветы", "willie-winkie", ["komody"]),
             product("fk-05-3", "Комод высокий Сказочное королевство", "willie-winkie", ["komody"]),
         ])["rows"]
-        families = {row["sku"]: row["family_key"] for row in rows}
-        self.assertNotEqual(families["fk-05-1"], families["pa-05-1"])
-        self.assertNotEqual(families["fk-05-1"], families["fk-05-3"])
-        self.assertIn("Сказочное королевство", rows[0]["proposed_clean_title"])
-        self.assertTrue(all(row["decision"] == "KEEP_SEPARATE_PRODUCTS" for row in rows))
+        by = {row["sku"]: row for row in rows}
+        self.assertNotEqual(by["fk-05-1"]["family_key"], by["pa-05-1"]["family_key"])
+        self.assertEqual(by["fk-05-1"]["family_key"], by["fk-05-3"]["family_key"])
+        self.assertEqual(by["fk-05-1"]["proposed_clean_title"], "Комод Сказочное королевство")
+        self.assertEqual(by["fk-05-1"]["decision"], "SAFE_VARIANT_FAMILY")
+        self.assertNotEqual(by["fk-05-1"]["axis_values"]["form"], by["fk-05-3"]["axis_values"]["form"])
+        self.assertIn("Полевые цветы", by["pa-05-1"]["proposed_clean_title"])
 
     def test_footboard_is_not_one_bed(self):
         rows = classify([
@@ -86,20 +88,69 @@ class DecisionTest(unittest.TestCase):
             ),
         ])["rows"]
         by = {row["sku"]: row for row in rows}
-        self.assertNotEqual(by["OL-14-1"]["family_key"], by["OL-14-2"]["family_key"])
+        self.assertEqual(by["OL-14-1"]["family_key"], by["OL-14-2"]["family_key"])
         self.assertEqual(by["OL-14-1"]["family_key"], by["OL-15-1"]["family_key"])
-        self.assertIn("без изножья", by["OL-14-2"]["proposed_clean_title"])
-        self.assertNotIn("90", by["OL-14-2"]["proposed_clean_title"])
-        self.assertEqual(by["OL-14-1"]["decision"], "KEEP_SEPARATE_PRODUCTS")
-        self.assertEqual(by["OL-14-1"]["title_apply"], "no")
+        self.assertEqual(by["OL-14-1"]["proposed_clean_title"], "Кровать Оливер")
+        self.assertNotIn("90", by["OL-14-1"]["proposed_clean_title"])
+        self.assertEqual(by["OL-14-1"]["decision"], "SAFE_VARIANT_FAMILY")
+        self.assertEqual(by["OL-14-2"]["axis_values"]["footboard"], "Без изножья")
+        self.assertEqual(by["OL-14-1"]["axis_values"]["footboard"], "С изножьем")
         self.assertEqual(by["OL-14-1"]["current_price"], "72900")
+        self.assertEqual(by["OL-14-1"]["expected_price"], "72900")
+        result = classify([
+            product("OL-14-1", "Кровать 1-сп. (90×190)", "oliver", ["krovati"], variants=[variant("OL-14-1", "72900", (90, 190))]),
+            product("OL-15-1", "Кровать 1,5-сп. (120×190)", "oliver", ["krovati"], variants=[variant("OL-15-1", "91900", (120, 190))]),
+            product("OL-14-2", "Кровать 1-сп. (90×190) без изножья", "oliver", ["krovati"], variants=[variant("OL-14-2", "69900", (90, 190))]),
+        ])
+        self.assertEqual(result["summary"]["rejected_combinations"], 1)
+        from catalog_norm.sparse import family_plans
+        plans = family_plans(result["rows"])
+        self.assertEqual(len(plans), 1)
+        self.assertEqual(sorted(plans[0]["skus"]), ["OL-14-1", "OL-14-2", "OL-15-1"])
+        self.assertEqual(len(plans[0]["axes"]), 3)
+
+    def test_shared_footboard_stays_in_the_title(self):
+        rows = classify([
+            product("PV-14-1", "Кровать 1-сп. (90×190) без изножья", "provence", ["krovati"], variants=[variant("PV-14-1", "1", (90, 190))]),
+            product("PV-15-1", "Кровать 1,5-сп. (120×190) без изножья", "provence", ["krovati"], variants=[variant("PV-15-1", "2", (120, 190))]),
+        ])["rows"]
+        self.assertEqual(rows[0]["proposed_clean_title"], "Кровать Прованс без изножья")
+        self.assertNotIn("footboard", rows[0]["variant_axis"])
+
+    def test_chest_width_and_shelving_are_sparse(self):
+        rows = classify([
+            product("OL-05-1", "Комод стандартный", "oliver", ["komody"]),
+            product("OL-05-2", "Комод широкий", "oliver", ["komody"]),
+            product("CO-62-1", "Стеллаж широкий", "country-london-paris", ["stellazhi"]),
+            product("CO-62-2", "Стеллаж узкий с дверью", "country-london-paris", ["stellazhi"]),
+            product("CO-62-3", "Стеллаж узкий с ящиком", "country-london-paris", ["stellazhi"]),
+            product("OL-62-1", "Стеллаж для книг", "oliver", ["stellazhi"]),
+        ])["rows"]
+        by = {row["sku"]: row for row in rows}
+        self.assertEqual(by["OL-05-1"]["decision"], "SAFE_VARIANT_FAMILY")
+        self.assertEqual(by["OL-05-1"]["proposed_clean_title"], "Комод Оливер")
+        self.assertEqual(by["OL-05-1"]["family_key"], by["OL-05-2"]["family_key"])
+        self.assertEqual(by["CO-62-1"]["proposed_clean_title"], "Стеллаж Кантри")
+        self.assertEqual(len({by[sku]["family_key"] for sku in ("CO-62-1", "CO-62-2", "CO-62-3")}), 1)
+        self.assertEqual(by["OL-62-1"]["decision"], "KEEP_SEPARATE_PRODUCTS")
+
+    def test_shelf_tier_uses_russian_count(self):
+        rows = classify([
+            product("OL-69-1", "Полка книжная 1-ярусная", "oliver", ["stellazhi"]),
+            product("OL-69-2", "Полка книжная 2-ярусная", "oliver", ["stellazhi"]),
+        ])["rows"]
+        by = {row["sku"]: row for row in rows}
+        self.assertEqual(by["OL-69-1"]["axis_values"]["tiers"], "1 ярус")
+        self.assertEqual(by["OL-69-2"]["axis_values"]["tiers"], "2 яруса")
 
     def test_unknown_mattress_is_a_hold(self):
         rows = classify([
             product("OL-85-2", "Кроватка приставная + матрас", "oliver", ["krovati"]),
         ])["rows"]
-        self.assertEqual(rows[0]["decision"], "AMBIGUOUS_HOLD")
+        self.assertEqual(rows[0]["decision"], "KEEP_SEPARATE_PRODUCTS")
         self.assertEqual(rows[0]["mattress_width_cm"], "")
+        self.assertIn("MATTRESS_SIZE_UNKNOWN", rows[0]["blocker"])
+        self.assertNotEqual(rows[0]["family_key"], "merged-with-newborn")
 
     def test_merged_bed_is_already_applied(self):
         merged = product(
@@ -117,6 +168,32 @@ class DecisionTest(unittest.TestCase):
         self.assertEqual({row["decision"] for row in rows}, {"ALREADY_APPLIED"})
         self.assertEqual(rows[0]["current_price"], rows[0]["expected_price"])
         self.assertEqual(len({row["sku"] for row in rows}), 2)
+
+    def test_applied_rows_keep_each_variant_size(self):
+        merged = product(
+            "CO-14-2",
+            "Кровать Кантри с подъёмным механизмом",
+            "country-london-paris",
+            ["krovati"],
+            variants=[
+                variant("CO-14-2", "100", (90, 190)),
+                variant("CO-15-2", "200", (120, 190)),
+            ],
+        )
+        for item, width in zip(merged["variants"], (90, 120)):
+            item["metadata"]["variant_axes"] = {
+                "mattress_size": {
+                    "label": "Размер спального места",
+                    "display": f"{width} × 190 см",
+                    "sort": width,
+                }
+            }
+        rows = classify([merged])["rows"]
+        by = {row["sku"]: row for row in rows}
+        self.assertEqual(by["CO-14-2"]["mattress_width_cm"], 90)
+        self.assertEqual(by["CO-15-2"]["mattress_width_cm"], 120)
+        self.assertEqual(by["CO-14-2"]["axis_values"]["mattress_size"], "90 × 190 см")
+        self.assertEqual(by["CO-15-2"]["axis_values"]["mattress_size"], "120 × 190 см")
 
     def test_unequal_finishes_do_not_merge(self):
         rows = classify([
@@ -137,7 +214,9 @@ class DecisionTest(unittest.TestCase):
                 variants=[variant("CO-65-2", "37500", executions={"blue": {}})],
             ),
         ])["rows"]
-        self.assertEqual({row["decision"] for row in rows}, {"AMBIGUOUS_HOLD"})
+        self.assertEqual({row["decision"] for row in rows}, {"SAFE_VARIANT_FAMILY"})
+        self.assertEqual(rows[0]["proposed_clean_title"], rows[1]["proposed_clean_title"])
+        self.assertNotEqual(rows[0]["axis_values"]["side"], rows[1]["axis_values"]["side"])
 
     def test_orientation_keys_keep_the_model_stem(self):
         def desk(sku, title):
@@ -157,7 +236,10 @@ class DecisionTest(unittest.TestCase):
         ])["rows"]
         by = {row["sku"]: row for row in rows}
         self.assertEqual(by["S-1"]["family_key"], by["S-2"]["family_key"])
-        self.assertNotEqual(by["S-1"]["family_key"], by["L-1"]["family_key"])
+        self.assertEqual(by["S-1"]["family_key"], by["L-1"]["family_key"])
+        self.assertEqual(by["S-1"]["axis_values"]["size"], "Малый")
+        self.assertEqual(by["L-1"]["axis_values"]["size"], "Большой")
+        self.assertNotEqual(by["S-1"]["axis_values"]["side"], by["S-2"]["axis_values"]["side"])
         self.assertEqual(by["S-1"]["current_price"], "100.50")
         self.assertEqual(by["S-1"]["expected_price"], "100.50")
         self.assertEqual(by["S-1"]["decision"], "SAFE_VARIANT_FAMILY")

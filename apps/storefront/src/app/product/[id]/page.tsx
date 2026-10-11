@@ -12,6 +12,12 @@ import {
   resolveBuyerVariantId,
   variantChipTarget,
 } from "@/lib/buyer-variant-axis"
+import {
+  resolveSparseVariantId,
+  sparseAxisChoices,
+  sparseVariantMap,
+  withVariantCapabilities,
+} from "@/lib/sparse-variant-map"
 import { indexingCanonical } from "@/lib/indexing-policy"
 import {
   buildBreadcrumbJsonLd,
@@ -233,14 +239,31 @@ export default async function ProductPage({
     )
   }
 
+  const sparseMap = sparseVariantMap(product)
+  const variantAxis = sparseMap ? null : buyerVariantAxis(product)
+  const requestedVariant = resolvedSearchParams?.variant
+  const requestedVariantId = Array.isArray(requestedVariant)
+    ? requestedVariant[0]
+    : requestedVariant
+  const selectedVariantId = sparseMap
+    ? resolveSparseVariantId(sparseMap, requestedVariantId)
+    : resolveBuyerVariantId(variantAxis, requestedVariantId)
+  const selectedVariant =
+    selectedVariantId == null
+      ? null
+      : ((product.variants as Array<Record<string, unknown>> | undefined) ?? []).find(
+          (variant) => variant.id === selectedVariantId
+        ) ?? null
+  const viewProduct = withVariantCapabilities(product, selectedVariant) as Record<string, unknown>
+
   const isOliver = handle.startsWith("ol-")
-  const isGreenwichBed = isGreenwichBedProduct(product)
-  const thumbSrc = cardThumbnailSrcFromProduct(product)
-  const executionSelectors = buildIntraProductExecutionSelectors(product, thumbSrc)
+  const isGreenwichBed = isGreenwichBedProduct(viewProduct)
+  const thumbSrc = cardThumbnailSrcFromProduct(viewProduct)
+  const executionSelectors = buildIntraProductExecutionSelectors(viewProduct, thumbSrc)
   const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
   const greenwichPaintMatrix = executionSelectors.greenwichPaintMatrix
   const bedInteriorSrcs = isGreenwichBed
-    ? greenwichBedInteriorUrlsFromProduct(product)
+    ? greenwichBedInteriorUrlsFromProduct(viewProduct)
     : []
   const bedDefaults =
     greenwichBedMatrix && greenwichBedMatrix.length > 0
@@ -306,30 +329,18 @@ export default async function ProductPage({
               : activeFinish != null
                 ? activeFinish.extraSrcs
                 : mergeUniqueExtraUrls(thumbSrc, [
-                    collectExtraProductImageUrls(product, thumbSrc),
+                    collectExtraProductImageUrls(viewProduct, thumbSrc),
                   ])
     return { mainSrc, extraSrcs }
   })()
 
   const useExecutionPdp =
     isGreenwichBed || hasPdpExecutionControls(executionSelectors)
-  const variantAxis = buyerVariantAxis(product)
-  const requestedVariant = resolvedSearchParams?.variant
-  const requestedVariantId = Array.isArray(requestedVariant)
-    ? requestedVariant[0]
-    : requestedVariant
-  const selectedVariantId = resolveBuyerVariantId(variantAxis, requestedVariantId)
-  const selectedVariant =
-    selectedVariantId == null
-      ? null
-      : ((product.variants as Array<Record<string, unknown>> | undefined) ?? []).find(
-          (variant) => variant.id === selectedVariantId
-        ) ?? null
   const price = selectedVariant
     ? priceOfVariant(selectedVariant) ?? getPrice(product)
     : getPrice(product)
   /* Material execution options from metadata.material_tiers (backend SoT). */
-  const materialTiers = buildMaterialTierOptions(product, price)
+  const materialTiers = buildMaterialTierOptions(viewProduct, price)
   const backendDefaultMin = (() => {
     const cfg = (product.metadata as Record<string, unknown> | undefined)
       ?.buyer_default_configuration
@@ -506,8 +517,24 @@ export default async function ProductPage({
     ...displayGroupMembers,
   ])
   const handleForVariant = typeof product.handle === "string" ? product.handle : id
+  const variants = (product.variants as Array<Record<string, unknown>> | undefined) ?? []
+  const sparseChipRows =
+    sparseMap && selectedVariantId
+      ? sparseAxisChoices(sparseMap, selectedVariantId).map((row) => ({
+          label: row.label,
+          chips: row.choices.map((choice) => ({
+            id: variantChipTarget(handleForVariant, choice.variantId, resolvedSearchParams),
+            label: choice.label,
+            basePrice: priceOfVariant(variants.find((item) => item.id === choice.variantId)),
+            sort: choice.sort,
+            isCurrent: choice.isCurrent,
+          })),
+        }))
+      : []
   const sizeChips =
-    variantAxis && selectedVariantId
+    sparseMap
+      ? []
+      : variantAxis && selectedVariantId
       ? variantAxis.choices.map((choice) => {
           const variant = (
             (product.variants as Array<Record<string, unknown>> | undefined) ?? []
@@ -787,7 +814,17 @@ export default async function ProductPage({
                   requestQuote={isRequestQuoteProduct(product)}
                 />
               )}
-              {sizeChips.length > 0 && (
+              {sparseChipRows.map((row) => (
+                <PdpSizeChips
+                  key={row.label}
+                  productKey={handle || (product.id as string)}
+                  chips={row.chips}
+                  materialTiers={materialTiers}
+                  requestQuote={isRequestQuoteProduct(product)}
+                  selectorLabel={row.label}
+                />
+              ))}
+              {sparseChipRows.length === 0 && sizeChips.length > 0 && (
                 <PdpSizeChips
                   productKey={handle || (product.id as string)}
                   chips={sizeChips}

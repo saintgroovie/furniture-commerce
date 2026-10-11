@@ -5,14 +5,15 @@
   "sku_rows": 157,
   "sku_unique": true,
   "decisions": {
-    "KEEP_SEPARATE_PRODUCTS": 141,
-    "AMBIGUOUS_HOLD": 11,
-    "ALREADY_APPLIED": 5,
-    "LEGACY_SHELL": 4,
+    "KEEP_SEPARATE_PRODUCTS": 80,
+    "ALREADY_APPLIED": 77,
+    "LEGACY_SHELL": 49,
     "INTENTIONALLY_EXCLUDED": 15
   },
   "price_mismatch": 0,
   "title_apply_yes": 0,
+  "rejected_combinations": 12,
+  "safe_families": 0,
   "mattress_rows": 5,
   "mattress_families": 0
 }
