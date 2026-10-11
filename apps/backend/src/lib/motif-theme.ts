@@ -13,9 +13,10 @@
 export const WILLIE_WINKIE_COLLECTION = "willie-winkie" as const
 
 /**
- * Canonical buyer-facing Russian display names for Willie Winkie motifs.
- * Keyed by stable `motif_slug` (Latin, never localized). Single SoT for API wire
- * `motif_title` — product.metadata may still hold English internal labels.
+ * Canonical buyer-facing display names for Willie Winkie motifs.
+ * Keyed by stable `motif_slug` (Latin). Single SoT for API wire `motif_title`.
+ * The first 14 labels stay Russian. Albion and both Brigantine themes use the
+ * proven English names; product titles still transcribe those words separately.
  */
 export const MOTIF_BUYER_DISPLAY_NAMES_RU = {
   "ants-village": "Деревня муравьев",
@@ -32,6 +33,9 @@ export const MOTIF_BUYER_DISPLAY_NAMES_RU = {
   templars: "Рыцари",
   "tiggy-winkle": "Ежик",
   tommy: "Томми",
+  albion: "Albion",
+  "brigantine-blue": "Brigantine Blue",
+  "brigantine-ivory": "Brigantine Ivory",
 } as const satisfies Record<string, string>
 
 export type MotifCanonicalSlug = keyof typeof MOTIF_BUYER_DISPLAY_NAMES_RU
@@ -63,7 +67,7 @@ const MOTIF_LEGACY_ENGLISH_TITLE_SET = new Set<string>(
 )
 
 /**
- * Resolve buyer-facing motif title. Never returns known English legacy labels.
+ * Resolve buyer-facing motif title.
  * Unknown slug → neutral "Роспись" (not metadata English).
  */
 export function motifBuyerDisplayName(slug: string): string {
