@@ -7,7 +7,7 @@
    "status": "published",
    "raw_title": "Тумбочка прикроватная Albion",
    "canonical_title": "Прикроватная тумба Вилли Винки",
-   "category": "krovati",
+   "category": "tumby",
    "description": "",
    "visible_description": null
   },
@@ -61,7 +61,7 @@
    "sku": "al-40-2",
    "status": "published",
    "raw_title": "Шкаф комбинированный 560 Albion",
-   "canonical_title": "Шкаф комбинированный Вилли Винки, 560",
+   "canonical_title": "Шкаф комбинированный Вилли Винки",
    "category": "shkafy",
    "description": "",
    "visible_description": null
@@ -183,7 +183,7 @@
    "status": "published",
    "raw_title": "Стол письменный 1-тумб. 0П Ant's Village",
    "canonical_title": "Однотумбовый письменный стол Вилли Винки (тумба с полками справа)",
-   "category": "tumby",
+   "category": "stoly",
    "description": "",
    "visible_description": null
   },
@@ -194,7 +194,7 @@
    "status": "published",
    "raw_title": "Стол письменный 2-тумб.ПЯ Ant's Village",
    "canonical_title": "Двухтумбовый письменный стол Вилли Винки (полки слева, ящики справа)",
-   "category": "tumby",
+   "category": "stoly",
    "description": "",
    "visible_description": null
   },
@@ -215,7 +215,7 @@
    "sku": "ba-07-1",
    "status": "published",
    "raw_title": "Ящик для игрушек с подъем. мех. Ballet",
-   "canonical_title": "Ящик для игрушек с подъем. мех",
+   "canonical_title": "Ящик для игрушек с подъёмным механизмом",
    "category": "toy-box",
    "description": "",
    "visible_description": null
@@ -248,7 +248,7 @@
    "sku": "brb-40-2",
    "status": "published",
    "raw_title": "Шкаф комбинированный 560 Brigantine Blue",
-   "canonical_title": "Шкаф комбинированный Вилли Винки, 560",
+   "canonical_title": "Шкаф комбинированный Вилли Винки",
    "category": "shkafy",
    "description": "",
    "visible_description": null
@@ -435,7 +435,7 @@
    "sku": "fa-40-1",
    "status": "published",
    "raw_title": "Шкаф комбинированный 440 Fairies",
-   "canonical_title": "Шкаф комбинированный Вилли Винки, 440",
+   "canonical_title": "Шкаф комбинированный Вилли Винки",
    "category": "shkafy",
    "description": "",
    "visible_description": null
@@ -1689,7 +1689,7 @@
    "sku": "OX-14-1",
    "status": "published",
    "raw_title": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
-   "canonical_title": "Комплекс Оксфорд-1 (нижняя кровать без матраса 90 × 185)",
+   "canonical_title": "Нижняя кровать Оксфорд без матраса (90 × 185)",
    "category": "krovati",
    "description": "Нижняя выкатная часть комплекса Оксфорд-1: спальное место под матрас 90 × 185 см, высота корпуса 26 см. Дополняет верхний модуль комплекса вторым спальным местом - для второго ребёнка или гостей - и убирается, когда не нужна.\n\nМатрас в комплект не входит. Данные по коллекции Оксфорд пилотные: состав и исполнение уточняются при заявке.\n\nЕсть варианты исполнения - уточним в заявке",
    "visible_description": "Нижняя выкатная часть комплекса Оксфорд-1: спальное место под матрас 90 × 185 см, высота корпуса 26 см. Дополняет верхний модуль комплекса вторым спальным местом - для второго ребёнка или гостей - и убирается, когда не нужна.\n\nМатрас в комплект не входит. Данные по коллекции Оксфорд пилотные: состав и исполнение уточняются при заявке.\n\nЕсть варианты исполнения - уточним в заявке"
@@ -2481,7 +2481,7 @@
    "sku": "rl-40-2",
    "status": "published",
    "raw_title": "Шкаф комбинированный 560 Royal Lilies",
-   "canonical_title": "Шкаф комбинированный Вилли Винки, 560",
+   "canonical_title": "Шкаф комбинированный Вилли Винки",
    "category": "shkafy",
    "description": "",
    "visible_description": null
@@ -2624,7 +2624,7 @@
    "sku": "te-07-1",
    "status": "published",
    "raw_title": "Ящик для игрушек с подъем. мех. Templars",
-   "canonical_title": "Ящик для игрушек с подъем. мех",
+   "canonical_title": "Ящик для игрушек с подъёмным механизмом",
    "category": "toy-box",
    "description": "",
    "visible_description": null
@@ -2635,7 +2635,7 @@
    "sku": "te-40-2",
    "status": "published",
    "raw_title": "Шкаф комбинированный 560 Templars",
-   "canonical_title": "Шкаф комбинированный Вилли Винки, 560",
+   "canonical_title": "Шкаф комбинированный Вилли Винки",
    "category": "shkafy",
    "description": "",
    "visible_description": null
@@ -2680,7 +2680,7 @@
    "status": "published",
    "raw_title": "Стол письменный 1-тумб. П0 Templars",
    "canonical_title": "Однотумбовый письменный стол Вилли Винки (тумба с полками слева)",
-   "category": "tumby",
+   "category": "stoly",
    "description": "",
    "visible_description": null
   },
@@ -2702,7 +2702,7 @@
    "status": "published",
    "raw_title": "Стол письменный 2-тумб.ЯП Templars",
    "canonical_title": "Двухтумбовый письменный стол Вилли Винки (ящики слева, полки справа)",
-   "category": "tumby",
+   "category": "stoly",
    "description": "",
    "visible_description": null
   },

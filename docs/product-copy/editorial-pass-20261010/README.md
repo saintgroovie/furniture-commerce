@@ -30,8 +30,10 @@ yarn dlx -q tsx scripts/editorial-copy-board.ts --dir ../../docs/product-copy/ed
 - `editorial-quality.json`, `editorial-report.md` - before/after metrics, repetition report, examples.
 - `apply/editorial-copy-packet.json` + `.sha256` - the only importer input.
 - `owner-copy-review.md` - before / final examples and the HOLD list for owner copy approval.
-- `owner-final-decision.md` - short owner gate: 12 full descriptions and the 4 open content decisions
-  (al-95-1, ox-14-1, bri-95-3, te-55-1 / painting_name policy). Hand-written, not generated.
+- `owner-final-decision.md` - short owner gate: 12 full descriptions and the 4 resolved content
+  decisions (al-95-1, ox-14-1, bri-95-3, te-55-1 / painting_name policy). Hand-written, not generated.
+- `data-fix/te-55-1-painting-data-fix.json` - prepared, not applied: the separate data correction
+  for te-55-1 (owner decision 4). Not an importer input; it needs its own governed apply.
 
 Style gate (`findStyleIssues` in `apps/backend/src/lib/editorial-copy/quality.ts`): telegraphic
 clauses and dashes standing in for a dropped verb, dash overuse, 1-4 word fragments, caption-like
@@ -41,11 +43,13 @@ openings and thin texts fail `--strict` and the packet fidelity test.
 
 `READY_FOR_OWNER_COPY_APPROVAL`. Not applied; production apply needs a separate owner approval.
 
-SEO side of the final polish (storefront `product-seo.ts`): a `painting_name` without `motif_slug`
-gets a buyer name only from the exact EN to RU dictionary (no transliteration) and is shown as
-`, «Альбион»` without the word «роспись», since the name alone does not prove the piece is painted;
-«роспись «…»» stays reserved for canonical `motif_slug`. A Latin legacy subtitle no longer replaces
-a Latin-free first sentence in the meta description.
+SEO side (storefront `product-seo.ts`, owned by PR #301 since the owner decisions of 2026-10-11):
+a `painting_name` without `motif_slug` gets a buyer name only from the exact EN to RU dictionary
+(no transliteration) and is shown as `, «Альбион»` without the word «роспись»; «роспись «…»» stays
+reserved for canonical `motif_slug`. Owner policy A with fail-safe exceptions: pages whose painting
+data the catalog contradicts (`PAINTING_PRESENTATION_SUPPRESSED` in backend `motif-theme.ts`:
+`bri-95-3`, `te-55-1`) show no painting. A Latin legacy subtitle no longer replaces a Latin-free
+first sentence in the meta description.
 
 ## Storage
 
@@ -83,9 +87,14 @@ npx medusa exec ./src/scripts/apply-editorial-copy.ts
 
 ## Holds
 
-- `ox-14-1` - the title names both the Oxford-1 complex and its lower bed, and the photos do not
-  settle which item the page sells; current text kept until the owner confirms.
-- `al-95-1` - the title promises an Albion painting, the only photo shows plain headboards and the
-  convertible mechanism is not visible; empty description kept until photos or owner input.
+None. Both former holds were resolved by the owner on 2026-10-11 and are in the packet:
 
-`pr-06-1` (earlier hold: published after the first snapshot) is now in the packet.
+- `ox-14-1` (decision B) - the page sells the Oxford-1 lower bed alone (price row 29 000 ₽,
+  height 257 mm); family `oxford-lower-bed`. Its buyer title and category come from PR #301.
+- `al-95-1` (decision A) - text only from what its photo shows, without the painting and the
+  convertible mechanism; family `ww-convertible-bed-panel`.
+
+`pr-06-1` (earlier hold: published after the first snapshot) is in the packet.
+
+The snapshot was refreshed on 2026-10-11 (read-only GET): descriptions, titles and statuses match
+the earlier snapshot; buyer titles follow PR #301 and 5 category values follow production.

@@ -1,12 +1,11 @@
 {
  "packet_id": "editorial-pass-20261010",
- "snapshot_sha256": "72ca25143850e383adfdddde29fdd7d1d24d9cd11ffeadaa8ce702a5a46dbe00",
- "packet_sha256": "19dbd7a1f829eca72d9ac79d9d2bedb82cf0fef5919e964d2084cbef4b481f61",
- "packet_items": 246,
+ "snapshot_sha256": "a95b6da51cb60d4526484d1556dbadb472d87e9636796330bb0c84125c3d059c",
+ "packet_sha256": "5baa9ed7e87c34467ebe5fb61e1a7623086e8db85b89153d99bdf8135e9e570c",
+ "packet_items": 248,
  "action_counts": {
-  "ADD": 91,
-  "HOLD": 2,
-  "REWRITE": 155
+  "ADD": 92,
+  "REWRITE": 156
  },
  "current_class_counts": {
   "empty": 42,
@@ -15,13 +14,13 @@
   "technical": 50
  },
  "families": {
-  "families_total": 168,
+  "families_total": 170,
   "multi_member_families": 37,
   "products_in_multi_member_families": 115,
-  "single_member_families": 131,
+  "single_member_families": 133,
   "by_confidence": {
    "EXACT": 135,
-   "STRONG": 33,
+   "STRONG": 35,
    "AMBIGUOUS": 0
   }
  },
@@ -54,15 +53,15 @@
  },
  "after": {
   "pdp_total": 248,
-  "empty": 1,
+  "empty": 0,
   "technical_import": 0,
-  "boilerplate_shared_note": 1,
+  "boilerplate_shared_note": 0,
   "exact_duplicate_groups": 16,
   "exact_duplicate_products": 42,
   "exact_duplicate_groups_cross_family": 0,
   "near_duplicate_groups": 4,
   "near_duplicate_groups_cross_family": 0,
-  "raw_dimensions": 1,
+  "raw_dimensions": 0,
   "sku_internal_code": 0,
   "ascii_ellipsis": 0,
   "title_mismatch_latin_or_echo": 0,
@@ -73,7 +72,7 @@
   "opening_model_template": 0,
   "too_short_under_150": 15,
   "too_long_over_900": 0,
-  "hold": 2,
+  "hold": 0,
   "length_p10": 158,
   "length_median": 247,
   "length_p90": 397,
@@ -91,13 +90,13 @@
    "FACT_RISK": 67,
    "GENERIC": 3,
    "GOOD": 22,
-   "NEW": 21,
+   "NEW": 23,
    "POLISH": 28,
    "TOO_TECHNICAL": 37,
    "TOO_THIN": 25
   },
   "families_quality_after": {
-   "GOOD": 166,
+   "GOOD": 168,
    "TOO_THIN": 2
   },
   "products_quality_before": {
@@ -105,25 +104,20 @@
    "FACT_RISK": 104,
    "GENERIC": 3,
    "GOOD": 22,
-   "HOLD": 1,
-   "NEW": 34,
+   "NEW": 35,
    "POLISH": 46,
    "TOO_TECHNICAL": 52,
    "TOO_THIN": 40
   },
   "products_quality_after": {
-   "GOOD": 242,
-   "HOLD": 2,
+   "GOOD": 244,
    "TOO_THIN": 4
   },
   "products_good_at_once": 22,
   "products_changed": 191,
-  "products_new": 33,
+  "products_new": 35,
   "products_unchanged": 22,
-  "holds": [
-   "al-95-1",
-   "ox-14-1"
-  ],
+  "holds": [],
   "style_flags_before": {
    "caption_opening": 35,
    "dash_overuse": 43,
@@ -413,6 +407,18 @@
     "keys": [
      "ol-95-3",
      "pr-95-3"
+    ]
+   },
+   {
+    "text": "Матрас в комплект кровати не входит, его подбирают отдельно под спальное место.",
+    "occurrences": 2,
+    "families": [
+     "oxford-lower-bed",
+     "oxford-lower-bed-wide"
+    ],
+    "keys": [
+     "ox-14-1",
+     "ox-14-11"
     ]
    },
    {
@@ -4503,9 +4509,6 @@
   "al-23-1": [
    "too_short"
   ],
-  "al-95-1": [
-   "empty"
-  ],
   "av-09-1": [
    "too_short"
   ],
@@ -4523,10 +4526,6 @@
   ],
   "ol-69-4": [
    "too_short"
-  ],
-  "ox-14-1": [
-   "raw_dimension",
-   "shared_note"
   ],
   "pr-30-1": [
    "too_short"

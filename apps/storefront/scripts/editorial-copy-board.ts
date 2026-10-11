@@ -798,8 +798,9 @@ if (audit && finalPolish) {
     if (r.polish_reason) review.push(`- почему: ${r.polish_reason}`)
     review.push("", "Было:", "", r.baseline_text ? quote(r.baseline_text) : "> (PDP не было в пакете PR #305)", "", "Стало:", "", quote(r.proposed_description), "")
   }
-  review.push("## HOLD", "", "Эти PDP остаются без изменений до ответа владельца.", "")
-  for (const r of rows.filter((x) => x.action === "HOLD")) {
+  const holdRows = rows.filter((x) => x.action === "HOLD")
+  review.push("## HOLD", "", holdRows.length ? "Эти PDP остаются без изменений до ответа владельца." : "Нет: все PDP из snapshot в пакете.", "")
+  for (const r of holdRows) {
     review.push(`- \`${r.handle}\` ${r.canonical_title}: ${r.polish_reason}`)
   }
   review.push("", "## Статусы", "", ...Object.entries(audit.statuses).map(([k, v]) => `- ${k} - ${v}`))

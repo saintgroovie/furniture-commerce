@@ -1,15 +1,14 @@
 # Editorial copy pass - отчёт генератора
 
-Snapshot sha256: `72ca25143850e383adfdddde29fdd7d1d24d9cd11ffeadaa8ce702a5a46dbe00`
-Packet: `apply/editorial-copy-packet.json` - 246 строк, sha256 (canonical JSON) `19dbd7a1f829eca72d9ac79d9d2bedb82cf0fef5919e964d2084cbef4b481f61`
+Snapshot sha256: `a95b6da51cb60d4526484d1556dbadb472d87e9636796330bb0c84125c3d059c`
+Packet: `apply/editorial-copy-packet.json` - 248 строк, sha256 (canonical JSON) `5baa9ed7e87c34467ebe5fb61e1a7623086e8db85b89153d99bdf8135e9e570c`
 
 ## Действия по PDP
 
 | action | count |
 |---|---|
-| ADD | 91 |
-| HOLD | 2 |
-| REWRITE | 155 |
+| ADD | 92 |
+| REWRITE | 156 |
 
 ## Что было на PDP
 
@@ -24,13 +23,13 @@ Packet: `apply/editorial-copy-packet.json` - 246 строк, sha256 (canonical J
 
 ```json
 {
- "families_total": 168,
+ "families_total": 170,
  "multi_member_families": 37,
  "products_in_multi_member_families": 115,
- "single_member_families": 131,
+ "single_member_families": 133,
  "by_confidence": {
   "EXACT": 135,
-  "STRONG": 33,
+  "STRONG": 35,
   "AMBIGUOUS": 0
  }
 }
@@ -41,15 +40,15 @@ Packet: `apply/editorial-copy-packet.json` - 246 строк, sha256 (canonical J
 | метрика | до | после |
 |---|---|---|
 | pdp_total | 248 | 248 |
-| empty | 42 | 1 |
+| empty | 42 | 0 |
 | technical_import | 50 | 0 |
-| boilerplate_shared_note | 156 | 1 |
+| boilerplate_shared_note | 156 | 0 |
 | exact_duplicate_groups | 1 | 16 |
 | exact_duplicate_products | 3 | 42 |
 | exact_duplicate_groups_cross_family | 1 | 0 |
 | near_duplicate_groups | 0 | 4 |
 | near_duplicate_groups_cross_family | 0 | 0 |
-| raw_dimensions | 140 | 1 |
+| raw_dimensions | 140 | 0 |
 | sku_internal_code | 0 | 0 |
 | ascii_ellipsis | 0 | 0 |
 | title_mismatch_latin_or_echo | 150 | 0 |
@@ -60,7 +59,7 @@ Packet: `apply/editorial-copy-packet.json` - 246 строк, sha256 (canonical J
 | opening_model_template | 0 | 0 |
 | too_short_under_150 | 3 | 15 |
 | too_long_over_900 | 0 | 0 |
-| hold | 0 | 2 |
+| hold | 0 | 0 |
 | length_p10 | 270 | 158 |
 | length_median | 340 | 247 |
 | length_p90 | 418 | 397 |
@@ -80,6 +79,7 @@ Packet: `apply/editorial-copy-packet.json` - 246 строк, sha256 (canonical J
 | Ткань обивки выбирается из 2 вариантов. | 2 | 9 |
 | Корпус стоит на шарообразных ножках. | 2 | 3 |
 | В спинки этой версии вставлены мягкие тканевые панели. | 2 | 2 |
+| Матрас в комплект кровати не входит, его подбирают отдельно под спальное место. | 2 | 2 |
 | Основание опирается на шарообразные ножки. | 2 | 2 |
 | Углы ящиков обведены тёмным орнаментом. | 2 | 2 |
 
@@ -140,7 +140,7 @@ Packet: `apply/editorial-copy-packet.json` - 246 строк, sha256 (canonical J
 | Есть варианты исполнения - уточним в заявке | 102 | 156 |
 | Роспись Templars совпадает с другими предметами серии. | 2 | 2 |
 
-## Примеры до / после (32)
+## Примеры до / после (31)
 
 Выборка: каждый 8-й PDP по handle, плюс добор недостающих типов (Мончелси, Вилли Винки, детская, семейство вариантов, пустое, техническое, битый префикс, HOLD).
 
@@ -330,12 +330,6 @@ Packet: `apply/editorial-copy-packet.json` - 246 строк, sha256 (canonical J
 - до: (пусто)
 - после: Мягкое тканевое сиденье этой небольшой банкетки обрамлено профилированным бортиком, а под ним проходит прямая царга. Стоит банкетка на 4 точёных ножках.
 
-### Кровать-трансформер Вилли Винки (80 × 150) с рисунком (`al-95-1`) - HOLD
-
-- семейство: `ww-convertible-bed`; было: empty
-- до: (пусто)
-- после: (без изменений - HOLD)
-
 ## Банлист и проверки
 
 Запрещённые фразы после: 0.
@@ -346,8 +340,8 @@ Packet: `apply/editorial-copy-packet.json` - 246 строк, sha256 (canonical J
 
 | абзацев | PDP |
 |---|---|
-| 1 | 27 |
-| 2 | 174 |
+| 1 | 28 |
+| 2 | 175 |
 | 3 | 45 |
 
 ## Финальная редакторская шлифовка
@@ -358,20 +352,20 @@ Packet: `apply/editorial-copy-packet.json` - 246 строк, sha256 (canonical J
 
 | статус | семейств до | семейств после | PDP до | PDP после |
 |---|---|---|---|---|
-| GOOD | 22 | 166 | 22 | 242 |
+| GOOD | 22 | 168 | 22 | 244 |
 | POLISH | 28 | 0 | 46 | 0 |
 | TOO_THIN | 25 | 2 | 40 | 4 |
 | TOO_TECHNICAL | 37 | 0 | 52 | 0 |
 | GENERIC | 3 | 0 | 3 | 0 |
 | AWKWARD | 25 | 0 | 46 | 0 |
 | FACT_RISK | 67 | 0 | 104 | 0 |
-| NEW | 21 | 0 | 34 | 0 |
+| NEW | 23 | 0 | 35 | 0 |
 
 - GOOD сразу (PDP): 22
 - изменено в шлифовке (PDP): 191
-- новых PDP: 33
+- новых PDP: 35
 - без изменений (PDP): 22
-- HOLD: al-95-1, ox-14-1
+- HOLD: нет
 - стилевые флаги (телеграф, обрывки, перегруз тире, подпись вместо начала, слишком коротко): до 136 PDP, после 0 PDP
 
 | флаг | до | после |
