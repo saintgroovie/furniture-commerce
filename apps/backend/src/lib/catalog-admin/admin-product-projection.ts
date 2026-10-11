@@ -177,7 +177,9 @@ export function buildAdminProductProjection(
         display_lines.push(
           `${AXIS_OWNER_LABEL[axis]}: ${formatAxisStateValues(state.values_mm, "mm")} мм`
         )
-        if (state.note) display_lines.push(state.note)
+        if (state.positions?.length) {
+          display_lines.push(state.positions.map((position) => position.label).join(" / "))
+        } else if (state.note) display_lines.push(state.note)
         continue
       }
       const value = dims.mm[AXIS_TO_MM_KEY[axis]]

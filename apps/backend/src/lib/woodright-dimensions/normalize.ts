@@ -2,6 +2,7 @@ import type {
   DimensionAxis,
   DimensionAxisState,
   DimensionMmKey,
+  DimensionPosition,
   ResolvedDimensionsMm,
 } from "./types"
 
@@ -60,21 +61,81 @@ function isAxis(value: unknown): value is DimensionAxis {
   return value === "height" || value === "width" || value === "depth"
 }
 
+export type DimensionAxisBag = {
+  states: DimensionAxisState[]
+  /** Axes whose multi-position payload was present and invalid. Scalar must not fill these. */
+  blocked: DimensionAxis[]
+}
+
+function readLabeledPositions(
+  raw: unknown
+): { kind: "absent" } | { kind: "blocked" } | { kind: "ok"; positions: DimensionPosition[] } {
+  if (raw == null) return { kind: "absent" }
+  if (!Array.isArray(raw) || raw.length < 2) return { kind: "blocked" }
+  const positions: DimensionPosition[] = []
+  const values = new Set<number>()
+  const labels = new Set<string>()
+  for (const item of raw) {
+    if (!item || typeof item !== "object") return { kind: "blocked" }
+    const obj = item as Record<string, unknown>
+    const mm = normalizeDimensionMm(obj.value_mm)
+    const label = typeof obj.label === "string" ? obj.label.trim() : ""
+    if (mm == null || !label || values.has(mm) || labels.has(label)) {
+      return { kind: "blocked" }
+    }
+    values.add(mm)
+    labels.add(label)
+    positions.push({ value_mm: mm, label })
+  }
+  return { kind: "ok", positions }
+}
+
 /**
  * Read discrete axis positions from the same dimensions object as scalars.
- * An entry needs two or more distinct positive millimetre values.
- * Malformed entries are dropped. Order is kept. This is not a range.
+ * Labeled `positions` win. An unlabeled list needs two or more distinct
+ * positive millimetre values. Malformed labeled positions block that axis.
+ * Order is kept. This is not a range.
  */
-export function readDimensionAxisStates(raw: unknown): DimensionAxisState[] {
-  if (!raw || typeof raw !== "object") return []
+export function readDimensionAxisBag(raw: unknown): DimensionAxisBag {
+  if (!raw || typeof raw !== "object") return { states: [], blocked: [] }
   const list = (raw as Record<string, unknown>).axis_states
-  if (!Array.isArray(list)) return []
-  const out: DimensionAxisState[] = []
+  if (!Array.isArray(list)) return { states: [], blocked: [] }
+  const states: DimensionAxisState[] = []
+  const blocked: DimensionAxis[] = []
   const seen = new Set<DimensionAxis>()
   for (const item of list) {
     if (!item || typeof item !== "object") continue
     const obj = item as Record<string, unknown>
     if (!isAxis(obj.axis) || seen.has(obj.axis)) continue
+    const labeled = readLabeledPositions(obj.positions)
+    if (labeled.kind === "blocked") {
+      seen.add(obj.axis)
+      blocked.push(obj.axis)
+      continue
+    }
+    if (labeled.kind === "ok") {
+      const fromList = Array.isArray(obj.values_mm)
+        ? obj.values_mm.map((value) => normalizeDimensionMm(value))
+        : null
+      if (
+        fromList &&
+        (fromList.some((value) => value == null) ||
+          fromList.length !== labeled.positions.length ||
+          fromList.some((value, index) => value !== labeled.positions[index].value_mm))
+      ) {
+        seen.add(obj.axis)
+        blocked.push(obj.axis)
+        continue
+      }
+      seen.add(obj.axis)
+      states.push({
+        axis: obj.axis,
+        values_mm: labeled.positions.map((position) => position.value_mm),
+        note: null,
+        positions: labeled.positions,
+      })
+      continue
+    }
     if (!Array.isArray(obj.values_mm) || obj.values_mm.length < 2) continue
     const values: number[] = []
     let valid = true
@@ -90,11 +151,14 @@ export function readDimensionAxisStates(raw: unknown): DimensionAxisState[] {
     const note =
       typeof obj.note === "string" && obj.note.trim() ? obj.note.trim() : null
     seen.add(obj.axis)
-    out.push({ axis: obj.axis, values_mm: values, note })
+    states.push({ axis: obj.axis, values_mm: values, note, positions: null })
   }
-  return out.sort(
-    (a, b) => AXES.indexOf(a.axis) - AXES.indexOf(b.axis)
-  )
+  states.sort((a, b) => AXES.indexOf(a.axis) - AXES.indexOf(b.axis))
+  return { states, blocked }
+}
+
+export function readDimensionAxisStates(raw: unknown): DimensionAxisState[] {
+  return readDimensionAxisBag(raw).states
 }
 
 export function hasAnyDimension(mm: ResolvedDimensionsMm): boolean {

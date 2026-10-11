@@ -77,6 +77,7 @@ import {
   getBuyerFacingProductTitleLayout,
   getArticle,
   getDimensions,
+  getPdpMattressSize,
   getPdpHeroObjectPosition,
   pdpDimensionCells,
 } from "@/lib/product-metadata"
@@ -411,23 +412,47 @@ export default async function ProductPage({
         label: dimensionLabelByAxis[cell.axis],
         mm: cell.mm,
         values_mm: cell.values_mm,
+        labels: cell.labels,
         note: cell.note,
       }))
     : []
 
+  const mattress = getPdpMattressSize(product)
+
   const specRows = [
+    ...(mattress
+      ? [
+          {
+            label: pdpCopy.mattressSize,
+            value: formatRuInline(mattress.display),
+            spec: "mattress-size",
+          },
+        ]
+      : []),
     ...dimensionCells.map((c) => ({
       label: c.label,
-      value: c.values_mm
-        ? `${c.values_mm.join(" / ")} ${pdpCopy.unitMm}${c.note ? ` - ${c.note}` : ""}`
-        : `${c.mm} ${pdpCopy.unitMm}`,
+      value: formatRuInline(
+        c.values_mm
+          ? `${c.values_mm.join(" / ")} ${pdpCopy.unitMm}${
+              c.labels?.length
+                ? ` - ${c.labels.join(" / ")}`
+                : c.note
+                  ? ` - ${c.note}`
+                  : ""
+            }`
+          : `${c.mm} ${pdpCopy.unitMm}`
+      ),
+      spec: `dimension-${c.label}`,
     })),
-    ...(article ? [{ label: pdpCopy.specArticle, value: article }] : []),
+    ...(article
+      ? [{ label: pdpCopy.specArticle, value: article, spec: "article" }]
+      : []),
     ...(collectionLabel
       ? [
           {
             label: pdpCopy.specCollection,
             value: [collectionLabel, subcollectionLabel].filter(Boolean).join(" · "),
+            spec: "collection",
           },
         ]
       : []),
@@ -662,7 +687,9 @@ export default async function ProductPage({
                           ? c.values_mm.map((mm) => mmToCmLabel(mm)).join(" / ")
                           : mmToCmLabel(c.mm ?? 0)}
                         &nbsp;{pdpCopy.unitCm}
-                        {c.note ? (
+                        {c.labels?.length ? (
+                          <span className="pdp-dimension-note">{c.labels.join(" / ")}</span>
+                        ) : c.note ? (
                           <span className="pdp-dimension-note">{c.note}</span>
                         ) : null}
                       </dd>
@@ -816,7 +843,7 @@ export default async function ProductPage({
               <h2>{pdpCopy.specsHeading}</h2>
               <dl className="pdp-specs-list">
                 {specRows.map((row) => (
-                  <div key={row.label} className="pdp-specs-row">
+                  <div key={row.label} className="pdp-specs-row" data-spec={row.spec}>
                     <dt>{row.label}</dt>
                     <dd>{row.value}</dd>
                   </div>

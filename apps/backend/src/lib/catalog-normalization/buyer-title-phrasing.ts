@@ -251,6 +251,7 @@ export function repairLegacyTitleNoise(title: string): string {
   return title
     .replace(/\u00a0/g, " ")
     .replace(/без\s+изн(?![а-яё])\.?/giu, "без изножья")
+    .replace(/с\s+подъ[её]м\.\s*мех(?![а-яё])\.?/giu, "с подъёмным механизмом")
     .replace(/,(?=[^\s\d])/gu, ", ")
     .replace(/\s+,/gu, ",")
     /* «1,5-сп.140*190» → «1,5-сп. (140*190)»: bare bed size joins the other rows' format. */

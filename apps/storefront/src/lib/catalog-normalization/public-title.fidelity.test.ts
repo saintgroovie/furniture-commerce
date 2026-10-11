@@ -112,6 +112,34 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
 }
 
 {
+  const wardrobe = (depth: number) =>
+    resolvePublicProductTitle({
+      handle: "te-40-2",
+      title: "Шкаф комбинированный 560 Templars",
+      metadata: {
+        collection: "willie-winkie",
+        motif_slug: "templars",
+        painting_name: "Templars",
+        dimensions: { depth_mm: depth, width_mm: 1930, height_mm: 1973 },
+      },
+    }).public_title
+  assert.doesNotMatch(wardrobe(560), /560/)
+  assert.match(wardrobe(560), /^Шкаф комбинированный/)
+  assert.match(wardrobe(440), /560/)
+
+  const keeps = (title: string, depth: number) =>
+    resolvePublicProductTitle({
+      title,
+      metadata: { collection: "willie-winkie", dimensions: { depth_mm: depth } },
+    }).public_title
+  assert.match(keeps("Полка 900 × 440", 440), /900 × 440/)
+  assert.match(keeps("Полка 900*440", 440), /900 × 440/)
+  assert.match(keeps("Шкаф 560 ММ", 560), /560 ММ/)
+  assert.match(keeps("Шкаф 560 mm", 560), /560 mm/)
+  assert.match(keeps("Этажерка 6 полок", 6), /6 полок/)
+}
+
+{
   assert.equal(extractLatinModelName("Кровать GR-09-1"), null)
   assert.equal(extractLatinModelName("Консоль Step"), "Step")
 }

@@ -25,6 +25,7 @@ const ALLOWED_ROOT = new Set([
   "public_urls",
   "verification",
   "notes",
+  "release_mode",
 ])
 const ALLOWED_PREVIOUS = new Set(["release_sha", "backend_digest", "storefront_digest"])
 const ALLOWED_ROLLBACK = new Set([
@@ -41,7 +42,7 @@ const ALLOWED_VERIFICATION = new Set([
   "first_catalog_title",
   "notes",
 ])
-const ALLOWED_IMAGE = new Set(["repository", "tag", "digest", "oci_revision", "oci_source"])
+const ALLOWED_IMAGE = new Set(["repository", "tag", "digest", "oci_revision", "oci_source", "reused"])
 
 function isHttpUrl(s) {
   return typeof s === "string" && /^https?:\/\/.+/i.test(s)
@@ -57,7 +58,7 @@ function rejectExtra(obj, allowed, prefix, errors) {
   }
 }
 
-function validateImage(side, img, releaseSha, errors) {
+function validateImage(side, img, releaseSha, errors, opts = {}) {
   if (!img || typeof img !== "object") {
     fail(`${side} required`, errors)
     return
@@ -71,6 +72,14 @@ function validateImage(side, img, releaseSha, errors) {
   if (img.oci_source != null && img.oci_source !== "" && !isHttpUrl(img.oci_source)) {
     fail(`${side}.oci_source must be http(s) URL`, errors)
   }
+  if (opts.reused) {
+    if (img.reused !== true) fail(`${side}.reused must be true`, errors)
+    if (releaseSha && img.oci_revision === releaseSha) {
+      fail(`${side}.oci_revision must stay the reused revision, not release_sha`, errors)
+    }
+    return
+  }
+  if (img.reused != null) fail(`${side}.reused is only valid for an isolated reused backend`, errors)
   if (releaseSha && img.oci_revision && img.oci_revision !== releaseSha) {
     fail(`${side}.oci_revision must equal release_sha`, errors)
   }
@@ -101,9 +110,16 @@ function validateManifest(doc, errors) {
   const envs = ["staging", "production", "candidate", "local-canonical"]
   if (!envs.includes(doc.target_environment)) fail("target_environment invalid", errors)
 
-  validateImage("backend", doc.backend, doc.release_sha, errors)
+  const isolated = doc.release_mode === "isolated_storefront"
+  if (doc.release_mode != null && doc.release_mode !== "main" && !isolated) {
+    fail("release_mode must be main or isolated_storefront", errors)
+  }
+  if (isolated && doc.database_migrations.length !== 0) {
+    fail("isolated storefront release forbids database_migrations", errors)
+  }
+  validateImage("backend", doc.backend, doc.release_sha, errors, { reused: isolated })
   validateImage("storefront", doc.storefront, doc.release_sha, errors)
-  if (doc.backend?.oci_revision && doc.storefront?.oci_revision) {
+  if (!isolated && doc.backend?.oci_revision && doc.storefront?.oci_revision) {
     if (doc.backend.oci_revision !== doc.storefront.oci_revision) {
       fail("backend/storefront oci_revision SHA mismatch", errors)
     }
