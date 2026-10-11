@@ -94,4 +94,94 @@ assert.deepEqual(normalizedOnly.axis_states?.[0]?.values_mm, [850, 1140])
 assert.equal(normalizedOnly.width_mm, 1202)
 assert.equal(normalizedOnly.height_mm, undefined)
 
+const ordinary = getDimensions({
+  metadata: { dimensions: { height_mm: 850, width_mm: 1202, depth_mm: 502 } },
+})
+assert.equal(ordinary?.height_mm, 850)
+assert.equal(ordinary?.axis_states, undefined)
+assert.deepEqual(
+  pdpDimensionCells(ordinary!).map((cell) => [cell.axis, cell.mm, cell.values_mm]),
+  [
+    ["height", 850, undefined],
+    ["width", 1202, undefined],
+    ["depth", 502, undefined],
+  ]
+)
+
+const labeled = getDimensions({
+  metadata: {
+    dimensions: {
+      width_mm: 1202,
+      depth_mm: 502,
+      axis_states: [
+        {
+          axis: "height",
+          positions: [
+            { value_mm: 850, label: "Зеркало опущено" },
+            { value_mm: 1140, label: "Зеркало поднято" },
+          ],
+        },
+      ],
+    },
+  },
+})
+const labeledCells = pdpDimensionCells(labeled!)
+assert.equal(labeled?.height_mm, undefined)
+assert.deepEqual(labeledCells[0].values_mm, [850, 1140])
+assert.deepEqual(labeledCells[0].labels, ["Зеркало опущено", "Зеркало поднято"])
+assert.equal(labeledCells[0].note, null)
+assert.deepEqual(
+  labeledCells.map((cell) => cell.axis),
+  ["height", "width", "depth"]
+)
+assert.equal(formatDimensionsCompact(labeled!), "85/114\u202F×\u202F120\u202F×\u202F50")
+assert.ok(!formatDimensionsCompact(labeled!).includes("–"))
+
+const both = getDimensions({
+  metadata: {
+    dimensions: {
+      height_mm: 850,
+      width_mm: 1202,
+      depth_mm: 502,
+      axis_states: [
+        {
+          axis: "height",
+          positions: [
+            { value_mm: 850, label: "Зеркало опущено" },
+            { value_mm: 1140, label: "Зеркало поднято" },
+          ],
+        },
+      ],
+    },
+  },
+})
+const bothCells = pdpDimensionCells(both!)
+assert.equal(bothCells.filter((cell) => cell.axis === "height").length, 1)
+assert.deepEqual(bothCells[0].values_mm, [850, 1140])
+assert.equal(both?.height_mm, undefined)
+
+const malformed = getDimensions({
+  metadata: {
+    dimensions: {
+      height_mm: 850,
+      width_mm: 1202,
+      depth_mm: 502,
+      axis_states: [
+        {
+          axis: "height",
+          positions: [
+            { value_mm: 850, label: "Зеркало опущено" },
+            { value_mm: 850, label: "Зеркало поднято" },
+          ],
+        },
+      ],
+    },
+  },
+})
+assert.equal(malformed?.height_mm, undefined)
+assert.equal(malformed?.axis_states, undefined)
+assert.equal(malformed?.width_mm, 1202)
+assert.equal(malformed?.depth_mm, 502)
+assert.ok(!pdpDimensionCells(malformed!).some((cell) => cell.axis === "height"))
+
 console.log("dimension-states.fidelity.test.ts: ok")

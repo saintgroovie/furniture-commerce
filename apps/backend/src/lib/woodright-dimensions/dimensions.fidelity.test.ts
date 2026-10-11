@@ -318,4 +318,60 @@ assert.equal(normalizeDimensionMm(null), null)
   assert.equal(r.provenance.height, "variant")
 }
 
+// Labeled positions stay in source order and hide the scalar height.
+{
+  const r = resolveFurnitureDimensions({
+    product: {
+      metadata: {
+        dimensions: {
+          height_mm: 850,
+          width_mm: 1202,
+          depth_mm: 502,
+          axis_states: [
+            {
+              axis: "height",
+              positions: [
+                { value_mm: 850, label: "Зеркало опущено" },
+                { value_mm: 1140, label: "Зеркало поднято" },
+              ],
+            },
+          ],
+        },
+      },
+    },
+  })
+  assert.equal(r.mm.height_mm, null)
+  assert.equal(r.mm.width_mm, 1202)
+  assert.deepEqual(r.axis_states[0].values_mm, [850, 1140])
+  assert.deepEqual(
+    r.axis_states[0].positions?.map((position) => position.label),
+    ["Зеркало опущено", "Зеркало поднято"]
+  )
+  assert.equal(formatAxisStateValues(r.axis_states[0].values_mm, "cm"), "85 / 114")
+}
+
+// Malformed labeled positions do not fall back to a conflicting scalar height.
+{
+  const r = resolveFurnitureDimensions({
+    product: {
+      metadata: {
+        dimensions: {
+          height_mm: 850,
+          width_mm: 1202,
+          depth_mm: 502,
+          axis_states: [
+            {
+              axis: "height",
+              positions: [{ value_mm: 850, label: "" }],
+            },
+          ],
+        },
+      },
+    },
+  })
+  assert.equal(r.mm.height_mm, null)
+  assert.equal(r.mm.width_mm, 1202)
+  assert.deepEqual(r.axis_states, [])
+}
+
 console.log("dimensions.fidelity.test.ts: ok")

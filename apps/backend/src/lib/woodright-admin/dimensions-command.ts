@@ -156,6 +156,7 @@ export function applyDimensionsToMetadata(
             axis_states: keptStates.map((state) => ({
               axis: state.axis,
               values_mm: state.values_mm,
+              ...(state.positions?.length ? { positions: state.positions } : {}),
               ...(state.note ? { note: state.note } : {}),
             })),
           }
