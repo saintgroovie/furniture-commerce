@@ -107,20 +107,24 @@ export function PartnersEditorial({ partners }: { partners: StorePartner[] }) {
   const openDeck = (event: MouseEvent<HTMLElement>, partner: StorePartner, index = 0) => {
     if (!slidesOf(partner).length) return
     const anchor = event.currentTarget instanceof HTMLAnchorElement ? event.currentTarget : null
-    if (
-      !isPlainDeckActivation({
-        defaultPrevented: event.defaultPrevented,
-        button: event.button,
-        metaKey: event.metaKey,
-        ctrlKey: event.ctrlKey,
-        shiftKey: event.shiftKey,
-        altKey: event.altKey,
-        target: anchor?.getAttribute("target") ?? null,
-      })
-    ) {
+    if (anchor) {
+      if (
+        !isPlainDeckActivation({
+          defaultPrevented: event.defaultPrevented,
+          button: event.button,
+          metaKey: event.metaKey,
+          ctrlKey: event.ctrlKey,
+          shiftKey: event.shiftKey,
+          altKey: event.altKey,
+          target: anchor.getAttribute("target"),
+        })
+      ) {
+        return
+      }
+      event.preventDefault()
+    } else if (event.defaultPrevented || event.button !== 0) {
       return
     }
-    event.preventDefault()
     markReturn(event)
     setOpen({ partner, index })
     window.history.pushState(deckHistoryState(partner.slug, index), "")
