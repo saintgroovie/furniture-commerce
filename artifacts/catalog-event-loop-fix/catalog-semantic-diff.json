@@ -1,4 +1,14 @@
 {
-  "status": "not_run",
-  "reason": "No disposable production-scale database. The previous restore rehearsal hung on docker run postgres:15-alpine. This diff does not change projected fields; it chunks the same queries and yields. A full id/price/image diff against production data is still required before cutover."
+  "unexpected_commercial_differences": 0,
+  "price_differences": 0,
+  "baseline_products": 248,
+  "candidate_products": 248,
+  "order_equal": true,
+  "only_baseline": [],
+  "only_candidate": [],
+  "drafts_in_candidate_response": 0,
+  "bytes_baseline": 558274,
+  "bytes_candidate": 558274,
+  "compared": ["id", "handle", "title", "status", "thumbnail", "images", "metadata", "variants", "product_classification"],
+  "canonical": "JSON stringify with sorted keys, no fields dropped"
 }

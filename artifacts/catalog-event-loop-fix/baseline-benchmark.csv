@@ -1,10 +1,20 @@
-source,metric,value,notes
-live_logs_before_2026-10-11T19:48:50Z,catalog_p50_ms,1266,246 requests duration field is milliseconds
-live_logs_before_2026-10-11T19:48:50Z,catalog_p95_ms,1927,
-live_logs_before_2026-10-11T19:48:50Z,catalog_max_ms,3726,
-live_one_catalog_2026-10-11T19:54Z,health_during_catalog_max_ms,415,in-container /health while one 1571 ms catalog ran
-live_one_catalog_2026-10-11T19:54Z,health_idle_max_ms,34,12 idle probes
-live_payload_2026-10-12,bytes,559556,248 products
-live_payload_2026-10-12,stringify_ms,4.76,not the stall
-isolated_candidate,catalog_p50_ms,,not run
-isolated_candidate,health_under_catalog_max_ms,,not run
+metric,value
+catalog_n,30
+catalog_p50_ms,948.87
+catalog_p90_ms,1092.07
+catalog_p95_ms,1171.02
+catalog_max_ms,1175.37
+bytes,558274
+sql_p50,14
+cpu_p50_ms,875
+rss_peak_bytes,2420277248
+health_under_catalog_n,320
+health_under_catalog_p50_ms,3.41
+health_under_catalog_p95_ms,7.29
+health_under_catalog_max_ms,21.71
+health_server_max_ms,39
+event_loop_delay_p95_ms,27.23
+event_loop_delay_max_p50_ms,281.02
+concurrency_1_wall_ms,1041
+concurrency_2_wall_ms,1607
+concurrency_4_wall_ms,3355
