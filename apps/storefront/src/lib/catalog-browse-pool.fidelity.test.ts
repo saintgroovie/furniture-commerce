@@ -90,7 +90,7 @@ function product(
 }
 
 {
-  const products = [product("m1", { title: "Main" })]
+  const products = [product("m1", { title: "Комод высокий" })]
   const entries = catalogBrowseDisplayEntries(products, {
     category: [],
     collection: [],
@@ -100,7 +100,21 @@ function product(
   assert.equal(jsonLd?.numberOfItems, 1)
   const items = jsonLd?.itemListElement as Array<Record<string, unknown>>
   assert.equal(items[0]?.url, "https://woodright-demo.ru/product/m1")
-  assert.equal(items[0]?.name, "Main")
+  assert.equal(items[0]?.name, "Высокий комод Гринвич")
+}
+
+{
+  const products = [
+    product("prod_01HX", { title: "Кровать 1-сп. (90×190)", handle: "ol-14-1", collection: "oliver" }),
+  ]
+  const entries = catalogBrowseDisplayEntries(products, { category: [], collection: [] })
+  const items = catalogItemListJsonLdPayload("https://woodright.ru", entries)
+    ?.itemListElement as Array<Record<string, unknown>>
+  assert.equal(items[0]?.url, "https://woodright.ru/product/ol-14-1", "ItemList points at the canonical handle URL")
+  assert.equal(
+    String(items[0]?.name).replace(/[\u00a0\u202f]/g, " "),
+    "Односпальная кровать Оливер (90 × 190)"
+  )
 }
 
 {

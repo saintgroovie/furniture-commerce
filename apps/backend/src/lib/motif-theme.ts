@@ -82,6 +82,29 @@ export function isLegacyEnglishMotifTitle(title: string): boolean {
   return MOTIF_LEGACY_ENGLISH_TITLE_SET.has(title.trim().toLowerCase())
 }
 
+/**
+ * Owner decision 2026-10-11: painting data (`motif_slug` or `painting_name`) is buyer evidence
+ * unless the catalog directly contradicts it. For these pages nothing derived from painting
+ * metadata (SEO name, motif pages, PDP motif selector, related-in-motif) shows the painting.
+ * Stored product titles keep their legacy wording (cart lines echo them) until the separate
+ * data fix is applied. Keyed by product handle; the value is the contradicting evidence.
+ */
+export const PAINTING_PRESENTATION_SUPPRESSED: Readonly<Record<string, string>> = Object.freeze({
+  "bri-95-3":
+    "painting_name Brigantine Ivory without motif_slug; the title says «с тканью» and the only photo shows fabric panels without the Brigantine ships",
+  "te-55-1":
+    "motif_slug templars; the only photo shows a plain cream bench with a green seat, without the Templars heraldry or palette",
+})
+
+export function isPaintingPresentationSuppressed(product: Record<string, unknown>): boolean {
+  const handle = product.handle
+  if (typeof handle !== "string") return false
+  return Object.prototype.hasOwnProperty.call(
+    PAINTING_PRESENTATION_SUPPRESSED,
+    handle.trim().toLowerCase()
+  )
+}
+
 /** Keys allowed on motif product-card metadata (if ever nested). Prefer flat DTO. */
 export const MOTIF_BUYER_METADATA_KEYS = [
   "motif_key",
@@ -197,6 +220,7 @@ export function isWillieWinkieMotifProduct(
 ): boolean {
   const meta = metaOf(product)
   if (asNonEmptyString(meta.collection) !== WILLIE_WINKIE_COLLECTION) return false
+  if (isPaintingPresentationSuppressed(product)) return false
   return (
     asNonEmptyString(meta.motif_key) != null &&
     asNonEmptyString(meta.motif_slug) != null &&

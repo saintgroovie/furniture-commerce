@@ -4,6 +4,7 @@ import { resolveCatalogCardPrice } from "@/lib/catalog-card-price"
 import { resolveSalePrice } from "@/lib/sale-price"
 import type { DisplayGroup } from "@/lib/display-group"
 import { formatGroupHint } from "@/lib/display-group"
+import { productCanonicalPath } from "@/lib/product-json-ld"
 import {
   getCollectionLabel,
   getSubcollectionLabel,
@@ -123,7 +124,7 @@ export function ProductCard({
 
   const handle = product.handle ?? ""
   const isOliver = handle.startsWith("ol-")
-  const productHref = `/product/${product.id}`
+  const productHref = productCanonicalPath(product, String(product.id ?? ""))
   const displayTitle = getBuyerFacingProductTitle(product as Record<string, unknown>)
   const thumbSrc = cardThumbnailSrc(product)
   const mainSrcForCard = thumbSrc ?? ""
