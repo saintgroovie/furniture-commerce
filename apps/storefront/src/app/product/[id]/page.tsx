@@ -380,7 +380,7 @@ export default async function ProductPage({
 
   const oliverBuyerGallery =
     isOliver && !useExecutionPdp && !bedMatrixMedia && !paintMatrixMedia
-      ? buildPdpBuyerFacingGallery(product)
+      ? buildPdpBuyerFacingGallery(viewProduct)
       : null
 
   const mainImage =
@@ -388,7 +388,7 @@ export default async function ProductPage({
       executionPdpMedia?.mainSrc ??
       bedMatrixMedia?.mainSrc ??
       paintMatrixMedia?.mainSrc) ||
-    pdpHeroThumbnail(product)
+    pdpHeroThumbnail(viewProduct)
   const mainNorm = mainImage ?? ""
   const heroObjectPosition = getPdpHeroObjectPosition(product)
   const pdpExtraSrcs = oliverBuyerGallery
