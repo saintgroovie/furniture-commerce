@@ -84,6 +84,16 @@ class DecisionTest(unittest.TestCase):
             self.assertEqual(row["family_key"], f"standalone/{row['sku']}", row["sku"])
         self.assertEqual(result["summary"]["safe_families"], 0)
         self.assertEqual(result["summary"]["rejected_combinations"], 0)
+        by = {row["sku"]: row for row in rows}
+        # Buyer titles keep the painting name. The two Brigantine themes must
+        # not collapse into one Russian label.
+        self.assertIn("Albion", by["al-14-1"]["proposed_clean_title"])
+        self.assertIn("Brigantine Blue", by["brb-14-2"]["proposed_clean_title"])
+        self.assertIn("Brigantine Ivory", by["bri-05-1"]["proposed_clean_title"])
+        self.assertNotEqual(
+            by["brb-14-2"]["proposed_clean_title"],
+            by["bri-05-1"]["proposed_clean_title"],
+        )
 
     def test_willie_known_motif_does_not_absorb_unknown(self):
         rows = classify([
