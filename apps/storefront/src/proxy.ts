@@ -153,7 +153,14 @@ export async function proxy(request: NextRequest) {
     } catch {
       key = null
     }
-    const retired = key ? retiredRedirectTarget(key, false) : null
+    if (key == null) {
+      const missing = new NextResponse("Not Found", {
+        status: 404,
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      })
+      return applySecurityHeaders(request, missing, nonce, csp)
+    }
+    const retired = retiredRedirectTarget(key, false)
     if (retired && !(await productIsStillPublic(key))) {
       const url = request.nextUrl.clone()
       url.pathname = `/product/${retired.survivorHandle}`
