@@ -150,12 +150,11 @@ export async function proxy(request: NextRequest) {
     const key = decodeURIComponent(productHandle[1])
     const retired = retiredRedirectTarget(key, false)
     if (retired && !(await productIsStillPublic(key))) {
-      return redirectTo(
-        request,
-        `/product/${retired.survivorHandle}?variant=${encodeURIComponent(retired.variantId)}`,
-        nonce,
-        csp
-      )
+      const url = request.nextUrl.clone()
+      url.pathname = `/product/${retired.survivorHandle}`
+      url.searchParams.set("variant", retired.variantId)
+      const redirect = NextResponse.redirect(url, 308)
+      return applySecurityHeaders(request, redirect, nonce, csp)
     }
   }
 

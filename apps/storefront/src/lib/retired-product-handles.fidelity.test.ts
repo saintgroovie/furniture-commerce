@@ -24,5 +24,6 @@ assert.equal(retiredRedirectTarget("ol-15-1", false)?.variantId, ol15.variantId)
 const proxy = readFileSync(join(process.cwd(), "src/proxy.ts"), "utf8")
 assert.match(proxy, /productIsStillPublic/)
 assert.match(proxy, /retiredRedirectTarget/)
+assert.match(proxy, /searchParams\.set\("variant"/)
 
 console.log("retired-product-handles.fidelity.test.ts: ok")

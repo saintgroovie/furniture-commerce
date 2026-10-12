@@ -73,7 +73,7 @@ export function PdpSizeChips({
     chipTiers: MaterialTierOption[] | null | undefined
   ): string | null => {
     if (basePrice == null) return null
-    const tiers = chipTiers ?? materialTiers
+    const tiers = chipTiers === undefined ? materialTiers : chipTiers
     let materialMultiplier = 1
     if (tiers && tiers.length > 0) {
       const tier = tiers.find((item) => item.code === selectedCode) ?? tiers[0]
