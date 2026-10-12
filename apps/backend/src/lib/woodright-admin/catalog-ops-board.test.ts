@@ -6,6 +6,7 @@ import {
   activeTasks,
   buildCatalogOpsBoard,
   matchPhotoFilename,
+  taskMatchesQuery,
   tasksInLane,
   type CatalogOpsProduct,
 } from "./catalog-ops-board.ts"
@@ -130,5 +131,28 @@ describe("catalog ops board", () => {
     assert.equal(watch.length, 1)
     assert.equal(watch[0].owner_input_required, false)
     assert.equal(watch[0].severity, "quiet")
+  })
+
+  it("finds a task by SKU, title or problem and ignores an unrelated word", () => {
+    const board = buildCatalogOpsBoard([
+      ...FIVE.slice(0, 4).map((handle) =>
+        product({
+          handle,
+          collection_label: "Принцесса Роза",
+          image_urls: [`/static/imports/${PHOTO_PLACEHOLDER_HASH}.jpg`],
+        })
+      ),
+      product({
+        handle: "ol-86-1",
+        collection_label: "Оливер",
+        image_urls: [`/static/imports/${CANOPY_SCAN_HASH}.png`],
+      }),
+    ])
+    const photo = board.tasks.find((task) => task.task_id === "photo-catalog")
+    assert.ok(photo)
+    assert.equal(taskMatchesQuery(photo, "pr-68-1"), true)
+    assert.equal(taskMatchesQuery(photo, "принцесса"), true)
+    assert.equal(taskMatchesQuery(photo, "первого фото"), true)
+    assert.equal(taskMatchesQuery(photo, "черновик"), false)
   })
 })

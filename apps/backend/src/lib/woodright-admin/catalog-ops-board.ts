@@ -59,6 +59,7 @@ export type PhotoItem = {
 export type AffectedItem = {
   handle: string
   title: string
+  collection_label?: string | null
 }
 
 export type OpsTask = {
@@ -258,7 +259,11 @@ function photoTask(products: CatalogOpsProduct[]): OpsTask | null {
     status: "active",
     lane: "do",
     resolution_type: "NEW_PHOTOGRAPHY",
-    affected_items: waiting.map((item) => ({ handle: item.handle, title: item.title })),
+    affected_items: waiting.map((item) => ({
+      handle: item.handle,
+      title: item.title,
+      collection_label: live.get(item.handle)?.collection_label ?? null,
+    })),
     affected_count: waiting.length,
     next_action: "Снять товары по брифу и загрузить файлы одним комплектом",
     primary_action: "Открыть съёмку",
@@ -290,7 +295,11 @@ function priceTask(products: CatalogOpsProduct[]): OpsTask | null {
     status: "active",
     lane: "do",
     resolution_type: "NEW_SOURCE_DATA",
-    affected_items: rows.map((product) => ({ handle: product.handle, title: product.title })),
+    affected_items: rows.map((product) => ({
+      handle: product.handle,
+      title: product.title,
+      collection_label: product.collection_label,
+    })),
     affected_count: rows.length,
     next_action: "Открыть список и поставить цену из принятого прайса",
     primary_action: "Открыть товары",
@@ -317,7 +326,11 @@ function invisibleTask(products: CatalogOpsProduct[]): OpsTask | null {
     status: "active",
     lane: "automatic",
     resolution_type: "AUTOMATIC_FIX",
-    affected_items: rows.map((product) => ({ handle: product.handle, title: product.title })),
+    affected_items: rows.map((product) => ({
+      handle: product.handle,
+      title: product.title,
+      collection_label: product.collection_label,
+    })),
     affected_count: rows.length,
     next_action: "Исправить видимость пакетом",
     primary_action: "Разобрать видимость",
@@ -410,6 +423,21 @@ export function buildCatalogOpsBoard(products: CatalogOpsProduct[]): CatalogOpsB
     },
     tasks,
   }
+}
+
+export function taskMatchesQuery(task: OpsTask, query: string): boolean {
+  const needle = query.trim().toLowerCase()
+  if (!needle) return true
+  const haystack = [
+    task.title,
+    task.problem,
+    task.next_action,
+    ...task.affected_items.flatMap((item) => [item.handle, item.title, item.collection_label ?? ""]),
+    ...(task.photo_items ?? []).flatMap((item) => [item.handle, item.title, item.group_label, item.brief]),
+  ]
+    .join(" ")
+    .toLowerCase()
+  return haystack.includes(needle)
 }
 
 export function tasksInLane(board: CatalogOpsBoard, lane: BoardLane): OpsTask[] {

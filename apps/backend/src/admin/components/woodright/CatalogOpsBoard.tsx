@@ -5,6 +5,7 @@ import {
   buildCatalogOpsBoard,
   frozenGroupSummary,
   matchPhotoFilename,
+  taskMatchesQuery,
   type CatalogOpsProduct,
   type OpsTask,
   type PhotoItem,
@@ -61,8 +62,11 @@ export function CatalogOpsBoard({
     [products]
   )
   const [filter, setFilter] = useState<FilterId>("active")
+  const [query, setQuery] = useState("")
   const [selectedId, setSelectedId] = useState<string | null>(initialTaskId)
-  const visible = board.tasks.filter((task) => matchesFilter(task, filter))
+  const visible = board.tasks.filter(
+    (task) => matchesFilter(task, filter) && taskMatchesQuery(task, query)
+  )
   const selected = board.tasks.find((task) => task.task_id === selectedId) ?? visible[0] ?? null
   const summary = board.summary
   const nothingActive = activeTasks(board).length === 0
@@ -75,6 +79,16 @@ export function CatalogOpsBoard({
         <Summary label="Ждут съёмку" value={summary.waiting_photos} />
         <Summary label="Критично" value={summary.critical} />
       </div>
+
+      <label className="block max-w-md">
+        <span className="sr-only">Поиск</span>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Артикул, название, коллекция"
+          className="w-full text-sm bg-transparent border border-ui-border-base rounded-md px-3 py-2"
+        />
+      </label>
 
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="Фильтр задач">
         {FILTERS.map((item) => (
@@ -121,9 +135,11 @@ export function CatalogOpsBoard({
           {filter === "active" ? (
             <QuietSections
               waiting={board.tasks.filter(
-                (task) => task.status === "frozen" || task.lane === "watch" || task.lane === "waiting"
+                (task) =>
+                  (task.status === "frozen" || task.lane === "watch" || task.lane === "waiting") &&
+                  taskMatchesQuery(task, query)
               )}
-              done={board.tasks.filter((task) => task.status === "done")}
+              done={board.tasks.filter((task) => task.status === "done" && taskMatchesQuery(task, query))}
               onSelect={setSelectedId}
             />
           ) : null}
