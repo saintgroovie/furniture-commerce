@@ -115,3 +115,12 @@ export function retiredProductRedirect(
   const key = handle.trim().toLowerCase()
   return RETIRED_PRODUCT_HANDLES[key] ?? RETIRED_PRODUCT_IDS[key] ?? null
 }
+
+/** A still-published product keeps its own URL. Redirect only after it is gone. */
+export function retiredRedirectTarget(
+  handle: string,
+  productIsPublic: boolean
+): { survivorHandle: string; variantId: string } | null {
+  if (productIsPublic) return null
+  return retiredProductRedirect(handle)
+}

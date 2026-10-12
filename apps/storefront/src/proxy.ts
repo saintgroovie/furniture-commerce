@@ -8,7 +8,9 @@ import { buildImgSrcDirective } from "@/lib/analytics-config"
 import { buildConnectSrcDirective } from "@/lib/csp-policy"
 import { storefrontRuntimeIdentityHeaders } from "@/lib/runtime-identity-headers"
 import { legacyBuyerRedirectDestination } from "@/lib/legacy-buyer-redirects"
-import { retiredProductRedirect } from "@/lib/retired-product-handles"
+import { retiredRedirectTarget } from "@/lib/retired-product-handles"
+import { getBaseUrl, medusaFetch } from "@/lib/api/base"
+import { isBuyerPublicProductStatus } from "@/lib/buyer-publication"
 import { stripLegacyQueryTokenFromOrderTrackSearch } from "@/lib/order-track-token-handoff"
 import { isProductionQaPathBlocked } from "@/lib/production-qa-exposure"
 
@@ -86,7 +88,26 @@ function redirectTo(request: NextRequest, destination: string, nonce: string, cs
   return applySecurityHeaders(request, redirect, nonce, csp)
 }
 
-export function proxy(request: NextRequest) {
+async function productIsStillPublic(key: string): Promise<boolean> {
+  try {
+    const base = getBaseUrl()
+    const byId = await medusaFetch(`${base}/store/products/${encodeURIComponent(key)}`)
+    if (byId.ok) {
+      const body = (await byId.json()) as { product?: { status?: unknown } }
+      return isBuyerPublicProductStatus(body.product?.status)
+    }
+    if (byId.status !== 404) return true
+    const search = new URLSearchParams({ handle: key, limit: "1" })
+    const listed = await medusaFetch(`${base}/store/products?${search}`)
+    if (!listed.ok) return true
+    const data = (await listed.json()) as { products?: Array<{ status?: unknown }> }
+    return isBuyerPublicProductStatus(data.products?.[0]?.status)
+  } catch {
+    return true
+  }
+}
+
+export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
 
   const csp = [
@@ -126,8 +147,9 @@ export function proxy(request: NextRequest) {
 
   const productHandle = request.nextUrl.pathname.match(/^\/product\/([^/]+)$/)
   if (productHandle) {
-    const retired = retiredProductRedirect(decodeURIComponent(productHandle[1]))
-    if (retired) {
+    const key = decodeURIComponent(productHandle[1])
+    const retired = retiredRedirectTarget(key, false)
+    if (retired && !(await productIsStillPublic(key))) {
       return redirectTo(
         request,
         `/product/${retired.survivorHandle}?variant=${encodeURIComponent(retired.variantId)}`,

@@ -4,7 +4,7 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { retiredProductRedirect } from "./retired-product-handles"
+import { retiredProductRedirect, retiredRedirectTarget } from "./retired-product-handles"
 
 const ol15 = retiredProductRedirect("ol-15-1")
 assert.ok(ol15)
@@ -18,8 +18,11 @@ assert.ok(legacyShell)
 assert.equal(legacyShell.survivorHandle, "ol-14-1")
 assert.equal(legacyShell.variantId, "variant_01KNTBXBMBTGQAE0VQC94SFJY6")
 assert.equal(retiredProductRedirect("prod_01KNTBXADDACBVH2BM1JSB2MWH"), null)
+assert.equal(retiredRedirectTarget("ol-15-1", true), null)
+assert.equal(retiredRedirectTarget("ol-15-1", false)?.variantId, ol15.variantId)
 
 const proxy = readFileSync(join(process.cwd(), "src/proxy.ts"), "utf8")
-assert.match(proxy, /retiredProductRedirect\(decodeURIComponent/)
+assert.match(proxy, /productIsStillPublic/)
+assert.match(proxy, /retiredRedirectTarget/)
 
 console.log("retired-product-handles.fidelity.test.ts: ok")
