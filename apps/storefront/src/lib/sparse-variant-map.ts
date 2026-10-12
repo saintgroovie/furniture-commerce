@@ -182,6 +182,8 @@ export function withVariantCapabilities(
     }
   }
   const next: Record<string, unknown> = { ...product, metadata }
+  const sku = typeof variant.sku === "string" ? variant.sku.trim().toLowerCase() : ""
+  if (sku.startsWith("pv-")) metadata.media_identity_handle = sku
   const gallery = variantMeta?.gallery_urls
   if (Array.isArray(gallery) && gallery.length > 0 && gallery.every((url) => typeof url === "string" && url)) {
     next.images = gallery.map((url) => ({ url }))

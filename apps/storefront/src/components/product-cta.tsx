@@ -101,6 +101,15 @@ export function ProductCta({
   function requestQuery(extra?: Record<string, string | undefined>): string {
     const params = new URLSearchParams()
     if (productId) params.set("product_id", productId)
+    const skuSource =
+      variantForCart && typeof variantForCart === "object" && "sku" in variantForCart
+        ? variantForCart
+        : undefined
+    const sku =
+      skuSource && typeof skuSource === "object" && "sku" in skuSource
+        ? String((skuSource as { sku?: unknown }).sku ?? "").trim()
+        : ""
+    if (sku) params.set("sku", sku)
     const tier = selectedMaterialTier()
     if (tier) params.set("material", tier.label)
     const hinge = selectedHingeSide()
