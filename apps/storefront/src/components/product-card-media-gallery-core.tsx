@@ -54,6 +54,7 @@ import {
   type PdpExecutionSpec,
   type PdpPurchaseGate,
 } from "@/lib/cart/pdp-selection"
+import { offeredExecutionKey } from "@/lib/offered-execution-key"
 import { pdpCopy, pdpLightboxCopy, states } from "@/lib/woodright-copy"
 
 type Props = {
@@ -86,6 +87,11 @@ type Props = {
   atfHero?: boolean
   /** Product handle for evidence-backed near-dup collapse. */
   productHandle?: string
+  /**
+   * Selected variant id. Changing it remounts execution state so a finish
+   * from the previous SKU cannot stay selected.
+   */
+  executionScopeKey?: string
 }
 
 function resolveCombinedMedia(
@@ -1765,9 +1771,10 @@ function ProductCardMediaGalleryCoreInner({
     }
 
     const standardFinishKey = finishVariants?.[0]?.key ?? null
+    const offeredFinishKey = offeredExecutionKey(activeFinishKey, finishVariants)
     const finishKeyForPrice =
       showFinish || isProvencePaintWood
-        ? activeFinishKey ?? standardFinishKey
+        ? offeredFinishKey ?? standardFinishKey
         : null
 
     const gate: PdpPurchaseGate = {
@@ -2193,6 +2200,7 @@ export function ProductCardMediaGalleryCore(props: Props) {
       )
       .join("\u0003") ?? "",
     props.productHandle ?? "",
+    props.executionScopeKey ?? "",
     props.layout ?? "card",
   ].join("|")
   return <ProductCardMediaGalleryCoreInner key={remountKey} {...props} />

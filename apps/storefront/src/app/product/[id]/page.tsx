@@ -674,6 +674,7 @@ export default async function ProductPage({
                 separateFabricRows={executionSelectors.separateFabricRows}
                 heroObjectPosition={heroObjectPosition}
                 productHandle={handle}
+                executionScopeKey={selectedVariantId ?? handle}
               />
             ) : isOliver ? (
               <OliverPdpMediaSwitcher
