@@ -99,6 +99,17 @@ def _plans_from_live(cur) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     return inventory, family_plans(result["rows"])
 
 
+def sku_rank_key(
+    axes: dict[str, str],
+    axis_names: list[str],
+    axis_sort: dict[tuple[str, str], int],
+    sku: str,
+) -> tuple:
+    """Same order as storefront orderedSparseVariants: axis key, then numeric sort, then SKU."""
+    names = sorted(name for name in axis_names if axes.get(name))
+    return tuple(axis_sort[(name, axes[name])] for name in names) + (sku,)
+
+
 def _load(cur, skus: list[str]) -> list[dict[str, Any]]:
     cur.execute(
         """
@@ -296,7 +307,7 @@ def _apply_family(cur, plan: dict[str, Any]) -> dict[str, Any]:
                 ),
             )
 
-    for rank, sku in enumerate(sorted(plan["skus"], key=lambda item: json.dumps(plan["axes"][item], ensure_ascii=False))):
+    for rank, sku in enumerate(sorted(plan["skus"], key=lambda item: sku_rank_key(plan["axes"][item], axis_names, axis_sort, item))):
         row = by_sku[sku]
         metadata = dict(row["variant_metadata"] or {})
         metadata["variant_axes"] = {

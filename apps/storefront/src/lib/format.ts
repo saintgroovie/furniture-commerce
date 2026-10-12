@@ -1,3 +1,5 @@
+import { orderedSparseVariants, sparseVariantMap } from "./sparse-variant-map"
+
 export function formatRub(amount: number): string {
   return amount.toLocaleString("ru-RU") + " ₽"
 }
@@ -20,7 +22,12 @@ export function getOrderDisplayNumber(order: Record<string, unknown>): string {
 /** Medusa v2 amounts are major currency units (rubles for RUB). */
 export function getPrice(product: Record<string, unknown>): number | null {
   const variants = product.variants as Array<Record<string, unknown>> | undefined
-  const v = variants?.[0]
+  if (!variants?.length) return null
+  const map = sparseVariantMap(product)
+  const openingId = map ? orderedSparseVariants(map)[0]?.id : undefined
+  const v =
+    (openingId ? variants.find((item) => item.id === openingId) : undefined) ??
+    variants[0]
   if (!v) return null
   const cp = v.calculated_price as Record<string, unknown> | undefined
   if (cp?.calculated_amount != null) return Number(cp.calculated_amount)

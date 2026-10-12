@@ -74,6 +74,27 @@ class AlignBuyerPublicTitle(unittest.TestCase):
         self.assertIn('row["status"] != "published"', guard)
         self.assertIn("unpublished sku", guard)
 
+    def test_variant_rank_follows_numeric_axis_sort(self):
+        from catalog_norm.sparse_apply import sku_rank_key
+
+        axis_sort = {
+            ("mattress_size", "90 × 190 см"): 0,
+            ("mattress_size", "120 × 190 см"): 1,
+        }
+        smaller = sku_rank_key(
+            {"mattress_size": "90 × 190 см"},
+            ["mattress_size"],
+            axis_sort,
+            "CO-14-2",
+        )
+        larger = sku_rank_key(
+            {"mattress_size": "120 × 190 см"},
+            ["mattress_size"],
+            axis_sort,
+            "CO-15-2",
+        )
+        self.assertLess(smaller, larger)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -83,21 +83,51 @@ function variantOriginalUnitPrice(
   return null
 }
 
+function axisSortKey(variant: Record<string, unknown>): number[] | null {
+  const meta = variant.metadata
+  if (!meta || typeof meta !== "object" || Array.isArray(meta)) return null
+  const axes = (meta as { variant_axes?: unknown }).variant_axes
+  if (!axes || typeof axes !== "object" || Array.isArray(axes)) return null
+  const keys = Object.keys(axes).sort()
+  if (keys.length === 0) return null
+  return keys.map((key) => {
+    const item = (axes as Record<string, { sort?: unknown }>)[key]
+    const sort = Number(item?.sort)
+    return Number.isFinite(sort) ? sort : 0
+  })
+}
+
 function openingPurchasableVariant(
   product: Record<string, unknown>
 ): { id: string; basePrice: number; originalPrice: number | null } | null {
-  /* Same opening variant as storefront getPrice / ProductCta: variants[0].
-     Do not skip to a later priced variant — that would diverge card vs PDP/cart. */
+  /* Same opening SKU as the PDP sparse map: lowest axis sort, then SKU.
+     Array order is variant_rank, which is not that order. */
   const variants = product.variants
   if (!Array.isArray(variants) || variants.length === 0) return null
-  const raw = variants[0]
-  if (!raw || typeof raw !== "object") return null
-  const v = raw as Record<string, unknown>
-  const id = typeof v.id === "string" ? v.id : null
+  const records = variants.filter(
+    (item): item is Record<string, unknown> => !!item && typeof item === "object"
+  )
+  const keys = records.map(axisSortKey)
+  const ordered =
+    records.length >= 2 && keys.every((key) => key != null)
+      ? [...records].sort((a, b) => {
+          const left = axisSortKey(a) ?? []
+          const right = axisSortKey(b) ?? []
+          const width = Math.max(left.length, right.length)
+          for (let i = 0; i < width; i++) {
+            const delta = (left[i] ?? 0) - (right[i] ?? 0)
+            if (delta) return delta
+          }
+          return String(a.sku ?? "").localeCompare(String(b.sku ?? ""), "ru")
+        })
+      : records
+  const raw = ordered[0]
+  if (!raw) return null
+  const id = typeof raw.id === "string" ? raw.id : null
   if (!id) return null
-  const basePrice = variantUnitPrice(v)
+  const basePrice = variantUnitPrice(raw)
   if (basePrice == null) return null
-  return { id, basePrice, originalPrice: variantOriginalUnitPrice(v, basePrice) }
+  return { id, basePrice, originalPrice: variantOriginalUnitPrice(raw, basePrice) }
 }
 
 /**

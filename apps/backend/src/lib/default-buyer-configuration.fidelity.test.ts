@@ -88,4 +88,29 @@ const tiersMeta = {
   )
 }
 
+{
+  const product = {
+    id: "p5",
+    variants: [
+      {
+        id: "larger",
+        sku: "CO-15-2",
+        prices: [{ amount: 62_000 }],
+        metadata: { variant_axes: { mattress_size: { sort: 1, display: "120 × 190 см" } } },
+      },
+      {
+        id: "smaller",
+        sku: "CO-14-2",
+        prices: [{ amount: 50_100 }],
+        metadata: { variant_axes: { mattress_size: { sort: 0, display: "90 × 190 см" } } },
+      },
+    ],
+    metadata: tiersMeta,
+  }
+  const d = resolveDefaultBuyerConfiguration(product)
+  assert.ok(d)
+  assert.equal(d!.variant_id, "smaller")
+  assert.equal(d!.min_unit_price, Math.round(50_100 * 0.7))
+}
+
 console.log("default-buyer-configuration.fidelity.test.ts: ok")
