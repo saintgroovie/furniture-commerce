@@ -35,7 +35,9 @@ export type StoreProductListMode = "default" | "browse"
 const DEFAULT_PRODUCT_FIELDS = [
   "*",
   "variants.*",
+  "variants.options.*",
   "variants.price_set.prices.amount",
+  "options.*",
   "images.*",
   "product_categories.*",
   "product_classification.*",

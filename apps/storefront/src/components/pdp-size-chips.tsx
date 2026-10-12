@@ -67,12 +67,14 @@ export function PdpSizeChips({
     ? resolveFinishColorMultiplier(gate.finishKey, gate.standardFinishKey)
     : 1
 
-  const priceLabelFor = (basePrice: number | null): string | null => {
+  const priceLabelFor = (basePrice: number | null, isCurrent: boolean): string | null => {
     if (basePrice == null) return null
+    /* A finish on this SKU must not inflate a sibling chip. Navigation
+       resets the finish, and the sibling may not offer it. */
     const amount = resolveConfiguredUnitPrice(
       basePrice,
       materialMultiplier,
-      colorMultiplier
+      isCurrent ? colorMultiplier : 1
     )
     return requestQuote ? `от ${formatRub(amount)}` : formatRub(amount)
   }
@@ -90,7 +92,7 @@ export function PdpSizeChips({
       </span>
       <div className="pdp-size-chip-row">
         {chips.map((chip) => {
-          const priceLabel = priceLabelFor(chip.basePrice)
+          const priceLabel = priceLabelFor(chip.basePrice, chip.isCurrent)
           return chip.isCurrent ? (
             <span key={chip.id} className="pdp-size-chip is-active" aria-current="true">
               <span className="pdp-size-chip-label">{chip.label}</span>
