@@ -1,0 +1,7 @@
+page,server_before,client_before,total_before,server_after,client_after,total_after
+/,1,0,1,1,0,1
+/catalog,1,1,2,1,0,1
+/catalog_filtered,1,1,2,1,0,1
+/kids/catalog,1,1,2,1,0,1
+pdp_with_display_group,1,0,1,1,0,1
+pdp_without_display_group,0,0,0,0,0,0

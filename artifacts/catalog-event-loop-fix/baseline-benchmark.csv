@@ -1,0 +1,10 @@
+source,metric,value,notes
+live_logs_before_2026-10-11T19:48:50Z,catalog_p50_ms,1266,246 requests duration field is milliseconds
+live_logs_before_2026-10-11T19:48:50Z,catalog_p95_ms,1927,
+live_logs_before_2026-10-11T19:48:50Z,catalog_max_ms,3726,
+live_one_catalog_2026-10-11T19:54Z,health_during_catalog_max_ms,415,in-container /health while one 1571 ms catalog ran
+live_one_catalog_2026-10-11T19:54Z,health_idle_max_ms,34,12 idle probes
+live_payload_2026-10-12,bytes,559556,248 products
+live_payload_2026-10-12,stringify_ms,4.76,not the stall
+isolated_candidate,catalog_p50_ms,,not run
+isolated_candidate,health_under_catalog_max_ms,,not run

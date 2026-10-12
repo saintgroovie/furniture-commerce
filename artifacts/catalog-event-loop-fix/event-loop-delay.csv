@@ -1,0 +1,4 @@
+window,mean_ms,p95_ms,max_ms,notes
+live_payload_parse_and_stringify,19.75,20.17,20.17,monitorEventLoopDelay around JSON.parse and JSON.stringify only
+live_health_while_one_catalog,,,415,previous incident; full handler not this stringify
+candidate_isolated,,,,not run

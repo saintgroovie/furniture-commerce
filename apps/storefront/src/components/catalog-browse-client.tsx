@@ -38,10 +38,14 @@ type Props = {
   basePath: "/catalog" | "/kids/catalog"
   initialState: CatalogFilterState
   /**
-   * First-screen representatives only. Full scoped pool is fetched after
-   * hydration so RSC HTML does not serialize every browse product.
+   * First-screen representatives. Used only when `hydratedPool` is absent.
    */
   atfProducts: Array<Record<string, unknown>>
+  /**
+   * Scoped browse products already loaded by the server render.
+   * When present, the client does not call `/store/catalog-products` again.
+   */
+  hydratedPool?: Array<Record<string, unknown>>
   poolScope: CatalogBrowsePoolScope
   kidsProductIds: string[]
   showBespokeCta?: boolean
@@ -66,14 +70,15 @@ function stateFromLocation(): CatalogFilterState {
 }
 
 /**
- * SSR ships ATF representatives + kids membership ids (small).
- * After hydration the client loads `/store/catalog-products` and scopes
- * the full pool. Filter clicks then recompute locally (no RSC refetch).
+ * SSR loads the catalog once and passes the scoped pool in.
+ * Filter clicks recompute locally. A second full-catalog fetch runs only
+ * when the server did not pass `hydratedPool`.
  */
 export function CatalogBrowseClient({
   basePath,
   initialState,
   atfProducts,
+  hydratedPool,
   poolScope,
   kidsProductIds,
   showBespokeCta = false,
@@ -82,9 +87,14 @@ export function CatalogBrowseClient({
   emptySecondaryLabel,
   promotionSlot = null,
 }: Props) {
+  const hasHydratedPool = Array.isArray(hydratedPool)
   const [state, setState] = useState<CatalogFilterState>(initialState)
-  const [pool, setPool] = useState<Array<Record<string, unknown>> | null>(null)
-  const [poolStatus, setPoolStatus] = useState<"atf" | "full" | "error">("atf")
+  const [pool, setPool] = useState<Array<Record<string, unknown>> | null>(
+    hasHydratedPool ? hydratedPool : null
+  )
+  const [poolStatus, setPoolStatus] = useState<"atf" | "full" | "error">(
+    hasHydratedPool ? "full" : "atf"
+  )
   const [retryTick, setRetryTick] = useState(0)
   const [, startTransition] = useTransition()
   const products = pool ?? atfProducts
@@ -100,6 +110,13 @@ export function CatalogBrowseClient({
   }, [])
 
   useEffect(() => {
+    if (!hasHydratedPool || !hydratedPool) return
+    setPool(hydratedPool)
+    setPoolStatus("full")
+  }, [hasHydratedPool, hydratedPool])
+
+  useEffect(() => {
+    if (hasHydratedPool) return
     let cancelled = false
     ;(async () => {
       try {
@@ -119,7 +136,7 @@ export function CatalogBrowseClient({
     return () => {
       cancelled = true
     }
-  }, [poolScope, kidsKey, retryTick])
+  }, [hasHydratedPool, poolScope, kidsKey, retryTick])
 
   const onClientNavigate = useCallback(
     (next: CatalogFilterState) => {

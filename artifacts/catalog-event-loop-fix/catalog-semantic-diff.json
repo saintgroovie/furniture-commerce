@@ -1,0 +1,4 @@
+{
+  "status": "not_run",
+  "reason": "No disposable production-scale database. The previous restore rehearsal hung on docker run postgres:15-alpine. This diff does not change projected fields; it chunks the same queries and yields. A full id/price/image diff against production data is still required before cutover."
+}
