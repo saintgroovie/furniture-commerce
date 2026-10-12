@@ -95,6 +95,13 @@ class AlignBuyerPublicTitle(unittest.TestCase):
         )
         self.assertLess(smaller, larger)
 
+    def test_writes_use_the_configured_database_url(self):
+        root = Path(__file__).resolve().parents[1].joinpath("catalog_norm")
+        for name in ("sparse_apply.py", "beds_apply.py", "beds_greenwich_merge.py"):
+            source = (root / name).read_text()
+            self.assertIn("database_url()", source)
+            self.assertNotIn('psycopg2.connect("postgresql://', source)
+
 
 if __name__ == "__main__":
     unittest.main()

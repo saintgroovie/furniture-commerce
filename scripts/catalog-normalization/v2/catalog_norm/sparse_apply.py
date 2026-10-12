@@ -16,7 +16,7 @@ import psycopg2.extras
 
 from catalog_norm.beds_apply import _amount, assert_identity
 from catalog_norm.decisions import FINISH_KEYS
-from catalog_norm.export_inventory import connect, export_products
+from catalog_norm.export_inventory import connect, database_url, export_products
 from catalog_norm.sparse import AXIS_LABEL, classify_products, family_plans
 
 SPARSE_PASS = "catalog-normalization-v2-sparse-20261011"
@@ -495,7 +495,7 @@ def apply_sparse() -> dict[str, Any]:
     finally:
         probe.close()
     _inventory, plans = _plans_from_live(None)
-    conn = psycopg2.connect("postgresql://postgres:postgres@127.0.0.1:5432/medusa-store")
+    conn = psycopg2.connect(database_url())
     conn.autocommit = False
     applied = []
     try:

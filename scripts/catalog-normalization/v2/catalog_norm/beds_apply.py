@@ -9,12 +9,11 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from typing import Any
-from urllib.parse import urlparse
 
 import psycopg2
 import psycopg2.extras
 
-from catalog_norm.export_inventory import LOCAL_HOSTS, connect
+from catalog_norm.export_inventory import connect, database_url
 
 PASS_ID = "bed-normalization-v2-20261010"
 
@@ -76,10 +75,7 @@ def apply_bed_fields(mutations: list[dict[str, Any]]) -> dict[str, Any]:
     finally:
         probe.close()
 
-    url_host = (urlparse("postgresql://postgres:postgres@127.0.0.1:5432/medusa-store").hostname or "")
-    if url_host not in LOCAL_HOSTS:
-        raise SystemExit("refusing apply dsn")
-    conn = psycopg2.connect("postgresql://postgres:postgres@127.0.0.1:5432/medusa-store")
+    conn = psycopg2.connect(database_url())
     conn.autocommit = False
     readback: list[dict[str, Any]] = []
     try:

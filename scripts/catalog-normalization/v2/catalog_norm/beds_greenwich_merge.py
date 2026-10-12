@@ -15,7 +15,7 @@ import psycopg2
 import psycopg2.extras
 
 from catalog_norm.beds_apply import PASS_ID, _amount, assert_identity
-from catalog_norm.export_inventory import connect
+from catalog_norm.export_inventory import connect, database_url
 
 FAMILY = "greenwich/bed/standard"
 CANONICAL_TITLE = "Кровать Гринвич"
@@ -152,7 +152,7 @@ def apply_greenwich_merge() -> dict[str, Any]:
         identity = assert_identity(probe)
     finally:
         probe.close()
-    conn = psycopg2.connect("postgresql://postgres:postgres@127.0.0.1:5432/medusa-store")
+    conn = psycopg2.connect(database_url())
     conn.autocommit = False
     try:
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)

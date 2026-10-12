@@ -14,12 +14,16 @@ import psycopg2.extras
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 
-def connect():
+def database_url() -> str:
     url = os.environ.get("DATABASE_URL") or "postgresql://postgres:postgres@127.0.0.1:5432/medusa-store"
     host = (urlparse(url).hostname or "").lower()
     if host not in LOCAL_HOSTS:
         raise SystemExit(f"refusing non-local database host {host}")
-    conn = psycopg2.connect(url)
+    return url
+
+
+def connect():
+    conn = psycopg2.connect(database_url())
     conn.set_session(readonly=True, autocommit=True)
     return conn
 
