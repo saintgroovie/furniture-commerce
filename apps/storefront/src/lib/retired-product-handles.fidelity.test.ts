@@ -14,7 +14,7 @@ assert.equal(retiredProductRedirect("ol-14-1"), null)
 assert.equal(retiredProductRedirect("OL-15-1")?.survivorHandle, "ol-14-1")
 assert.equal(retiredProductRedirect("not-a-product"), null)
 
-const page = readFileSync(join(process.cwd(), "src/app/product/[id]/page.tsx"), "utf8")
-assert.match(page, /retiredProductRedirect\(id\)/)
+const proxy = readFileSync(join(process.cwd(), "src/proxy.ts"), "utf8")
+assert.match(proxy, /retiredProductRedirect\(decodeURIComponent/)
 
 console.log("retired-product-handles.fidelity.test.ts: ok")

@@ -2,7 +2,6 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
-import { retiredProductRedirect } from "@/lib/retired-product-handles"
 import { getSiteUrl } from "@/lib/api/base"
 import { getCatalogProducts, getProduct, getProductCompatibility, NOT_FOUND } from "@/lib/api/products"
 import { PdpCompatibility } from "@/components/pdp-compatibility"
@@ -166,12 +165,6 @@ export async function generateMetadata({
     }
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
-      const retired = retiredProductRedirect(id)
-      if (retired) {
-        redirect(
-          `/product/${retired.survivorHandle}?variant=${encodeURIComponent(retired.variantId)}`
-        )
-      }
       notFound()
     }
     // Framework notFound() throws; rethrow. Operational failures must not become 404.
@@ -194,12 +187,6 @@ export default async function ProductPage({
     product = res.product ?? null
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
-      const retired = retiredProductRedirect(id)
-      if (retired) {
-        redirect(
-          `/product/${retired.survivorHandle}?variant=${encodeURIComponent(retired.variantId)}`
-        )
-      }
       notFound()
     }
     return (

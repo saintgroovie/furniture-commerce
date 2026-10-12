@@ -8,6 +8,7 @@ import { buildImgSrcDirective } from "@/lib/analytics-config"
 import { buildConnectSrcDirective } from "@/lib/csp-policy"
 import { storefrontRuntimeIdentityHeaders } from "@/lib/runtime-identity-headers"
 import { legacyBuyerRedirectDestination } from "@/lib/legacy-buyer-redirects"
+import { retiredProductRedirect } from "@/lib/retired-product-handles"
 import { stripLegacyQueryTokenFromOrderTrackSearch } from "@/lib/order-track-token-handoff"
 import { isProductionQaPathBlocked } from "@/lib/production-qa-exposure"
 
@@ -122,6 +123,19 @@ export function proxy(request: NextRequest) {
 
   const legacyDest = legacyBuyerRedirectDestination(request.nextUrl.pathname)
   if (legacyDest) return redirectTo(request, legacyDest, nonce, csp)
+
+  const productHandle = request.nextUrl.pathname.match(/^\/product\/([^/]+)$/)
+  if (productHandle) {
+    const retired = retiredProductRedirect(decodeURIComponent(productHandle[1]))
+    if (retired) {
+      return redirectTo(
+        request,
+        `/product/${retired.survivorHandle}?variant=${encodeURIComponent(retired.variantId)}`,
+        nonce,
+        csp
+      )
+    }
+  }
 
   // Option A: never consume query tokens into cookies/session. Strip only so
   // SSR/Flight cannot serialize them. First hop of a legacy bookmark may still
