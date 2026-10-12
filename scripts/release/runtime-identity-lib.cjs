@@ -230,19 +230,17 @@ function readSha40(raw) {
 }
 
 /**
- * WOODRIGHT_RELEASE_SHA is last-unified-pair informational only.
- * Split pairs must not emit x-woodright-release-sha.
+ * WOODRIGHT_RELEASE_SHA is the application / release baseline.
+ * Component revisions may differ. Divergence does not hide this header
+ * and must not be filled from this value when a component SHA is missing.
+ * backendSha/storefrontSha are accepted so older callers keep their arity.
  */
-function selectUnifiedReleaseSha(backendSha, storefrontSha, releaseSha) {
-  const release = readSha40(releaseSha)
-  if (!release) return ""
-  const be = readSha40(backendSha)
-  const sf = readSha40(storefrontSha)
-  if (be && sf) {
-    return be === sf && be === release ? release : ""
-  }
-  if (!be && !sf) return release
-  return ""
+function readApplicationReleaseSha(releaseSha) {
+  return readSha40(releaseSha)
+}
+
+function selectUnifiedReleaseSha(_backendSha, _storefrontSha, releaseSha) {
+  return readApplicationReleaseSha(releaseSha)
 }
 
 function buildIdentityHeadersFromEnv(env = process.env) {
@@ -250,11 +248,7 @@ function buildIdentityHeadersFromEnv(env = process.env) {
   const exposure = env.WOODRIGHT_EXPOSURE || ""
   const backendSha = readSha40(env.WOODRIGHT_BACKEND_SOURCE_SHA)
   const storefrontSha = readSha40(env.WOODRIGHT_STOREFRONT_SOURCE_SHA)
-  const sha = selectUnifiedReleaseSha(
-    backendSha,
-    storefrontSha,
-    env.WOODRIGHT_RELEASE_SHA || ""
-  )
+  const sha = readApplicationReleaseSha(env.WOODRIGHT_RELEASE_SHA || "")
   const dbAlias =
     env.WOODRIGHT_DATABASE_IDENTITY || env.WOODRIGHT_DATABASE_IDENTITY_ALIAS || ""
   const headers = {}
@@ -267,11 +261,16 @@ function buildIdentityHeadersFromEnv(env = process.env) {
   return headers
 }
 
-/** Surface BE/SF release mismatch for operators (not a hard schema error alone). */
+/**
+ * Warn only when both component revisions are present and differ.
+ * Do not substitute release_sha: a missing component is not the application
+ * baseline, and application != storefront after a governed component release
+ * is not by itself component skew.
+ */
 function releasePairMismatchWarning(identity) {
   if (!identity) return null
-  const be = identity.backend_revision || identity.release_sha
-  const sf = identity.storefront_revision || identity.release_sha
+  const be = readSha40(identity.backend_revision)
+  const sf = readSha40(identity.storefront_revision)
   if (be && sf && be !== sf) {
     return {
       warning: "backend_storefront_release_mismatch",
@@ -392,6 +391,7 @@ module.exports = {
   normalizeLegacyRole,
   buildIdentityHeadersFromEnv,
   selectUnifiedReleaseSha,
+  readApplicationReleaseSha,
   readSha40,
   evaluatePublicHeaders,
   evaluateCandidateHeaders,
