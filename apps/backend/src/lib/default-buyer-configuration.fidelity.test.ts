@@ -113,4 +113,41 @@ const tiersMeta = {
   assert.equal(d!.min_unit_price, Math.round(50_100 * 0.7))
 }
 
+{
+  const product = {
+    id: "p6",
+    variants: [
+      {
+        id: "opening",
+        sku: "CO-14-2",
+        prices: [{ amount: 50_100 }],
+        metadata: {
+          variant_axes: { mattress_size: { sort: 0 } },
+          capabilities: {
+            material_tiers: {
+              solid_front_ldsp_body: {
+                key: "solid_front_ldsp_body",
+                label_ru: "ЛДСП",
+                price_multiplier: 0.5,
+                position: 0,
+              },
+              solid_full: {
+                key: "solid_full",
+                label_ru: "Массив",
+                price_multiplier: 1,
+                position: 1,
+              },
+            },
+          },
+        },
+      },
+    ],
+    metadata: tiersMeta,
+  }
+  const d = resolveDefaultBuyerConfiguration(product)
+  assert.ok(d)
+  assert.equal(d!.min_unit_price, Math.round(50_100 * 0.5))
+  assert.equal(d!.material_price_multiplier, 0.5)
+}
+
 console.log("default-buyer-configuration.fidelity.test.ts: ok")

@@ -63,6 +63,15 @@ function productKeyOf(product: Record<string, unknown>): string {
   return typeof product.id === "string" ? product.id : ""
 }
 
+function variantGalleryImage(variant: unknown): string | undefined {
+  if (!variant || typeof variant !== "object") return undefined
+  const metadata = (variant as { metadata?: { gallery_urls?: unknown } }).metadata
+  const urls = metadata?.gallery_urls
+  if (!Array.isArray(urls)) return undefined
+  const first = urls.find((url) => typeof url === "string" && url.trim())
+  return typeof first === "string" ? first : undefined
+}
+
 export function ProductCta({
   product,
   requiresBuyerSelection = false,
@@ -228,8 +237,13 @@ export function ProductCta({
         selection?.finishKey?.trim() ||
         selection?.gate.finishKey?.trim() ||
         null
+      const galleryImage = variantGalleryImage(variantForCart)
       const metadata: Record<string, unknown> = {
-        ...(selection?.imageSrc ? { execution_image: selection.imageSrc } : {}),
+        ...(selection?.imageSrc
+          ? { execution_image: selection.imageSrc }
+          : galleryImage
+            ? { execution_image: galleryImage }
+            : {}),
         ...(specs.length > 0 ? { execution_specs: specs } : {}),
         ...(materialTier ? { material_execution_code: materialTier.code } : {}),
         ...(finishKey ? { finish_execution_key: finishKey } : {}),

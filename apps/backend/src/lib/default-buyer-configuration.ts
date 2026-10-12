@@ -13,6 +13,7 @@ import {
   parseMaterialTiers,
   resolveMaterialTierPrice,
 } from "./material-tier-contract"
+import { productMetadataForVariant } from "./variant-capabilities"
 
 export type BuyerDefaultConfiguration = {
   /** Cheapest valid unit price in RUB (integer). */
@@ -140,12 +141,26 @@ export function resolveDefaultBuyerConfiguration(
   const purchasable = openingPurchasableVariant(product)
   if (!purchasable) return null
 
-  const meta =
+  const variants = Array.isArray(product.variants) ? product.variants : []
+  const opening = variants.find(
+    (item): item is Record<string, unknown> =>
+      !!item &&
+      typeof item === "object" &&
+      (item as { id?: unknown }).id === purchasable.id
+  )
+  const productMeta =
     product.metadata &&
     typeof product.metadata === "object" &&
     !Array.isArray(product.metadata)
       ? (product.metadata as Record<string, unknown>)
       : null
+  const variantMeta =
+    opening?.metadata &&
+    typeof opening.metadata === "object" &&
+    !Array.isArray(opening.metadata)
+      ? (opening.metadata as Record<string, unknown>)
+      : null
+  const meta = productMetadataForVariant(productMeta, variantMeta)
   const tiers = parseMaterialTiers(meta)
 
   if (tiers && tiers.length > 0) {
