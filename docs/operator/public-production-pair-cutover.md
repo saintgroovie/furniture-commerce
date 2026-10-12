@@ -79,6 +79,10 @@ bash ops/release/reconcile-owner-approved-release.sh \
 
 Dry-run (`--mode dry-run`, the default) runs approval, image, CAS, and the planned mutation check, then exits without a Docker write. Image or CAS mismatch exits 4.
 
+The dry-run line `owner_approval_gate_a_ok checksum=` is the preflight identity. Execute outside the test harness must pass that value as `--expected-approval-checksum`. If the approval file changed after preflight, execute exits before the mutation lock and before any pin write.
+
+`WOODRIGHT_RELEASE_SHA` stays a shared identity. After a storefront-only cutover it can still show the retained backend revision. Separate component observability is `COMPONENT_RELEASE_IDENTITY_OBSERVABILITY` in `docs/operator/owner-approved-release-governance.md`, not part of the approval serializer.
+
 ## Canonical merge required
 
 Do **not** run a branch-local copy of this helper against the VM. Production mutation is allowed only after this helper is merged into canonical ops.
