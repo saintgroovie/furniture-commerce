@@ -386,6 +386,18 @@ function assertFacetsAlign(products: Record<string, unknown>[]) {
     })
   )
   assert.notEqual(otherOx.key, "stupeni")
+
+  // Owner decision 2026-10-11: the Oxford-1 lower-bed row is a bed, whatever its title says
+  const lowerBed = resolveBuyerItemType(
+    product({
+      id: "ox-14-1",
+      handle: "ox-14-1",
+      title: "Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185)",
+      metadata: { collection: "oxford" },
+    })
+  )
+  assert.equal(lowerBed.key, "krovati")
+  assert.equal(lowerBed.source, "confirmed_handle")
 }
 
 // Title-fallback false-positive guards (do not invent from partial words)

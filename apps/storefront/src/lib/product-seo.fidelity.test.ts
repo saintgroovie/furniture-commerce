@@ -1,0 +1,259 @@
+/**
+ * PDP SEO surfaces: entity name, meta description, buyer/JSON-LD description.
+ *   yarn dlx tsx src/lib/product-seo.fidelity.test.ts
+ */
+import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+import { sanitizeBuyerDescription, SHARED_EXECUTION_NOTE } from "./catalog-normalization"
+import { auditCatalogSeo, PROMISE_OR_CLICHE_RE } from "./catalog-seo-audit"
+import { compactDisplayGroupChipLabels } from "./display-group"
+import {
+  buildProductMetaDescription,
+  getBuyerDescription,
+  getProductSeoName,
+  getSeoDescriptionSource,
+  META_DESCRIPTION_MAX,
+  productMotifDisplayName,
+  productPaintingNameRu,
+} from "./product-seo"
+
+const plain = (s: string) => s.replace(/[\u00a0\u202f]/g, " ")
+const priced = { hasOptions: false, priceMode: "price" as const }
+
+const recovered = {
+  handle: "mnm-05-3",
+  title: "Комод высокий",
+  metadata: { collection: "monchelsea", dimensions: { height_mm: 1494, width_mm: 602, depth_mm: 574 } },
+  description: "Комод высокий\n1494 × 602 × 574 мм\nПорядок: высота, ширина, глубина. Источник - ячейка прайса",
+}
+
+const motifRow = {
+  handle: "fa-05-3",
+  title: "Комод высокий Fairies (гл. 560)",
+  subtitle: "Высокий детский комод с росписью Fairies — полная глубина 56 см.",
+  metadata: { collection: "willie-winkie", storefront_section: "kids", motif_slug: "fairies", painting_name: "Fairies" },
+  description:
+    "Высокий комод серии Fairies (Willie Winkie) в полноглубокой версии - 56 см: в каждом ящике больше места, чем у версий с глубиной 44 см. Вертикальная компоновка экономит стену.\n\nРоспись Fairies делает комод частью сюжетной серии - к нему подбираются стол и туалетный столик с тем же мотивом.\n\nЕсть варианты исполнения - уточним в заявке",
+}
+
+/* Sanitizer: internal price-list lines go, prose and the shared note stay on the PDP. */
+{
+  assert.equal(getBuyerDescription(recovered), null, "title echo + size line + provenance → nothing buyer-facing")
+  const r = sanitizeBuyerDescription(recovered.description, { title: recovered.title })
+  assert.deepEqual(r.removed, ["title_echo", "dimension_line", "provenance_line"])
+
+  const visible = getBuyerDescription(motifRow)!
+  assert.match(visible, /Вертикальная компоновка экономит стену/)
+  assert.ok(visible.endsWith(SHARED_EXECUTION_NOTE), "PDP keeps the shared note")
+  assert.equal(visible.split("\n\n").length, 3, "paragraphs preserved")
+
+  const ld = getSeoDescriptionSource(motifRow)!
+  assert.ok(!ld.includes(SHARED_EXECUTION_NOTE), "JSON-LD / snippet drop the shared note")
+
+  const pr = sanitizeBuyerDescription(
+    "Тумбочка прикроватная (ручки Swarovski)\nВ названии прайса указаны ручки Swarovski\n600 × 530 × 450 мм\nПорядок: высота, ширина, глубина. Источник - ячейка прайса 18.09.2026",
+    { title: "Тумбочка прикроватная (ручки Swarovski)" }
+  )
+  assert.equal(pr.text, null)
+
+  const prose = "Размер 120 × 190 мм в тексте.\nДругая строка."
+  assert.equal(sanitizeBuyerDescription(prose).text, prose, "dimension inside prose is not a size line")
+  assert.equal(sanitizeBuyerDescription("").text, null)
+  assert.equal(sanitizeBuyerDescription(null).text, null)
+}
+
+/* Entity name: H1 + painting for Willie Winkie rows; no painting for others. */
+{
+  assert.equal(plain(getProductSeoName(motifRow)), "Высокий комод Вилли Винки, роспись «Феи»")
+  assert.equal(plain(getProductSeoName(recovered)), "Высокий комод Мончелси")
+  const unknownMotif = { ...motifRow, metadata: { ...motifRow.metadata, motif_slug: "not-a-motif" } }
+  assert.doesNotMatch(getProductSeoName(unknownMotif), /роспись/, "only canonical motif slugs")
+  const noSlug = (painting: string) => ({
+    handle: "al-40-2",
+    title: `Шкаф комбинированный 560 ${painting}`,
+    metadata: { collection: "willie-winkie", painting_name: painting },
+  })
+  assert.match(plain(getProductSeoName(noSlug("Albion"))), /, «Альбион»$/)
+  assert.match(plain(getProductSeoName(noSlug("Brigantine Blue"))), /, «Бригантина»$/)
+  assert.notEqual(getProductSeoName(noSlug("Albion")), getProductSeoName(noSlug("Brigantine Blue")))
+  assert.doesNotMatch(getProductSeoName(noSlug("Brigantine Ivory")), /роспись/, "a painting name without a slug is not a painting claim")
+  assert.doesNotMatch(getProductSeoName(noSlug("Zebra Parade")), /«/, "no transliterated name")
+  assert.doesNotMatch(getProductSeoName(noSlug("Fairies")), /«Феи»/, "canonical paintings need motif_slug")
+
+  /* Owner exceptions: painting data the catalog contradicts is not shown; neighbours keep theirs. */
+  const bench = {
+    handle: "te-55-1",
+    title: "Банкетка малая Templars",
+    metadata: { collection: "willie-winkie", motif_slug: "templars", motif_title: "Templars" },
+  }
+  assert.equal(plain(getProductSeoName(bench)), "Малая банкетка Вилли Винки")
+  assert.equal(productMotifDisplayName(bench), null)
+  assert.match(plain(getProductSeoName({ ...bench, handle: "te-55-9" })), /, роспись «Рыцари»$/)
+  const ivory = {
+    handle: "bri-95-3",
+    title: "Кровать-трансформер Brigantine Ivory (80*150) с тканью",
+    metadata: { collection: "willie-winkie", painting_name: "Brigantine Ivory" },
+  }
+  assert.doesNotMatch(getProductSeoName(ivory), /Бригантина/)
+  assert.equal(productPaintingNameRu(ivory), null)
+  assert.match(plain(getProductSeoName({ ...noSlug("Brigantine Blue"), handle: "brb-40-2" })), /, «Бригантина»$/)
+}
+
+/* Meta description: whole sentences, ≤160, no ASCII ellipsis, no promises. */
+{
+  const m = buildProductMetaDescription(motifRow, priced)
+  assert.ok(m.length <= META_DESCRIPTION_MAX)
+  assert.ok(!m.includes("..."))
+  assert.doesNotMatch(m, /[—–]/u)
+  assert.ok(/[.!?]$/u.test(m) || m.endsWith("…"))
+
+  const short = {
+    handle: "ol-23-1",
+    title: "Стул",
+    metadata: { collection: "oliver" },
+    description: "Стул Oliver - 48 × 46 см в плане, высота по спинке 90,5 см. Спинка с филёнкой.\n\nЕсть варианты исполнения - уточним в заявке",
+  }
+  assert.equal(
+    plain(buildProductMetaDescription(short, priced)),
+    `${plain(getProductSeoName(short))}. Стул Oliver - 48 × 46 см в плане, высота по спинке 90,5 см. Спинка с филёнкой.`
+  )
+
+  // Sizes of one piece share one editorial description; the entity name keeps each meta unique.
+  const shared = "Кровать с невысоким арочным изголовьем и без изножья.\n\nЦарга по периметру вырезана мягкой волной."
+  const bed90 = { handle: "pv-14-1", title: "Кровать 90х190", metadata: { collection: "provence" }, description: shared }
+  const bed160 = { handle: "pv-17-1", title: "Кровать 160х200", metadata: { collection: "provence" }, description: shared }
+  const m90 = buildProductMetaDescription(bed90, priced)
+  const m160 = buildProductMetaDescription(bed160, priced)
+  assert.notEqual(m90, m160)
+  assert.ok(m90.startsWith(`${plain(getProductSeoName(bed90))}.`))
+  assert.ok(m90.endsWith("мягкой волной.") && m90.length <= META_DESCRIPTION_MAX)
+
+  // Shared leading item type merges with the name instead of being repeated.
+  const nightstand = { handle: "co-08-1", title: "Тумба прикроватная", metadata: { collection: "country" }, description: "Прикроватная тумба с 2 ящиками и круглыми ручками.\n\nСнизу корпус вырезан аркой." }
+  const nsName = plain(getProductSeoName(nightstand))
+  if (nsName.split(" ").length === 3 && nsName.startsWith("Прикроватная тумба ")) {
+    assert.equal(plain(buildProductMetaDescription(nightstand, priced)), `${nsName} с 2 ящиками и круглыми ручками. Снизу корпус вырезан аркой.`)
+  }
+  const shelving = { ...nightstand, title: "Стеллаж широкий", description: "Широкий стеллаж: наверху - открытые полки, внизу - дверцы." }
+  const shName = plain(getProductSeoName(shelving))
+  if (shName.startsWith("Широкий стеллаж ")) {
+    assert.equal(plain(buildProductMetaDescription(shelving, priced)), `${shName}: наверху - открытые полки, внизу - дверцы.`)
+  }
+  // A lowercase qualifier in the name is never re-attached to the sentence.
+  const vanity = { handle: "ol-06-1", title: "Туалетный столик с зеркалом", metadata: { collection: "oliver" }, description: "Туалетный столик с овальным зеркалом на стойках." }
+  const vm = plain(buildProductMetaDescription(vanity, priced))
+  assert.ok(vm.startsWith(`${plain(getProductSeoName(vanity))}. Туалетный столик с овальным`), vm)
+
+  // Word-cut path keeps the no-doubling rules.
+  const longTail = " ".repeat(1) + "и ещё очень длинное продолжение фразы без точки".repeat(4)
+  const stoolName = plain(getProductSeoName(short))
+  const longNamed = { ...short, subtitle: null, description: `${stoolName} с мягким сиденьем${longTail}.` }
+  const lnm = plain(buildProductMetaDescription(longNamed, priced))
+  assert.ok(lnm.startsWith(`${stoolName} с мягким сиденьем`) && !lnm.startsWith(`${stoolName}. ${stoolName}`), lnm)
+  assert.ok(lnm.endsWith("…") && lnm.length <= META_DESCRIPTION_MAX)
+  if (nsName.split(" ").length === 3 && nsName.startsWith("Прикроватная тумба ")) {
+    const longMerge = { ...nightstand, subtitle: null, description: `Прикроватная тумба с 2 ящиками${longTail}.` }
+    const lm = plain(buildProductMetaDescription(longMerge, priced))
+    assert.ok(lm.startsWith(`${nsName} с 2 ящиками`) && lm.endsWith("…"), lm)
+  }
+  // «Стул» is not «Стулья»: a prefix that is not a whole word is not treated as the name.
+  const plural = { ...short, description: `${stoolName}ья в ряд. Сиденья мягкие.` }
+  assert.ok(plain(buildProductMetaDescription(plural, priced)).startsWith(`${stoolName}. `))
+  // Non-breaking spaces in the description do not defeat the name match.
+  const nbsp = { ...short, description: `${stoolName.replace(" ", "\u00a0")} на точёных ножках. Сиденье мягкое.` }
+  assert.equal(plain(buildProductMetaDescription(nbsp, priced)), `${stoolName} на точёных ножках. Сиденье мягкое.`)
+
+  const named = { ...short, description: `${plain(getProductSeoName(short))} на точёных ножках. Сиденье мягкое.` }
+  assert.equal(plain(buildProductMetaDescription(named, priced)), `${plain(getProductSeoName(short))} на точёных ножках. Сиденье мягкое.`, "no doubled name")
+
+  const longName = {
+    handle: "pr-66-6",
+    title: "Стол письменный двухтумбовый (полки слева, ящики справа, ручки Сваровски)",
+    metadata: { collection: "princess-rose" },
+    description: "Письменный стол на 2 тумбах: в одной - выдвижные ящики, в другой - полки за филёнчатой дверцей и ещё немного слов.",
+  }
+  const ml = buildProductMetaDescription(longName, priced)
+  assert.ok(ml.length <= META_DESCRIPTION_MAX)
+  assert.ok(plain(ml).startsWith(`${plain(getProductSeoName(longName))}. `), "long name still leads")
+  assert.ok(ml.endsWith("…"), "first sentence cut at a word after the name")
+
+  const longFirst = {
+    ...short,
+    subtitle: "Стул Оливер — высота по спинке 90,5 см.",
+    description: `${"Очень длинное первое предложение без точки ".repeat(6)}конец.`,
+  }
+  assert.equal(buildProductMetaDescription(longFirst, priced), "Стул Оливер - высота по спинке 90,5 см.", "subtitle when the first sentence is too long")
+  const latinSubtitle = buildProductMetaDescription({ ...longFirst, subtitle: "Стул Oliver — высота по спинке 90,5 см." }, priced)
+  assert.doesNotMatch(latinSubtitle, /Oliver/, "a Latin subtitle loses to a Latin-free description sentence")
+  const latinBoth = { ...longFirst, subtitle: "Стул Oliver — высота по спинке 90,5 см.", description: `${"Стул Oliver очень длинное первое предложение ".repeat(5)}конец.` }
+  assert.equal(buildProductMetaDescription(latinBoth, priced), "Стул Oliver - высота по спинке 90,5 см.", "legacy rows keep the subtitle")
+  assert.ok(latinSubtitle.endsWith("…") && latinSubtitle.length <= META_DESCRIPTION_MAX)
+
+  const noSubtitle = { ...longFirst, subtitle: null }
+  const cut = buildProductMetaDescription(noSubtitle, priced)
+  assert.ok(cut.endsWith("…") && cut.length <= META_DESCRIPTION_MAX, "word-boundary cut with a real ellipsis")
+}
+
+/* Fallback: unique by entity name, factual, no promise words. */
+{
+  const fb = buildProductMetaDescription(recovered, priced)
+  assert.equal(plain(fb), "Высокий комод Мончелси. Посмотрите размеры и цену на сайте Woodright.")
+  const withOptions = buildProductMetaDescription(recovered, { hasOptions: true, priceMode: "price" })
+  assert.match(withOptions, /размеры, варианты исполнения и цену/)
+  const quote = buildProductMetaDescription(recovered, { hasOptions: false, priceMode: "quote" })
+  assert.match(quote, /оставьте заявку на расчёт/)
+  assert.doesNotMatch(quote, /цену/)
+  for (const s of [fb, withOptions, quote]) assert.doesNotMatch(s, PROMISE_OR_CLICHE_RE)
+}
+
+/* Audit over a mini catalog: no duplicates once paintings disambiguate. */
+{
+  const twin = { ...motifRow, handle: "pa-05-3", title: "Комод высокий Patchwork (гл. 560)", metadata: { ...motifRow.metadata, motif_slug: "patchwork" } }
+  const { summary } = auditCatalogSeo([motifRow, twin, recovered])
+  assert.equal(summary.duplicate_seo_name, 0)
+  assert.equal(summary.duplicate_meta_description, 0, "shared prose stays unique: the painting is in the entity name")
+  assert.equal(summary.description_internal_provenance, 0)
+
+  const clone = { ...motifRow, handle: "fa-05-3-copy" }
+  const dup = auditCatalogSeo([motifRow, clone]).summary
+  assert.equal(dup.duplicate_meta_description, 2, "true duplicates are still reported, not hidden")
+}
+
+/* Size chips inside one family show only what differs. */
+{
+  assert.deepEqual(
+    compactDisplayGroupChipLabels([
+      "Полутораспальная кровать Прованс (120 × 190) без изножья",
+      "Полутораспальная кровать Прованс (120 × 190) с тканью без изножья",
+      "Полутораспальная кровать Прованс (140 × 190) без изножья",
+    ]),
+    ["120 × 190 без изножья", "120 × 190 с тканью без изножья", "140 × 190 без изножья"]
+  )
+  assert.deepEqual(
+    compactDisplayGroupChipLabels(["Односпальная кровать Гринвич (90 × 200)", "Двуспальная кровать Гринвич (160 × 200)"]),
+    ["90 × 200", "160 × 200"]
+  )
+  assert.deepEqual(
+    compactDisplayGroupChipLabels(["Стол Оливер с ящиком", "Стол Оливер с полкой"]),
+    ["с ящиком", "с полкой"],
+    "no size → shared leading words dropped"
+  )
+  assert.deepEqual(
+    compactDisplayGroupChipLabels(["Кровать (90 × 200)", "Кровать (90 × 200)"]),
+    ["Кровать (90 × 200)", "Кровать (90 × 200)"],
+    "colliding short forms → full labels"
+  )
+  assert.deepEqual(compactDisplayGroupChipLabels(["Кровать (90 × 200)"]), ["Кровать (90 × 200)"])
+}
+
+/* PDP shows one buyer name: no raw price-list `canonical_name` line under H1. */
+{
+  const pdpSrc = readFileSync(join(__dirname, "..", "app", "product", "[id]", "page.tsx"), "utf8")
+  assert.doesNotMatch(pdpSrc, /pdp-canonical-name|getCanonicalName\(/)
+  assert.match(pdpSrc, /getProductSeoName\(product\)/)
+  assert.match(pdpSrc, /buildProductMetaDescription\(product/)
+  assert.doesNotMatch(pdpSrc, /truncate\(String\(product\.description\)/)
+}
+
+console.log("product-seo fidelity: ok")
