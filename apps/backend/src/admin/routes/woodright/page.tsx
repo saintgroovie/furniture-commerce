@@ -52,6 +52,13 @@ const WoodrightOverviewPage = () => {
         ) : (
           <CatalogOpsBoard products={data?.products ?? []} />
         )}
+        {extras.error ? (
+          <div className="px-6 py-4 border-t border-ui-border-base">
+            <Text size="small" className="text-ui-fg-error">
+              {extras.error}
+            </Text>
+          </div>
+        ) : null}
         {otherWork.length > 0 ? (
           <div className="px-6 py-4 border-t border-ui-border-base">
             <Text weight="plus" className="mb-3">

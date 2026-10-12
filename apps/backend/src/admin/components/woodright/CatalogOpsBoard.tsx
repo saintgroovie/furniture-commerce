@@ -227,8 +227,19 @@ function TaskCard({
 
 function groupLine(items: PhotoItem[]): string {
   const waiting = items.filter((item) => item.status !== "uploaded")
-  const count = (group: PhotoItem["group"]) => waiting.filter((item) => item.group === group).length
-  return `${count("etagere")} этажерки · ${count("guard")} бортика · ${count("canopy")} каркас`
+  const parts: Array<[PhotoItem["group"], string]> = [
+    ["etagere", "этажерки"],
+    ["guard", "бортика"],
+    ["canopy", "каркас"],
+    ["other", "прочие"],
+  ]
+  return parts
+    .map(([group, label]) => {
+      const count = waiting.filter((item) => item.group === group).length
+      return count > 0 ? `${count} ${label}` : ""
+    })
+    .filter(Boolean)
+    .join(" · ")
 }
 
 function Inspector({ task }: { task: OpsTask | null }) {
@@ -301,18 +312,22 @@ const STATUS_LABEL: Record<PhotoItem["status"], string> = {
 function PhotoBatch({ items }: { items: PhotoItem[] }) {
   const [rows, setRows] = useState(items)
   const [note, setNote] = useState<string | null>(null)
-  const groups = ["etagere", "guard", "canopy"] as const
+  const groups = ["etagere", "guard", "canopy", "other"] as const
   const labels: Record<(typeof groups)[number], string> = {
     etagere: "Этажерки",
     guard: "Бортики",
     canopy: "Каркас балдахина",
+    other: "Прочие",
   }
 
   async function onFiles(list: FileList | null) {
     if (!list || list.length === 0) return
     const next = rows.map((row) => ({ ...row }))
     for (const file of Array.from(list)) {
-      const match = matchPhotoFilename(file.name)
+      const match = matchPhotoFilename(
+        file.name,
+        next.map((row) => row.handle)
+      )
       if (!match || match.role !== "HERO") continue
       const row = next.find((item) => item.handle === match.handle)
       if (!row || row.status === "uploaded") continue

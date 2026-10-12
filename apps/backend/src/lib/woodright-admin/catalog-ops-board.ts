@@ -44,7 +44,7 @@ export type CatalogOpsProduct = {
   dimensions?: { height_mm?: number; width_mm?: number; depth_mm?: number } | null
 }
 
-export type PhotoGroupId = "etagere" | "guard" | "canopy"
+export type PhotoGroupId = "etagere" | "guard" | "canopy" | "other"
 
 export type PhotoItem = {
   handle: string
@@ -212,20 +212,14 @@ export function photoItemStatus(handle: string, url: string | null): PhotoItemSt
   return photoHeroNeedsShoot(handle, url) ? "not_shot" : "uploaded"
 }
 
-function byHandle(products: CatalogOpsProduct[]): Map<string, CatalogOpsProduct> {
-  const map = new Map<string, CatalogOpsProduct>()
-  for (const product of products) {
-    if (product.status === "draft") continue
-    map.set(product.handle, product)
-  }
-  return map
+function buyerVisible(products: CatalogOpsProduct[]): CatalogOpsProduct[] {
+  return products.filter((product) => product.status === "published" && !product.published_invisible)
 }
 
 function photoTask(products: CatalogOpsProduct[]): OpsTask | null {
-  const live = byHandle(products)
-  const present = PHOTO_SPEC.filter((spec) => live.has(spec.handle))
-  if (present.length === 0) return null
-  const items: PhotoItem[] = present.map((spec) => {
+  const live = new Map(buyerVisible(products).map((product) => [product.handle, product]))
+  const known = new Set(PHOTO_SPEC.map((spec) => spec.handle))
+  const items: PhotoItem[] = PHOTO_SPEC.filter((spec) => live.has(spec.handle)).map((spec) => {
     const product = live.get(spec.handle)
     const url = heroUrl(product)
     return {
@@ -238,6 +232,20 @@ function photoTask(products: CatalogOpsProduct[]): OpsTask | null {
       reference_url: url,
     }
   })
+  for (const product of live.values()) {
+    if (known.has(product.handle)) continue
+    const url = heroUrl(product)
+    if (!photoHeroNeedsShoot(product.handle, url)) continue
+    items.push({
+      handle: product.handle,
+      title: product.title,
+      group: "other",
+      group_label: "Прочие",
+      brief: "Нужен нормальный первый кадр товара",
+      status: "not_shot",
+      reference_url: url,
+    })
+  }
   const waiting = items.filter((item) => item.status !== "uploaded")
   if (waiting.length === 0) return null
   return {
@@ -378,7 +386,7 @@ function frozenTask(): OpsTask {
 }
 
 export function buildCatalogOpsBoard(products: CatalogOpsProduct[]): CatalogOpsBoard {
-  const published = products.filter((product) => product.status === "published")
+  const visible = buyerVisible(products)
   const photo = photoTask(products)
   const tasks: OpsTask[] = []
   const price = priceTask(products)
@@ -390,11 +398,13 @@ export function buildCatalogOpsBoard(products: CatalogOpsProduct[]): CatalogOpsB
   if (watch) tasks.push(watch)
   tasks.push(frozenTask())
   tasks.push(...COMPLETED)
-  const waitingPhotos = photo?.affected_count ?? 0
+  const waitingPhotos = visible.filter((product) =>
+    photoHeroNeedsShoot(product.handle, heroUrl(product))
+  ).length
   return {
     summary: {
-      buyer_visible: published.length,
-      ready_photos: Math.max(0, published.length - waitingPhotos),
+      buyer_visible: visible.length,
+      ready_photos: visible.length - waitingPhotos,
       waiting_photos: waitingPhotos,
       critical: tasks.filter((task) => task.severity === "critical" && task.status === "active").length,
     },
@@ -417,12 +427,26 @@ const ROLE_BY_TOKEN: Record<string, "HERO" | "ANGLE" | "DETAIL" | "CONTEXT"> = {
   context: "CONTEXT",
 }
 
-export function matchPhotoFilename(name: string): { handle: string; role: string } | null {
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+export function matchPhotoFilename(
+  name: string,
+  handles: string[] = PHOTO_SPEC.map((row) => row.handle)
+): { handle: string; role: string } | null {
   const lower = name.toLowerCase()
-  const spec = PHOTO_SPEC.find((row) => lower.includes(row.handle))
-  if (!spec) return null
-  const role = Object.entries(ROLE_BY_TOKEN).find(([token]) => lower.includes(token))?.[1] ?? "HERO"
-  return { handle: spec.handle, role }
+  const handle = [...handles]
+    .sort((left, right) => right.length - left.length)
+    .find((candidate) =>
+      new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(candidate)}(?:[^a-z0-9]|$)`).test(lower)
+    )
+  if (!handle) return null
+  const role =
+    Object.entries(ROLE_BY_TOKEN).find(([token]) =>
+      new RegExp(`(?:^|[^a-z])${token}(?:[^a-z]|$)`).test(lower)
+    )?.[1] ?? "HERO"
+  return { handle, role }
 }
 
 export function frozenGroupSummary(): Array<{ label: string; count: number }> {

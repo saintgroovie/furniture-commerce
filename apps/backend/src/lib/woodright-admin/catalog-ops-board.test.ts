@@ -47,6 +47,8 @@ describe("catalog ops board", () => {
     assert.equal(active[0].resolution_type, "NEW_PHOTOGRAPHY")
     assert.equal(active.some((task) => task.problem_type === "draft"), false)
     assert.equal(board.summary.critical, 0)
+    assert.equal(board.summary.buyer_visible, 6)
+    assert.equal(board.summary.ready_photos, 1)
     assert.equal(board.summary.waiting_photos, 5)
   })
 
@@ -104,6 +106,20 @@ describe("catalog ops board", () => {
       handle: "ol-86-1",
       role: "CONTEXT",
     })
+    assert.equal(matchPhotoFilename("pr-68-10_hero.jpg"), null)
+  })
+
+  it("does not count an invisible product as on the storefront or a file-less product as photographed", () => {
+    const board = buildCatalogOpsBoard([
+      product({ handle: "hidden-1", published_invisible: true, image_urls: [] }),
+      product({ handle: "bare-1", image_urls: [], thumbnail: null }),
+    ])
+    assert.equal(board.summary.buyer_visible, 1)
+    assert.equal(board.summary.ready_photos, 0)
+    assert.equal(board.summary.waiting_photos, 1)
+    const photo = activeTasks(board).find((task) => task.task_id === "photo-catalog")
+    assert.equal(photo?.affected_count, 1)
+    assert.equal(photo?.photo_items?.[0]?.group, "other")
   })
 
   it("keeps mnm-06-1 quiet when facts are still missing", () => {
