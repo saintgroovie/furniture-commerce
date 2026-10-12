@@ -419,10 +419,10 @@ def _apply_family(cur, plan: dict[str, Any]) -> dict[str, Any]:
     cur.execute(
         """
         UPDATE order_line_item
-        SET product_id = %s, product_title = %s, updated_at = NOW()
+        SET product_id = %s, updated_at = NOW()
         WHERE variant_id = ANY(%s) AND deleted_at IS NULL
         """,
-        (survivor["product_id"], plan["title"], variant_ids),
+        (survivor["product_id"], variant_ids),
     )
     cur.execute(
         """

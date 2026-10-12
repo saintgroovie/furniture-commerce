@@ -62,6 +62,12 @@ class AlignBuyerPublicTitle(unittest.TestCase):
             self.assertEqual(patched["source_title"], stale)
             self.assertEqual(meta["public_title"], stale)
 
+    def test_order_lines_keep_the_purchased_title(self):
+        source = Path(__file__).resolve().parents[1].joinpath("catalog_norm/sparse_apply.py").read_text()
+        order = source.split("UPDATE order_line_item", 1)[1].split('"""', 1)[0]
+        self.assertNotIn("product_title", order)
+        self.assertIn("product_id", order)
+
 
 if __name__ == "__main__":
     unittest.main()
