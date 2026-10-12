@@ -1,0 +1,4555 @@
+{
+ "packet_id": "editorial-pass-20261010",
+ "snapshot_sha256": "a95b6da51cb60d4526484d1556dbadb472d87e9636796330bb0c84125c3d059c",
+ "packet_sha256": "5baa9ed7e87c34467ebe5fb61e1a7623086e8db85b89153d99bdf8135e9e570c",
+ "packet_items": 248,
+ "action_counts": {
+  "ADD": 92,
+  "REWRITE": 156
+ },
+ "current_class_counts": {
+  "empty": 42,
+  "boilerplate": 149,
+  "prefix_mangled": 7,
+  "technical": 50
+ },
+ "families": {
+  "families_total": 170,
+  "multi_member_families": 37,
+  "products_in_multi_member_families": 115,
+  "single_member_families": 133,
+  "by_confidence": {
+   "EXACT": 135,
+   "STRONG": 35,
+   "AMBIGUOUS": 0
+  }
+ },
+ "before": {
+  "pdp_total": 248,
+  "empty": 42,
+  "technical_import": 50,
+  "boilerplate_shared_note": 156,
+  "exact_duplicate_groups": 1,
+  "exact_duplicate_products": 3,
+  "exact_duplicate_groups_cross_family": 1,
+  "near_duplicate_groups": 0,
+  "near_duplicate_groups_cross_family": 0,
+  "raw_dimensions": 140,
+  "sku_internal_code": 0,
+  "ascii_ellipsis": 0,
+  "title_mismatch_latin_or_echo": 150,
+  "banned_phrases": 0,
+  "seo_words": 0,
+  "commercial_claims": 0,
+  "long_dash": 0,
+  "opening_model_template": 0,
+  "too_short_under_150": 3,
+  "too_long_over_900": 0,
+  "hold": 0,
+  "length_p10": 270,
+  "length_median": 340,
+  "length_p90": 418,
+  "length_max": 551
+ },
+ "after": {
+  "pdp_total": 248,
+  "empty": 0,
+  "technical_import": 0,
+  "boilerplate_shared_note": 0,
+  "exact_duplicate_groups": 16,
+  "exact_duplicate_products": 42,
+  "exact_duplicate_groups_cross_family": 0,
+  "near_duplicate_groups": 4,
+  "near_duplicate_groups_cross_family": 0,
+  "raw_dimensions": 0,
+  "sku_internal_code": 0,
+  "ascii_ellipsis": 0,
+  "title_mismatch_latin_or_echo": 0,
+  "banned_phrases": 0,
+  "seo_words": 0,
+  "commercial_claims": 0,
+  "long_dash": 0,
+  "opening_model_template": 0,
+  "too_short_under_150": 15,
+  "too_long_over_900": 0,
+  "hold": 0,
+  "length_p10": 158,
+  "length_median": 247,
+  "length_p90": 397,
+  "length_max": 470
+ },
+ "final_polish": {
+  "pass_id": "final-editorial-polish-20261010",
+  "baseline": {
+   "ref": "PR #305 f810c4d887ae6d4d2bbe683a5f99addcc2709ff4",
+   "packet_sha256": "3a7009aafad3e19f11ba145fae2cb3f6cb91d42db796bab9c4908d9e52c38959",
+   "items": 213
+  },
+  "families_quality_before": {
+   "AWKWARD": 25,
+   "FACT_RISK": 67,
+   "GENERIC": 3,
+   "GOOD": 22,
+   "NEW": 23,
+   "POLISH": 28,
+   "TOO_TECHNICAL": 37,
+   "TOO_THIN": 25
+  },
+  "families_quality_after": {
+   "GOOD": 168,
+   "TOO_THIN": 2
+  },
+  "products_quality_before": {
+   "AWKWARD": 46,
+   "FACT_RISK": 104,
+   "GENERIC": 3,
+   "GOOD": 22,
+   "NEW": 35,
+   "POLISH": 46,
+   "TOO_TECHNICAL": 52,
+   "TOO_THIN": 40
+  },
+  "products_quality_after": {
+   "GOOD": 244,
+   "TOO_THIN": 4
+  },
+  "products_good_at_once": 22,
+  "products_changed": 191,
+  "products_new": 35,
+  "products_unchanged": 22,
+  "holds": [],
+  "style_flags_before": {
+   "caption_opening": 35,
+   "dash_overuse": 43,
+   "fragment": 20,
+   "telegraphic": 92,
+   "thin": 45
+  },
+  "style_flags_after": {},
+  "products_with_style_flags_before": 136,
+  "products_with_style_flags_after": 0,
+  "openings_in_3plus_families_before": [
+   {
+    "opening": "кровать с",
+    "families": 5
+   },
+   {
+    "opening": "письменный стол",
+    "families": 5
+   },
+   {
+    "opening": "комод с",
+    "families": 4
+   },
+   {
+    "opening": "прикроватная тумба",
+    "families": 4
+   },
+   {
+    "opening": "наверху -",
+    "families": 3
+   },
+   {
+    "opening": "навесная книжная",
+    "families": 3
+   },
+   {
+    "opening": "овальное зеркало",
+    "families": 3
+   },
+   {
+    "opening": "прямоугольное зеркало",
+    "families": 3
+   },
+   {
+    "opening": "широкий комод",
+    "families": 3
+   }
+  ],
+  "openings_in_3plus_families_after": [
+   {
+    "opening": "зеркало у",
+    "families": 3
+   },
+   {
+    "opening": "навесная книжная",
+    "families": 3
+   },
+   {
+    "opening": "прикроватная тумба",
+    "families": 3
+   },
+   {
+    "opening": "прямоугольное зеркало",
+    "families": 3
+   }
+  ]
+ },
+ "hard_failures": [],
+ "coverage_errors": [],
+ "after_duplicates_cross_family": {
+  "exact": [],
+  "near": []
+ },
+ "after_exact_duplicate_groups": [
+  {
+   "keys": [
+    "al-14-1",
+    "al-15-1"
+   ],
+   "families": [
+    "ww-bed"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "greenwich-gr-08-1",
+    "greenwich-gr-08-2"
+   ],
+   "families": [
+    "greenwich-nightstand"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "greenwich-gr-09-1-bed-90",
+    "greenwich-gr-12-1",
+    "greenwich-gr-14-1",
+    "greenwich-gr-16-1",
+    "greenwich-gr-18-1"
+   ],
+   "families": [
+    "greenwich-bed"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "mnm-14-2",
+    "mnm-16-2"
+   ],
+   "families": [
+    "monchelsea-bed-no-footboard"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "ol-14-1",
+    "ol-16-1",
+    "ol-17-1",
+    "ol-18-1"
+   ],
+   "families": [
+    "oliver-bed"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "ol-14-2",
+    "ol-16-2",
+    "ol-17-2",
+    "ol-18-2"
+   ],
+   "families": [
+    "oliver-bed"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "ol-68-1",
+    "ol-68-2"
+   ],
+   "families": [
+    "oliver-etagere"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "ol-84-1",
+    "ol-84-2"
+   ],
+   "families": [
+    "oliver-kids-bed-rail"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "pr-14-1",
+    "pr-15-1"
+   ],
+   "families": [
+    "princess-rose-bed"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "pr-65-5",
+    "pr-65-6"
+   ],
+   "families": [
+    "princess-rose-desk-1ped"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "pr-65-7",
+    "pr-65-8"
+   ],
+   "families": [
+    "princess-rose-desk-1ped"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "pr-66-6",
+    "pr-66-7"
+   ],
+   "families": [
+    "princess-rose-desk-2ped"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "pr-84-1",
+    "pr-84-2"
+   ],
+   "families": [
+    "princess-rose-bed-rail"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "pv-14-1",
+    "pv-15-1",
+    "pv-16-1",
+    "pv-17-1",
+    "pv-18-1"
+   ],
+   "families": [
+    "provence-bed"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "pv-15-2",
+    "pv-16-2"
+   ],
+   "families": [
+    "provence-bed"
+   ],
+   "similarity": 1
+  },
+  {
+   "keys": [
+    "pv-66-6",
+    "pv-66-7"
+   ],
+   "families": [
+    "provence-desk-2ped"
+   ],
+   "similarity": 1
+  }
+ ],
+ "repetition_after": {
+  "repeated_sentences": [
+   {
+    "text": "Ткань обивки выбирается из 2 вариантов.",
+    "occurrences": 9,
+    "families": [
+     "oliver-bed",
+     "oliver-bed-lift"
+    ],
+    "keys": [
+     "ol-14-1",
+     "ol-14-2",
+     "ol-16-1",
+     "ol-16-2",
+     "ol-17-1",
+     "ol-17-2",
+     "ol-17-3",
+     "ol-18-1",
+     "ol-18-2"
+    ]
+   },
+   {
+    "text": "Корпус стоит на шарообразных ножках.",
+    "occurrences": 3,
+    "families": [
+     "ww-nightstand",
+     "ww-toy-chest"
+    ],
+    "keys": [
+     "al-08-1",
+     "ba-07-1",
+     "te-07-1"
+    ]
+   },
+   {
+    "text": "В спинки этой версии вставлены мягкие тканевые панели.",
+    "occurrences": 2,
+    "families": [
+     "oliver-kids-convertible-bed",
+     "princess-rose-convertible-bed"
+    ],
+    "keys": [
+     "ol-95-3",
+     "pr-95-3"
+    ]
+   },
+   {
+    "text": "Матрас в комплект кровати не входит, его подбирают отдельно под спальное место.",
+    "occurrences": 2,
+    "families": [
+     "oxford-lower-bed",
+     "oxford-lower-bed-wide"
+    ],
+    "keys": [
+     "ox-14-1",
+     "ox-14-11"
+    ]
+   },
+   {
+    "text": "Основание опирается на шарообразные ножки.",
+    "occurrences": 2,
+    "families": [
+     "ww-sofa-large",
+     "ww-sofa-small"
+    ],
+    "keys": [
+     "al-57-1",
+     "te-57-2"
+    ]
+   },
+   {
+    "text": "Углы ящиков обведены тёмным орнаментом.",
+    "occurrences": 2,
+    "families": [
+     "ww-desk-2door",
+     "ww-sofa-small"
+    ],
+    "keys": [
+     "al-57-1",
+     "al-66-1"
+    ]
+   }
+  ],
+  "repeated_first_sentences": [],
+  "top_trigrams": [
+   {
+    "text": "корпус стоит на",
+    "occurrences": 33,
+    "families": [
+     "monchelsea-chest-wide",
+     "monchelsea-nightstand",
+     "monchelsea-wardrobe-drawers",
+     "monchelsea-wardrobe-full",
+     "oliver-tv-stand",
+     "oliver-wardrobe-2d",
+     "provence-tv-stand",
+     "provence-wardrobe-3d",
+     "ww-chest-high",
+     "ww-chest-standard",
+     "ww-nightstand",
+     "ww-toy-chest",
+     "ww-tv-stand",
+     "ww-wardrobe-1door",
+     "ww-wardrobe-combined",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-40-2",
+     "al-42-1",
+     "av-05-1",
+     "ba-05-3",
+     "ba-07-1",
+     "brb-40-2",
+     "fa-05-3",
+     "fa-40-1",
+     "fk-05-1",
+     "fk-05-3",
+     "mnm-02-1",
+     "mnm-02-2",
+     "mnm-05-2",
+     "mnm-08-1",
+     "mo-02-1",
+     "ol-02-1",
+     "ol-42-1",
+     "pa-05-1",
+     "pa-05-3",
+     "pv-03-1",
+     "pv-42-2",
+     "rl-05-3",
+     "rl-40-2",
+     "rs-05-3",
+     "tb-05-3",
+     "te-01-2",
+     "te-02-2",
+     "te-05-1",
+     "te-05-3",
+     "te-07-1",
+     "te-40-2",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "на шарообразных ножках",
+    "occurrences": 33,
+    "families": [
+     "ww-bed",
+     "ww-chest-high",
+     "ww-chest-standard",
+     "ww-desk-2door",
+     "ww-desk-2ped",
+     "ww-nightstand",
+     "ww-toy-chest",
+     "ww-tv-stand",
+     "ww-wardrobe-1door",
+     "ww-wardrobe-combined",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-14-1",
+     "al-14-2",
+     "al-15-1",
+     "al-40-2",
+     "al-42-1",
+     "al-66-1",
+     "av-05-1",
+     "av-66-2",
+     "ba-05-3",
+     "ba-07-1",
+     "brb-40-2",
+     "fa-05-3",
+     "fa-40-1",
+     "fk-05-1",
+     "fk-05-3",
+     "mo-02-1",
+     "pa-05-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-13-2",
+     "rl-40-2",
+     "rs-05-3",
+     "tb-05-3",
+     "te-01-2",
+     "te-02-2",
+     "te-05-1",
+     "te-05-3",
+     "te-07-1",
+     "te-40-2",
+     "te-66-1",
+     "te-66-3",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "стоит на шарообразных",
+    "occurrences": 33,
+    "families": [
+     "ww-bed",
+     "ww-chest-high",
+     "ww-chest-standard",
+     "ww-desk-2door",
+     "ww-desk-2ped",
+     "ww-nightstand",
+     "ww-toy-chest",
+     "ww-tv-stand",
+     "ww-wardrobe-1door",
+     "ww-wardrobe-combined",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-14-1",
+     "al-14-2",
+     "al-15-1",
+     "al-40-2",
+     "al-42-1",
+     "al-66-1",
+     "av-05-1",
+     "av-66-2",
+     "ba-05-3",
+     "ba-07-1",
+     "brb-40-2",
+     "fa-05-3",
+     "fa-40-1",
+     "fk-05-1",
+     "fk-05-3",
+     "mo-02-1",
+     "pa-05-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-13-2",
+     "rl-40-2",
+     "rs-05-3",
+     "tb-05-3",
+     "te-01-2",
+     "te-02-2",
+     "te-05-1",
+     "te-05-3",
+     "te-07-1",
+     "te-40-2",
+     "te-66-1",
+     "te-66-3",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "на точеных ножках",
+    "occurrences": 12,
+    "families": [
+     "monchelsea-bench",
+     "oliver-bench-large",
+     "oliver-bench-small",
+     "oliver-desk-1ped",
+     "oliver-kids-chair",
+     "oliver-kids-table",
+     "oliver-trunk",
+     "oliver-tv-stand",
+     "oliver-wardrobe-2d",
+     "ww-kids-chair",
+     "ww-kids-table"
+    ],
+    "keys": [
+     "al-82-1",
+     "mnm-55-1",
+     "mo-81-1",
+     "ol-02-1",
+     "ol-07-1",
+     "ol-42-1",
+     "ol-55-1",
+     "ol-55-2",
+     "ol-65",
+     "ol-81-1",
+     "ol-82-1",
+     "sh-81-1"
+    ]
+   },
+   {
+    "text": "место для ног",
+    "occurrences": 16,
+    "families": [
+     "country-desk-1ped",
+     "monchelsea-desk-1ped",
+     "monchelsea-vanity-plain",
+     "oliver-desk-1ped",
+     "oliver-desk-2ped-study",
+     "princess-rose-desk-1ped",
+     "provence-vanity",
+     "ww-desk-2door",
+     "ww-desk-2ped",
+     "ww-vanity"
+    ],
+    "keys": [
+     "al-66-1",
+     "av-66-2",
+     "co-65-1",
+     "co-65-2",
+     "fa-06-1",
+     "mnm-06-2",
+     "mnm-65-4",
+     "ol-65",
+     "ol-66-4",
+     "pr-65-5",
+     "pr-65-6",
+     "pr-65-7",
+     "pr-65-8",
+     "pv-06-2",
+     "te-66-1",
+     "te-66-3"
+    ]
+   },
+   {
+    "text": "на изогнутых ножках",
+    "occurrences": 14,
+    "families": [
+     "princess-rose-bed",
+     "princess-rose-bench",
+     "princess-rose-bookcase-open",
+     "princess-rose-chair",
+     "princess-rose-chest-standard",
+     "princess-rose-desk-2ped",
+     "princess-rose-kids-table",
+     "princess-rose-vanity",
+     "princess-rose-wardrobe-2d",
+     "provence-chair"
+    ],
+    "keys": [
+     "pr-02-1",
+     "pr-05-1",
+     "pr-06-1",
+     "pr-14-1",
+     "pr-15-1",
+     "pr-16-1",
+     "pr-23-1",
+     "pr-55-1",
+     "pr-55-2",
+     "pr-62-1",
+     "pr-66-6",
+     "pr-66-7",
+     "pr-81-1",
+     "pv-23-1"
+    ]
+   },
+   {
+    "text": "в тоне темного",
+    "occurrences": 11,
+    "families": [
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tv-stand",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-55-1",
+     "pv-61-1",
+     "pv-65-5",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "или в тоне",
+    "occurrences": 11,
+    "families": [
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tv-stand",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-55-1",
+     "pv-61-1",
+     "pv-65-5",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "тоне темного дерева",
+    "occurrences": 11,
+    "families": [
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tv-stand",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-55-1",
+     "pv-61-1",
+     "pv-65-5",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "остается место для",
+    "occurrences": 15,
+    "families": [
+     "country-desk-1ped",
+     "monchelsea-desk-1ped",
+     "monchelsea-tv-stand",
+     "monchelsea-wardrobe-drawers",
+     "oliver-desk-2ped",
+     "princess-rose-desk-1ped",
+     "provence-vanity",
+     "ww-desk-2door",
+     "ww-desk-2ped"
+    ],
+    "keys": [
+     "al-66-1",
+     "av-66-2",
+     "co-65-1",
+     "co-65-2",
+     "mnm-02-2",
+     "mnm-42-1",
+     "mnm-65-4",
+     "ol-66-1",
+     "pr-65-5",
+     "pr-65-6",
+     "pr-65-7",
+     "pr-65-8",
+     "pv-06-2",
+     "te-66-1",
+     "te-66-3"
+    ]
+   },
+   {
+    "text": "остаются на виду",
+    "occurrences": 10,
+    "families": [
+     "country-bookcase-glass",
+     "greenwich-vitrine-crystal",
+     "monchelsea-bookcase-2d",
+     "monchelsea-corner-open",
+     "oliver-bookcase-glass",
+     "oliver-bookcase-open",
+     "oliver-vitrine",
+     "princess-rose-etagere",
+     "provence-bookcase-open"
+    ],
+    "keys": [
+     "co-61-1",
+     "greenwich-gr-26-1",
+     "mnm-61-1",
+     "mnm-62-1",
+     "ol-26-2",
+     "ol-61-1",
+     "ol-62-1",
+     "pr-68-1",
+     "pr-68-2",
+     "pv-62-1"
+    ]
+   },
+   {
+    "text": "выдвигаются 2 ящика",
+    "occurrences": 11,
+    "families": [
+     "oliver-console-shelves",
+     "oliver-wardrobe-1d-mirror",
+     "oliver-wardrobe-2d",
+     "ww-bed",
+     "ww-bookcase",
+     "ww-desk-1ped",
+     "ww-sofa-small",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "al-57-1",
+     "av-65-1",
+     "ba-62-1",
+     "mo-02-1",
+     "ol-01-2",
+     "ol-02-1",
+     "ol-44-2",
+     "pa-62-1",
+     "rl-13-2",
+     "te-02-2",
+     "te-65-2"
+    ]
+   },
+   {
+    "text": "в контрастный цвет",
+    "occurrences": 8,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-desk-2door",
+     "ww-kids-chair",
+     "ww-kids-table",
+     "ww-nightstand",
+     "ww-tv-stand",
+     "ww-wardrobe-combined"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-40-2",
+     "al-42-1",
+     "al-82-1",
+     "rl-05-3",
+     "sh-81-1",
+     "te-62-1",
+     "te-66-1"
+    ]
+   },
+   {
+    "text": "в росписи альбион",
+    "occurrences": 9,
+    "families": [
+     "ww-bed",
+     "ww-crib",
+     "ww-desk-2door",
+     "ww-nightstand",
+     "ww-sofa-small",
+     "ww-tv-stand",
+     "ww-wardrobe-combined"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-14-1",
+     "al-14-2",
+     "al-15-1",
+     "al-40-2",
+     "al-42-1",
+     "al-57-1",
+     "al-66-1",
+     "al-85-1"
+    ]
+   },
+   {
+    "text": "же что у",
+    "occurrences": 7,
+    "families": [
+     "greenwich-console-step",
+     "monchelsea-chest-high",
+     "oliver-bed-lift",
+     "oliver-nightstand-niche",
+     "oliver-wardrobe-corner",
+     "provence-bookcase-glass",
+     "provence-tea-table"
+    ],
+    "keys": [
+     "greenwich-gr-44-1",
+     "mnm-05-3",
+     "ol-00-1",
+     "ol-08-1",
+     "ol-17-3",
+     "pv-43-1",
+     "pv-61-1"
+    ]
+   },
+   {
+    "text": "и точеные ножки",
+    "occurrences": 7,
+    "families": [
+     "oliver-buffet",
+     "oliver-chest-high",
+     "oliver-chest-standard",
+     "oliver-desk-2ped",
+     "oliver-wardrobe-3d",
+     "oliver-wardrobe-corner"
+    ],
+    "keys": [
+     "ol-00-1",
+     "ol-03-1",
+     "ol-05-1",
+     "ol-05-3",
+     "ol-05-n",
+     "ol-26-1",
+     "ol-66-1"
+    ]
+   },
+   {
+    "text": "оставлена открытая ниша",
+    "occurrences": 7,
+    "families": [
+     "country-desk-1ped",
+     "greenwich-tv-wide",
+     "oliver-tv-stand",
+     "princess-rose-tv-stand",
+     "provence-tv-stand",
+     "ww-tv-stand"
+    ],
+    "keys": [
+     "al-42-1",
+     "co-65-1",
+     "co-65-2",
+     "greenwich-gr-42-1",
+     "ol-42-1",
+     "pr-42-1",
+     "pv-42-2"
+    ]
+   },
+   {
+    "text": "стоит на точеных",
+    "occurrences": 7,
+    "families": [
+     "oliver-desk-1ped",
+     "oliver-kids-chair",
+     "oliver-trunk",
+     "oliver-tv-stand",
+     "oliver-wardrobe-2d",
+     "ww-kids-table"
+    ],
+    "keys": [
+     "mo-81-1",
+     "ol-02-1",
+     "ol-07-1",
+     "ol-42-1",
+     "ol-65",
+     "ol-82-1",
+     "sh-81-1"
+    ]
+   },
+   {
+    "text": "те же что",
+    "occurrences": 6,
+    "families": [
+     "greenwich-console-step",
+     "monchelsea-chest-high",
+     "oliver-nightstand-niche",
+     "oliver-wardrobe-corner",
+     "provence-bookcase-glass",
+     "provence-tea-table"
+    ],
+    "keys": [
+     "greenwich-gr-44-1",
+     "mnm-05-3",
+     "ol-00-1",
+     "ol-08-1",
+     "pv-43-1",
+     "pv-61-1"
+    ]
+   },
+   {
+    "text": "боковинах и задней",
+    "occurrences": 20,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "mo-02-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "в боковинах и",
+    "occurrences": 20,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "mo-02-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "и задней стенке",
+    "occurrences": 20,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "mo-02-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "лдсп в боковинах",
+    "occurrences": 20,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "mo-02-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "выпускается в 2",
+    "occurrences": 16,
+    "families": [
+     "country-bed-lift",
+     "oliver-kids-bed-rail",
+     "princess-rose-bed-rail",
+     "ww-chest-high",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "co-14-2",
+     "fa-05-3",
+     "fk-05-3",
+     "mo-02-1",
+     "ol-84-1",
+     "ol-84-2",
+     "pa-05-3",
+     "pr-84-1",
+     "pr-84-2",
+     "rl-05-3",
+     "rs-05-3",
+     "tb-05-3",
+     "te-02-2",
+     "te-05-3",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "на шарообразные ножки",
+    "occurrences": 10,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-crib",
+     "ww-desk-1ped",
+     "ww-sofa-large",
+     "ww-sofa-small"
+    ],
+    "keys": [
+     "al-57-1",
+     "al-85-1",
+     "av-65-1",
+     "ba-85-1",
+     "rs-62-1",
+     "tb-62-1",
+     "te-57-2",
+     "te-62-1",
+     "te-65-2",
+     "to-62-1"
+    ]
+   },
+   {
+    "text": "опирается на шарообразные",
+    "occurrences": 10,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-crib",
+     "ww-desk-1ped",
+     "ww-sofa-large",
+     "ww-sofa-small"
+    ],
+    "keys": [
+     "al-57-1",
+     "al-85-1",
+     "av-65-1",
+     "ba-85-1",
+     "rs-62-1",
+     "tb-62-1",
+     "te-57-2",
+     "te-62-1",
+     "te-65-2",
+     "to-62-1"
+    ]
+   },
+   {
+    "text": "коротких изогнутых ножках",
+    "occurrences": 8,
+    "families": [
+     "princess-rose-wardrobe-3d",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-tv-stand",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pr-03-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-42-2",
+     "pv-65-5",
+     "pv-65-6",
+     "pv-65-7",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "на коротких изогнутых",
+    "occurrences": 8,
+    "families": [
+     "princess-rose-wardrobe-3d",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-tv-stand",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pr-03-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-42-2",
+     "pv-65-5",
+     "pv-65-6",
+     "pv-65-7",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "с волнистым краем",
+    "occurrences": 8,
+    "families": [
+     "princess-rose-bed",
+     "princess-rose-chest-standard",
+     "princess-rose-clock",
+     "provence-bench",
+     "provence-wardrobe-2d"
+    ],
+    "keys": [
+     "pr-05-1",
+     "pr-14-1",
+     "pr-15-1",
+     "pr-16-1",
+     "pr-30-1",
+     "pv-02-1",
+     "pv-55-1",
+     "pv-55-2"
+    ]
+   },
+   {
+    "text": "в подстолье и",
+    "occurrences": 7,
+    "families": [
+     "oliver-kids-table",
+     "oliver-work-table",
+     "princess-rose-desk-2ped",
+     "princess-rose-kids-table",
+     "provence-desk-2ped"
+    ],
+    "keys": [
+     "ol-67-1",
+     "ol-81-1",
+     "pr-66-6",
+     "pr-66-7",
+     "pr-81-1",
+     "pv-66-6",
+     "pv-66-7"
+    ]
+   },
+   {
+    "text": "из 12 цветов",
+    "occurrences": 6,
+    "families": [
+     "greenwich-chest-scale",
+     "greenwich-desk-base",
+     "greenwich-nightstand",
+     "greenwich-tv-wide",
+     "greenwich-vitrine-crystal"
+    ],
+    "keys": [
+     "greenwich-gr-05-1",
+     "greenwich-gr-08-1",
+     "greenwich-gr-08-2",
+     "greenwich-gr-26-1",
+     "greenwich-gr-42-1",
+     "greenwich-gr-67-1"
+    ]
+   },
+   {
+    "text": "а под ним",
+    "occurrences": 5,
+    "families": [
+     "monchelsea-wardrobe-drawers",
+     "oliver-bed-lift",
+     "oxford-loft-desk",
+     "ww-bench-small",
+     "ww-sofa-small"
+    ],
+    "keys": [
+     "al-57-1",
+     "mnm-02-2",
+     "ol-17-3",
+     "ox-90-1",
+     "te-55-1"
+    ]
+   },
+   {
+    "text": "в пару к",
+    "occurrences": 5,
+    "families": [
+     "monchelsea-vanity-mirror",
+     "oliver-armchair",
+     "oliver-kids-chair",
+     "oliver-tea-table-round",
+     "princess-rose-kids-chair"
+    ],
+    "keys": [
+     "mnm-06-1",
+     "ol-43-1",
+     "ol-56-1",
+     "ol-82-1",
+     "pr-82-1"
+    ]
+   },
+   {
+    "text": "голубом сером молочном",
+    "occurrences": 5,
+    "families": [
+     "country-bed-lift",
+     "country-chest",
+     "country-desk-2ped",
+     "country-wall-shelf",
+     "country-wardrobe"
+    ],
+    "keys": [
+     "co-02-1",
+     "co-05-1",
+     "co-15-2",
+     "co-66-1",
+     "co-69-1"
+    ]
+   },
+   {
+    "text": "на фигурном цоколе",
+    "occurrences": 5,
+    "families": [
+     "monchelsea-chest-wide",
+     "monchelsea-desk-2ped",
+     "monchelsea-nightstand",
+     "monchelsea-wardrobe-drawers",
+     "monchelsea-wardrobe-full"
+    ],
+    "keys": [
+     "mnm-02-1",
+     "mnm-02-2",
+     "mnm-05-2",
+     "mnm-08-1",
+     "mnm-66-3"
+    ]
+   },
+   {
+    "text": "окрашен в контрастный",
+    "occurrences": 5,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-desk-2door",
+     "ww-kids-chair",
+     "ww-nightstand",
+     "ww-tv-stand"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-42-1",
+     "al-82-1",
+     "te-62-1",
+     "te-66-1"
+    ]
+   },
+   {
+    "text": "росписи альбион на",
+    "occurrences": 5,
+    "families": [
+     "ww-crib",
+     "ww-desk-2door",
+     "ww-sofa-small",
+     "ww-tv-stand",
+     "ww-wardrobe-combined"
+    ],
+    "keys": [
+     "al-40-2",
+     "al-42-1",
+     "al-57-1",
+     "al-66-1",
+     "al-85-1"
+    ]
+   },
+   {
+    "text": "цветах голубом сером",
+    "occurrences": 5,
+    "families": [
+     "country-bed-lift",
+     "country-desk-2ped",
+     "country-shelving-wide",
+     "country-wall-shelf",
+     "country-wardrobe"
+    ],
+    "keys": [
+     "co-02-1",
+     "co-15-2",
+     "co-62-1",
+     "co-66-1",
+     "co-69-1"
+    ]
+   },
+   {
+    "text": "полем для росписи",
+    "occurrences": 17,
+    "families": [
+     "ww-bed",
+     "ww-chest-high",
+     "ww-crib",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "al-14-1",
+     "al-14-2",
+     "al-15-1",
+     "al-85-1",
+     "ba-05-3",
+     "ba-85-1",
+     "fa-05-3",
+     "fk-05-3",
+     "mo-02-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-13-2",
+     "rs-05-3",
+     "tb-05-3",
+     "te-02-2",
+     "te-05-3",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "и лдсп в",
+    "occurrences": 16,
+    "families": [
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "mo-02-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "tb-05-3",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-3",
+     "tw-05-3"
+    ]
+   }
+  ],
+  "top_fourgrams": [
+   {
+    "text": "стоит на шарообразных ножках",
+    "occurrences": 33,
+    "families": [
+     "ww-bed",
+     "ww-chest-high",
+     "ww-chest-standard",
+     "ww-desk-2door",
+     "ww-desk-2ped",
+     "ww-nightstand",
+     "ww-toy-chest",
+     "ww-tv-stand",
+     "ww-wardrobe-1door",
+     "ww-wardrobe-combined",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-14-1",
+     "al-14-2",
+     "al-15-1",
+     "al-40-2",
+     "al-42-1",
+     "al-66-1",
+     "av-05-1",
+     "av-66-2",
+     "ba-05-3",
+     "ba-07-1",
+     "brb-40-2",
+     "fa-05-3",
+     "fa-40-1",
+     "fk-05-1",
+     "fk-05-3",
+     "mo-02-1",
+     "pa-05-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-13-2",
+     "rl-40-2",
+     "rs-05-3",
+     "tb-05-3",
+     "te-01-2",
+     "te-02-2",
+     "te-05-1",
+     "te-05-3",
+     "te-07-1",
+     "te-40-2",
+     "te-66-1",
+     "te-66-3",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "в тоне темного дерева",
+    "occurrences": 11,
+    "families": [
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tv-stand",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-55-1",
+     "pv-61-1",
+     "pv-65-5",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "или в тоне темного",
+    "occurrences": 11,
+    "families": [
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tv-stand",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-55-1",
+     "pv-61-1",
+     "pv-65-5",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "корпус стоит на шарообразных",
+    "occurrences": 25,
+    "families": [
+     "ww-chest-high",
+     "ww-chest-standard",
+     "ww-nightstand",
+     "ww-toy-chest",
+     "ww-tv-stand",
+     "ww-wardrobe-1door",
+     "ww-wardrobe-combined",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-40-2",
+     "al-42-1",
+     "av-05-1",
+     "ba-05-3",
+     "ba-07-1",
+     "brb-40-2",
+     "fa-05-3",
+     "fa-40-1",
+     "fk-05-1",
+     "fk-05-3",
+     "mo-02-1",
+     "pa-05-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-40-2",
+     "rs-05-3",
+     "tb-05-3",
+     "te-01-2",
+     "te-02-2",
+     "te-05-1",
+     "te-05-3",
+     "te-07-1",
+     "te-40-2",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "остается место для ног",
+    "occurrences": 12,
+    "families": [
+     "country-desk-1ped",
+     "monchelsea-desk-1ped",
+     "princess-rose-desk-1ped",
+     "provence-vanity",
+     "ww-desk-2door",
+     "ww-desk-2ped"
+    ],
+    "keys": [
+     "al-66-1",
+     "av-66-2",
+     "co-65-1",
+     "co-65-2",
+     "mnm-65-4",
+     "pr-65-5",
+     "pr-65-6",
+     "pr-65-7",
+     "pr-65-8",
+     "pv-06-2",
+     "te-66-1",
+     "te-66-3"
+    ]
+   },
+   {
+    "text": "стоит на точеных ножках",
+    "occurrences": 7,
+    "families": [
+     "oliver-desk-1ped",
+     "oliver-kids-chair",
+     "oliver-trunk",
+     "oliver-tv-stand",
+     "oliver-wardrobe-2d",
+     "ww-kids-table"
+    ],
+    "keys": [
+     "mo-81-1",
+     "ol-02-1",
+     "ol-07-1",
+     "ol-42-1",
+     "ol-65",
+     "ol-82-1",
+     "sh-81-1"
+    ]
+   },
+   {
+    "text": "те же что у",
+    "occurrences": 6,
+    "families": [
+     "greenwich-console-step",
+     "monchelsea-chest-high",
+     "oliver-nightstand-niche",
+     "oliver-wardrobe-corner",
+     "provence-bookcase-glass",
+     "provence-tea-table"
+    ],
+    "keys": [
+     "greenwich-gr-44-1",
+     "mnm-05-3",
+     "ol-00-1",
+     "ol-08-1",
+     "pv-43-1",
+     "pv-61-1"
+    ]
+   },
+   {
+    "text": "боковинах и задней стенке",
+    "occurrences": 20,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "mo-02-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "в боковинах и задней",
+    "occurrences": 20,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "mo-02-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "лдсп в боковинах и",
+    "occurrences": 20,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "mo-02-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "опирается на шарообразные ножки",
+    "occurrences": 10,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-crib",
+     "ww-desk-1ped",
+     "ww-sofa-large",
+     "ww-sofa-small"
+    ],
+    "keys": [
+     "al-57-1",
+     "al-85-1",
+     "av-65-1",
+     "ba-85-1",
+     "rs-62-1",
+     "tb-62-1",
+     "te-57-2",
+     "te-62-1",
+     "te-65-2",
+     "to-62-1"
+    ]
+   },
+   {
+    "text": "на коротких изогнутых ножках",
+    "occurrences": 8,
+    "families": [
+     "princess-rose-wardrobe-3d",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-tv-stand",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pr-03-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-42-2",
+     "pv-65-5",
+     "pv-65-6",
+     "pv-65-7",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "в росписи альбион на",
+    "occurrences": 5,
+    "families": [
+     "ww-crib",
+     "ww-desk-2door",
+     "ww-sofa-small",
+     "ww-tv-stand",
+     "ww-wardrobe-combined"
+    ],
+    "keys": [
+     "al-40-2",
+     "al-42-1",
+     "al-57-1",
+     "al-66-1",
+     "al-85-1"
+    ]
+   },
+   {
+    "text": "окрашен в контрастный цвет",
+    "occurrences": 5,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-desk-2door",
+     "ww-kids-chair",
+     "ww-nightstand",
+     "ww-tv-stand"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-42-1",
+     "al-82-1",
+     "te-62-1",
+     "te-66-1"
+    ]
+   },
+   {
+    "text": "и лдсп в боковинах",
+    "occurrences": 16,
+    "families": [
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "mo-02-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "tb-05-3",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-3",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "из массива или с",
+    "occurrences": 14,
+    "families": [
+     "ww-bookcase",
+     "ww-chest-high",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "ba-62-1",
+     "fa-05-3",
+     "fa-06-1",
+     "fk-05-3",
+     "mo-02-1",
+     "pa-05-3",
+     "pa-62-1",
+     "rl-05-3",
+     "rs-05-3",
+     "tb-05-3",
+     "te-02-2",
+     "te-05-3",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "стоит на коротких изогнутых",
+    "occurrences": 7,
+    "families": [
+     "princess-rose-wardrobe-3d",
+     "provence-desk-1ped",
+     "provence-tv-stand",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pr-03-1",
+     "pv-03-1",
+     "pv-42-2",
+     "pv-65-5",
+     "pv-65-6",
+     "pv-65-7",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "бывает молочной или в",
+    "occurrences": 4,
+    "families": [
+     "provence-bench",
+     "provence-chest-standard",
+     "provence-nightstand",
+     "provence-tv-stand"
+    ],
+    "keys": [
+     "pv-05-2",
+     "pv-08-2",
+     "pv-42-2",
+     "pv-55-1"
+    ]
+   },
+   {
+    "text": "в ящик можно убрать",
+    "occurrences": 4,
+    "families": [
+     "greenwich-wardrobe-level",
+     "oliver-kids-table",
+     "princess-rose-kids-table",
+     "provence-nightstand"
+    ],
+    "keys": [
+     "greenwich-gr-02-1",
+     "ol-81-1",
+     "pr-81-1",
+     "pv-08-2"
+    ]
+   },
+   {
+    "text": "корпус окрашен в контрастный",
+    "occurrences": 4,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-desk-2door",
+     "ww-nightstand",
+     "ww-tv-stand"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-42-1",
+     "te-62-1",
+     "te-66-1"
+    ]
+   },
+   {
+    "text": "корпус стоит на фигурном",
+    "occurrences": 4,
+    "families": [
+     "monchelsea-chest-wide",
+     "monchelsea-nightstand",
+     "monchelsea-wardrobe-drawers",
+     "monchelsea-wardrobe-full"
+    ],
+    "keys": [
+     "mnm-02-1",
+     "mnm-02-2",
+     "mnm-05-2",
+     "mnm-08-1"
+    ]
+   },
+   {
+    "text": "молочной или в тоне",
+    "occurrences": 4,
+    "families": [
+     "provence-bench",
+     "provence-chest-standard",
+     "provence-nightstand",
+     "provence-tv-stand"
+    ],
+    "keys": [
+     "pv-05-2",
+     "pv-08-2",
+     "pv-42-2",
+     "pv-55-1"
+    ]
+   },
+   {
+    "text": "поэтому их можно поставить",
+    "occurrences": 4,
+    "families": [
+     "monchelsea-wardrobe-full",
+     "oliver-bookcase-open",
+     "oliver-wardrobe-corner",
+     "princess-rose-bookcase-glass"
+    ],
+    "keys": [
+     "mnm-02-1",
+     "ol-00-1",
+     "ol-62-1",
+     "pr-61-1"
+    ]
+   },
+   {
+    "text": "со стойками и навершиями",
+    "occurrences": 4,
+    "families": [
+     "oliver-kids-crib",
+     "oliver-sofa-bed-small",
+     "oliver-sofa-large",
+     "oliver-sofa-small"
+    ],
+    "keys": [
+     "ol-57-1",
+     "ol-57-2",
+     "ol-57-3",
+     "ol-85-1"
+    ]
+   },
+   {
+    "text": "стоит на изогнутых ножках",
+    "occurrences": 4,
+    "families": [
+     "princess-rose-chest-standard",
+     "princess-rose-vanity",
+     "princess-rose-wardrobe-2d",
+     "provence-chair"
+    ],
+    "keys": [
+     "pr-02-1",
+     "pr-05-1",
+     "pr-06-1",
+     "pv-23-1"
+    ]
+   },
+   {
+    "text": "стоит на фигурном цоколе",
+    "occurrences": 4,
+    "families": [
+     "monchelsea-chest-wide",
+     "monchelsea-nightstand",
+     "monchelsea-wardrobe-drawers",
+     "monchelsea-wardrobe-full"
+    ],
+    "keys": [
+     "mnm-02-1",
+     "mnm-02-2",
+     "mnm-05-2",
+     "mnm-08-1"
+    ]
+   },
+   {
+    "text": "цветах голубом сером молочном",
+    "occurrences": 4,
+    "families": [
+     "country-bed-lift",
+     "country-desk-2ped",
+     "country-wall-shelf",
+     "country-wardrobe"
+    ],
+    "keys": [
+     "co-02-1",
+     "co-15-2",
+     "co-66-1",
+     "co-69-1"
+    ]
+   },
+   {
+    "text": "из массива и лдсп",
+    "occurrences": 14,
+    "families": [
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "tb-05-3",
+     "tb-67-1",
+     "te-05-3",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "массива и лдсп в",
+    "occurrences": 14,
+    "families": [
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "tb-05-3",
+     "tb-67-1",
+     "te-05-3",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "с фасадами из массива",
+    "occurrences": 14,
+    "families": [
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "tb-05-3",
+     "tb-67-1",
+     "te-05-3",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "фасадами из массива и",
+    "occurrences": 14,
+    "families": [
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "tb-05-3",
+     "tb-67-1",
+     "te-05-3",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "стойки с шарами навершиями",
+    "occurrences": 12,
+    "families": [
+     "oliver-armchair",
+     "oliver-bed",
+     "ww-mirror-floor"
+    ],
+    "keys": [
+     "av-09-2",
+     "ol-14-1",
+     "ol-14-2",
+     "ol-15-1",
+     "ol-15-2",
+     "ol-16-1",
+     "ol-16-2",
+     "ol-17-1",
+     "ol-17-2",
+     "ol-18-1",
+     "ol-18-2",
+     "ol-56-1"
+    ]
+   },
+   {
+    "text": "а корпус стоит на",
+    "occurrences": 10,
+    "families": [
+     "ww-chest-standard",
+     "ww-tv-stand",
+     "ww-wardrobe-combined"
+    ],
+    "keys": [
+     "al-40-2",
+     "al-42-1",
+     "av-05-1",
+     "brb-40-2",
+     "fa-40-1",
+     "fk-05-1",
+     "pa-05-1",
+     "rl-40-2",
+     "te-05-1",
+     "te-40-2"
+    ]
+   },
+   {
+    "text": "ткань обивки выбирается из",
+    "occurrences": 10,
+    "families": [
+     "oliver-bed",
+     "oliver-bed-lift",
+     "oliver-chair"
+    ],
+    "keys": [
+     "ol-14-1",
+     "ol-14-2",
+     "ol-16-1",
+     "ol-16-2",
+     "ol-17-1",
+     "ol-17-2",
+     "ol-17-3",
+     "ol-18-1",
+     "ol-18-2",
+     "ol-23-1"
+    ]
+   },
+   {
+    "text": "выбирается из 3 вариантов",
+    "occurrences": 7,
+    "families": [
+     "greenwich-bed",
+     "oliver-bench-small",
+     "oliver-kids-chair"
+    ],
+    "keys": [
+     "greenwich-gr-09-1-bed-90",
+     "greenwich-gr-12-1",
+     "greenwich-gr-14-1",
+     "greenwich-gr-16-1",
+     "greenwich-gr-18-1",
+     "ol-55-1",
+     "ol-82-1"
+    ]
+   },
+   {
+    "text": "вешают над письменным столом",
+    "occurrences": 5,
+    "families": [
+     "country-wall-shelf",
+     "oliver-wall-shelf",
+     "provence-wall-shelf"
+    ],
+    "keys": [
+     "co-69-1",
+     "ol-69-1",
+     "ol-69-2",
+     "ol-69-3",
+     "pv-69-1"
+    ]
+   },
+   {
+    "text": "между тумбами остается место",
+    "occurrences": 5,
+    "families": [
+     "oliver-desk-2ped",
+     "ww-desk-2door",
+     "ww-desk-2ped"
+    ],
+    "keys": [
+     "al-66-1",
+     "av-66-2",
+     "ol-66-1",
+     "te-66-1",
+     "te-66-3"
+    ]
+   },
+   {
+    "text": "навесная книжная полка с",
+    "occurrences": 5,
+    "families": [
+     "oliver-wall-shelf",
+     "princess-rose-wall-shelf",
+     "provence-wall-shelf"
+    ],
+    "keys": [
+     "ol-69-1",
+     "ol-69-2",
+     "ol-69-3",
+     "pr-69-1",
+     "pv-69-1"
+    ]
+   },
+   {
+    "text": "над письменным столом комодом",
+    "occurrences": 5,
+    "families": [
+     "country-wall-shelf",
+     "oliver-wall-shelf",
+     "provence-wall-shelf"
+    ],
+    "keys": [
+     "co-69-1",
+     "ol-69-1",
+     "ol-69-2",
+     "ol-69-3",
+     "pv-69-1"
+    ]
+   },
+   {
+    "text": "письменным столом комодом или",
+    "occurrences": 5,
+    "families": [
+     "country-wall-shelf",
+     "oliver-wall-shelf",
+     "provence-wall-shelf"
+    ],
+    "keys": [
+     "co-69-1",
+     "ol-69-1",
+     "ol-69-2",
+     "ol-69-3",
+     "pv-69-1"
+    ]
+   }
+  ],
+  "repeated_endings": [
+   {
+    "text": "тоне темного дерева",
+    "occurrences": 9,
+    "families": [
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-chair",
+     "provence-desk-1ped",
+     "provence-mirror-wall",
+     "provence-tv-stand",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pv-02-1",
+     "pv-03-1",
+     "pv-09-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-55-1",
+     "pv-61-1",
+     "pv-65-5",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "на шарообразных ножках",
+    "occurrences": 17,
+    "families": [
+     "ww-chest-standard",
+     "ww-desk-2door",
+     "ww-desk-2ped",
+     "ww-nightstand",
+     "ww-toy-chest",
+     "ww-tv-stand",
+     "ww-wardrobe-combined"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-40-2",
+     "al-42-1",
+     "al-66-1",
+     "av-05-1",
+     "av-66-2",
+     "ba-07-1",
+     "brb-40-2",
+     "fa-40-1",
+     "fk-05-1",
+     "pa-05-1",
+     "rl-40-2",
+     "te-05-1",
+     "te-07-1",
+     "te-40-2",
+     "te-66-1",
+     "te-66-3"
+    ]
+   },
+   {
+    "text": "место для ног",
+    "occurrences": 11,
+    "families": [
+     "country-desk-1ped",
+     "monchelsea-desk-1ped",
+     "monchelsea-vanity-plain",
+     "oliver-desk-2ped-study",
+     "princess-rose-desk-1ped",
+     "provence-vanity",
+     "ww-vanity"
+    ],
+    "keys": [
+     "co-65-1",
+     "co-65-2",
+     "fa-06-1",
+     "mnm-06-2",
+     "mnm-65-4",
+     "ol-66-4",
+     "pr-65-5",
+     "pr-65-6",
+     "pr-65-7",
+     "pr-65-8",
+     "pv-06-2"
+    ]
+   },
+   {
+    "text": "в контрастный цвет",
+    "occurrences": 6,
+    "families": [
+     "ww-chest-high",
+     "ww-desk-2door",
+     "ww-kids-chair",
+     "ww-kids-table",
+     "ww-nightstand",
+     "ww-tv-stand"
+    ],
+    "keys": [
+     "al-08-1",
+     "al-42-1",
+     "al-82-1",
+     "rl-05-3",
+     "sh-81-1",
+     "te-66-1"
+    ]
+   },
+   {
+    "text": "и задней стенке",
+    "occurrences": 20,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-desk",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "ba-05-3",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-3",
+     "in-67-1",
+     "mo-02-1",
+     "pa-05-3",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "выдвигаются 2 ящика",
+    "occurrences": 6,
+    "families": [
+     "oliver-wardrobe-1d-mirror",
+     "oliver-wardrobe-2d",
+     "ww-bed",
+     "ww-sofa-small",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "al-57-1",
+     "mo-02-1",
+     "ol-01-2",
+     "ol-02-1",
+     "rl-13-2",
+     "te-02-2"
+    ]
+   },
+   {
+    "text": "на точеных ножках",
+    "occurrences": 6,
+    "families": [
+     "oliver-bench-large",
+     "oliver-bench-small",
+     "oliver-tv-stand",
+     "ww-kids-chair",
+     "ww-kids-table"
+    ],
+    "keys": [
+     "al-82-1",
+     "mo-81-1",
+     "ol-42-1",
+     "ol-55-1",
+     "ol-55-2",
+     "sh-81-1"
+    ]
+   },
+   {
+    "text": "на шарообразные ножки",
+    "occurrences": 8,
+    "families": [
+     "ww-bookcase-tall",
+     "ww-desk-1ped",
+     "ww-sofa-large",
+     "ww-sofa-small"
+    ],
+    "keys": [
+     "al-57-1",
+     "av-65-1",
+     "rs-62-1",
+     "tb-62-1",
+     "te-57-2",
+     "te-62-1",
+     "te-65-2",
+     "to-62-1"
+    ]
+   },
+   {
+    "text": "коротких изогнутых ножках",
+    "occurrences": 7,
+    "families": [
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-tv-stand",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pv-03-1",
+     "pv-05-2",
+     "pv-42-2",
+     "pv-65-5",
+     "pv-65-6",
+     "pv-65-7",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "на изогнутых ножках",
+    "occurrences": 6,
+    "families": [
+     "princess-rose-bed",
+     "princess-rose-chest-standard",
+     "princess-rose-vanity",
+     "princess-rose-wardrobe-2d"
+    ],
+    "keys": [
+     "pr-02-1",
+     "pr-05-1",
+     "pr-06-1",
+     "pr-14-1",
+     "pr-15-1",
+     "pr-16-1"
+    ]
+   },
+   {
+    "text": "с шарами навершиями",
+    "occurrences": 13,
+    "families": [
+     "oliver-bed",
+     "oliver-etagere",
+     "ww-mirror-floor"
+    ],
+    "keys": [
+     "av-09-2",
+     "ol-14-1",
+     "ol-14-2",
+     "ol-15-1",
+     "ol-15-2",
+     "ol-16-1",
+     "ol-16-2",
+     "ol-17-1",
+     "ol-17-2",
+     "ol-18-1",
+     "ol-18-2",
+     "ol-68-1",
+     "ol-68-2"
+    ]
+   },
+   {
+    "text": "полем для росписи",
+    "occurrences": 8,
+    "families": [
+     "ww-bed",
+     "ww-crib",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "al-14-1",
+     "al-14-2",
+     "al-15-1",
+     "al-85-1",
+     "ba-85-1",
+     "mo-02-1",
+     "rl-13-2",
+     "te-02-2"
+    ]
+   },
+   {
+    "text": "место для стула",
+    "occurrences": 5,
+    "families": [
+     "oliver-desk-2ped",
+     "princess-rose-desk-2ped",
+     "provence-desk-2ped"
+    ],
+    "keys": [
+     "ol-66-1",
+     "pr-66-6",
+     "pr-66-7",
+     "pv-66-6",
+     "pv-66-7"
+    ]
+   },
+   {
+    "text": "держать на виду",
+    "occurrences": 4,
+    "families": [
+     "country-shelving-narrow",
+     "monchelsea-wall-shelf-door",
+     "ww-bookcase"
+    ],
+    "keys": [
+     "ba-62-1",
+     "co-62-2",
+     "mnm-69-2",
+     "pa-62-1"
+    ]
+   },
+   {
+    "text": "темном тоне дерева",
+    "occurrences": 4,
+    "families": [
+     "greenwich-nightstand",
+     "greenwich-tv-wide",
+     "greenwich-wardrobe-total"
+    ],
+    "keys": [
+     "greenwich-gr-02-2",
+     "greenwich-gr-08-1",
+     "greenwich-gr-08-2",
+     "greenwich-gr-42-1"
+    ]
+   },
+   {
+    "text": "мебели принцессы розы",
+    "occurrences": 3,
+    "families": [
+     "princess-rose-kids-chair",
+     "princess-rose-mirror-floor",
+     "princess-rose-mirror-wall"
+    ],
+    "keys": [
+     "pr-09-1",
+     "pr-09-2",
+     "pr-82-1"
+    ]
+   },
+   {
+    "text": "молочном и оливковом",
+    "occurrences": 3,
+    "families": [
+     "country-bed-lift",
+     "country-desk-2ped",
+     "country-wardrobe"
+    ],
+    "keys": [
+     "co-02-1",
+     "co-15-2",
+     "co-66-1"
+    ]
+   },
+   {
+    "text": "обведены орнаментальными рамками",
+    "occurrences": 3,
+    "families": [
+     "ww-desk-1ped",
+     "ww-desk-2door",
+     "ww-desk-2ped"
+    ],
+    "keys": [
+     "te-65-2",
+     "te-66-1",
+     "te-66-3"
+    ]
+   },
+   {
+    "text": "остаются на виду",
+    "occurrences": 3,
+    "families": [
+     "monchelsea-corner-open",
+     "oliver-bookcase-glass",
+     "provence-bookcase-open"
+    ],
+    "keys": [
+     "mnm-62-1",
+     "ol-61-1",
+     "pv-62-1"
+    ]
+   }
+  ]
+ },
+ "repetition_before": {
+  "repeated_sentences": [
+   {
+    "text": "Есть варианты исполнения - уточним в заявке",
+    "occurrences": 156,
+    "families": [
+     "country-bed-lift",
+     "country-bookcase-glass",
+     "country-chest",
+     "country-desk-1ped",
+     "country-desk-2ped",
+     "country-nightstand",
+     "country-shelving-narrow",
+     "country-shelving-wide",
+     "country-wall-shelf",
+     "country-wardrobe",
+     "greenwich-bed",
+     "greenwich-chest-scale",
+     "greenwich-console-step",
+     "greenwich-desk-base",
+     "greenwich-mirror-wall",
+     "greenwich-nightstand",
+     "greenwich-tv-wide",
+     "greenwich-vitrine-crystal",
+     "greenwich-wardrobe-level",
+     "greenwich-wardrobe-total",
+     "oliver-armchair",
+     "oliver-bed",
+     "oliver-bed-lift",
+     "oliver-bench-large",
+     "oliver-bench-small",
+     "oliver-bookcase-glass",
+     "oliver-bookcase-open",
+     "oliver-buffet",
+     "oliver-bureau",
+     "oliver-chair",
+     "oliver-chest-high",
+     "oliver-chest-standard",
+     "oliver-chest-wide",
+     "oliver-clock",
+     "oliver-console",
+     "oliver-console-shelves",
+     "oliver-desk-1ped",
+     "oliver-desk-2ped",
+     "oliver-desk-2ped-study",
+     "oliver-dining-table",
+     "oliver-etagere",
+     "oliver-kids-bed-rail",
+     "oliver-kids-bedside-crib",
+     "oliver-kids-canopy-holder",
+     "oliver-kids-chair",
+     "oliver-kids-changing-top",
+     "oliver-kids-convertible-bed",
+     "oliver-kids-crib",
+     "oliver-kids-table",
+     "oliver-mirror-floor",
+     "oliver-mirror-oval-wall",
+     "oliver-nightstand-door",
+     "oliver-nightstand-niche",
+     "oliver-shelving-wide",
+     "oliver-sideboard-low",
+     "oliver-sofa-bed-small",
+     "oliver-sofa-large",
+     "oliver-sofa-small",
+     "oliver-study-cabinet",
+     "oliver-tea-table-round",
+     "oliver-trunk",
+     "oliver-tv-stand",
+     "oliver-vanity",
+     "oliver-vitrine",
+     "oliver-wall-shelf",
+     "oliver-wall-shelf-corner",
+     "oliver-wardrobe-1d-mirror",
+     "oliver-wardrobe-2d",
+     "oliver-wardrobe-3d",
+     "oliver-wardrobe-corner",
+     "oliver-work-table",
+     "oxford-loft-desk",
+     "oxford-lower-bed",
+     "oxford-lower-bed-wide",
+     "oxford-steps",
+     "provence-bed",
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-bookcase-open",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-desk-2ped",
+     "provence-etagere-large",
+     "provence-etagere-small",
+     "provence-mirror-floor",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tea-table",
+     "provence-tv-stand",
+     "provence-vanity",
+     "provence-wall-shelf",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d",
+     "ww-bookcase",
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-chest-standard",
+     "ww-desk",
+     "ww-kids-table",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "av-05-1",
+     "ba-05-3",
+     "ba-62-1",
+     "co-02-1",
+     "co-05-1",
+     "co-08-1",
+     "co-14-2",
+     "co-15-2",
+     "co-61-1",
+     "co-62-1",
+     "co-62-2",
+     "co-62-3",
+     "co-65-1",
+     "co-65-2",
+     "co-66-1",
+     "co-69-1",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-1",
+     "fk-05-3",
+     "greenwich-gr-02-1",
+     "greenwich-gr-02-2",
+     "greenwich-gr-05-1",
+     "greenwich-gr-08-1",
+     "greenwich-gr-08-2",
+     "greenwich-gr-09-1-bed-90",
+     "greenwich-gr-09-1-mirror",
+     "greenwich-gr-12-1",
+     "greenwich-gr-14-1",
+     "greenwich-gr-16-1",
+     "greenwich-gr-18-1",
+     "greenwich-gr-26-1",
+     "greenwich-gr-42-1",
+     "greenwich-gr-44-1",
+     "greenwich-gr-67-1",
+     "in-67-1",
+     "mo-02-1",
+     "mo-81-1",
+     "ol-00-1",
+     "ol-01-2",
+     "ol-02-1",
+     "ol-03-1",
+     "ol-05-1",
+     "ol-05-2",
+     "ol-05-3",
+     "ol-05-n",
+     "ol-06-1",
+     "ol-07-1",
+     "ol-08-1",
+     "ol-08-1-mirror",
+     "ol-08-2",
+     "ol-09-2",
+     "ol-14-1",
+     "ol-14-2",
+     "ol-15-1",
+     "ol-15-2",
+     "ol-16-1",
+     "ol-16-2",
+     "ol-17-1",
+     "ol-17-2",
+     "ol-17-3",
+     "ol-18-1",
+     "ol-18-2",
+     "ol-21-1",
+     "ol-23-1",
+     "ol-25-1",
+     "ol-26-1",
+     "ol-26-2",
+     "ol-30-1",
+     "ol-42-1",
+     "ol-43-1",
+     "ol-44-1",
+     "ol-44-2",
+     "ol-55-1",
+     "ol-55-2",
+     "ol-56-1",
+     "ol-57-1",
+     "ol-57-2",
+     "ol-57-3",
+     "ol-61-1",
+     "ol-61-2",
+     "ol-62-1",
+     "ol-62-2",
+     "ol-64-1",
+     "ol-65",
+     "ol-66-1",
+     "ol-66-4",
+     "ol-67-1",
+     "ol-68-1",
+     "ol-68-2",
+     "ol-69-1",
+     "ol-69-2",
+     "ol-69-3",
+     "ol-69-4",
+     "ol-81-1",
+     "ol-82-1",
+     "ol-83-1",
+     "ol-84-1",
+     "ol-84-2",
+     "ol-85-1",
+     "ol-85-2",
+     "ol-86-1",
+     "ol-95-1",
+     "ol-95-3",
+     "ox-14-1",
+     "ox-14-11",
+     "ox-90-1",
+     "pa-05-1",
+     "pa-05-3",
+     "pa-62-1",
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-06-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-09-2",
+     "pv-14-1",
+     "pv-15-1",
+     "pv-15-2",
+     "pv-16-1",
+     "pv-16-2",
+     "pv-17-1",
+     "pv-18-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-43-1",
+     "pv-55-1",
+     "pv-55-2",
+     "pv-61-1",
+     "pv-62-1",
+     "pv-65-5",
+     "pv-65-6",
+     "pv-65-7",
+     "pv-65-8",
+     "pv-66-6",
+     "pv-66-7",
+     "pv-68-1",
+     "pv-68-2",
+     "pv-69-1",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "s-ox-05",
+     "sh-81-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-1",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "Роспись Templars совпадает с другими предметами серии.",
+    "occurrences": 2,
+    "families": [
+     "ww-chest-standard",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "te-02-2",
+     "te-05-1"
+    ]
+   }
+  ],
+  "repeated_first_sentences": [
+   {
+    "text": "Есть варианты исполнения - уточним в заявке",
+    "occurrences": 3,
+    "families": [
+     "oliver-mirror-oval-wall",
+     "oliver-nightstand-niche",
+     "oxford-steps"
+    ],
+    "keys": [
+     "ol-08-1",
+     "ol-08-1-mirror",
+     "s-ox-05"
+    ]
+   }
+  ],
+  "top_trigrams": [
+   {
+    "text": "варианты исполнения уточним",
+    "occurrences": 156,
+    "families": [
+     "country-bed-lift",
+     "country-bookcase-glass",
+     "country-chest",
+     "country-desk-1ped",
+     "country-desk-2ped",
+     "country-nightstand",
+     "country-shelving-narrow",
+     "country-shelving-wide",
+     "country-wall-shelf",
+     "country-wardrobe",
+     "greenwich-bed",
+     "greenwich-chest-scale",
+     "greenwich-console-step",
+     "greenwich-desk-base",
+     "greenwich-mirror-wall",
+     "greenwich-nightstand",
+     "greenwich-tv-wide",
+     "greenwich-vitrine-crystal",
+     "greenwich-wardrobe-level",
+     "greenwich-wardrobe-total",
+     "oliver-armchair",
+     "oliver-bed",
+     "oliver-bed-lift",
+     "oliver-bench-large",
+     "oliver-bench-small",
+     "oliver-bookcase-glass",
+     "oliver-bookcase-open",
+     "oliver-buffet",
+     "oliver-bureau",
+     "oliver-chair",
+     "oliver-chest-high",
+     "oliver-chest-standard",
+     "oliver-chest-wide",
+     "oliver-clock",
+     "oliver-console",
+     "oliver-console-shelves",
+     "oliver-desk-1ped",
+     "oliver-desk-2ped",
+     "oliver-desk-2ped-study",
+     "oliver-dining-table",
+     "oliver-etagere",
+     "oliver-kids-bed-rail",
+     "oliver-kids-bedside-crib",
+     "oliver-kids-canopy-holder",
+     "oliver-kids-chair",
+     "oliver-kids-changing-top",
+     "oliver-kids-convertible-bed",
+     "oliver-kids-crib",
+     "oliver-kids-table",
+     "oliver-mirror-floor",
+     "oliver-mirror-oval-wall",
+     "oliver-nightstand-door",
+     "oliver-nightstand-niche",
+     "oliver-shelving-wide",
+     "oliver-sideboard-low",
+     "oliver-sofa-bed-small",
+     "oliver-sofa-large",
+     "oliver-sofa-small",
+     "oliver-study-cabinet",
+     "oliver-tea-table-round",
+     "oliver-trunk",
+     "oliver-tv-stand",
+     "oliver-vanity",
+     "oliver-vitrine",
+     "oliver-wall-shelf",
+     "oliver-wall-shelf-corner",
+     "oliver-wardrobe-1d-mirror",
+     "oliver-wardrobe-2d",
+     "oliver-wardrobe-3d",
+     "oliver-wardrobe-corner",
+     "oliver-work-table",
+     "oxford-loft-desk",
+     "oxford-lower-bed",
+     "oxford-lower-bed-wide",
+     "oxford-steps",
+     "provence-bed",
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-bookcase-open",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-desk-2ped",
+     "provence-etagere-large",
+     "provence-etagere-small",
+     "provence-mirror-floor",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tea-table",
+     "provence-tv-stand",
+     "provence-vanity",
+     "provence-wall-shelf",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d",
+     "ww-bookcase",
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-chest-standard",
+     "ww-desk",
+     "ww-kids-table",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "av-05-1",
+     "ba-05-3",
+     "ba-62-1",
+     "co-02-1",
+     "co-05-1",
+     "co-08-1",
+     "co-14-2",
+     "co-15-2",
+     "co-61-1",
+     "co-62-1",
+     "co-62-2",
+     "co-62-3",
+     "co-65-1",
+     "co-65-2",
+     "co-66-1",
+     "co-69-1",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-1",
+     "fk-05-3",
+     "greenwich-gr-02-1",
+     "greenwich-gr-02-2",
+     "greenwich-gr-05-1",
+     "greenwich-gr-08-1",
+     "greenwich-gr-08-2",
+     "greenwich-gr-09-1-bed-90",
+     "greenwich-gr-09-1-mirror",
+     "greenwich-gr-12-1",
+     "greenwich-gr-14-1",
+     "greenwich-gr-16-1",
+     "greenwich-gr-18-1",
+     "greenwich-gr-26-1",
+     "greenwich-gr-42-1",
+     "greenwich-gr-44-1",
+     "greenwich-gr-67-1",
+     "in-67-1",
+     "mo-02-1",
+     "mo-81-1",
+     "ol-00-1",
+     "ol-01-2",
+     "ol-02-1",
+     "ol-03-1",
+     "ol-05-1",
+     "ol-05-2",
+     "ol-05-3",
+     "ol-05-n",
+     "ol-06-1",
+     "ol-07-1",
+     "ol-08-1",
+     "ol-08-1-mirror",
+     "ol-08-2",
+     "ol-09-2",
+     "ol-14-1",
+     "ol-14-2",
+     "ol-15-1",
+     "ol-15-2",
+     "ol-16-1",
+     "ol-16-2",
+     "ol-17-1",
+     "ol-17-2",
+     "ol-17-3",
+     "ol-18-1",
+     "ol-18-2",
+     "ol-21-1",
+     "ol-23-1",
+     "ol-25-1",
+     "ol-26-1",
+     "ol-26-2",
+     "ol-30-1",
+     "ol-42-1",
+     "ol-43-1",
+     "ol-44-1",
+     "ol-44-2",
+     "ol-55-1",
+     "ol-55-2",
+     "ol-56-1",
+     "ol-57-1",
+     "ol-57-2",
+     "ol-57-3",
+     "ol-61-1",
+     "ol-61-2",
+     "ol-62-1",
+     "ol-62-2",
+     "ol-64-1",
+     "ol-65",
+     "ol-66-1",
+     "ol-66-4",
+     "ol-67-1",
+     "ol-68-1",
+     "ol-68-2",
+     "ol-69-1",
+     "ol-69-2",
+     "ol-69-3",
+     "ol-69-4",
+     "ol-81-1",
+     "ol-82-1",
+     "ol-83-1",
+     "ol-84-1",
+     "ol-84-2",
+     "ol-85-1",
+     "ol-85-2",
+     "ol-86-1",
+     "ol-95-1",
+     "ol-95-3",
+     "ox-14-1",
+     "ox-14-11",
+     "ox-90-1",
+     "pa-05-1",
+     "pa-05-3",
+     "pa-62-1",
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-06-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-09-2",
+     "pv-14-1",
+     "pv-15-1",
+     "pv-15-2",
+     "pv-16-1",
+     "pv-16-2",
+     "pv-17-1",
+     "pv-18-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-43-1",
+     "pv-55-1",
+     "pv-55-2",
+     "pv-61-1",
+     "pv-62-1",
+     "pv-65-5",
+     "pv-65-6",
+     "pv-65-7",
+     "pv-65-8",
+     "pv-66-6",
+     "pv-66-7",
+     "pv-68-1",
+     "pv-68-2",
+     "pv-69-1",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "s-ox-05",
+     "sh-81-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-1",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "есть варианты исполнения",
+    "occurrences": 156,
+    "families": [
+     "country-bed-lift",
+     "country-bookcase-glass",
+     "country-chest",
+     "country-desk-1ped",
+     "country-desk-2ped",
+     "country-nightstand",
+     "country-shelving-narrow",
+     "country-shelving-wide",
+     "country-wall-shelf",
+     "country-wardrobe",
+     "greenwich-bed",
+     "greenwich-chest-scale",
+     "greenwich-console-step",
+     "greenwich-desk-base",
+     "greenwich-mirror-wall",
+     "greenwich-nightstand",
+     "greenwich-tv-wide",
+     "greenwich-vitrine-crystal",
+     "greenwich-wardrobe-level",
+     "greenwich-wardrobe-total",
+     "oliver-armchair",
+     "oliver-bed",
+     "oliver-bed-lift",
+     "oliver-bench-large",
+     "oliver-bench-small",
+     "oliver-bookcase-glass",
+     "oliver-bookcase-open",
+     "oliver-buffet",
+     "oliver-bureau",
+     "oliver-chair",
+     "oliver-chest-high",
+     "oliver-chest-standard",
+     "oliver-chest-wide",
+     "oliver-clock",
+     "oliver-console",
+     "oliver-console-shelves",
+     "oliver-desk-1ped",
+     "oliver-desk-2ped",
+     "oliver-desk-2ped-study",
+     "oliver-dining-table",
+     "oliver-etagere",
+     "oliver-kids-bed-rail",
+     "oliver-kids-bedside-crib",
+     "oliver-kids-canopy-holder",
+     "oliver-kids-chair",
+     "oliver-kids-changing-top",
+     "oliver-kids-convertible-bed",
+     "oliver-kids-crib",
+     "oliver-kids-table",
+     "oliver-mirror-floor",
+     "oliver-mirror-oval-wall",
+     "oliver-nightstand-door",
+     "oliver-nightstand-niche",
+     "oliver-shelving-wide",
+     "oliver-sideboard-low",
+     "oliver-sofa-bed-small",
+     "oliver-sofa-large",
+     "oliver-sofa-small",
+     "oliver-study-cabinet",
+     "oliver-tea-table-round",
+     "oliver-trunk",
+     "oliver-tv-stand",
+     "oliver-vanity",
+     "oliver-vitrine",
+     "oliver-wall-shelf",
+     "oliver-wall-shelf-corner",
+     "oliver-wardrobe-1d-mirror",
+     "oliver-wardrobe-2d",
+     "oliver-wardrobe-3d",
+     "oliver-wardrobe-corner",
+     "oliver-work-table",
+     "oxford-loft-desk",
+     "oxford-lower-bed",
+     "oxford-lower-bed-wide",
+     "oxford-steps",
+     "provence-bed",
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-bookcase-open",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-desk-2ped",
+     "provence-etagere-large",
+     "provence-etagere-small",
+     "provence-mirror-floor",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tea-table",
+     "provence-tv-stand",
+     "provence-vanity",
+     "provence-wall-shelf",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d",
+     "ww-bookcase",
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-chest-standard",
+     "ww-desk",
+     "ww-kids-table",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "av-05-1",
+     "ba-05-3",
+     "ba-62-1",
+     "co-02-1",
+     "co-05-1",
+     "co-08-1",
+     "co-14-2",
+     "co-15-2",
+     "co-61-1",
+     "co-62-1",
+     "co-62-2",
+     "co-62-3",
+     "co-65-1",
+     "co-65-2",
+     "co-66-1",
+     "co-69-1",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-1",
+     "fk-05-3",
+     "greenwich-gr-02-1",
+     "greenwich-gr-02-2",
+     "greenwich-gr-05-1",
+     "greenwich-gr-08-1",
+     "greenwich-gr-08-2",
+     "greenwich-gr-09-1-bed-90",
+     "greenwich-gr-09-1-mirror",
+     "greenwich-gr-12-1",
+     "greenwich-gr-14-1",
+     "greenwich-gr-16-1",
+     "greenwich-gr-18-1",
+     "greenwich-gr-26-1",
+     "greenwich-gr-42-1",
+     "greenwich-gr-44-1",
+     "greenwich-gr-67-1",
+     "in-67-1",
+     "mo-02-1",
+     "mo-81-1",
+     "ol-00-1",
+     "ol-01-2",
+     "ol-02-1",
+     "ol-03-1",
+     "ol-05-1",
+     "ol-05-2",
+     "ol-05-3",
+     "ol-05-n",
+     "ol-06-1",
+     "ol-07-1",
+     "ol-08-1",
+     "ol-08-1-mirror",
+     "ol-08-2",
+     "ol-09-2",
+     "ol-14-1",
+     "ol-14-2",
+     "ol-15-1",
+     "ol-15-2",
+     "ol-16-1",
+     "ol-16-2",
+     "ol-17-1",
+     "ol-17-2",
+     "ol-17-3",
+     "ol-18-1",
+     "ol-18-2",
+     "ol-21-1",
+     "ol-23-1",
+     "ol-25-1",
+     "ol-26-1",
+     "ol-26-2",
+     "ol-30-1",
+     "ol-42-1",
+     "ol-43-1",
+     "ol-44-1",
+     "ol-44-2",
+     "ol-55-1",
+     "ol-55-2",
+     "ol-56-1",
+     "ol-57-1",
+     "ol-57-2",
+     "ol-57-3",
+     "ol-61-1",
+     "ol-61-2",
+     "ol-62-1",
+     "ol-62-2",
+     "ol-64-1",
+     "ol-65",
+     "ol-66-1",
+     "ol-66-4",
+     "ol-67-1",
+     "ol-68-1",
+     "ol-68-2",
+     "ol-69-1",
+     "ol-69-2",
+     "ol-69-3",
+     "ol-69-4",
+     "ol-81-1",
+     "ol-82-1",
+     "ol-83-1",
+     "ol-84-1",
+     "ol-84-2",
+     "ol-85-1",
+     "ol-85-2",
+     "ol-86-1",
+     "ol-95-1",
+     "ol-95-3",
+     "ox-14-1",
+     "ox-14-11",
+     "ox-90-1",
+     "pa-05-1",
+     "pa-05-3",
+     "pa-62-1",
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-06-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-09-2",
+     "pv-14-1",
+     "pv-15-1",
+     "pv-15-2",
+     "pv-16-1",
+     "pv-16-2",
+     "pv-17-1",
+     "pv-18-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-43-1",
+     "pv-55-1",
+     "pv-55-2",
+     "pv-61-1",
+     "pv-62-1",
+     "pv-65-5",
+     "pv-65-6",
+     "pv-65-7",
+     "pv-65-8",
+     "pv-66-6",
+     "pv-66-7",
+     "pv-68-1",
+     "pv-68-2",
+     "pv-69-1",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "s-ox-05",
+     "sh-81-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-1",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "исполнения уточним в",
+    "occurrences": 156,
+    "families": [
+     "country-bed-lift",
+     "country-bookcase-glass",
+     "country-chest",
+     "country-desk-1ped",
+     "country-desk-2ped",
+     "country-nightstand",
+     "country-shelving-narrow",
+     "country-shelving-wide",
+     "country-wall-shelf",
+     "country-wardrobe",
+     "greenwich-bed",
+     "greenwich-chest-scale",
+     "greenwich-console-step",
+     "greenwich-desk-base",
+     "greenwich-mirror-wall",
+     "greenwich-nightstand",
+     "greenwich-tv-wide",
+     "greenwich-vitrine-crystal",
+     "greenwich-wardrobe-level",
+     "greenwich-wardrobe-total",
+     "oliver-armchair",
+     "oliver-bed",
+     "oliver-bed-lift",
+     "oliver-bench-large",
+     "oliver-bench-small",
+     "oliver-bookcase-glass",
+     "oliver-bookcase-open",
+     "oliver-buffet",
+     "oliver-bureau",
+     "oliver-chair",
+     "oliver-chest-high",
+     "oliver-chest-standard",
+     "oliver-chest-wide",
+     "oliver-clock",
+     "oliver-console",
+     "oliver-console-shelves",
+     "oliver-desk-1ped",
+     "oliver-desk-2ped",
+     "oliver-desk-2ped-study",
+     "oliver-dining-table",
+     "oliver-etagere",
+     "oliver-kids-bed-rail",
+     "oliver-kids-bedside-crib",
+     "oliver-kids-canopy-holder",
+     "oliver-kids-chair",
+     "oliver-kids-changing-top",
+     "oliver-kids-convertible-bed",
+     "oliver-kids-crib",
+     "oliver-kids-table",
+     "oliver-mirror-floor",
+     "oliver-mirror-oval-wall",
+     "oliver-nightstand-door",
+     "oliver-nightstand-niche",
+     "oliver-shelving-wide",
+     "oliver-sideboard-low",
+     "oliver-sofa-bed-small",
+     "oliver-sofa-large",
+     "oliver-sofa-small",
+     "oliver-study-cabinet",
+     "oliver-tea-table-round",
+     "oliver-trunk",
+     "oliver-tv-stand",
+     "oliver-vanity",
+     "oliver-vitrine",
+     "oliver-wall-shelf",
+     "oliver-wall-shelf-corner",
+     "oliver-wardrobe-1d-mirror",
+     "oliver-wardrobe-2d",
+     "oliver-wardrobe-3d",
+     "oliver-wardrobe-corner",
+     "oliver-work-table",
+     "oxford-loft-desk",
+     "oxford-lower-bed",
+     "oxford-lower-bed-wide",
+     "oxford-steps",
+     "provence-bed",
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-bookcase-open",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-desk-2ped",
+     "provence-etagere-large",
+     "provence-etagere-small",
+     "provence-mirror-floor",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tea-table",
+     "provence-tv-stand",
+     "provence-vanity",
+     "provence-wall-shelf",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d",
+     "ww-bookcase",
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-chest-standard",
+     "ww-desk",
+     "ww-kids-table",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "av-05-1",
+     "ba-05-3",
+     "ba-62-1",
+     "co-02-1",
+     "co-05-1",
+     "co-08-1",
+     "co-14-2",
+     "co-15-2",
+     "co-61-1",
+     "co-62-1",
+     "co-62-2",
+     "co-62-3",
+     "co-65-1",
+     "co-65-2",
+     "co-66-1",
+     "co-69-1",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-1",
+     "fk-05-3",
+     "greenwich-gr-02-1",
+     "greenwich-gr-02-2",
+     "greenwich-gr-05-1",
+     "greenwich-gr-08-1",
+     "greenwich-gr-08-2",
+     "greenwich-gr-09-1-bed-90",
+     "greenwich-gr-09-1-mirror",
+     "greenwich-gr-12-1",
+     "greenwich-gr-14-1",
+     "greenwich-gr-16-1",
+     "greenwich-gr-18-1",
+     "greenwich-gr-26-1",
+     "greenwich-gr-42-1",
+     "greenwich-gr-44-1",
+     "greenwich-gr-67-1",
+     "in-67-1",
+     "mo-02-1",
+     "mo-81-1",
+     "ol-00-1",
+     "ol-01-2",
+     "ol-02-1",
+     "ol-03-1",
+     "ol-05-1",
+     "ol-05-2",
+     "ol-05-3",
+     "ol-05-n",
+     "ol-06-1",
+     "ol-07-1",
+     "ol-08-1",
+     "ol-08-1-mirror",
+     "ol-08-2",
+     "ol-09-2",
+     "ol-14-1",
+     "ol-14-2",
+     "ol-15-1",
+     "ol-15-2",
+     "ol-16-1",
+     "ol-16-2",
+     "ol-17-1",
+     "ol-17-2",
+     "ol-17-3",
+     "ol-18-1",
+     "ol-18-2",
+     "ol-21-1",
+     "ol-23-1",
+     "ol-25-1",
+     "ol-26-1",
+     "ol-26-2",
+     "ol-30-1",
+     "ol-42-1",
+     "ol-43-1",
+     "ol-44-1",
+     "ol-44-2",
+     "ol-55-1",
+     "ol-55-2",
+     "ol-56-1",
+     "ol-57-1",
+     "ol-57-2",
+     "ol-57-3",
+     "ol-61-1",
+     "ol-61-2",
+     "ol-62-1",
+     "ol-62-2",
+     "ol-64-1",
+     "ol-65",
+     "ol-66-1",
+     "ol-66-4",
+     "ol-67-1",
+     "ol-68-1",
+     "ol-68-2",
+     "ol-69-1",
+     "ol-69-2",
+     "ol-69-3",
+     "ol-69-4",
+     "ol-81-1",
+     "ol-82-1",
+     "ol-83-1",
+     "ol-84-1",
+     "ol-84-2",
+     "ol-85-1",
+     "ol-85-2",
+     "ol-86-1",
+     "ol-95-1",
+     "ol-95-3",
+     "ox-14-1",
+     "ox-14-11",
+     "ox-90-1",
+     "pa-05-1",
+     "pa-05-3",
+     "pa-62-1",
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-06-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-09-2",
+     "pv-14-1",
+     "pv-15-1",
+     "pv-15-2",
+     "pv-16-1",
+     "pv-16-2",
+     "pv-17-1",
+     "pv-18-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-43-1",
+     "pv-55-1",
+     "pv-55-2",
+     "pv-61-1",
+     "pv-62-1",
+     "pv-65-5",
+     "pv-65-6",
+     "pv-65-7",
+     "pv-65-8",
+     "pv-66-6",
+     "pv-66-7",
+     "pv-68-1",
+     "pv-68-2",
+     "pv-69-1",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "s-ox-05",
+     "sh-81-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-1",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "уточним в заявке",
+    "occurrences": 156,
+    "families": [
+     "country-bed-lift",
+     "country-bookcase-glass",
+     "country-chest",
+     "country-desk-1ped",
+     "country-desk-2ped",
+     "country-nightstand",
+     "country-shelving-narrow",
+     "country-shelving-wide",
+     "country-wall-shelf",
+     "country-wardrobe",
+     "greenwich-bed",
+     "greenwich-chest-scale",
+     "greenwich-console-step",
+     "greenwich-desk-base",
+     "greenwich-mirror-wall",
+     "greenwich-nightstand",
+     "greenwich-tv-wide",
+     "greenwich-vitrine-crystal",
+     "greenwich-wardrobe-level",
+     "greenwich-wardrobe-total",
+     "oliver-armchair",
+     "oliver-bed",
+     "oliver-bed-lift",
+     "oliver-bench-large",
+     "oliver-bench-small",
+     "oliver-bookcase-glass",
+     "oliver-bookcase-open",
+     "oliver-buffet",
+     "oliver-bureau",
+     "oliver-chair",
+     "oliver-chest-high",
+     "oliver-chest-standard",
+     "oliver-chest-wide",
+     "oliver-clock",
+     "oliver-console",
+     "oliver-console-shelves",
+     "oliver-desk-1ped",
+     "oliver-desk-2ped",
+     "oliver-desk-2ped-study",
+     "oliver-dining-table",
+     "oliver-etagere",
+     "oliver-kids-bed-rail",
+     "oliver-kids-bedside-crib",
+     "oliver-kids-canopy-holder",
+     "oliver-kids-chair",
+     "oliver-kids-changing-top",
+     "oliver-kids-convertible-bed",
+     "oliver-kids-crib",
+     "oliver-kids-table",
+     "oliver-mirror-floor",
+     "oliver-mirror-oval-wall",
+     "oliver-nightstand-door",
+     "oliver-nightstand-niche",
+     "oliver-shelving-wide",
+     "oliver-sideboard-low",
+     "oliver-sofa-bed-small",
+     "oliver-sofa-large",
+     "oliver-sofa-small",
+     "oliver-study-cabinet",
+     "oliver-tea-table-round",
+     "oliver-trunk",
+     "oliver-tv-stand",
+     "oliver-vanity",
+     "oliver-vitrine",
+     "oliver-wall-shelf",
+     "oliver-wall-shelf-corner",
+     "oliver-wardrobe-1d-mirror",
+     "oliver-wardrobe-2d",
+     "oliver-wardrobe-3d",
+     "oliver-wardrobe-corner",
+     "oliver-work-table",
+     "oxford-loft-desk",
+     "oxford-lower-bed",
+     "oxford-lower-bed-wide",
+     "oxford-steps",
+     "provence-bed",
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-bookcase-open",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-desk-2ped",
+     "provence-etagere-large",
+     "provence-etagere-small",
+     "provence-mirror-floor",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tea-table",
+     "provence-tv-stand",
+     "provence-vanity",
+     "provence-wall-shelf",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d",
+     "ww-bookcase",
+     "ww-bookcase-tall",
+     "ww-chest-high",
+     "ww-chest-standard",
+     "ww-desk",
+     "ww-kids-table",
+     "ww-vanity",
+     "ww-wardrobe-tall"
+    ],
+    "keys": [
+     "av-05-1",
+     "ba-05-3",
+     "ba-62-1",
+     "co-02-1",
+     "co-05-1",
+     "co-08-1",
+     "co-14-2",
+     "co-15-2",
+     "co-61-1",
+     "co-62-1",
+     "co-62-2",
+     "co-62-3",
+     "co-65-1",
+     "co-65-2",
+     "co-66-1",
+     "co-69-1",
+     "fa-05-3",
+     "fa-06-1",
+     "fa-67-1",
+     "fk-05-1",
+     "fk-05-3",
+     "greenwich-gr-02-1",
+     "greenwich-gr-02-2",
+     "greenwich-gr-05-1",
+     "greenwich-gr-08-1",
+     "greenwich-gr-08-2",
+     "greenwich-gr-09-1-bed-90",
+     "greenwich-gr-09-1-mirror",
+     "greenwich-gr-12-1",
+     "greenwich-gr-14-1",
+     "greenwich-gr-16-1",
+     "greenwich-gr-18-1",
+     "greenwich-gr-26-1",
+     "greenwich-gr-42-1",
+     "greenwich-gr-44-1",
+     "greenwich-gr-67-1",
+     "in-67-1",
+     "mo-02-1",
+     "mo-81-1",
+     "ol-00-1",
+     "ol-01-2",
+     "ol-02-1",
+     "ol-03-1",
+     "ol-05-1",
+     "ol-05-2",
+     "ol-05-3",
+     "ol-05-n",
+     "ol-06-1",
+     "ol-07-1",
+     "ol-08-1",
+     "ol-08-1-mirror",
+     "ol-08-2",
+     "ol-09-2",
+     "ol-14-1",
+     "ol-14-2",
+     "ol-15-1",
+     "ol-15-2",
+     "ol-16-1",
+     "ol-16-2",
+     "ol-17-1",
+     "ol-17-2",
+     "ol-17-3",
+     "ol-18-1",
+     "ol-18-2",
+     "ol-21-1",
+     "ol-23-1",
+     "ol-25-1",
+     "ol-26-1",
+     "ol-26-2",
+     "ol-30-1",
+     "ol-42-1",
+     "ol-43-1",
+     "ol-44-1",
+     "ol-44-2",
+     "ol-55-1",
+     "ol-55-2",
+     "ol-56-1",
+     "ol-57-1",
+     "ol-57-2",
+     "ol-57-3",
+     "ol-61-1",
+     "ol-61-2",
+     "ol-62-1",
+     "ol-62-2",
+     "ol-64-1",
+     "ol-65",
+     "ol-66-1",
+     "ol-66-4",
+     "ol-67-1",
+     "ol-68-1",
+     "ol-68-2",
+     "ol-69-1",
+     "ol-69-2",
+     "ol-69-3",
+     "ol-69-4",
+     "ol-81-1",
+     "ol-82-1",
+     "ol-83-1",
+     "ol-84-1",
+     "ol-84-2",
+     "ol-85-1",
+     "ol-85-2",
+     "ol-86-1",
+     "ol-95-1",
+     "ol-95-3",
+     "ox-14-1",
+     "ox-14-11",
+     "ox-90-1",
+     "pa-05-1",
+     "pa-05-3",
+     "pa-62-1",
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-06-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-09-2",
+     "pv-14-1",
+     "pv-15-1",
+     "pv-15-2",
+     "pv-16-1",
+     "pv-16-2",
+     "pv-17-1",
+     "pv-18-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-43-1",
+     "pv-55-1",
+     "pv-55-2",
+     "pv-61-1",
+     "pv-62-1",
+     "pv-65-5",
+     "pv-65-6",
+     "pv-65-7",
+     "pv-65-8",
+     "pv-66-6",
+     "pv-66-7",
+     "pv-68-1",
+     "pv-68-2",
+     "pv-69-1",
+     "rl-05-3",
+     "rl-67-1",
+     "rs-05-3",
+     "rs-62-1",
+     "s-ox-05",
+     "sh-81-1",
+     "tb-05-3",
+     "tb-62-1",
+     "tb-67-1",
+     "te-02-2",
+     "te-05-1",
+     "te-05-3",
+     "te-62-1",
+     "to-62-1",
+     "tw-05-3"
+    ]
+   },
+   {
+    "text": "см по фронту",
+    "occurrences": 19,
+    "families": [
+     "country-bookcase-glass",
+     "country-chest",
+     "country-shelving-narrow",
+     "country-shelving-wide",
+     "greenwich-wardrobe-total",
+     "oliver-bookcase-glass",
+     "oliver-bookcase-open",
+     "oliver-chest-wide",
+     "oliver-etagere",
+     "oliver-shelving-wide",
+     "oliver-sideboard-low",
+     "oliver-sofa-large",
+     "oliver-sofa-small",
+     "oliver-study-cabinet",
+     "oliver-vitrine",
+     "provence-bookcase-glass",
+     "provence-chest-standard",
+     "provence-tv-stand"
+    ],
+    "keys": [
+     "co-05-1",
+     "co-61-1",
+     "co-62-1",
+     "co-62-2",
+     "co-62-3",
+     "greenwich-gr-02-2",
+     "ol-05-2",
+     "ol-25-1",
+     "ol-26-2",
+     "ol-57-1",
+     "ol-57-2",
+     "ol-61-1",
+     "ol-61-2",
+     "ol-62-1",
+     "ol-62-2",
+     "ol-68-1",
+     "pv-05-2",
+     "pv-42-2",
+     "pv-61-1"
+    ]
+   },
+   {
+    "text": "см в глубину",
+    "occurrences": 16,
+    "families": [
+     "country-chest",
+     "country-nightstand",
+     "country-shelving-wide",
+     "greenwich-console-step",
+     "greenwich-vitrine-crystal",
+     "oliver-armchair",
+     "oliver-bookcase-glass",
+     "oliver-bookcase-open",
+     "oliver-chest-standard",
+     "oliver-trunk",
+     "oliver-tv-stand",
+     "oliver-vitrine",
+     "provence-bookcase-glass",
+     "provence-chest-standard",
+     "provence-nightstand",
+     "provence-tv-stand"
+    ],
+    "keys": [
+     "co-05-1",
+     "co-08-1",
+     "co-62-1",
+     "greenwich-gr-26-1",
+     "greenwich-gr-44-1",
+     "ol-05-1",
+     "ol-07-1",
+     "ol-26-2",
+     "ol-42-1",
+     "ol-56-1",
+     "ol-61-1",
+     "ol-62-1",
+     "pv-05-2",
+     "pv-08-2",
+     "pv-42-2",
+     "pv-61-1"
+    ]
+   },
+   {
+    "text": "см в высоту",
+    "occurrences": 14,
+    "families": [
+     "country-chest",
+     "country-nightstand",
+     "country-shelving-wide",
+     "greenwich-vitrine-crystal",
+     "oliver-bookcase-glass",
+     "oliver-bookcase-open",
+     "oliver-chest-standard",
+     "oliver-trunk",
+     "oliver-tv-stand",
+     "oliver-vitrine",
+     "provence-bookcase-glass",
+     "provence-chest-standard",
+     "provence-nightstand",
+     "provence-tv-stand"
+    ],
+    "keys": [
+     "co-05-1",
+     "co-08-1",
+     "co-62-1",
+     "greenwich-gr-26-1",
+     "ol-05-1",
+     "ol-07-1",
+     "ol-26-2",
+     "ol-42-1",
+     "ol-61-1",
+     "ol-62-1",
+     "pv-05-2",
+     "pv-08-2",
+     "pv-42-2",
+     "pv-61-1"
+    ]
+   },
+   {
+    "text": "дерево или молочный",
+    "occurrences": 13,
+    "families": [
+     "provence-bed",
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-bookcase-open",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tv-stand",
+     "provence-vanity",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-06-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-18-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-55-1",
+     "pv-61-1",
+     "pv-62-1",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "темное дерево или",
+    "occurrences": 13,
+    "families": [
+     "provence-bed",
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-bookcase-open",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-desk-1ped",
+     "provence-mirror-wall",
+     "provence-nightstand",
+     "provence-tv-stand",
+     "provence-vanity",
+     "provence-wardrobe-2d",
+     "provence-wardrobe-3d"
+    ],
+    "keys": [
+     "pv-02-1",
+     "pv-03-1",
+     "pv-05-2",
+     "pv-06-2",
+     "pv-08-2",
+     "pv-09-1",
+     "pv-18-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-55-1",
+     "pv-61-1",
+     "pv-62-1",
+     "pv-65-8"
+    ]
+   },
+   {
+    "text": "country london paris",
+    "occurrences": 13,
+    "families": [
+     "country-bed-lift",
+     "country-bookcase-glass",
+     "country-chest",
+     "country-desk-1ped",
+     "country-desk-2ped",
+     "country-nightstand",
+     "country-shelving-narrow",
+     "country-shelving-wide",
+     "country-wall-shelf",
+     "country-wardrobe"
+    ],
+    "keys": [
+     "co-02-1",
+     "co-05-1",
+     "co-08-1",
+     "co-14-2",
+     "co-15-2",
+     "co-61-1",
+     "co-62-1",
+     "co-62-2",
+     "co-62-3",
+     "co-65-1",
+     "co-65-2",
+     "co-66-1",
+     "co-69-1"
+    ]
+   },
+   {
+    "text": "см в ширину",
+    "occurrences": 11,
+    "families": [
+     "country-nightstand",
+     "greenwich-bed",
+     "greenwich-chest-scale",
+     "greenwich-nightstand",
+     "greenwich-vitrine-crystal",
+     "oliver-armchair",
+     "oliver-bed",
+     "oliver-chest-standard",
+     "oliver-tv-stand",
+     "provence-nightstand"
+    ],
+    "keys": [
+     "co-08-1",
+     "greenwich-gr-05-1",
+     "greenwich-gr-08-1",
+     "greenwich-gr-14-1",
+     "greenwich-gr-18-1",
+     "greenwich-gr-26-1",
+     "ol-05-1",
+     "ol-15-1",
+     "ol-42-1",
+     "ol-56-1",
+     "pv-08-2"
+    ]
+   },
+   {
+    "text": "см при высоте",
+    "occurrences": 10,
+    "families": [
+     "greenwich-nightstand",
+     "greenwich-tv-wide",
+     "greenwich-wardrobe-level",
+     "oliver-bench-small",
+     "oliver-kids-convertible-bed",
+     "oliver-kids-crib",
+     "oliver-nightstand-door",
+     "oxford-loft-desk",
+     "provence-bench",
+     "provence-bookcase-open"
+    ],
+    "keys": [
+     "greenwich-gr-02-1",
+     "greenwich-gr-08-2",
+     "greenwich-gr-42-1",
+     "ol-08-2",
+     "ol-55-1",
+     "ol-85-1",
+     "ol-95-1",
+     "ox-90-1",
+     "pv-55-1",
+     "pv-62-1"
+    ]
+   },
+   {
+    "text": "отделка темное дерево",
+    "occurrences": 8,
+    "families": [
+     "provence-bed",
+     "provence-bench",
+     "provence-bookcase-glass",
+     "provence-bookcase-open",
+     "provence-chair",
+     "provence-chest-standard",
+     "provence-nightstand",
+     "provence-tv-stand"
+    ],
+    "keys": [
+     "pv-05-2",
+     "pv-08-2",
+     "pv-18-1",
+     "pv-23-1",
+     "pv-42-2",
+     "pv-55-1",
+     "pv-61-1",
+     "pv-62-1"
+    ]
+   },
+   {
+    "text": "см в длину",
+    "occurrences": 7,
+    "families": [
+     "greenwich-bed",
+     "greenwich-console-step",
+     "oliver-bed",
+     "oliver-console",
+     "oliver-console-shelves",
+     "oliver-trunk"
+    ],
+    "keys": [
+     "greenwich-gr-14-1",
+     "greenwich-gr-18-1",
+     "greenwich-gr-44-1",
+     "ol-07-1",
+     "ol-15-1",
+     "ol-44-1",
+     "ol-44-2"
+    ]
+   },
+   {
+    "text": "43 см в",
+    "occurrences": 6,
+    "families": [
+     "country-shelving-wide",
+     "greenwich-vitrine-crystal",
+     "oliver-bookcase-glass",
+     "oliver-bookcase-open",
+     "oliver-study-cabinet",
+     "oliver-vitrine"
+    ],
+    "keys": [
+     "co-62-1",
+     "greenwich-gr-26-1",
+     "ol-26-2",
+     "ol-61-1",
+     "ol-61-2",
+     "ol-62-1"
+    ]
+   }
+  ]
+ },
+ "issues_after": {
+  "al-23-1": [
+   "too_short"
+  ],
+  "av-09-1": [
+   "too_short"
+  ],
+  "av-09-2": [
+   "too_short"
+  ],
+  "mnm-09-1": [
+   "too_short"
+  ],
+  "ol-08-1-mirror": [
+   "too_short"
+  ],
+  "ol-55-2": [
+   "too_short"
+  ],
+  "ol-69-4": [
+   "too_short"
+  ],
+  "pr-30-1": [
+   "too_short"
+  ],
+  "pr-68-1": [
+   "too_short"
+  ],
+  "pr-68-2": [
+   "too_short"
+  ],
+  "pr-84-1": [
+   "too_short"
+  ],
+  "pr-84-2": [
+   "too_short"
+  ],
+  "pv-68-2": [
+   "too_short"
+  ],
+  "pv-69-1": [
+   "too_short"
+  ],
+  "s-ox-05": [
+   "too_short"
+  ]
+ }
+}

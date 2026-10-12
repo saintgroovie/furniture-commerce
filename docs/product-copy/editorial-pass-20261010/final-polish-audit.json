@@ -1,0 +1,1831 @@
+{
+  "pass_id": "final-editorial-polish-20261010",
+  "baseline": {
+    "ref": "PR #305 f810c4d887ae6d4d2bbe683a5f99addcc2709ff4",
+    "packet_sha256": "3a7009aafad3e19f11ba145fae2cb3f6cb91d42db796bab9c4908d9e52c38959",
+    "items": 213
+  },
+  "statuses": {
+    "GOOD": "готовый каталожный текст, правка не нужна",
+    "POLISH": "факты верны, нужна шлифовка синтаксиса или ритма",
+    "TOO_THIN": "текст слишком короткий или читается как подпись к фото",
+    "TOO_TECHNICAL": "телеграфный протокол «наверху - …, внизу - …», инвентарь деталей",
+    "GENERIC": "общая фраза без опоры на предмет",
+    "AWKWARD": "обрывки, неестественный порядок слов, начало с детали или местоимения",
+    "FACT_RISK": "утверждение без опоры на evidence или противоречит ему",
+    "NEW": "PDP не было в пакете PR #305 (новый в свежем snapshot)",
+    "HOLD": "текст не пишется до ответа владельца"
+  },
+  "families": [
+    {
+      "family_id": "country-chest",
+      "quality_before": [
+        "POLISH",
+        "GENERIC",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«сделать отдельным акцентом» - общая фраза; палитра не связана с серией; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "country-wardrobe",
+      "quality_before": [
+        "TOO_THIN"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "подпись к фото: рамка, вагонка, арка без цельного образа шкафа"
+    },
+    {
+      "family_id": "country-nightstand",
+      "quality_before": [
+        "POLISH",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«в цвет кровати»: у односпальной кровати Кантри другая палитра (молочный / кремовый)"
+    },
+    {
+      "family_id": "country-bed-lift",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "первое предложение-подпись; телеграф «под ним - место для хранения»"
+    },
+    {
+      "family_id": "country-bookcase-glass",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "телеграфная схема «наверху - …, внизу - …»"
+    },
+    {
+      "family_id": "country-shelving-wide",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "телеграфная схема «наверху - …, внизу - …»"
+    },
+    {
+      "family_id": "country-shelving-narrow",
+      "quality_before": [
+        "TOO_THIN",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«высоком» не подтверждено; «для зарядок» - придуманное назначение"
+    },
+    {
+      "family_id": "country-desk-1ped",
+      "quality_before": [
+        "AWKWARD",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "обрывки «Тумба справа.» / «Цвет - …»; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "country-desk-2ped",
+      "quality_before": [
+        "TOO_THIN",
+        "AWKWARD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "начало «В обеих тумбах - выдвижные ящики» без образа стола"
+    },
+    {
+      "family_id": "country-wall-shelf",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "второе предложение без подлежащего"
+    },
+    {
+      "family_id": "greenwich-bed",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "первое предложение-подпись «Кровать с мягким изголовьем в деревянной раме»"
+    },
+    {
+      "family_id": "greenwich-chest-scale",
+      "quality_before": [
+        "POLISH",
+        "GENERIC",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«тихим фоном или заметным акцентом»; короткое первое предложение; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "greenwich-console-step",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "greenwich-desk-base",
+      "quality_before": [
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Корпус - в одном из 12 цветов» - тире вместо глагола; найдено усиленным детектором эллипсиса; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "greenwich-tv-wide",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "схема «по краям - …, в центре - …»; «Палитра - 12, рама - …»"
+    },
+    {
+      "family_id": "greenwich-vitrine-crystal",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "greenwich-wardrobe-level",
+      "quality_before": [
+        "AWKWARD",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "начало «Ящик здесь вынесен…» без образа; «из 12, тон рамы - из 2»; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "greenwich-wardrobe-total",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«рама - в светлом или тёмном тоне» - тире вместо глагола; найдено усиленным детектором эллипсиса"
+    },
+    {
+      "family_id": "greenwich-mirror-wall",
+      "quality_before": [
+        "TOO_THIN",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "подпись «Вертикальное прямоугольное зеркало для стены»; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "greenwich-nightstand",
+      "quality_before": [
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«рама - в светлом или тёмном тоне» - тире вместо глагола; найдено усиленным детектором эллипсиса; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "monchelsea-wardrobe-drawers",
+      "quality_before": [
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "протокол «Наверху - …, под ним - …»; «штанги» внутри не подтверждены; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "monchelsea-wardrobe-full",
+      "quality_before": [
+        "AWKWARD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "начало «Обе дверцы идут во всю высоту» без образа шкафа"
+    },
+    {
+      "family_id": "monchelsea-wardrobe-3d",
+      "quality_before": [
+        "AWKWARD",
+        "TOO_THIN",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "начало с детали «Крайние дверцы…»; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "monchelsea-chest-wide",
+      "quality_before": [
+        "POLISH",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "перечень «ручки - скобы, внизу - цоколь»; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "monchelsea-chest-high",
+      "quality_before": [
+        "AWKWARD",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Здесь 6 ящиков…»; «одинаковой высоты» не подтверждено; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "monchelsea-nightstand",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "monchelsea-vanity-mirror",
+      "quality_before": [
+        "TOO_THIN",
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«в подстолье - 3 ящика. Ножки точёные, середина свободна»"
+    },
+    {
+      "family_id": "monchelsea-vanity-plain",
+      "quality_before": [
+        "TOO_THIN",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Под столешницей - один длинный ящик…» без образа; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "monchelsea-mirror-wall",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "monchelsea-mirror-floor",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "monchelsea-mirror-table",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "monchelsea-bed-no-footboard",
+      "quality_before": [
+        "TOO_THIN",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "короткий текст при ограниченном evidence; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "monchelsea-bed-footboard",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review; обзор, площадь или совпадение высоты без опоры на evidence"
+    },
+    {
+      "family_id": "monchelsea-chair",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "monchelsea-tv-stand",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«под ней - 2 ящика. Низ корпуса - цоколь»"
+    },
+    {
+      "family_id": "monchelsea-bench",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«под сиденьем - царга»"
+    },
+    {
+      "family_id": "monchelsea-sofa-trundle",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Спинка высокая, боковины - в филёнках.» (пример из брифа)"
+    },
+    {
+      "family_id": "monchelsea-bookcase-2d",
+      "quality_before": [
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Наверху дверцы застеклены, внизу - глухие»; обзор, площадь или совпадение высоты без опоры на evidence"
+    },
+    {
+      "family_id": "monchelsea-bookcase-1d",
+      "quality_before": [
+        "TOO_THIN",
+        "AWKWARD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "служебная фраза про фото без связи с текстом"
+    },
+    {
+      "family_id": "monchelsea-corner-open",
+      "quality_before": [
+        "TOO_THIN",
+        "AWKWARD",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Высокая» не подтверждена; служебная фраза про фото"
+    },
+    {
+      "family_id": "monchelsea-desk-1ped",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "monchelsea-desk-2ped",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Слева - …, справа - …, между ними - …»"
+    },
+    {
+      "family_id": "monchelsea-wall-shelf",
+      "quality_before": [
+        "AWKWARD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "начало-подпись «Полка разделена на открытые ниши»"
+    },
+    {
+      "family_id": "monchelsea-wall-shelf-door",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«На открытой части - …, за дверкой - …»"
+    },
+    {
+      "family_id": "oliver-kids-bed-rail",
+      "quality_before": [
+        "AWKWARD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Длины 2: …»; «внизу - паз»"
+    },
+    {
+      "family_id": "oliver-kids-changing-top",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "пунктуация «, - комод остаётся обычным комодом»"
+    },
+    {
+      "family_id": "oliver-kids-chair",
+      "quality_before": [
+        "TOO_THIN"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Спинка собрана из реек, сиденье мягкое» - подпись"
+    },
+    {
+      "family_id": "oliver-kids-table",
+      "quality_before": [
+        "TOO_THIN",
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«В подстолье - ящик, ножки точёные. На столешнице - рисунок»; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-kids-convertible-bed",
+      "quality_before": [
+        "AWKWARD",
+        "TOO_THIN",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "обрывок «Спереди - решётчатый борт.»; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-kids-bedside-crib",
+      "quality_before": [
+        "AWKWARD",
+        "TOO_THIN",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "начало с местоимения «Её ставят…»; обрывок «Кроватка идёт с матрасом.»; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-kids-crib",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Борта решётчатые, спинка арочная… Под спальным местом - ящик»"
+    },
+    {
+      "family_id": "oliver-kids-canopy-holder",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "oliver-bed",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "телеграфные extras «В изножье - такая же панель»"
+    },
+    {
+      "family_id": "oliver-bed-lift",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "oliver-wardrobe-2d",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Под дверцами - 2 ящика.» + перечень деталей"
+    },
+    {
+      "family_id": "oliver-wardrobe-1d-mirror",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-wardrobe-corner",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "короткое первое предложение; «- те же, что…»"
+    },
+    {
+      "family_id": "oliver-wardrobe-3d",
+      "quality_before": [
+        "POLISH",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«одежда - за дверцами, мелочи - в ящиках»; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-vanity",
+      "quality_before": [
+        "TOO_THIN",
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Овальное зеркало стоит на 2 точёных стойках.» (пример из брифа)"
+    },
+    {
+      "family_id": "oliver-chest-standard",
+      "quality_before": [
+        "POLISH",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "обрывок «Это базовый формат серии.»; «- общие для всех»; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-chest-wide",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "oliver-chest-high",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-trunk",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-nightstand-niche",
+      "quality_before": [
+        "POLISH",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«в ящике - то, что…»; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-nightstand-door",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "oliver-mirror-oval-wall",
+      "quality_before": [
+        "AWKWARD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "подпись «Рама у зеркала широкая и гладкая.»"
+    },
+    {
+      "family_id": "oliver-mirror-floor",
+      "quality_before": [
+        "POLISH",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«внизу - изогнутые опоры»; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-chair",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "oliver-dining-table",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-sideboard-low",
+      "quality_before": [
+        "POLISH",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«в ящиках - приборы и салфетки»; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-buffet",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«наверху - …, внизу - …»"
+    },
+    {
+      "family_id": "oliver-vitrine",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-clock",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Под циферблатом - цветочный рисунок.»"
+    },
+    {
+      "family_id": "oliver-tv-stand",
+      "quality_before": [
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«По краям - …, в центре - …»; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-tea-table-round",
+      "quality_before": [
+        "TOO_THIN",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "нет формы столешницы, хотя она в названии; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-console",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-console-shelves",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Под столешницей - 2 ящика, ниже - открытые полки.»"
+    },
+    {
+      "family_id": "oliver-bench-large",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-bench-small",
+      "quality_before": [
+        "AWKWARD",
+        "TOO_THIN"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Её место - у туалетного столика»; обрывок про ткань; найдено усиленным детектором эллипсиса"
+    },
+    {
+      "family_id": "oliver-bookcase-open",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "oliver-shelving-wide",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "oliver-armchair",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "oliver-sofa-bed-small",
+      "quality_before": [
+        "AWKWARD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«ночью - кровать для гостя» - тире вместо глагола; найдено усиленным детектором эллипсиса"
+    },
+    {
+      "family_id": "oliver-sofa-small",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-sofa-large",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-bookcase-glass",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "обрывок «Верхние дверцы застеклены, нижние - глухие.»"
+    },
+    {
+      "family_id": "oliver-study-cabinet",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«по краям - …, в центре - …»"
+    },
+    {
+      "family_id": "oliver-desk-1ped",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«за её дверцей - полки, под столешницей - ящики»"
+    },
+    {
+      "family_id": "oliver-etagere",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-bureau",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«над столешницей - ярус… Под столешницей - 2 тумбы»"
+    },
+    {
+      "family_id": "oliver-work-table",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-wall-shelf",
+      "quality_before": [
+        "POLISH",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "extra «над ним - открытые полки»; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-wall-shelf-corner",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "oliver-desk-2ped",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«В подстолье - ящики, между тумбами - место для стула»"
+    },
+    {
+      "family_id": "oliver-desk-2ped-study",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«В подстолье - ящики»"
+    },
+    {
+      "family_id": "oxford-loft-desk",
+      "quality_before": [
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Наверху - спальное место…, внизу - рабочий стол»; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review; обзор, площадь или совпадение высоты без опоры на evidence"
+    },
+    {
+      "family_id": "oxford-lower-bed-wide",
+      "quality_before": [
+        "TOO_THIN",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "короткий текст; начало «Под верхним ярусом…» без предмета; обзор, площадь или совпадение высоты без опоры на evidence"
+    },
+    {
+      "family_id": "oxford-steps",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "princess-rose-wardrobe-2d",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Сверху - арочный карниз… В нижней части дверец - рисунок»"
+    },
+    {
+      "family_id": "princess-rose-wardrobe-3d",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "princess-rose-chest-standard",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "первое предложение-подпись"
+    },
+    {
+      "family_id": "princess-rose-nightstand",
+      "quality_before": [
+        "AWKWARD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "обрывок «Ручка ящика - Сваровски.»"
+    },
+    {
+      "family_id": "princess-rose-bed",
+      "quality_before": [
+        "TOO_THIN"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "у варианта без рисунка текст короче 200 знаков"
+    },
+    {
+      "family_id": "princess-rose-mirror-wall",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "princess-rose-mirror-floor",
+      "quality_before": [
+        "GENERIC"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«повторяют плавные линии мебели» - общая фраза"
+    },
+    {
+      "family_id": "princess-rose-clock",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Под циферблатом - рисунок с розами»"
+    },
+    {
+      "family_id": "princess-rose-chair",
+      "quality_before": [
+        "AWKWARD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Сиденье и вставка в спинке - мягкие.»"
+    },
+    {
+      "family_id": "princess-rose-tv-stand",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Оба ящика вынесены по бокам, в центре - ниша, внизу - полка.» + обрывок про ручки"
+    },
+    {
+      "family_id": "princess-rose-bench",
+      "quality_before": [
+        "POLISH",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«под сиденьем - резной подзор»; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "princess-rose-bookcase-glass",
+      "quality_before": [
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«на нижних филёнках - рисунок, наверху - карниз»; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "princess-rose-bookcase-open",
+      "quality_before": [
+        "TOO_THIN"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "короткий текст"
+    },
+    {
+      "family_id": "princess-rose-desk-1ped",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Фасады в рельефной сетке, под столешницей - ящик…» (пример из брифа)"
+    },
+    {
+      "family_id": "princess-rose-desk-2ped",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Ящики в одной тумбе, полки - в другой. Между тумбами - …»"
+    },
+    {
+      "family_id": "princess-rose-etagere",
+      "quality_before": [
+        "TOO_THIN",
+        "AWKWARD",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "TOO_THIN"
+      ],
+      "polish_reason": "подпись «… без дверец - для книг…»; фото нет, поэтому текст остаётся коротким; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review",
+      "after_note": "фото товара нет; длиннее без выдуманных деталей не написать"
+    },
+    {
+      "family_id": "princess-rose-wall-shelf",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "princess-rose-kids-chair",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«на сиденье - рисунок с розами»"
+    },
+    {
+      "family_id": "princess-rose-changing-top",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "princess-rose-kids-table",
+      "quality_before": [
+        "AWKWARD",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "начало «Ножки изогнутые, в подстолье спрятан ящик.»; оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "princess-rose-bed-rail",
+      "quality_before": [
+        "TOO_THIN",
+        "POLISH"
+      ],
+      "quality_after": [
+        "TOO_THIN"
+      ],
+      "polish_reason": "«Выпускается в 2 длинах - …» без подлежащего; фото нет, поэтому текст остаётся коротким",
+      "after_note": "фото товара нет; длиннее без выдуманных деталей не написать"
+    },
+    {
+      "family_id": "princess-rose-convertible-bed",
+      "quality_before": [
+        "AWKWARD",
+        "TOO_THIN"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "первое предложение без сказуемого"
+    },
+    {
+      "family_id": "princess-rose-vanity",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "provence-chest-standard",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "первое предложение-подпись; «Отделка - …»"
+    },
+    {
+      "family_id": "provence-wardrobe-3d",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "provence-wardrobe-2d",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "provence-vanity",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "provence-nightstand",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review; обзор, площадь или совпадение высоты без опоры на evidence"
+    },
+    {
+      "family_id": "provence-bed",
+      "quality_before": [
+        "TOO_THIN",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Кровать с невысоким арочным изголовьем.» (пример из брифа); оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "provence-mirror-wall",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "provence-mirror-floor",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "оценка удобства без опоры на evidence («удобно прислониться», «удобно сидеть», «удобно держать»), найдено Codex review"
+    },
+    {
+      "family_id": "provence-bench",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«под ним - царга…, ниже - изогнутые ножки»"
+    },
+    {
+      "family_id": "provence-bookcase-open",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "provence-bookcase-glass",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "provence-chair",
+      "quality_before": [
+        "POLISH"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "перечень через двоеточие; «Каркас стула - …»"
+    },
+    {
+      "family_id": "provence-tea-table",
+      "quality_before": [
+        "TOO_THIN"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "короткий текст"
+    },
+    {
+      "family_id": "provence-tv-stand",
+      "quality_before": [
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Между ящиками - ниша, ниже - полка»; «Отделка - …»; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "provence-etagere-small",
+      "quality_before": [
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "provence-etagere-large",
+      "quality_before": [
+        "POLISH",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "подпись «Высокая открытая этажерка на 6 полок.»; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "provence-wall-shelf",
+      "quality_before": [
+        "GOOD"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": ""
+    },
+    {
+      "family_id": "provence-desk-1ped",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«под столешницей - ящик и резной подзор. Ножки короткие и изогнутые.»"
+    },
+    {
+      "family_id": "provence-desk-2ped",
+      "quality_before": [
+        "TOO_TECHNICAL"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«В одной тумбе - ящики, в другой - полки. Между тумбами - …»"
+    },
+    {
+      "family_id": "ww-chest-high",
+      "quality_before": [
+        "AWKWARD",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«роспись проходит через несколько ящиков» неверно для «Феи» и «Ежик»; «корпус из ЛДСП» вместо боковин и задних стенок; подписи «Роспись «X» - …»"
+    },
+    {
+      "family_id": "ww-chest-standard",
+      "quality_before": [
+        "AWKWARD",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "подписи «Роспись «X» - …»; «корпус из ЛДСП» вместо боковин и задних стенок"
+    },
+    {
+      "family_id": "ww-desk",
+      "quality_before": [
+        "AWKWARD",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Тумб нет - стул задвигается»; «корпус из ЛДСП» вместо боковин и задних стенок; гарантия вместимости, посадки или обзора без опоры на evidence («хватает места», «свободно помещаются», «видны с любого места»), найдено Codex review"
+    },
+    {
+      "family_id": "ww-bookcase",
+      "quality_before": [
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Внизу - 2 выдвижных ящика: туда уходит…»; «корпус из ЛДСП»"
+    },
+    {
+      "family_id": "ww-bookcase-tall",
+      "quality_before": [
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«в основании - 2 ящика»; «корпус из ЛДСП»"
+    },
+    {
+      "family_id": "ww-wardrobe-tall",
+      "quality_before": [
+        "TOO_TECHNICAL",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Наверху - фронтон, в основании - 2 ящика, между ними - 2 дверцы.» (пример из брифа); «корпус из ЛДСП»"
+    },
+    {
+      "family_id": "ww-kids-table",
+      "quality_before": [
+        "AWKWARD",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Роспись вынесена на столешницу - на неё смотрят…»; сравнение или превосходная степень без опоры на evidence («самый вместительный», «может заменить», «ребёнка видно»), найдено Codex review"
+    },
+    {
+      "family_id": "ww-vanity",
+      "quality_before": [
+        "AWKWARD",
+        "FACT_RISK"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "«Зеркало здесь овальное, на стойке, а по бокам - 2 ящика»; «корпус из ЛДСП»"
+    },
+    {
+      "family_id": "ww-nightstand",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-bed",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-chair",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-wardrobe-combined",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-sofa-small",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-wall-shelf",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-kids-chair",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-crib",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-mirror-oval-wall",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-mirror-floor",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-desk-1ped",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-desk-2ped",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-toy-chest",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-tv-stand",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-desk-2door",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-convertible-bed",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-changing-top",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-wardrobe-1door",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-bench-small",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "ww-sofa-large",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "новый PDP в свежем snapshot; текст по фото, названию и metadata"
+    },
+    {
+      "family_id": "oxford-lower-bed",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "бывший HOLD; решение владельца B (нижняя кровать, не комплекс); текст по прайсу, подзаголовку и названию"
+    },
+    {
+      "family_id": "ww-convertible-bed-panel",
+      "quality_before": [
+        "NEW"
+      ],
+      "quality_after": [
+        "GOOD"
+      ],
+      "polish_reason": "бывший HOLD; решение владельца A; текст только по видимому на фото, без росписи и механизма"
+    }
+  ],
+  "holds": [],
+  "owner_review_examples": [
+    "co-05-1",
+    "co-66-1",
+    "co-14-2",
+    "greenwich-gr-42-1",
+    "greenwich-gr-02-1",
+    "greenwich-gr-09-1-mirror",
+    "mnm-57-3",
+    "mnm-02-2",
+    "mnm-05-3",
+    "mnm-06-1",
+    "mnm-62-1",
+    "ol-06-1",
+    "ol-02-1",
+    "ol-14-1",
+    "ol-26-1",
+    "ol-43-1",
+    "ol-30-1",
+    "ol-85-1",
+    "ol-81-1",
+    "ol-85-2",
+    "ox-90-1",
+    "ox-14-11",
+    "pr-65-5",
+    "pr-02-1",
+    "pr-14-1",
+    "pr-06-1",
+    "pr-09-2",
+    "pv-14-1",
+    "pv-42-2",
+    "pv-66-6",
+    "mo-02-1",
+    "ba-05-3",
+    "in-67-1",
+    "al-40-2",
+    "al-14-1",
+    "av-65-1",
+    "ba-07-1",
+    "av-09-2",
+    "ol-21-1",
+    "ol-14-2",
+    "fa-05-3",
+    "al-14-2",
+    "pr-65-7",
+    "ox-14-1",
+    "al-95-1"
+  ]
+}
