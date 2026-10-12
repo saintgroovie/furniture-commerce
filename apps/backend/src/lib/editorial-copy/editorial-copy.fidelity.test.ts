@@ -37,16 +37,38 @@ const BEFORE_A = "Комод. Цены в прайс-листе"
 const AFTER_A = "Комод с 3 ящиками.\n\nЦвет выбирается из 4 вариантов."
 const AFTER_B = "Стул на изогнутых ножках.\n\nСиденье мягкое."
 
+function item(
+  product_id: string,
+  handle: string,
+  before: string,
+  after: string,
+  operation: EditorialCopyPacket["items"][number]["operation"] = "editorial_write"
+): EditorialCopyPacket["items"][number] {
+  return {
+    product_id,
+    handle,
+    field: EDITORIAL_COPY_FIELD,
+    before,
+    before_sha256: sha256Text(before),
+    after,
+    operation,
+  }
+}
+
 function packet(items?: EditorialCopyPacket["items"]): EditorialCopyPacket {
+  const resolved = items ?? [
+    item("prod_A1", "co-05-1", BEFORE_A, AFTER_A),
+    item("prod_B2", "pv-23-1", "", AFTER_B),
+  ]
   return {
     packet_version: EDITORIAL_COPY_PACKET_VERSION,
     packet_id: "test-packet",
     field: EDITORIAL_COPY_FIELD,
     generated_from: "fixture",
-    items: items ?? [
-      { product_id: "prod_A1", handle: "co-05-1", field: "description", before_sha256: sha256Text(BEFORE_A), after: AFTER_A },
-      { product_id: "prod_B2", handle: "pv-23-1", field: "description", before_sha256: sha256Text(null), after: AFTER_B },
-    ],
+    generated_at: "2026-10-12T00:00:00.000Z",
+    canonical_target_count: resolved.length,
+    owner_decision: "fixture",
+    items: resolved,
   }
 }
 
@@ -88,6 +110,15 @@ const liveClean = (): LiveProductRow[] => [
   badSha.items[0].before_sha256 = "ABC"
   assert.equal(parseEditorialCopyPacket(badSha).ok, false)
 
+  const lied = packet()
+  lied.items[0].before = "other text"
+  assert.equal(parseEditorialCopyPacket(lied).ok, false, "before hash must match the before text")
+
+  const satisfied = packet([item("prod_A1", "co-05-1", AFTER_A, AFTER_A, "already_satisfied")])
+  assert.equal(parseEditorialCopyPacket(satisfied).ok, true)
+  const fakeSatisfied = packet([item("prod_A1", "co-05-1", BEFORE_A, AFTER_A, "already_satisfied")])
+  assert.equal(parseEditorialCopyPacket(fakeSatisfied).ok, false, "already_satisfied cannot hide a write")
+
   for (const bad of ["", "  text", "a\r\nb", "a\n\n\nb", "a\u0007b", "x".repeat(2001)]) {
     const p = packet()
     p.items[0].after = bad
@@ -99,7 +130,16 @@ const liveClean = (): LiveProductRow[] => [
 /* ---------- canonical SHA ignores formatting, not content ---------- */
 {
   const p = packet()
-  const reordered = JSON.parse(JSON.stringify({ items: p.items, field: p.field, packet_id: p.packet_id, generated_from: p.generated_from, packet_version: p.packet_version }))
+  const reordered = JSON.parse(JSON.stringify({
+    items: p.items,
+    owner_decision: p.owner_decision,
+    canonical_target_count: p.canonical_target_count,
+    generated_at: p.generated_at,
+    field: p.field,
+    packet_id: p.packet_id,
+    generated_from: p.generated_from,
+    packet_version: p.packet_version,
+  }))
   assert.equal(computeArtifactSha(p), computeArtifactSha(reordered))
   const changed = packet()
   changed.items[0].after = AFTER_A + " "
@@ -338,10 +378,37 @@ function findRepoRoot(start: string): string | null {
       const a = idx.value.get(item.handle)
       assert.equal(a?.kind, "copy", `${item.handle} must be a family member`)
       if (a?.kind === "copy") assert.equal(item.after, a.description, `${item.handle} packet text drifted from family source`)
-      const issues = findCopyIssues(item.after, {}).filter((i) => i !== "too_short")
+      const lengthException = item.handle === "pr-84-1" || item.handle === "pr-84-2"
+      const issues = findCopyIssues(item.after, {}).filter((i) => i !== "too_short" && !(lengthException && i === "raw_dimension"))
       assert.deepEqual(issues, [], `${item.handle}: ${JSON.stringify(issues)}`)
+      if (lengthException) {
+        assert.ok(findCopyIssues(item.after, {}).includes("raw_dimension"), `${item.handle} must name its proven length`)
+      }
       const styleIssues = findStyleIssues(item.after, { productType: a?.kind === "copy" ? a.family.product_type : undefined })
+        .filter((i) => !(lengthException && i === "thin"))
       assert.deepEqual(styleIssues, [], `${item.handle} style: ${JSON.stringify(styleIssues)}`)
+    }
+    const rail1 = parsed.value.items.find((i) => i.handle === "pr-84-1")
+    const rail2 = parsed.value.items.find((i) => i.handle === "pr-84-2")
+    assert.ok(rail1 && rail2)
+    assert.equal(rail1.operation, "editorial_split_rewrite")
+    assert.equal(rail2.operation, "editorial_split_rewrite")
+    assert.equal(
+      rail1.after,
+      "Бортик ставится на край кровати и закрывает часть спального места сбоку.\n\nЭто малый бортик длиной 70 см."
+    )
+    assert.equal(
+      rail2.after,
+      "Бортик ставится на край кровати и закрывает часть спального места сбоку.\n\nЭто большой бортик длиной 100 см."
+    )
+    assert.notEqual(rail1.after, rail2.after)
+    assert.equal(rail1.after.includes("70 см"), true)
+    assert.equal(rail1.after.includes("100 см"), false)
+    assert.equal(rail2.after.includes("100 см"), true)
+    assert.equal(rail2.after.includes("70 см"), false)
+    for (const rail of [rail1, rail2]) {
+      assert.equal(rail.after.includes("2 длинах"), false)
+      assert.equal(rail.after.includes("малый и большой"), false)
     }
   }
 }

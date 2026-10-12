@@ -227,23 +227,31 @@ export type PacketSourceRow = { product_id: string; handle: string; description:
 /** Packet rows for every product whose description changes; sorted by handle for a stable file. */
 export function buildEditorialPacket(
   rows: PacketSourceRow[],
-  meta: { packet_id: string; generated_from: string }
+  meta: { packet_id: string; generated_from: string; generated_at?: string; owner_decision?: string }
 ): EditorialCopyPacket {
   const items = rows
     .filter((r) => r.proposed !== null && r.proposed !== (r.description ?? null))
-    .map((r) => ({
-      product_id: r.product_id,
-      handle: r.handle,
-      field: EDITORIAL_COPY_FIELD,
-      before_sha256: sha256Text(r.description),
-      after: r.proposed as string,
-    }))
+    .map((r) => {
+      const before = r.description ?? ""
+      return {
+        product_id: r.product_id,
+        handle: r.handle,
+        field: EDITORIAL_COPY_FIELD,
+        before,
+        before_sha256: sha256Text(before),
+        after: r.proposed as string,
+        operation: "editorial_write" as const,
+      }
+    })
     .sort((a, b) => (a.handle < b.handle ? -1 : a.handle > b.handle ? 1 : 0))
   return {
     packet_version: EDITORIAL_COPY_PACKET_VERSION,
     packet_id: meta.packet_id,
     field: EDITORIAL_COPY_FIELD,
     generated_from: meta.generated_from,
+    generated_at: meta.generated_at ?? "2026-10-12T00:00:00.000Z",
+    canonical_target_count: items.length,
+    owner_decision: meta.owner_decision ?? "fixture",
     items,
   }
 }

@@ -1,9 +1,11 @@
 /**
  * Editorial copy apply packet - the only input the description importer accepts.
  *
- * A packet is a closed list of `{ product_id, handle, before_sha256, after }` rows for
- * `product.description`. Nothing else can be expressed: no other field, no create,
- * no status / price / title / handle. Parsing is strict and fail-closed.
+ * A packet is a closed list of description rows. Each row carries the current before
+ * text, its sha256, the final after text, and an operation class. The importer may
+ * write only `after` into `product.description`. Nothing else can be expressed:
+ * no other field, no create, no status / price / title / handle. Parsing is strict
+ * and fail-closed.
  *
  * Pure - no I/O.
  */
@@ -14,12 +16,23 @@ export const EDITORIAL_COPY_ROLLBACK_VERSION = "woodright-editorial-copy-rollbac
 export const EDITORIAL_COPY_FIELD = "description" as const
 export const EDITORIAL_COPY_MAX_LENGTH = 2000
 
+export const EDITORIAL_COPY_OPERATIONS = [
+  "editorial_write",
+  "editorial_rewrite",
+  "editorial_split_rewrite",
+  "already_satisfied",
+] as const
+export type EditorialCopyOperation = (typeof EDITORIAL_COPY_OPERATIONS)[number]
+
 export type EditorialCopyItem = {
   product_id: string
   handle: string
   field: typeof EDITORIAL_COPY_FIELD
+  /** Exact current description. Empty string when the live value is unset. */
+  before: string
   before_sha256: string
   after: string
+  operation: EditorialCopyOperation
 }
 
 export type EditorialCopyPacket = {
@@ -27,13 +40,27 @@ export type EditorialCopyPacket = {
   packet_id: string
   field: typeof EDITORIAL_COPY_FIELD
   generated_from: string
+  /** UTC timestamp, second or millisecond precision, Zulu. */
+  generated_at: string
+  canonical_target_count: number
+  owner_decision: string
   items: EditorialCopyItem[]
 }
 
 export type ParseResult<T> = { ok: true; value: T } | { ok: false; errors: string[] }
 
-const PACKET_KEYS = ["field", "generated_from", "items", "packet_id", "packet_version"]
-const ITEM_KEYS = ["after", "before_sha256", "field", "handle", "product_id"]
+const PACKET_KEYS = [
+  "canonical_target_count",
+  "field",
+  "generated_at",
+  "generated_from",
+  "items",
+  "owner_decision",
+  "packet_id",
+  "packet_version",
+]
+const ITEM_KEYS = ["after", "before", "before_sha256", "field", "handle", "operation", "product_id"]
+const GENERATED_AT_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/
 const PRODUCT_ID_RE = /^prod_[A-Za-z0-9]+$/
 const HANDLE_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const SHA256_RE = /^[0-9a-f]{64}$/
@@ -96,9 +123,18 @@ export function parseEditorialCopyPacket(input: unknown): ParseResult<EditorialC
   if (input.field !== EDITORIAL_COPY_FIELD) errors.push(`field must be ${EDITORIAL_COPY_FIELD}`)
   if (typeof input.packet_id !== "string" || !input.packet_id.trim()) errors.push("packet_id is required")
   if (typeof input.generated_from !== "string") errors.push("generated_from must be a string")
+  if (typeof input.generated_at !== "string" || !GENERATED_AT_RE.test(input.generated_at)) {
+    errors.push("generated_at must be a UTC timestamp")
+  }
+  if (typeof input.owner_decision !== "string" || !input.owner_decision.trim()) {
+    errors.push("owner_decision is required")
+  }
   if (!Array.isArray(input.items) || input.items.length === 0) {
     errors.push("items must be a non-empty array")
     return { ok: false, errors }
+  }
+  if (input.canonical_target_count !== input.items.length) {
+    errors.push(`canonical_target_count must equal items.length (${input.items.length})`)
   }
 
   const ids = new Set<string>()
@@ -125,8 +161,24 @@ export function parseEditorialCopyPacket(input: unknown): ParseResult<EditorialC
       if (handle <= prevHandle) errors.push(`${at}.handle not in ascending order`)
       prevHandle = handle
     }
+    if (typeof raw.before !== "string") errors.push(`${at}.before must be a string`)
+    else if (raw.before.includes("\r") || CONTROL_RE.test(raw.before)) {
+      errors.push(`${at}.before contains a forbidden control character`)
+    }
     if (typeof raw.before_sha256 !== "string" || !SHA256_RE.test(raw.before_sha256)) {
       errors.push(`${at}.before_sha256 must be a lowercase sha256 hex`)
+    } else if (typeof raw.before === "string" && sha256Text(raw.before) !== raw.before_sha256) {
+      errors.push(`${at}.before_sha256 does not match before`)
+    }
+    if (!EDITORIAL_COPY_OPERATIONS.includes(raw.operation as EditorialCopyOperation)) {
+      errors.push(`${at}.operation is invalid`)
+    } else if (typeof raw.before === "string" && typeof raw.after === "string") {
+      if (raw.operation === "already_satisfied" && raw.before !== raw.after) {
+        errors.push(`${at}.already_satisfied requires before === after`)
+      }
+      if (raw.operation !== "already_satisfied" && raw.before === raw.after) {
+        errors.push(`${at}.operation ${raw.operation} requires before !== after`)
+      }
     }
     const textErr = validateDescriptionText(raw.after)
     if (textErr) errors.push(`${at}.${textErr}`)

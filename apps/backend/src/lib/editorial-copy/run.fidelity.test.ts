@@ -44,9 +44,12 @@ const packet: EditorialCopyPacket = {
   packet_id: "run-test",
   field: EDITORIAL_COPY_FIELD,
   generated_from: "fixture",
+  generated_at: "2026-10-12T00:00:00.000Z",
+  canonical_target_count: 2,
+  owner_decision: "fixture",
   items: [
-    { product_id: "prod_A1", handle: "co-05-1", field: "description", before_sha256: sha256Text("old A"), after: AFTER_A },
-    { product_id: "prod_B2", handle: "pv-23-1", field: "description", before_sha256: sha256Text(null), after: AFTER_B },
+    { product_id: "prod_A1", handle: "co-05-1", field: "description", before: "old A", before_sha256: sha256Text("old A"), after: AFTER_A, operation: "editorial_write" },
+    { product_id: "prod_B2", handle: "pv-23-1", field: "description", before: "", before_sha256: sha256Text(null), after: AFTER_B, operation: "editorial_write" },
   ],
 }
 const SHA = computeArtifactSha(packet)
