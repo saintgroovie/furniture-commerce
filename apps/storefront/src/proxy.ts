@@ -147,8 +147,13 @@ export async function proxy(request: NextRequest) {
 
   const productHandle = request.nextUrl.pathname.match(/^\/product\/([^/]+)$/)
   if (productHandle) {
-    const key = decodeURIComponent(productHandle[1])
-    const retired = retiredRedirectTarget(key, false)
+    let key: string | null = null
+    try {
+      key = decodeURIComponent(productHandle[1])
+    } catch {
+      key = null
+    }
+    const retired = key ? retiredRedirectTarget(key, false) : null
     if (retired && !(await productIsStillPublic(key))) {
       const url = request.nextUrl.clone()
       url.pathname = `/product/${retired.survivorHandle}`

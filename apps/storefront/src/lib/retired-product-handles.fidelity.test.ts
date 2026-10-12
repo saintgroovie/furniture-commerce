@@ -25,5 +25,7 @@ const proxy = readFileSync(join(process.cwd(), "src/proxy.ts"), "utf8")
 assert.match(proxy, /productIsStillPublic/)
 assert.match(proxy, /retiredRedirectTarget/)
 assert.match(proxy, /searchParams\.set\("variant"/)
+assert.match(proxy, /decodeURIComponent\(productHandle\[1\]\)/)
+assert.match(proxy, /catch/)
 
 console.log("retired-product-handles.fidelity.test.ts: ok")
