@@ -399,20 +399,20 @@ export default async function ProductPage({
         ? bedMatrixMedia.extraSrcs
         : paintMatrixMedia
           ? paintMatrixMedia.extraSrcs
-          : collectDisplayGroupExtraImageUrls([product, ...displayGroupMembers], mainNorm)
+          : collectDisplayGroupExtraImageUrls([viewProduct, ...displayGroupMembers], mainNorm)
 
   const { mainSrc: bundledMain, extraSrcs: bundledExtras } = resolvePdpMediaBundle(
     mainNorm,
-    filterProvenceSceneOnlyPdpExtras(product, mainNorm, pdpExtraSrcs)
+    filterProvenceSceneOnlyPdpExtras(viewProduct, mainNorm, pdpExtraSrcs)
   )
   // Shared PDP boundary: restore evidence-protected angles, then drop true near-dups
   // (covers Oliver buyer gallery, execution selectors, and plain collect paths).
   const restoredOrder = promoteClosedFrontHero(
-    product as Record<string, unknown>,
+    viewProduct,
     restoreEvidenceProtectedAngles(
       handle,
       [bundledMain, ...bundledExtras],
-      collectProductImageUrls(product as Record<string, unknown>)
+      collectProductImageUrls(viewProduct)
     )
   )
   const evidenced = resolveCardHeroAndNearDuplicateExtras(
