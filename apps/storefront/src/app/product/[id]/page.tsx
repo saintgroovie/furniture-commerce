@@ -33,7 +33,7 @@ import {
 } from "@/lib/request-quote"
 import { ProductCta } from "@/components/product-cta"
 import { PdpPriceBlock } from "@/components/pdp-price-block"
-import { resolveOriginalBasePrice } from "@/lib/sale-price"
+import { resolveOriginalBasePriceOf } from "@/lib/sale-price"
 import { PdpMaterialTierSelect } from "@/components/pdp-material-tier-select"
 import { PdpSizeChips } from "@/components/pdp-size-chips"
 import { PdpHingeSideSelect } from "@/components/pdp-hinge-side-select"
@@ -853,7 +853,11 @@ export default async function ProductPage({
                         : null
                 }
                 basePrice={price}
-                originalBasePrice={resolveOriginalBasePrice(product as Record<string, unknown>)}
+                originalBasePrice={resolveOriginalBasePriceOf(
+                  (selectedVariant as Record<string, unknown> | null) ??
+                    ((product.variants as Array<Record<string, unknown>> | undefined)?.[0] ??
+                      null)
+                )}
                 requiresBuyerSelection={
                   useExecutionPdp &&
                   !isRequestQuoteProduct(product) &&

@@ -19,6 +19,17 @@ assert.equal(pdpVariantPrice(product, second), 1500, "selected variant: its own 
 assert.equal(pdpVariantPrice(product, unpriced), null, "unpriced selection does not inherit the first SKU")
 assert.equal(pdpVariantPrice(product, { id: "v5" }), null, "variant without prices stays unpriced")
 assert.equal(pdpVariantPrice(product, promoOnly), priceOfVariant(promoOnly))
+{
+  const onSale = {
+    id: "v6",
+    prices: [
+      { amount: 1500, price_list_id: null },
+      { amount: 900, price_list_id: "plist_1" },
+    ],
+    calculated_price: { calculated_amount: 1200, original_amount: 1500 },
+  }
+  assert.equal(priceOfVariant(onSale), 1200, "active calculated price wins over the undiscounted base row")
+}
 assert.equal(pdpVariantPrice({ id: "empty", variants: [] }, null), null)
 
 {
