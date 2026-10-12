@@ -89,14 +89,16 @@ export function CatalogBrowseClient({
 }: Props) {
   const hasHydratedPool = Array.isArray(hydratedPool)
   const [state, setState] = useState<CatalogFilterState>(initialState)
-  const [pool, setPool] = useState<Array<Record<string, unknown>> | null>(
-    hasHydratedPool ? hydratedPool : null
+  const [fetchedPool, setFetchedPool] = useState<Array<Record<string, unknown>> | null>(
+    null
   )
-  const [poolStatus, setPoolStatus] = useState<"atf" | "full" | "error">(
-    hasHydratedPool ? "full" : "atf"
-  )
+  const [fetchStatus, setFetchStatus] = useState<"atf" | "full" | "error">("atf")
   const [retryTick, setRetryTick] = useState(0)
   const [, startTransition] = useTransition()
+  // Server pool is rendered directly so a later RSC payload replaces prices
+  // without a second network fetch and without setState inside an effect.
+  const pool = hasHydratedPool ? hydratedPool : fetchedPool
+  const poolStatus: "atf" | "full" | "error" = hasHydratedPool ? "full" : fetchStatus
   const products = pool ?? atfProducts
   const poolReady = poolStatus === "full"
   const kidsKey = kidsProductIds.join(",")
@@ -110,12 +112,6 @@ export function CatalogBrowseClient({
   }, [])
 
   useEffect(() => {
-    if (!hasHydratedPool || !hydratedPool) return
-    setPool(hydratedPool)
-    setPoolStatus("full")
-  }, [hasHydratedPool, hydratedPool])
-
-  useEffect(() => {
     if (hasHydratedPool) return
     let cancelled = false
     ;(async () => {
@@ -126,11 +122,11 @@ export function CatalogBrowseClient({
           scopeCatalogBrowsePool(raw, poolScope, ids)
         )
         if (!cancelled) {
-          setPool(scoped)
-          setPoolStatus("full")
+          setFetchedPool(scoped)
+          setFetchStatus("full")
         }
       } catch {
-        if (!cancelled) setPoolStatus("error")
+        if (!cancelled) setFetchStatus("error")
       }
     })()
     return () => {
@@ -186,7 +182,7 @@ export function CatalogBrowseClient({
             type="button"
             className="catalog-search-btn"
             onClick={() => {
-              setPoolStatus("atf")
+              setFetchStatus("atf")
               setRetryTick((n) => n + 1)
             }}
           >
