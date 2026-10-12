@@ -41,6 +41,7 @@ export type CatalogOpsProduct = {
   description?: string | null
   missing_price?: boolean
   published_invisible?: boolean
+  deleted?: boolean
   dimensions?: { height_mm?: number; width_mm?: number; depth_mm?: number } | null
 }
 
@@ -147,7 +148,7 @@ const FROZEN_GROUPS = [
   { label: "Соседние семьи", count: 31 },
 ]
 
-const COMPLETED: Array<Omit<OpsTask, "affected_items" | "affected_count"> & { affected_items?: AffectedItem[] }> = [
+const COMPLETED: OpsTask[] = [
   done("recovery-closed", "Восстановление каталога закрыто", "2026-10-11", "RECOVERY_CLOSED"),
   done("willie-prices", "Цены Вилли Винки сверены", "2026-10-11", "PRICE_RECONCILED"),
   done("monchelsea-ldsp", "ЛДСП Мончелси уже в ценах", "2026-10-11", "LDSP_LIVE"),
@@ -214,7 +215,9 @@ export function photoItemStatus(handle: string, url: string | null): PhotoItemSt
 }
 
 function buyerVisible(products: CatalogOpsProduct[]): CatalogOpsProduct[] {
-  return products.filter((product) => product.status === "published" && !product.published_invisible)
+  return products.filter(
+    (product) => product.status === "published" && !product.published_invisible && !product.deleted
+  )
 }
 
 function photoTask(products: CatalogOpsProduct[]): OpsTask | null {
@@ -463,20 +466,151 @@ export function matchPhotoFilename(
   name: string,
   handles: string[] = PHOTO_SPEC.map((row) => row.handle)
 ): { handle: string; role: string } | null {
-  const lower = name.toLowerCase()
-  const handle = [...handles]
-    .sort((left, right) => right.length - left.length)
-    .find((candidate) =>
-      new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(candidate)}(?:[^a-z0-9]|$)`).test(lower)
-    )
-  if (!handle) return null
+  const hits = matchingHandles(name, handles)
+  if (hits.length !== 1) return null
+  const handle = hits[0]
   const role =
     Object.entries(ROLE_BY_TOKEN).find(([token]) =>
-      new RegExp(`(?:^|[^a-z])${token}(?:[^a-z]|$)`).test(lower)
+      new RegExp(`(?:^|[^a-z])${token}(?:[^a-z]|$)`).test(name.toLowerCase())
     )?.[1] ?? "HERO"
   return { handle, role }
 }
 
 export function frozenGroupSummary(): Array<{ label: string; count: number }> {
   return FROZEN_GROUPS.map((group) => ({ ...group }))
+}
+
+export const PHOTO_MIN_LONG_SIDE = 1600
+
+export type PhotoPackIssueCode =
+  | "empty"
+  | "bad_mime"
+  | "too_small"
+  | "unreadable"
+  | "unknown_sku"
+  | "ambiguous"
+  | "duplicate_name"
+  | "duplicate_hero"
+
+export type PhotoPackFile = {
+  name: string
+  bytes: number
+  mime: string
+  width: number | null
+  height: number | null
+}
+
+export type PhotoPackIssue = {
+  name: string
+  code: PhotoPackIssueCode
+  handle: string | null
+  text: string
+}
+
+export type PhotoPackResult = {
+  catalog_write: false
+  ready_handles: string[]
+  extra_shots: Array<{ name: string; handle: string; role: string }>
+  issues: PhotoPackIssue[]
+}
+
+export type BoardLoadView = "loading" | "failed" | "stale" | "ready"
+
+const ACCEPTED_MIME = new Set(["image/jpeg", "image/png"])
+
+function matchingHandles(name: string, handles: string[]): string[] {
+  const lower = name.toLowerCase()
+  return handles.filter((candidate) =>
+    new RegExp(`(?:^|[^a-z0-9])${escapeRegExp(candidate.toLowerCase())}(?:[^a-z0-9]|$)`).test(lower)
+  )
+}
+
+function issueText(code: PhotoPackIssueCode, name: string, extra: string): string {
+  if (code === "empty") return `${name}: пустой файл`
+  if (code === "bad_mime") return `${name}: нужен JPEG или PNG`
+  if (code === "too_small") return `${name}: длинная сторона меньше 1600 px`
+  if (code === "unreadable") return `${name}: размер кадра не прочитался`
+  if (code === "unknown_sku") return `${name}: артикул не из этой съёмки`
+  if (code === "ambiguous") return `${name}: в имени несколько артикулов (${extra})`
+  if (code === "duplicate_name") return `${name}: повтор того же файла`
+  return `${name}: у ${extra} уже есть главный кадр`
+}
+
+export function classifyPhotoPack(
+  files: PhotoPackFile[],
+  handles: string[] = PHOTO_SPEC.map((row) => row.handle)
+): PhotoPackResult {
+  const seen = new Set<string>()
+  const ready = new Set<string>()
+  const issues: PhotoPackIssue[] = []
+  const extra_shots: PhotoPackResult["extra_shots"] = []
+  const push = (name: string, code: PhotoPackIssueCode, handle: string | null, extra = "") => {
+    issues.push({ name, code, handle, text: issueText(code, name, extra || handle || "") })
+  }
+
+  for (const file of files) {
+    const key = file.name.toLowerCase()
+    if (seen.has(key)) {
+      push(file.name, "duplicate_name", null)
+      continue
+    }
+    seen.add(key)
+    if (file.bytes <= 0) {
+      push(file.name, "empty", null)
+      continue
+    }
+    const hits = matchingHandles(file.name, handles)
+    if (hits.length === 0) {
+      push(file.name, "unknown_sku", null)
+      continue
+    }
+    if (hits.length > 1) {
+      push(file.name, "ambiguous", null, hits.join(", "))
+      continue
+    }
+    const handle = hits[0]
+    const role =
+      Object.entries(ROLE_BY_TOKEN).find(([token]) =>
+        new RegExp(`(?:^|[^a-z])${token}(?:[^a-z]|$)`).test(file.name.toLowerCase())
+      )?.[1] ?? "HERO"
+    if (!ACCEPTED_MIME.has(file.mime)) {
+      push(file.name, "bad_mime", handle)
+      continue
+    }
+    if (file.width == null || file.height == null) {
+      push(file.name, "unreadable", handle)
+      continue
+    }
+    if (Math.max(file.width, file.height) < PHOTO_MIN_LONG_SIDE) {
+      push(file.name, "too_small", handle)
+      continue
+    }
+    if (role !== "HERO") {
+      extra_shots.push({ name: file.name, handle, role })
+      continue
+    }
+    if (ready.has(handle)) {
+      push(file.name, "duplicate_hero", handle)
+      continue
+    }
+    ready.add(handle)
+  }
+
+  return {
+    catalog_write: false,
+    ready_handles: [...ready],
+    extra_shots,
+    issues,
+  }
+}
+
+export function boardLoadView(input: {
+  loading: boolean
+  error: string | null
+  hasSnapshot: boolean
+}): BoardLoadView {
+  if (!input.hasSnapshot && input.loading) return "loading"
+  if (!input.hasSnapshot && input.error) return "failed"
+  if (input.error) return "stale"
+  return "ready"
 }

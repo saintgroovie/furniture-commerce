@@ -4,7 +4,9 @@ import {
   CANOPY_SCAN_HASH,
   PHOTO_PLACEHOLDER_HASH,
   activeTasks,
+  boardLoadView,
   buildCatalogOpsBoard,
+  classifyPhotoPack,
   matchPhotoFilename,
   taskMatchesQuery,
   tasksInLane,
@@ -154,5 +156,89 @@ describe("catalog ops board", () => {
     assert.equal(taskMatchesQuery(photo, "принцесса"), true)
     assert.equal(taskMatchesQuery(photo, "первого фото"), true)
     assert.equal(taskMatchesQuery(photo, "черновик"), false)
+    assert.equal(activeTasks(board).filter((task) => task.problem_type === "photography").length, 1)
+    assert.equal(board.tasks.filter((task) => task.status === "done").length, 9)
+    assert.equal(board.tasks.filter((task) => task.status === "frozen").length, 1)
+  })
+
+  it("keeps deleted and non-public rows out of the storefront count", () => {
+    const board = buildCatalogOpsBoard([
+      product({ handle: "live-1" }),
+      product({ handle: "gone-1", deleted: true }),
+      product({ handle: "draft-1", status: "draft" }),
+      product({ handle: "hidden-2", published_invisible: true }),
+    ])
+    assert.equal(board.summary.buyer_visible, 1)
+    assert.equal(board.summary.ready_photos, 1)
+    assert.equal(board.summary.waiting_photos, 0)
+  })
+
+  it("matches a SKU only on a whole token", () => {
+    const handles = ["pr-68-1", "pr-68-10"]
+    assert.deepEqual(matchPhotoFilename("pr-68-1_hero.jpg", handles), {
+      handle: "pr-68-1",
+      role: "HERO",
+    })
+    assert.deepEqual(matchPhotoFilename("pr-68-1-detail.jpg", handles), {
+      handle: "pr-68-1",
+      role: "DETAIL",
+    })
+    assert.deepEqual(matchPhotoFilename("pr-68-10_hero.jpg", handles), {
+      handle: "pr-68-10",
+      role: "HERO",
+    })
+    assert.equal(matchPhotoFilename("pr-68-1_pr-68-10_hero.jpg", handles), null)
+  })
+
+  it("accepts a real jpeg or png and rejects an empty, small, foreign or ambiguous file", () => {
+    const handles = ["pr-68-1", "pr-68-2", "pr-68-10"]
+    const jpeg = { bytes: 1200, mime: "image/jpeg", width: 1600, height: 900 }
+    const pack = classifyPhotoPack(
+      [
+        { name: "pr-68-1_hero.jpg", ...jpeg },
+        { name: "pr-68-1_detail.png", bytes: 800, mime: "image/png", width: 1800, height: 1200 },
+        { name: "pr-68-2_hero.jpg", bytes: 10, mime: "image/jpeg", width: 800, height: 600 },
+        { name: "empty.jpg", bytes: 0, mime: "image/jpeg", width: null, height: null },
+        { name: "pr-68-10_hero.webp", bytes: 400, mime: "image/webp", width: 2000, height: 2000 },
+        { name: "notes.jpg", ...jpeg },
+        { name: "pr-68-1_pr-68-2_hero.jpg", ...jpeg },
+        { name: "pr-68-1_hero.jpg", ...jpeg },
+        { name: "pr-68-10_angle.jpg", bytes: 900, mime: "image/jpeg", width: 100, height: 1600 },
+      ],
+      handles
+    )
+    assert.equal(pack.catalog_write, false)
+    assert.deepEqual(pack.ready_handles, ["pr-68-1"])
+    assert.deepEqual(
+      pack.extra_shots.map((shot) => `${shot.handle}:${shot.role}`),
+      ["pr-68-1:DETAIL", "pr-68-10:ANGLE"]
+    )
+    assert.deepEqual(
+      pack.issues.map((item) => item.code),
+      ["too_small", "empty", "bad_mime", "unknown_sku", "ambiguous", "duplicate_name"]
+    )
+    assert.equal(pack.issues.some((item) => item.code === "too_small" && item.handle === "pr-68-2"), true)
+    const secondHero = classifyPhotoPack(
+      [
+        { name: "pr-68-1_hero.jpg", ...jpeg },
+        { name: "pr-68-1_front.jpg", ...jpeg },
+      ],
+      handles
+    )
+    assert.deepEqual(secondHero.ready_handles, ["pr-68-1"])
+    assert.equal(secondHero.issues[0]?.code, "duplicate_hero")
+  })
+
+  it("keeps a failed catalog load visible and does not replace a snapshot with an empty board", () => {
+    assert.equal(boardLoadView({ loading: true, error: null, hasSnapshot: false }), "loading")
+    assert.equal(
+      boardLoadView({ loading: false, error: "Не удалось загрузить товары", hasSnapshot: false }),
+      "failed"
+    )
+    assert.equal(
+      boardLoadView({ loading: false, error: "Не удалось загрузить товары", hasSnapshot: true }),
+      "stale"
+    )
+    assert.equal(boardLoadView({ loading: false, error: null, hasSnapshot: true }), "ready")
   })
 })

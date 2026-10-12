@@ -3,9 +3,11 @@ import { useMemo, useState } from "react"
 import {
   activeTasks,
   buildCatalogOpsBoard,
+  classifyPhotoPack,
   frozenGroupSummary,
-  matchPhotoFilename,
   taskMatchesQuery,
+  type PhotoPackFile,
+  type PhotoPackIssue,
   type CatalogOpsProduct,
   type OpsTask,
   type PhotoItem,
@@ -328,6 +330,7 @@ const STATUS_LABEL: Record<PhotoItem["status"], string> = {
 function PhotoBatch({ items }: { items: PhotoItem[] }) {
   const [rows, setRows] = useState(items)
   const [note, setNote] = useState<string | null>(null)
+  const [issues, setIssues] = useState<PhotoPackIssue[]>([])
   const groups = ["etagere", "guard", "canopy", "other"] as const
   const labels: Record<(typeof groups)[number], string> = {
     etagere: "Этажерки",
@@ -338,20 +341,25 @@ function PhotoBatch({ items }: { items: PhotoItem[] }) {
 
   async function onFiles(list: FileList | null) {
     if (!list || list.length === 0) return
+    const measured = await Promise.all(Array.from(list).map(measurePhotoFile))
+    const pack = classifyPhotoPack(
+      measured,
+      rows.map((row) => row.handle)
+    )
     const next = rows.map((row) => ({ ...row }))
-    for (const file of Array.from(list)) {
-      const match = matchPhotoFilename(
-        file.name,
-        next.map((row) => row.handle)
-      )
-      if (!match || match.role !== "HERO") continue
-      const row = next.find((item) => item.handle === match.handle)
-      if (!row || row.status === "uploaded") continue
-      const ok = await fileLooksLikePhoto(file)
-      row.status = ok ? "ready" : "file_received"
+    for (const handle of pack.ready_handles) {
+      const row = next.find((item) => item.handle === handle)
+      if (row && row.status !== "uploaded") row.status = "ready"
+    }
+    for (const issue of pack.issues) {
+      if (!issue.handle) continue
+      if (issue.code !== "too_small" && issue.code !== "unreadable" && issue.code !== "bad_mime") continue
+      const row = next.find((item) => item.handle === issue.handle)
+      if (row && row.status !== "uploaded" && row.status !== "ready") row.status = "file_received"
     }
     setRows(next)
-    setNote(null)
+    setIssues(pack.issues)
+    setNote(pack.catalog_write ? null : "Каталог с этого экрана не изменяется")
   }
 
   function checkPack() {
@@ -419,24 +427,50 @@ function PhotoBatch({ items }: { items: PhotoItem[] }) {
       <button type="button" className="text-left text-sm font-medium underline underline-offset-4" onClick={checkPack}>
         Проверить комплект
       </button>
+      {issues.length > 0 ? (
+        <ul className="flex flex-col gap-1 text-ui-fg-error">
+          {issues.map((issue) => (
+            <li key={`${issue.code}-${issue.name}`}>{issue.text}</li>
+          ))}
+        </ul>
+      ) : null}
       {note ? <p>{note}</p> : null}
     </div>
   )
 }
 
-function fileLooksLikePhoto(file: File): Promise<boolean> {
-  if (!file.type.startsWith("image/")) return Promise.resolve(false)
+function measurePhotoFile(file: File): Promise<PhotoPackFile> {
+  if (file.size <= 0 || (file.type !== "image/jpeg" && file.type !== "image/png")) {
+    return Promise.resolve({
+      name: file.name,
+      bytes: file.size,
+      mime: file.type,
+      width: null,
+      height: null,
+    })
+  }
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file)
     const image = new Image()
     image.onload = () => {
-      const longSide = Math.max(image.naturalWidth, image.naturalHeight)
       URL.revokeObjectURL(url)
-      resolve(longSide >= 1600)
+      resolve({
+        name: file.name,
+        bytes: file.size,
+        mime: file.type,
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+      })
     }
     image.onerror = () => {
       URL.revokeObjectURL(url)
-      resolve(false)
+      resolve({
+        name: file.name,
+        bytes: file.size,
+        mime: file.type,
+        width: null,
+        height: null,
+      })
     }
     image.src = url
   })

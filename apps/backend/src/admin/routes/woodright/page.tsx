@@ -6,6 +6,7 @@ import { CatalogOpsBoard } from "../../components/woodright/CatalogOpsBoard"
 import { DeskFrame } from "../../components/woodright/DeskNav"
 import { useDeskExtras } from "../../lib/use-desk-extras"
 import { useWoodrightProducts } from "../../lib/use-woodright-products"
+import { boardLoadView } from "../../../lib/woodright-admin/catalog-ops-board"
 import {
   buildDeskInbox,
   type DeskInboxItem,
@@ -15,6 +16,11 @@ const WoodrightOverviewPage = () => {
   const { data, loading, error } = useWoodrightProducts()
   const extras = useDeskExtras()
   const leadsById = new Map(extras.leads.map((lead) => [lead.id, lead]))
+  const loadView = boardLoadView({
+    loading,
+    error,
+    hasSnapshot: Boolean(data),
+  })
   const otherWork = buildDeskInbox({
     now: new Date(),
     products: [],
@@ -36,22 +42,34 @@ const WoodrightOverviewPage = () => {
   return (
     <Container className="divide-y p-0">
       <DeskFrame title="Каталог" lead="Только то, что ещё можно закрыть" active="today">
-        {error ? (
-          <div className="px-6 py-4">
-            <Text size="small" className="text-ui-fg-error">
-              {error}
-            </Text>
-          </div>
-        ) : null}
-        {loading ? (
+        {loadView === "loading" ? (
           <div className="px-6 py-4">
             <Text size="small" className="text-ui-fg-subtle">
               Загружаем каталог…
             </Text>
           </div>
-        ) : (
+        ) : null}
+        {loadView === "failed" && error ? (
+          <div className="px-6 py-8">
+            <Text weight="plus">Каталог не загрузился</Text>
+            <Text size="small" className="text-ui-fg-error mt-2 block">
+              {error}
+            </Text>
+            <Text size="small" className="text-ui-fg-subtle mt-2 block">
+              Повторите загрузку. Пустой стол вместо снимка не показываем
+            </Text>
+          </div>
+        ) : null}
+        {loadView === "stale" && error ? (
+          <div className="px-6 py-4">
+            <Text size="small" className="text-ui-fg-error">
+              {error}. На экране прошлый снимок
+            </Text>
+          </div>
+        ) : null}
+        {loadView === "ready" || loadView === "stale" ? (
           <CatalogOpsBoard products={data?.products ?? []} />
-        )}
+        ) : null}
         {extras.error ? (
           <div className="px-6 py-4 border-t border-ui-border-base">
             <Text size="small" className="text-ui-fg-error">
