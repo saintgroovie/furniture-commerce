@@ -293,6 +293,31 @@ def identify(product: dict[str, Any]) -> dict[str, Any] | None:
     }
 
 
+def _axes_for_applied_variant(shared: dict[str, dict[str, Any]], variant: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Axes of one SKU already stored on a product.
+
+    Stored variant_axes win. A mattress measured on this SKU still wins over the
+    mattress copied from the first variant of the product title.
+    """
+    per_variant = _axes_from_variant_metadata(variant)
+    axes = dict(per_variant or shared)
+    if per_variant and "mattress_size" in per_variant:
+        return axes
+    own = mattress_of(variant)
+    if not own:
+        return axes
+    axes["mattress_size"] = {
+        "key": "mattress_size",
+        "value": own["key"],
+        "display": own["display"],
+        "sort": own["width"] * 1000 + own["length"],
+        "label": AXIS_LABEL["mattress_size"],
+        "width": own["width"],
+        "length": own["length"],
+    }
+    return axes
+
+
 def _axes_from_variant_metadata(variant: dict[str, Any]) -> dict[str, dict[str, Any]] | None:
     raw = (variant.get("metadata") or {}).get("variant_axes") or {}
     if not isinstance(raw, dict) or not raw:
@@ -404,11 +429,8 @@ def classify_products(products: list[dict[str, Any]]) -> dict[str, Any]:
                 blocker="",
             )
             for variant in variants:
-                per_variant = _axes_from_variant_metadata(variant)
-                row_member = member
-                if per_variant:
-                    row_member = dict(member)
-                    row_member["axes"] = per_variant
+                row_member = dict(member)
+                row_member["axes"] = _axes_for_applied_variant(member.get("axes") or {}, variant)
                 rows.append(_row(product, variant, row_member))
             continue
         identity = identify(product)

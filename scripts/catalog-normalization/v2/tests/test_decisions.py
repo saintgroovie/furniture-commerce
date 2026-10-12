@@ -230,9 +230,13 @@ class DecisionTest(unittest.TestCase):
             ],
         )
         rows = classify([merged])["rows"]
+        by = {row["sku"]: row for row in rows}
         self.assertEqual({row["decision"] for row in rows}, {"ALREADY_APPLIED"})
         self.assertEqual(rows[0]["current_price"], rows[0]["expected_price"])
-        self.assertEqual(len({row["sku"] for row in rows}), 2)
+        self.assertEqual(len(by), 2)
+        self.assertEqual(by["GR-09-1"]["mattress_width_cm"], 90)
+        self.assertEqual(by["GR-18-1"]["mattress_width_cm"], 180)
+        self.assertEqual(by["GR-18-1"]["axis_values"]["mattress_size"], "180 × 200 см")
 
     def test_applied_rows_keep_each_variant_size(self):
         merged = product(

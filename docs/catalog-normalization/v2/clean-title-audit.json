@@ -1,0 +1,176 @@
+{
+  "production": "NOT_MUTATED",
+  "database": "medusa-store",
+  "families": 28,
+  "titles": [
+    {
+      "family": "already/prod_01KNTBXADB4V43P4P0KDTHVDQR",
+      "handle": "co-62-1",
+      "title": "Стеллаж Кантри",
+      "problem": "pass"
+    },
+    {
+      "family": "already/prod_01KNTBXADB5BFDKMSAB35J8Z0V",
+      "handle": "co-65-1",
+      "title": "Стол письменный Кантри",
+      "problem": "pass"
+    },
+    {
+      "family": "already/prod_01KNTBXADDACBVH2BM1JSB2MWH",
+      "handle": "ol-05-1",
+      "title": "Комод Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "already/prod_01KNTBXADW0MYZ9SEBBAYPS5V4",
+      "handle": "ol-65-1",
+      "title": "Стол письменный Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "already/prod_01KNTBXAE14DE7Z6FHFMT4X3XZ",
+      "handle": "pv-65-5",
+      "title": "Стол письменный Прованс",
+      "problem": "pass"
+    },
+    {
+      "family": "country-london-paris/CONFIGURABLE/bed/-",
+      "handle": "co-14-2",
+      "title": "Кровать Кантри с подъёмным механизмом",
+      "problem": "pass"
+    },
+    {
+      "family": "greenwich/STANDARD/bed/-",
+      "handle": "greenwich-gr-09-1-bed-90",
+      "title": "Кровать Гринвич",
+      "problem": "pass"
+    },
+    {
+      "family": "greenwich/STANDARD/bedside/-",
+      "handle": "greenwich-gr-08-1",
+      "title": "Прикроватная тумба Гринвич",
+      "problem": "pass"
+    },
+    {
+      "family": "greenwich/STANDARD/wardrobe/-",
+      "handle": "greenwich-gr-02-1",
+      "title": "Гардероб Гринвич",
+      "problem": "pass"
+    },
+    {
+      "family": "oliver/CONFIGURABLE/banquette/-",
+      "handle": "ol-55-1",
+      "title": "Банкетка Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "oliver/CONFIGURABLE/bed/-",
+      "handle": "ol-14-1",
+      "title": "Кровать Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "oliver/CONFIGURABLE/book-shelf/-",
+      "handle": "ol-69-1",
+      "title": "Полка книжная Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "oliver/CONFIGURABLE/chest-tall/-",
+      "handle": "ol-05-3",
+      "title": "Комод высокий Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "oliver/CONFIGURABLE/clothes-wardrobe/-",
+      "handle": "ol-02-1",
+      "title": "Шкаф для одежды Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "oliver/CONFIGURABLE/console/-",
+      "handle": "ol-44-1",
+      "title": "Консоль Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "oliver/CONFIGURABLE/etagere/-",
+      "handle": "ol-68-1",
+      "title": "Этажерка Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "oliver/CONFIGURABLE/nightstand/-",
+      "handle": "ol-08-1",
+      "title": "Тумбочка прикроватная Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "oliver/CONFIGURABLE/sofa/-",
+      "handle": "ol-57-1",
+      "title": "Диван Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "oliver/CONFIGURABLE/transformer/-",
+      "handle": "ol-95-1",
+      "title": "Кровать-трансформер Оливер",
+      "problem": "pass"
+    },
+    {
+      "family": "oliver/STANDARD/rail/-",
+      "handle": "ol-84-1",
+      "title": "Бортик к кровати",
+      "problem": "pass"
+    },
+    {
+      "family": "provence/CONFIGURABLE/banquette/-",
+      "handle": "pv-55-1",
+      "title": "Банкетка Прованс",
+      "problem": "pass"
+    },
+    {
+      "family": "provence/CONFIGURABLE/bed/-",
+      "handle": "pv-14-1",
+      "title": "Кровать Прованс без изножья",
+      "problem": "pass"
+    },
+    {
+      "family": "provence/CONFIGURABLE/clothes-wardrobe/-",
+      "handle": "pv-02-1",
+      "title": "Шкаф для одежды Прованс",
+      "problem": "pass"
+    },
+    {
+      "family": "provence/CONFIGURABLE/desk-two/-",
+      "handle": "pv-66-6",
+      "title": "Стол письменный двухтумбовый Прованс",
+      "problem": "pass"
+    },
+    {
+      "family": "provence/CONFIGURABLE/etagere/-",
+      "handle": "pv-68-1",
+      "title": "Этажерка Прованс",
+      "problem": "pass"
+    },
+    {
+      "family": "willie-winkie/CONFIGURABLE/willie-chest/Полевые цветы",
+      "handle": "pa-05-1",
+      "title": "Комод Полевые цветы",
+      "problem": "pass"
+    },
+    {
+      "family": "willie-winkie/CONFIGURABLE/willie-chest/Рыцари",
+      "handle": "te-05-1",
+      "title": "Комод Рыцари",
+      "problem": "pass"
+    },
+    {
+      "family": "willie-winkie/CONFIGURABLE/willie-chest/Сказочное королевство",
+      "handle": "fk-05-1",
+      "title": "Комод Сказочное королевство",
+      "problem": "pass"
+    }
+  ],
+  "clean_title_pass": true
+}
