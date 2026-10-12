@@ -412,6 +412,17 @@ def classify_products(products: list[dict[str, Any]]) -> dict[str, Any]:
                 rows.append(_row(product, variant, row_member))
             continue
         identity = identify(product)
+        if identity and product.get("status") != "published":
+            rows.append(_row(product, variants[0] if variants else {}, _member(
+                product,
+                family=f"standalone/{sku_of(product) or product.get('handle')}",
+                decision="KEEP_SEPARATE_PRODUCTS",
+                clean=product.get("title") or "",
+                axes={},
+                evidence="unpublished product is not merged into a family",
+                blocker="",
+            )))
+            continue
         if not identity:
             member = _member(
                 product,

@@ -68,6 +68,12 @@ class AlignBuyerPublicTitle(unittest.TestCase):
         self.assertNotIn("product_title", order)
         self.assertIn("product_id", order)
 
+    def test_merge_refuses_an_unpublished_sku(self):
+        source = Path(__file__).resolve().parents[1].joinpath("catalog_norm/sparse_apply.py").read_text()
+        guard = source.split("if len(product_ids) > 1:", 1)[1].split("if len(product_ids) == 1", 1)[0]
+        self.assertIn('row["status"] != "published"', guard)
+        self.assertIn("unpublished sku", guard)
+
 
 if __name__ == "__main__":
     unittest.main()

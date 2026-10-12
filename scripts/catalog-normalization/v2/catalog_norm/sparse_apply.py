@@ -163,6 +163,12 @@ def _apply_family(cur, plan: dict[str, Any]) -> dict[str, Any]:
     by_sku = {row["sku"]: row for row in rows}
     survivor = by_sku[min(plan["skus"])]
     product_ids = {row["product_id"] for row in rows}
+    if len(product_ids) > 1:
+        unpublished = [row["sku"] for row in rows if row["status"] != "published"]
+        if unpublished:
+            raise SystemExit(
+                f"unpublished sku in family {plan['family_key']}: {', '.join(unpublished)}"
+            )
     if len(product_ids) == 1 and survivor["title"] == plan["title"]:
         patched = align_buyer_public_title(survivor["metadata"], plan["title"])
         if patched is None:

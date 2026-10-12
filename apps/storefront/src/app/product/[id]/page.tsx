@@ -520,13 +520,21 @@ export default async function ProductPage({
     sparseMap && selectedVariantId
       ? sparseAxisChoices(sparseMap, selectedVariantId).map((row) => ({
           label: row.label,
-          chips: row.choices.map((choice) => ({
-            id: variantChipTarget(handleForVariant, choice.variantId, resolvedSearchParams),
-            label: choice.label,
-            basePrice: priceOfVariant(variants.find((item) => item.id === choice.variantId)),
-            sort: choice.sort,
-            isCurrent: choice.isCurrent,
-          })),
+          chips: row.choices.map((choice) => {
+            const variant = variants.find((item) => item.id === choice.variantId) ?? null
+            const basePrice = priceOfVariant(variant)
+            return {
+              id: variantChipTarget(handleForVariant, choice.variantId, resolvedSearchParams),
+              label: choice.label,
+              basePrice,
+              materialTiers: buildMaterialTierOptions(
+                withVariantCapabilities(product, variant),
+                basePrice
+              ),
+              sort: choice.sort,
+              isCurrent: choice.isCurrent,
+            }
+          }),
         }))
       : []
   const sizeChips =

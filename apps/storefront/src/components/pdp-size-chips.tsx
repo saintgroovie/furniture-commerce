@@ -23,6 +23,11 @@ export type PdpSizeChip = {
   /** Full-solid (base) RUB price of the chip's product; null → no price shown. */
   basePrice: number | null
   isCurrent: boolean
+  /**
+   * Tiers of this chip's own SKU. When set, the chip price uses these
+   * instead of the SKU currently open on the page.
+   */
+  materialTiers?: MaterialTierOption[] | null
 }
 
 type Props = {
@@ -57,18 +62,23 @@ export function PdpSizeChips({
   const gate = usePdpPurchaseGate()
   const gateOk = gateMatchesProduct(gate, productKey)
 
-  let materialMultiplier = 1
-  if (materialTiers && materialTiers.length > 0) {
-    const code = materialCodeForProduct(materialSelection, productKey)
-    const tier = materialTiers.find((t) => t.code === code) ?? materialTiers[0]
-    materialMultiplier = tier.multiplier
-  }
+  const selectedCode = materialCodeForProduct(materialSelection, productKey)
   const colorMultiplier = gateOk
     ? resolveFinishColorMultiplier(gate.finishKey, gate.standardFinishKey)
     : 1
 
-  const priceLabelFor = (basePrice: number | null, isCurrent: boolean): string | null => {
+  const priceLabelFor = (
+    basePrice: number | null,
+    isCurrent: boolean,
+    chipTiers: MaterialTierOption[] | null | undefined
+  ): string | null => {
     if (basePrice == null) return null
+    const tiers = chipTiers ?? materialTiers
+    let materialMultiplier = 1
+    if (tiers && tiers.length > 0) {
+      const tier = tiers.find((item) => item.code === selectedCode) ?? tiers[0]
+      materialMultiplier = tier.multiplier
+    }
     /* A finish on this SKU must not inflate a sibling chip. Navigation
        resets the finish, and the sibling may not offer it. */
     const amount = resolveConfiguredUnitPrice(
@@ -92,7 +102,7 @@ export function PdpSizeChips({
       </span>
       <div className="pdp-size-chip-row">
         {chips.map((chip) => {
-          const priceLabel = priceLabelFor(chip.basePrice, chip.isCurrent)
+          const priceLabel = priceLabelFor(chip.basePrice, chip.isCurrent, chip.materialTiers)
           return chip.isCurrent ? (
             <span key={chip.id} className="pdp-size-chip is-active" aria-current="true">
               <span className="pdp-size-chip-label">{chip.label}</span>

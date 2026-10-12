@@ -151,6 +151,29 @@ class DecisionTest(unittest.TestCase):
         self.assertEqual(sorted(plans[0]["skus"]), ["OL-14-1", "OL-14-2", "OL-15-1"])
         self.assertEqual(len(plans[0]["axes"]), 3)
 
+    def test_unpublished_sku_is_not_merged(self):
+        rows = classify([
+            product(
+                "OL-14-1",
+                "Кровать 1-сп. (90×190)",
+                "oliver",
+                ["krovati"],
+                variants=[variant("OL-14-1", "72900", (90, 190))],
+            ),
+            product(
+                "OL-15-1",
+                "Кровать 1,5-сп. (120×190)",
+                "oliver",
+                ["krovati"],
+                status="draft",
+                variants=[variant("OL-15-1", "91900", (120, 190))],
+            ),
+        ])["rows"]
+        by = {row["sku"]: row for row in rows}
+        self.assertEqual(by["OL-15-1"]["decision"], "KEEP_SEPARATE_PRODUCTS")
+        self.assertNotEqual(by["OL-14-1"]["decision"], "SAFE_VARIANT_FAMILY")
+        self.assertNotEqual(by["OL-14-1"]["family_key"], by["OL-15-1"]["family_key"])
+
     def test_shared_footboard_stays_in_the_title(self):
         rows = classify([
             product("PV-14-1", "Кровать 1-сп. (90×190) без изножья", "provence", ["krovati"], variants=[variant("PV-14-1", "1", (90, 190))]),
