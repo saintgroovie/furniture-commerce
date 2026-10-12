@@ -82,6 +82,7 @@ SOURCE_SHA=""
 SF_REF=""
 BE_REF=""
 CONFIRM=""
+EXPECTED_APPROVAL_CHECKSUM=""
 MISMATCH=0
 
 HELPER_INSTALL_SHA=""
@@ -143,6 +144,10 @@ Required:
 Optional:
   --mode dry-run|execute      (default dry-run; --dry-run/--execute also accepted)
   --confirm-mutation <token>  (execute only: I_UNDERSTAND_PUBLIC_PRODUCTION_PAIR_CUTOVER)
+  --expected-approval-checksum <64hex>
+                         execute outside the harness requires the checksum Gate A
+                         printed on the final dry-run. A mismatch dies before the
+                         mutation lock and before any pin write.
 
 Dry-run: read-only. No lock held, no pin writes, no recreate, no ACTIVE/EXPECTED writes.
 Execute: pins -> recreate (backend then storefront, --no-deps) -> readiness -> ACTIVE,
@@ -183,6 +188,8 @@ parse_args() {
       --execute) MODE="execute"; record_mode_request execute; shift ;;
       --confirm-mutation) CONFIRM="${2:?}"; shift 2 ;;
       --confirm-mutation=*) CONFIRM="${1#--confirm-mutation=}"; shift ;;
+      --expected-approval-checksum) EXPECTED_APPROVAL_CHECKSUM="${2:?}"; shift 2 ;;
+      --expected-approval-checksum=*) EXPECTED_APPROVAL_CHECKSUM="${1#--expected-approval-checksum=}"; shift ;;
       *) die "unknown argument: $1" ;;
     esac
   done
@@ -316,6 +323,10 @@ if [[ "${WOODRIGHT_CUTOVER_HARNESS:-0}" == "1" ]]; then
     */locks/public_production/live-cutover.lock) ;;
     *) die "harness: lock must end in /locks/public_production/live-cutover.lock" ;;
   esac
+  # Fault injection is test-only. The same flag must not waive the execute
+  # checksum, or anything else, when the profile still points at production.
+  wr_owner_approved_harness_is_isolated \
+    || die "CUTOVER_HARNESS_PRODUCTION_PATH_REFUSED lock=${WOODRIGHT_MUTATION_LOCK_PATH} meta=${WOODRIGHT_META_ROOT:-<unset>} compose=${WOODRIGHT_COMPOSE_ENV_FILE:-<unset>}"
 else
   wr_assert_public_production_path_isolation || die "public_production path isolation failed"
 fi
@@ -342,7 +353,11 @@ fi
 [[ "${WR_OA_ENVIRONMENT:-}" == "public_production" ]] || die "Gate A environment must be exact public_production (got ${WR_OA_ENVIRONMENT:-empty})"
 GATE_A_CHECKSUM="${WR_OA_CHECKSUM:-}"
 [[ -n "$GATE_A_CHECKSUM" ]] || die "Gate A checksum missing"
-log "owner_approval_gate_a_ok checksum=$GATE_A_CHECKSUM"
+if ! wr_owner_approved_bind_preflight_checksum "$EXPECTED_APPROVAL_CHECKSUM" "$MODE"; then
+  die "preflight approval bind failed result=${WR_OWNER_APPROVAL_RESULT} gate_a=$GATE_A_CHECKSUM expected=${EXPECTED_APPROVAL_CHECKSUM:-<unset>}"
+fi
+export WR_OA_BIND_CHECKSUM="$GATE_A_CHECKSUM"
+log "owner_approval_gate_a_ok checksum=$GATE_A_CHECKSUM generation=${WR_OA_GENERATION:-legacy} reservation=${WR_OA_RESERVATION_STATE:-legacy}"
 if [[ -n "${WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST:-}" && "${WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST}" != "$OA_SF_DIGEST" ]]; then
   die "caller WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST mismatch vs pair plan want=$OA_SF_DIGEST"
 fi
@@ -1190,6 +1205,10 @@ emit_packet() {
   local packet_mode="$1" verdict="$2"
   local write_release=0
   if should_write_common_release_sha; then write_release=1; fi
+  export WR_OA_BIND_CHECKSUM="${WR_OA_BIND_CHECKSUM:-${GATE_A_CHECKSUM:-}}"
+  export WR_OA_GENERATION="${WR_OA_GENERATION:-}"
+  export WR_OA_RESERVATION_STATE="${WR_OA_RESERVATION_STATE:-}"
+  export WR_OA_COMPONENT="${WR_OA_COMPONENT:-}"
   export WR_LOCK_STATUS WR_SF_PRESENT WR_SF_REVISION WR_SF_BUILD_PROFILE WR_SF_REF \
     WR_BE_PRESENT WR_BE_REVISION WR_BE_BUILD_PROFILE WR_BE_REF \
     WR_BE_CONTAINER_PRESENT WR_SF_CONTAINER_PRESENT \
@@ -1311,6 +1330,12 @@ packet = {
     "component": component,
     "source_sha": source_sha,
     "application_source_sha": source_sha,
+    "owner_approval": {
+        "checksum": os.environ.get("WR_OA_BIND_CHECKSUM", ""),
+        "generation": os.environ.get("WR_OA_GENERATION", ""),
+        "reservation_state": os.environ.get("WR_OA_RESERVATION_STATE", ""),
+        "component": os.environ.get("WR_OA_COMPONENT", ""),
+    },
     "helper_install_sha": os.environ.get("WR_PACKET_HELPER_SHA", ""),
     "operation_helper_install_sha": os.environ.get("WR_PACKET_HELPER_SHA", ""),
     "sha_separation_note": (
@@ -1886,6 +1911,16 @@ run_rollback() {
      && "$meta_ok" == "1" && "$backend_ok" == "1" ]]; then
     ROLLBACK_RC=10
     record_state rolled_back
+    # Reservation ends only after a proven rollback. Incomplete rollback stays
+    # reserved so a second candidate cannot be approved against an open incident.
+    if [[ "${WR_OA_RESERVATION_STATE:-legacy}" == "reserved" ]]; then
+      export WR_OA_TRANSITION_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      if ! wr_owner_approved_mark_terminal public_production rolled_back "$EVIDENCE_DIR" "cutover rolled back"; then
+        log "WARN approval reservation remains reserved after rollback result=${WR_OWNER_APPROVAL_RESULT:-unknown}; explicit cancel is required before another candidate"
+      else
+        log "approval_reservation_rolled_back checksum=${WR_OA_CHECKSUM:-}"
+      fi
+    fi
     log "ROLLBACK_OK (pins restored, runtime digests == pins, RELEASE_SHA restored, private binds, media volume, no public Traefik, HTTP gates)"
     return "$ROLLBACK_RC"
   fi
@@ -2625,6 +2660,14 @@ if ! assert_backend_notouch; then
   die "backend identity moved before commit"
 fi
 log "owner_approval_gate_c_ok live_be=$LIVE_BE_DIGEST_FINAL live_sf=$LIVE_SF_DIGEST_FINAL checksum=$WR_OA_CHECKSUM"
+if [[ "${WR_OA_RESERVATION_STATE:-legacy}" == "reserved" ]]; then
+  export WR_OA_TRANSITION_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  if ! wr_owner_approved_mark_terminal public_production committed "$EVIDENCE_DIR" "cutover committed"; then
+    log "WARN approval reservation remains reserved after commit result=${WR_OWNER_APPROVAL_RESULT:-unknown}; explicit cancel is required before another candidate"
+  else
+    log "approval_reservation_committed previous=$GATE_A_CHECKSUM checksum=${WR_OA_CHECKSUM:-}"
+  fi
+fi
 COMMITTED=1
 record_state committed
 {
