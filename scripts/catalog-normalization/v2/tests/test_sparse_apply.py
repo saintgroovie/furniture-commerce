@@ -102,6 +102,34 @@ class AlignBuyerPublicTitle(unittest.TestCase):
             self.assertIn("database_url()", source)
             self.assertNotIn('psycopg2.connect("postgresql://', source)
 
+    def test_identity_guard_refuses_remote_host_and_other_database(self):
+        from catalog_norm.beds_apply import assert_identity
+
+        class Conn:
+            def __init__(self, host, db, addr):
+                self.host, self.row = host, (db, addr, "off")
+
+            def get_dsn_parameters(self):
+                return {"host": self.host}
+
+            def cursor(self):
+                return self
+
+            def execute(self, *_args):
+                pass
+
+            def fetchone(self):
+                return self.row
+
+        with self.assertRaises(SystemExit):
+            assert_identity(Conn("db.example.org", "medusa-store", "10.0.0.5"))
+        with self.assertRaises(SystemExit):
+            assert_identity(Conn("127.0.0.1", "woodright_public_production", "172.18.0.2"))
+        self.assertEqual(
+            assert_identity(Conn("127.0.0.1", "medusa-store", "172.18.0.2"))["db"],
+            "medusa-store",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

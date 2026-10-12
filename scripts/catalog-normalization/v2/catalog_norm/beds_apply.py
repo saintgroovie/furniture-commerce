@@ -13,7 +13,7 @@ from typing import Any
 import psycopg2
 import psycopg2.extras
 
-from catalog_norm.export_inventory import connect, database_url
+from catalog_norm.export_inventory import LOCAL_HOSTS, connect, database_url
 
 PASS_ID = "bed-normalization-v2-20261010"
 
