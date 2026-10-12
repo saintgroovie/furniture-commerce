@@ -6,12 +6,13 @@ import { PartnersEditorial } from "@/components/partners/partners-editorial"
 import { getPublicPartners } from "@/lib/api/partners"
 import { canonicalAlternates } from "@/lib/page-canonical"
 import { partnersCopy, seo } from "@/lib/woodright-copy"
+import { pageTitle } from "@/lib/page-title"
 import "./partners-editorial.css"
 
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: seo.partners.title,
+  title: pageTitle(seo.partners.title),
   description: seo.partners.description,
   openGraph: {
     title: seo.partners.title,

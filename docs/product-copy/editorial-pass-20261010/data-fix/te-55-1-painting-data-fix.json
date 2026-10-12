@@ -1,0 +1,36 @@
+{
+  "fix_id": "te-55-1-painting-data-fix-20261011",
+  "status": "prepared_not_applied",
+  "owner_decision": "2026-10-11, decision 4 (B): «роспись «Рыцари»» is not shown to buyers while the data contradicts the photo; the data correction is a separate step",
+  "product_id": "prod_WWRAF4E9D57DD921D0BD1602C",
+  "handle": "te-55-1",
+  "sku": "te-55-1",
+  "evidence": {
+    "data_claims_painting": "title «Банкетка малая Templars»; metadata motif / motif_key / motif_slug / motif_title / painting_name = Templars; SKU prefix TE",
+    "photo": "the only product photo shows a plain cream bench with turned legs and a green fabric seat, without the heraldic shields and grey-cream palette of the other Templars pieces (e.g. te-07-1)"
+  },
+  "before": {
+    "title": "Банкетка малая Templars",
+    "metadata": {
+      "motif": "Templars",
+      "motif_key": "ww-motif:templars",
+      "motif_slug": "templars",
+      "motif_title": "Templars",
+      "painting_name": "Templars"
+    }
+  },
+  "before_sha256": "21f3b3f13fba7ee2b9fa62a154d1f4dc8f6ac294f0e83b1b2d759e3d5c7b45dc",
+  "before_sha256_basis": "sha256 of the `before` object as JSON with sorted keys and no whitespace, read from the production Store API on 2026-10-11",
+  "proposed": {
+    "variant": "F1 - the photo is right, the bench is not painted",
+    "title": "Банкетка малая",
+    "metadata_remove": ["motif", "motif_key", "motif_slug", "motif_title", "painting_name"]
+  },
+  "alternative": {
+    "variant": "F2 - the data is right, the photo is wrong",
+    "action": "replace the product photo with a confirmed Templars bench photo; title and metadata stay"
+  },
+  "never_changed": ["handle", "sku", "legacy_code", "painting_prefix", "family_key", "price", "inventory", "status", "description", "images (F1)"],
+  "after_apply": "remove te-55-1 from PAINTING_PRESENTATION_SUPPRESSED in apps/backend/src/lib/motif-theme.ts (F1: no painting data is left; F2: the photo now confirms the painting)",
+  "apply_path": "not an editorial-copy importer input; needs its own governed prompt: confirm F1 or F2, read-only before-state check against before_sha256, dry-run, rollback artifact, apply, smoke"
+}

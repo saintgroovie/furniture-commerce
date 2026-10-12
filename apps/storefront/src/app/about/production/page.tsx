@@ -7,9 +7,10 @@ import { editorialMedia } from "@/lib/editorial-media"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { canonicalAlternates } from "@/lib/page-canonical"
 import { aboutProductionCopy, seo } from "@/lib/woodright-copy"
+import { pageTitle } from "@/lib/page-title"
 
 export const metadata: Metadata = {
-  title: seo.aboutProduction.title,
+  title: pageTitle(seo.aboutProduction.title),
   description: seo.aboutProduction.description,
   openGraph: {
     title: seo.aboutProduction.title,
