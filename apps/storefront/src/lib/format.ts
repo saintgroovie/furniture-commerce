@@ -61,3 +61,47 @@ export function pdpVariantPrice(
 ): number | null {
   return selectedVariant ? priceOfVariant(selectedVariant) : getPrice(product)
 }
+
+/** Opening SKU and its configured amount, as resolved by the backend. */
+export function buyerDefaultConfiguration(product: Record<string, unknown>): {
+  variantId: string | null
+  minUnitPrice: number | null
+} {
+  const meta = product.metadata
+  const cfg =
+    meta && typeof meta === "object" && !Array.isArray(meta)
+      ? (meta as { buyer_default_configuration?: unknown }).buyer_default_configuration
+      : null
+  if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) {
+    return { variantId: null, minUnitPrice: null }
+  }
+  const rec = cfg as { variant_id?: unknown; min_unit_price?: unknown }
+  const variantId =
+    typeof rec.variant_id === "string" && rec.variant_id ? rec.variant_id : null
+  const min = rec.min_unit_price
+  const minUnitPrice =
+    typeof min === "number" && Number.isFinite(min) && min > 0 ? min : null
+  return { variantId, minUnitPrice }
+}
+
+/**
+ * Amount shown on the PDP.
+ * The opening SKU is `buyer_default_configuration.variant_id`, not `variants[0]`.
+ * A selected SKU with no price of its own stays unpriced.
+ */
+export function pdpDisplayedPrice(input: {
+  selectedVariantId: string | null
+  selectedOwnPrice: number | null
+  openingVariantId: string | null
+  openingConfiguredPrice: number | null
+  selectedTierPrice: number | null
+}): number | null {
+  if (input.selectedVariantId != null && input.selectedOwnPrice == null) return null
+  const isOpening =
+    input.selectedVariantId == null ||
+    (input.openingVariantId != null && input.selectedVariantId === input.openingVariantId)
+  if (isOpening) {
+    return input.openingConfiguredPrice ?? input.selectedTierPrice ?? input.selectedOwnPrice
+  }
+  return input.selectedTierPrice ?? input.selectedOwnPrice
+}
