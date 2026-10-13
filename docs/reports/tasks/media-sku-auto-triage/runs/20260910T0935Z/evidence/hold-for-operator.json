@@ -1,0 +1,59 @@
+[
+  {
+    "handle": "co-02-1",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-05-1",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-08-1",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-14-2",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-15-2",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-61-1",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-62-1",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-62-2",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-62-3",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-65-1",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-65-2",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-66-1",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "co-69-1",
+    "reason": "clp_operator_gold_hold"
+  },
+  {
+    "handle": "ol-05-н",
+    "reason": "cyrillic_handle",
+    "collection": "oliver"
+  }
+]
