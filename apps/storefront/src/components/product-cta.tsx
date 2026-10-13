@@ -27,6 +27,7 @@ import { cartLineConfigurationIdentity } from "@/lib/cart-line-identity"
 import { userFacingError } from "@/lib/user-facing-error"
 import { isRequestQuoteProduct } from "@/lib/request-quote"
 import { isKidsStorefrontProduct } from "@/lib/kids"
+import { openingVariant } from "@/lib/opening-variant"
 import { actions, pdpCopy, productCta as copy } from "@/lib/woodright-copy"
 import { flatCopy } from "@/lib/format-ru-copy"
 import {
@@ -142,7 +143,7 @@ export function ProductCta({
     const skuSource =
       variantForCart && typeof variantForCart === "object" && "sku" in variantForCart
         ? variantForCart
-        : firstVariant
+        : undefined
     const sku =
       skuSource && typeof skuSource === "object" && "sku" in skuSource
         ? String((skuSource as { sku?: unknown }).sku ?? "")
@@ -160,7 +161,6 @@ export function ProductCta({
   const productType = getProductType(product)
   const isKids = isKidsStorefrontProduct(product)
   const variants = (product.variants as unknown[]) ?? []
-  const firstVariant = Array.isArray(variants) ? variants[0] : undefined
   const chosenVariant =
     variantIdProp && Array.isArray(variants)
       ? variants.find(
@@ -171,7 +171,7 @@ export function ProductCta({
             (item as { id: string }).id === variantIdProp
         )
       : undefined
-  const variantForCart = chosenVariant ?? firstVariant
+  const variantForCart = chosenVariant ?? openingVariant(product) ?? undefined
   const variantId =
     variantForCart && typeof variantForCart === "object" && "id" in variantForCart
       ? (variantForCart as { id: string }).id

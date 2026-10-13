@@ -3,6 +3,7 @@
  * Builds seller-facing rows from raw product graph + promo price list rows.
  * No Medusa runtime imports.
  */
+import { resolveDefaultBuyerConfiguration } from "../default-buyer-configuration"
 import { parseMaterialTiers, resolveMaterialTierPrice } from "../material-tier-contract"
 import { isPriceListActiveNow, priceAmount, type PriceListRow, type PriceRow } from "./catalog-promo-price-list"
 
@@ -17,6 +18,7 @@ export const CATALOG_PROMO_PRODUCT_GRAPH_FIELDS = [
   "images.url",
   "variants.id",
   "variants.sku",
+  "variants.metadata",
   "variants.price_set.id",
   "variants.price_set.prices.id",
   "variants.price_set.prices.amount",
@@ -108,7 +110,7 @@ export function openingTierMultiplier(raw: Record<string, unknown>): number {
 
 /**
  * Build one admin row. `promoPrices` is keyed by price_set_id.
- * Opening variant = variants[0] (same rule as storefront / buyer defaults).
+ * Opening variant follows buyer_default_configuration, not array order.
  */
 export function buildCatalogPromoAdminProduct(
   raw: Record<string, unknown>,
@@ -119,7 +121,10 @@ export function buildCatalogPromoAdminProduct(
   const variants = Array.isArray(raw.variants)
     ? (raw.variants as Array<Record<string, unknown>>)
     : []
-  const v0 = variants[0] ?? null
+  const openingId = resolveDefaultBuyerConfiguration(raw)?.variant_id
+  const v0 =
+    (openingId ? variants.find((variant) => variant.id === openingId) : null) ??
+    (variants.length === 1 ? variants[0] : null)
   const priceSet = v0?.price_set as
     | { id?: unknown; prices?: Array<Record<string, unknown>> }
     | undefined

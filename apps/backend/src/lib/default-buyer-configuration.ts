@@ -1,7 +1,7 @@
 /**
  * Backend-resolved default buyer configuration for CONFIGURABLE products.
  *
- * SoT for the cheapest valid purchasable opening state shared by:
+ * SoT for the axis-sorted opening SKU shared by:
  * - catalog card minimum price
  * - PDP auto-selected controls
  * - cart line pricing when material_execution_code is omitted
@@ -28,7 +28,7 @@ export type BuyerDefaultConfiguration = {
   material_execution_code: string | null
   material_execution_label: string | null
   material_price_multiplier: number
-  /** First purchasable variant id with a positive price, or null. */
+  /** Opening variant id. Not variants[0] and not the cheapest SKU. */
   variant_id: string | null
   /** Standard finish color multiplier for the default opening state. */
   color_multiplier: 1

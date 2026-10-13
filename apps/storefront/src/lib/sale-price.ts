@@ -1,11 +1,13 @@
 /**
  * Buyer-facing sale price from native Medusa pricing.
  *
- * Source of truth is the backend: `variants[0].calculated_price` (price list)
+ * Source of truth is the backend opening variant's `calculated_price` (price list)
  * and the tier-aware `metadata.buyer_default_configuration.original_min_unit_price`.
  * The storefront never computes a discount from unrelated data - if the backend
  * does not confirm a lower price-list amount, there is no sale to show.
  */
+
+import { openingVariant } from "./opening-variant"
 
 export type SalePrice = {
   /** What the buyer pays (already the opening / tier-aware price). */
@@ -22,7 +24,7 @@ function positive(n: unknown): number | null {
 
 /**
  * Original (pre-sale) opening price for a product, or null when no sale.
- * Order: backend default configuration → variants[0].calculated_price.
+ * Order: backend default configuration, then the opening variant's calculated price.
  */
 export function resolveOriginalOpeningPrice(
   product: Record<string, unknown>
@@ -86,6 +88,5 @@ export function resolveOriginalBasePriceOf(
 export function resolveOriginalBasePrice(
   product: Record<string, unknown>
 ): number | null {
-  const variants = product.variants as Array<Record<string, unknown>> | undefined
-  return resolveOriginalBasePriceOf(variants?.[0])
+  return resolveOriginalBasePriceOf(openingVariant(product))
 }

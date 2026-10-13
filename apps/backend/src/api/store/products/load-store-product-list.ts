@@ -57,12 +57,13 @@ export const BROWSE_PRODUCT_FIELDS = [
   "images.url",
   "variants.id",
   "variants.sku",
+  "variants.metadata",
   "product_categories.handle",
   "product_classification.product_type",
 ] as const
 
 /** Browse field set when category/product_type filters need relations. */
-const BROWSE_FILTERED_PRODUCT_FIELDS = [
+export const BROWSE_FILTERED_PRODUCT_FIELDS = [
   "id",
   "handle",
   "title",
@@ -72,6 +73,7 @@ const BROWSE_FILTERED_PRODUCT_FIELDS = [
   "images.url",
   "variants.id",
   "variants.sku",
+  "variants.metadata",
   "product_categories.category_id",
   "product_categories.handle",
   "product_classification.product_type",
@@ -107,6 +109,49 @@ function flattenVariantPrices(
       ),
     }
   })
+}
+
+/**
+ * Browse variant row used by the shared opening resolver.
+ * Keeps axis sort and the variant's own material tiers. Finish URL lists
+ * stay off this row. Without `variant_axes`, opening falls through to
+ * array order and the catalog card disagrees with the PDP.
+ */
+export function slimBrowseVariantRecord(
+  variant: Record<string, unknown>,
+  prices?: Array<{ amount: number }>,
+  calculated?: StoreCalculatedPrice
+): Record<string, unknown> {
+  const slim: Record<string, unknown> = {
+    id: variant.id,
+    sku: variant.sku,
+  }
+  if (prices) slim.prices = prices
+  else if (Array.isArray(variant.prices)) slim.prices = variant.prices
+  const ownCalculated = slimStoreCalculatedPrice(variant.calculated_price)
+  if (calculated) slim.calculated_price = calculated
+  else if (ownCalculated) slim.calculated_price = ownCalculated
+  const openingMeta = browseOpeningMetadata(variant.metadata)
+  if (openingMeta) slim.metadata = openingMeta
+  return slim
+}
+
+function browseOpeningMetadata(metadata: unknown): Record<string, unknown> | null {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null
+  const src = metadata as Record<string, unknown>
+  const kept: Record<string, unknown> = {}
+  const axes = src.variant_axes
+  if (axes && typeof axes === "object" && !Array.isArray(axes)) {
+    kept.variant_axes = axes
+  }
+  const capabilities = src.capabilities
+  if (capabilities && typeof capabilities === "object" && !Array.isArray(capabilities)) {
+    const tiers = (capabilities as Record<string, unknown>).material_tiers
+    if (tiers && typeof tiers === "object" && !Array.isArray(tiers)) {
+      kept.capabilities = { material_tiers: tiers }
+    }
+  }
+  return Object.keys(kept).length > 0 ? kept : null
 }
 
 async function attachBrowseVariantPrices(
@@ -183,13 +228,7 @@ async function attachBrowseVariantPrices(
           const id = typeof v.id === "string" ? v.id : undefined
           const prices = id ? pricesByVariantId.get(id) : undefined
           const calculated = id ? calculatedByVariantId.get(id) : undefined
-          const slim: Record<string, unknown> = {
-            id: v.id,
-            sku: v.sku,
-          }
-          if (prices) slim.prices = prices
-          if (calculated) slim.calculated_price = calculated
-          return slim
+          return slimBrowseVariantRecord(v, prices, calculated)
         })
       : variants
     return {

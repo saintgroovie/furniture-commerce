@@ -11,9 +11,20 @@ const first = { id: "v1", prices: [{ amount: 1000, price_list_id: null }] }
 const second = { id: "v2", prices: [{ amount: 1500, price_list_id: null }] }
 const unpriced = { id: "v3", prices: [] }
 const promoOnly = { id: "v4", prices: [{ amount: 900, price_list_id: "plist_1" }] }
-const product = { id: "p", variants: [first, second, unpriced, promoOnly] }
+const product = {
+  id: "p",
+  variants: [second, first, unpriced, promoOnly],
+  metadata: {
+    buyer_default_configuration: { variant_id: "v1", min_unit_price: 1000 },
+  },
+}
 
-assert.equal(pdpVariantPrice(product, null), 1000, "no selection: product opening price")
+assert.equal(pdpVariantPrice(product, null), 1000, "no selection: named opening SKU, not array head")
+assert.equal(
+  pdpVariantPrice({ id: "unordered", variants: [second, first] }, null),
+  null,
+  "multi-SKU product without an opening contract does not use variants[0]"
+)
 assert.equal(pdpVariantPrice(product, undefined), getPrice(product))
 assert.equal(pdpVariantPrice(product, second), 1500, "selected variant: its own base")
 assert.equal(pdpVariantPrice(product, unpriced), null, "unpriced selection does not inherit the first SKU")

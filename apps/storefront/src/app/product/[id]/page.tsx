@@ -33,6 +33,7 @@ import {
 } from "@/lib/request-quote"
 import { ProductCta } from "@/components/product-cta"
 import { PdpPriceBlock } from "@/components/pdp-price-block"
+import { openingVariant } from "@/lib/opening-variant"
 import { resolveOriginalBasePriceOf } from "@/lib/sale-price"
 import { PdpMaterialTierSelect } from "@/components/pdp-material-tier-select"
 import { PdpSizeChips } from "@/components/pdp-size-chips"
@@ -349,10 +350,11 @@ export default async function ProductPage({
     const min = (cfg as { min_unit_price?: unknown }).min_unit_price
     return typeof min === "number" && Number.isFinite(min) && min > 0 ? min : null
   })()
-  /* Opening PDP amount = backend default, else cheapest tier, else solid_full. */
-  const firstVariantId = (product.variants as Array<{ id?: string }> | undefined)?.[0]?.id
+  /* Opening PDP amount follows the canonical opening SKU, not array order. */
+  const opening = openingVariant(product)
   const selectedIsOpeningVariant =
-    selectedVariant == null || selectedVariant.id === firstVariantId
+    selectedVariant == null ||
+    (opening != null && selectedVariant.id === opening.id)
   const openingPrice = selectedIsOpeningVariant
     ? backendDefaultMin ??
       (materialTiers?.[0]?.price != null && Number.isFinite(materialTiers[0].price)
@@ -856,9 +858,7 @@ export default async function ProductPage({
                 }
                 basePrice={price}
                 originalBasePrice={resolveOriginalBasePriceOf(
-                  (selectedVariant as Record<string, unknown> | null) ??
-                    ((product.variants as Array<Record<string, unknown>> | undefined)?.[0] ??
-                      null)
+                  (selectedVariant as Record<string, unknown> | null) ?? opening
                 )}
                 requiresBuyerSelection={
                   useExecutionPdp &&
