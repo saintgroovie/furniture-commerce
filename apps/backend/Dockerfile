@@ -40,9 +40,18 @@ RUN yarn medusa build \
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /server
+# Exact backend artifact source SHA. Same value as org.opencontainers.image.revision.
+# Empty is allowed for local images. Canonical bakes always pass 40 lowercase hex.
+# Do not copy WOODRIGHT_RELEASE_SHA into this variable.
+ARG WOODRIGHT_BACKEND_SOURCE_SHA=
 ENV NODE_ENV=production \
     PORT=9000 \
-    HOME=/home/medusa
+    HOME=/home/medusa \
+    WOODRIGHT_BACKEND_SOURCE_SHA=$WOODRIGHT_BACKEND_SOURCE_SHA
+RUN if [ -n "$WOODRIGHT_BACKEND_SOURCE_SHA" ]; then \
+      echo "$WOODRIGHT_BACKEND_SOURCE_SHA" | grep -Eq '^[0-9a-f]{40}$' \
+        || { echo "WOODRIGHT_BACKEND_SOURCE_SHA must be 40 lowercase hex" >&2; exit 1; }; \
+    fi
 RUN useradd --system --uid 10001 --create-home medusa \
  && mkdir -p /server/static \
  && chown -R medusa:medusa /server/static /home/medusa

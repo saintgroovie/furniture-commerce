@@ -81,7 +81,7 @@ Dry-run (`--mode dry-run`, the default) runs approval, image, CAS, and the plann
 
 The dry-run line `owner_approval_gate_a_ok checksum=` is the preflight identity. Execute outside the test harness must pass that value as `--expected-approval-checksum`. If the approval file changed after preflight, execute exits before the mutation lock and before any pin write.
 
-`WOODRIGHT_RELEASE_SHA` stays a shared identity. After a storefront-only cutover it can still show the retained backend revision. Separate component observability is `COMPONENT_RELEASE_IDENTITY_OBSERVABILITY` in `docs/operator/owner-approved-release-governance.md`, not part of the approval serializer.
+`WOODRIGHT_RELEASE_SHA` stays a shared application identity. After a storefront-only cutover it can still show the previous baseline. The storefront and backend component headers come from the image env (`WOODRIGHT_STOREFRONT_SOURCE_SHA` / `WOODRIGHT_BACKEND_SOURCE_SHA`) and follow the artifact that is actually running. See `docs/operator/runtime-identity.md`. This is not part of the approval serializer.
 
 ## Canonical merge required
 

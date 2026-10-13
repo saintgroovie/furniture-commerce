@@ -8,8 +8,8 @@ import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import {
+  readApplicationReleaseSha,
   runtimeIdentityHeaderMap,
-  selectUnifiedReleaseSha,
 } from "./runtime-identity-headers"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..")
@@ -41,51 +41,47 @@ assert.doesNotMatch(hdrSrc, /DATABASE_URL/)
 assert.doesNotMatch(hdrSrc, /password/i)
 assert.doesNotMatch(hdrSrc, /req\.headers/)
 
+const APP = "0123456789abcdef0123456789abcdef01234567"
 const BE = "caf82b048b9caefae30679342aec3d4fc42a8d89"
 const SF = "dd304d1bf92d59c85795b5091ed0386365bcca6d"
 
-assert.equal(
-  selectUnifiedReleaseSha({ backendSha: BE, storefrontSha: SF, releaseSha: SF }),
-  "",
-  "split pair must not emit a global SHA"
-)
-assert.equal(
-  selectUnifiedReleaseSha({ backendSha: BE, storefrontSha: BE, releaseSha: BE }),
-  BE,
-  "unified pair may emit the global SHA"
-)
-assert.equal(
-  selectUnifiedReleaseSha({ backendSha: "", storefrontSha: "", releaseSha: SF }),
-  SF,
-  "legacy global-only env still emits x-woodright-release-sha"
-)
-assert.equal(
-  selectUnifiedReleaseSha({ backendSha: BE, storefrontSha: "", releaseSha: BE }),
-  "",
-  "incomplete pair must not imply global identity"
-)
+assert.equal(readApplicationReleaseSha(APP), APP)
+assert.equal(readApplicationReleaseSha(""), "")
 
 const split = runtimeIdentityHeaderMap({
-  WOODRIGHT_RUNTIME_ROLE: "non_public_candidate",
-  WOODRIGHT_EXPOSURE: "private",
+  WOODRIGHT_RUNTIME_ROLE: "public_production",
+  WOODRIGHT_EXPOSURE: "public",
   WOODRIGHT_BACKEND_SOURCE_SHA: BE,
   WOODRIGHT_STOREFRONT_SOURCE_SHA: SF,
-  WOODRIGHT_RELEASE_SHA: SF,
-  WOODRIGHT_DATABASE_IDENTITY: "non_public_candidate_db",
+  WOODRIGHT_RELEASE_SHA: APP,
+  WOODRIGHT_DATABASE_IDENTITY: "public_production_db",
 })
 assert.equal(split["x-woodright-backend-source-sha"], BE)
 assert.equal(split["x-woodright-storefront-source-sha"], SF)
-assert.equal(split["x-woodright-release-sha"], undefined)
-assert.equal(split["x-woodright-runtime-role"], "non_public_candidate")
+assert.equal(split["x-woodright-release-sha"], APP)
+assert.equal(split["x-woodright-runtime-role"], "public_production")
+assert.notEqual(split["x-woodright-backend-source-sha"], split["x-woodright-release-sha"])
 
-const unified = runtimeIdentityHeaderMap({
-  WOODRIGHT_RUNTIME_ROLE: "non_public_candidate",
-  WOODRIGHT_EXPOSURE: "private",
-  WOODRIGHT_BACKEND_SOURCE_SHA: BE,
-  WOODRIGHT_STOREFRONT_SOURCE_SHA: BE,
-  WOODRIGHT_RELEASE_SHA: BE,
+const pair = runtimeIdentityHeaderMap({
+  WOODRIGHT_RUNTIME_ROLE: "public_production",
+  WOODRIGHT_EXPOSURE: "public",
+  WOODRIGHT_BACKEND_SOURCE_SHA: APP,
+  WOODRIGHT_STOREFRONT_SOURCE_SHA: APP,
+  WOODRIGHT_RELEASE_SHA: APP,
 })
-assert.equal(unified["x-woodright-release-sha"], BE)
+assert.equal(pair["x-woodright-release-sha"], APP)
+assert.equal(pair["x-woodright-backend-source-sha"], APP)
+assert.equal(pair["x-woodright-storefront-source-sha"], APP)
+
+const retainedBackend = runtimeIdentityHeaderMap({
+  WOODRIGHT_RUNTIME_ROLE: "public_production",
+  WOODRIGHT_EXPOSURE: "public",
+  WOODRIGHT_BACKEND_SOURCE_SHA: BE,
+  WOODRIGHT_RELEASE_SHA: APP,
+})
+assert.equal(retainedBackend["x-woodright-release-sha"], APP)
+assert.equal(retainedBackend["x-woodright-backend-source-sha"], BE)
+assert.equal(retainedBackend["x-woodright-storefront-source-sha"], undefined)
 
 const legacy = runtimeIdentityHeaderMap({
   WOODRIGHT_RUNTIME_ROLE: "non_public_candidate",

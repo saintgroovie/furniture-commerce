@@ -97,16 +97,18 @@ Legacy files omit `reservation_state` and load as `legacy`. They still
 authorize a cutover. Replacing them still requires the explicit checksum.
 The first canonical rewrite upgrades them to `reserved`.
 
-## Follow-up, not this change
+## Component observability
 
 `COMPONENT_RELEASE_IDENTITY_OBSERVABILITY`
 
-A storefront-only cutover does not rewrite the shared `WOODRIGHT_RELEASE_SHA`
-pin. `x-woodright-release-sha` can therefore keep the retained backend
-revision while the storefront OCI revision is newer. That is the current
-contract. A later change may publish separate global, storefront, and backend
-identities. Do not pretend one SHA covers every component after a
-component-only release.
+A storefront-only cutover still does not rewrite the shared
+`WOODRIGHT_RELEASE_SHA` pin. That header stays the application baseline.
+The running storefront image reports `x-woodright-storefront-source-sha`
+from `WOODRIGHT_STOREFRONT_SOURCE_SHA` baked at image build. The running
+backend image reports `x-woodright-backend-source-sha` the same way.
+Those values may differ. That is expected after a component-only release,
+not automatic drift. Approval files are not the place for this. See
+`docs/operator/runtime-identity.md`.
 
 ## Public production
 
