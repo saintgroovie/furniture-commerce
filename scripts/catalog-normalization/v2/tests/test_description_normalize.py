@@ -5,7 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from catalog_norm.description_fidelity import classify_family_description
-from catalog_norm.description_normalize import propose_family_description
+from catalog_norm.description_normalize import propose_family_description, propose_family_subtitle
 
 
 OLIVER = [
@@ -34,6 +34,12 @@ class DescriptionNormalizeTest(unittest.TestCase):
         self.assertNotIn("изнож", text.lower())
         self.assertNotIn("узк", text.lower())
         self.assertIn("Lorna", text)
+        cleared = propose_family_subtitle(
+            "Односпальная кровать Oliver под матрас 90 × 190 см с тканевым изголовьем.",
+            OLIVER,
+        )
+        self.assertEqual(cleared["action"], "CLEAR_VARIANT_SPECIFIC")
+        self.assertEqual(cleared["proposed_subtitle"], "")
         verdict = classify_family_description(text, OLIVER)
         self.assertEqual(verdict["classification"], "FAMILY_SAFE")
 

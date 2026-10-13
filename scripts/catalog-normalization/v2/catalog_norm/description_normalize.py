@@ -98,6 +98,37 @@ def propose_family_description(
     }
 
 
+def propose_family_subtitle(subtitle: str, variants: list[dict[str, Any]]) -> dict[str, str]:
+    """Keep a subtitle only when every SKU can say it. Otherwise clear it.
+
+    The H1 already names the model. A one-SKU subtitle is not rewritten into
+    new marketing copy.
+    """
+    current = subtitle or ""
+    tidied = _tidy(current)
+    verdict = classify_family_description(tidied, variants)
+    if verdict["classification"] == "VARIANT_SPECIFIC":
+        return {
+            "proposed_subtitle": "",
+            "action": "CLEAR_VARIANT_SPECIFIC",
+            "confidence": "high",
+            "evidence": verdict["claims"],
+        }
+    if tidied != current.strip():
+        return {
+            "proposed_subtitle": tidied,
+            "action": "NORMALIZE_TYPOGRAPHY",
+            "confidence": "high",
+            "evidence": "shared subtitle kept; dash typography only",
+        }
+    return {
+        "proposed_subtitle": tidied,
+        "action": "KEEP_FAMILY_SAFE" if tidied else "KEEP_EMPTY",
+        "confidence": "high",
+        "evidence": verdict["evidence"],
+    }
+
+
 def description_facts(description: str, variants: list[dict[str, Any]]) -> list[dict[str, str]]:
     """Classify concrete claims already present in the prose."""
     text = _norm(description or "")
