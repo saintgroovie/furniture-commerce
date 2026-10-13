@@ -54,29 +54,65 @@ Public-demo helpers must not treat a stale schema-v2 `ACTIVE_RELEASE.json` as cu
 
 ## Response headers
 
-Backend (env-driven):
+Three identities. They are not interchangeable.
+
+| Header | Env | Meaning |
+|--------|-----|---------|
+| `x-woodright-release-sha` | `WOODRIGHT_RELEASE_SHA` | Application / release baseline. Shared compose pin. A storefront-only cutover does not rewrite it. |
+| `x-woodright-storefront-source-sha` | `WOODRIGHT_STOREFRONT_SOURCE_SHA` | Source SHA of the storefront image that is actually running. |
+| `x-woodright-backend-source-sha` | `WOODRIGHT_BACKEND_SOURCE_SHA` | Source SHA of the backend image that is actually running. |
+
+Also:
 
 - `x-woodright-runtime-role`
 - `x-woodright-exposure`
-- `x-woodright-backend-source-sha`
-- `x-woodright-storefront-source-sha`
-- `x-woodright-release-sha` (legacy / last-unified-pair only; omitted on a split pair)
-- `x-woodright-database-identity` (alias only: `public_demo_db` / `non_public_candidate_db`)
+- `x-woodright-database-identity` (alias only: `public_demo_db` / `non_public_candidate_db` / `public_production_db`)
 - existing `x-woodright-catalog-order: merchandising-v1` on catalog-products
 
-Storefront: same role / exposure / component SHA headers (no DB name).
+Storefront HTML carries the application header and its own component header. It also carries the backend component header when that env is present (candidate compose injects both). Public production does not inject a second mutable component pin: each image bakes its own `WOODRIGHT_*_SOURCE_SHA` at build, equal to `org.opencontainers.image.revision`. Replacing the container replaces the identity. Rollback follows the restored image.
 
-Never emit DSN, DB host, credentials, or internal IPs in headers.
+A missing component env omits that header. It is not filled from `WOODRIGHT_RELEASE_SHA`. Local and pre-change images may omit the component header. Profiled storefront bakes fail closed without a 40-hex storefront SHA.
+
+Full 40-hex only. No hostnames, paths, registry credentials, database names, tokens, or approval checksums.
+
+### Expected divergence vs skew
+
+After a governed storefront-only release the application SHA and the storefront SHA may differ. The retained backend SHA stays on the backend image. That is expected. It is not drift.
+
+Skew is when a running image digest or OCI revision does not match the approved manifest for that component. Compare digests and `oci_revision`, not "application SHA == storefront SHA".
+
+### Pair release
+
+When both images are built from one source SHA:
+
+```text
+x-woodright-release-sha:           X
+x-woodright-storefront-source-sha: X
+x-woodright-backend-source-sha:    X
+```
+
+### Isolated storefront release
+
+```text
+x-woodright-release-sha:           A   # unchanged application baseline
+x-woodright-storefront-source-sha: B   # new storefront image
+x-woodright-backend-source-sha:    A   # retained backend image, once that image was baked with this env
+```
+
+Images built before component env baking omit the component header until the next bake of that component. Do not treat the omission as the application SHA.
+
+Buyer page: `curl -sI https://woodright.ru/ | grep -i x-woodright-`
+API: `curl -sI https://api.woodright.ru/health | grep -i x-woodright-`
 
 Env vars:
 
 ```text
-WOODRIGHT_RUNTIME_ROLE=public_demo|non_public_candidate
+WOODRIGHT_RUNTIME_ROLE=public_demo|non_public_candidate|public_production
 WOODRIGHT_EXPOSURE=public|private
-WOODRIGHT_BACKEND_SOURCE_SHA=<40-hex>
-WOODRIGHT_STOREFRONT_SOURCE_SHA=<40-hex>
-WOODRIGHT_RELEASE_SHA=<40-hex>   # last unified pair only; not pair identity after a split cutover
-WOODRIGHT_DATABASE_IDENTITY=public_demo_db|non_public_candidate_db
+WOODRIGHT_BACKEND_SOURCE_SHA=<40-hex baked into the backend image>
+WOODRIGHT_STOREFRONT_SOURCE_SHA=<40-hex baked into the storefront image>
+WOODRIGHT_RELEASE_SHA=<40-hex application baseline; compose pin, not a component revision>
+WOODRIGHT_DATABASE_IDENTITY=public_demo_db|non_public_candidate_db|public_production_db
 WOODRIGHT_DATABASE_IDENTITY_ALIAS=…   # legacy alias of WOODRIGHT_DATABASE_IDENTITY
 WOODRIGHT_CANONICAL_DOMAIN=woodright-demo.ru|none
 WOODRIGHT_CANONICAL_API_ORIGIN=https://api.woodright-demo.ru|none

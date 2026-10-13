@@ -7,6 +7,7 @@ const ALLOWED_ROLES = new Set([
   "public_demo",
   "non_public_candidate",
   "production_candidate",
+  "public_production",
 ])
 
 const ALLOWED_EXPOSURES = new Set(["public", "private"])
@@ -14,6 +15,7 @@ const ALLOWED_EXPOSURES = new Set(["public", "private"])
 const ALLOWED_DB_ALIASES = new Set([
   "public_demo_db",
   "non_public_candidate_db",
+  "public_production_db",
 ])
 
 const SHA40 = /^[0-9a-f]{40}$/
@@ -29,23 +31,14 @@ function readSha40(raw: string | undefined): string {
 }
 
 /**
- * WOODRIGHT_RELEASE_SHA is last-unified-pair informational only.
- * Split pairs (backend SHA != storefront SHA) must not emit a global SHA header.
+ * WOODRIGHT_RELEASE_SHA is the application / release baseline.
+ * Component revisions are separate (`WOODRIGHT_STOREFRONT_SOURCE_SHA`,
+ * `WOODRIGHT_BACKEND_SOURCE_SHA`) and may differ after a component-only
+ * release. That divergence is expected. It must not hide this header, and
+ * this value must not be copied into a missing component header.
  */
-export function selectUnifiedReleaseSha(input: {
-  backendSha: string
-  storefrontSha: string
-  releaseSha: string
-}): string {
-  const releaseSha = readSha40(input.releaseSha)
-  if (!releaseSha) return ""
-  const backendSha = readSha40(input.backendSha)
-  const storefrontSha = readSha40(input.storefrontSha)
-  if (backendSha && storefrontSha) {
-    return backendSha === storefrontSha && backendSha === releaseSha ? releaseSha : ""
-  }
-  if (!backendSha && !storefrontSha) return releaseSha
-  return ""
+export function readApplicationReleaseSha(raw: string | undefined): string {
+  return readSha40(raw)
 }
 
 function readDbIdentityAlias(env: NodeJS.ProcessEnv): string {
@@ -63,11 +56,7 @@ export function storefrontRuntimeIdentityHeaders(
   const exposure = (env.WOODRIGHT_EXPOSURE || "").trim()
   const backendSha = readSha40(env.WOODRIGHT_BACKEND_SOURCE_SHA)
   const storefrontSha = readSha40(env.WOODRIGHT_STOREFRONT_SOURCE_SHA)
-  const releaseSha = selectUnifiedReleaseSha({
-    backendSha,
-    storefrontSha,
-    releaseSha: env.WOODRIGHT_RELEASE_SHA || "",
-  })
+  const releaseSha = readApplicationReleaseSha(env.WOODRIGHT_RELEASE_SHA)
   const dbAlias = readDbIdentityAlias(env)
   const out: Record<string, string> = {}
   if (ALLOWED_ROLES.has(roleRaw) || ALLOWED_ROLES.has(role)) {

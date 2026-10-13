@@ -1,69 +1,48 @@
 import { Container, Text } from "@medusajs/ui"
-import { Link } from "react-router-dom"
 import { DeskFrame } from "../../../components/woodright/DeskNav"
+import { CatalogOpsBoard } from "../../../components/woodright/CatalogOpsBoard"
 import { useWoodrightProducts } from "../../../lib/use-woodright-products"
+import { boardLoadView } from "../../../../lib/woodright-admin/catalog-ops-board"
 
 const WoodrightMediaPage = () => {
   const { data, loading, error } = useWoodrightProducts()
-  const rows = (data?.products ?? []).filter(
-    (p) => !p.readiness.has_media || p.image_urls.length === 0
-  )
-  const withPhotos = (data?.products ?? []).filter((p) => p.readiness.has_media)
+  const loadView = boardLoadView({
+    loading,
+    error,
+    hasSnapshot: Boolean(data),
+  })
 
   return (
     <Container className="divide-y p-0">
-      <DeskFrame
-        title="Медиа"
-        lead="Очередь ролей, не галерея файлов"
-        active="media"
-      >
-        {error ? (
-          <div className="px-6 py-4">
-            <Text size="small" className="text-ui-fg-error">
-              {error}
-            </Text>
-          </div>
-        ) : null}
-        {loading ? (
+      <DeskFrame title="Съёмка" lead="Один комплект на все товары без нормального фото" active="media">
+        {loadView === "loading" ? (
           <div className="px-6 py-4">
             <Text size="small" className="text-ui-fg-subtle">
               Загружаем…
             </Text>
           </div>
         ) : null}
-        <div className="px-6 py-4">
-          <Text weight="plus" className="mb-3">
-            Нужен кадр
-          </Text>
-          {rows.length === 0 && !loading ? (
-            <Text size="small" className="text-ui-fg-subtle">
-              Всему каталогу хватает фото
+        {loadView === "failed" && error ? (
+          <div className="px-6 py-8">
+            <Text weight="plus">Каталог не загрузился</Text>
+            <Text size="small" className="text-ui-fg-error mt-2 block">
+              {error}
             </Text>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {rows.map((product) => (
-                <li key={product.id}>
-                  <Link to={`/woodright/products/${product.id}`} className="text-sm">
-                    {product.title}
-                    {product.skus[0] ? ` · ${product.skus[0]}` : ""}
-                    <span className="block text-ui-fg-subtle">Нет hero</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <div className="px-6 py-4">
-          <Text weight="plus" className="mb-3">
-            Было / стало
-          </Text>
-          <Text size="small" className="text-ui-fg-subtle">
-            Сравнение кадров - в карточке товара. Здесь очередь, у кого не закрыта роль
-          </Text>
-          <Text size="small" className="text-ui-fg-subtle mt-2">
-            С фото: {withPhotos.length}
-          </Text>
-        </div>
+            <Text size="small" className="text-ui-fg-subtle mt-2 block">
+              Повторите загрузку. Пустой стол вместо снимка не показываем
+            </Text>
+          </div>
+        ) : null}
+        {loadView === "stale" && error ? (
+          <div className="px-6 py-4">
+            <Text size="small" className="text-ui-fg-error">
+              {error}. На экране прошлый снимок
+            </Text>
+          </div>
+        ) : null}
+        {loadView === "ready" || loadView === "stale" ? (
+          <CatalogOpsBoard products={data?.products ?? []} initialTaskId="photo-catalog" />
+        ) : null}
       </DeskFrame>
     </Container>
   )
