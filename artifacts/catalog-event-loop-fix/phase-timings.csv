@@ -1,0 +1,10 @@
+phase,wall_ms,blocks_event_loop,notes
+route_enter,,,,,
+product_id_query,,,,,not instrumented in production
+product_graph_chunk,,,,,new code yields between 32-id chunks; not timed on production data
+variant_price_chunk,,,,,new code yields between 80-id chunks
+buyer_item_type,,,,,
+default_configuration,,,,,
+merchandising_sort,,,,,
+projection_slice,,,,,yields every 32 products
+json_stringify,4.76,low,measured on the live 559556-byte body

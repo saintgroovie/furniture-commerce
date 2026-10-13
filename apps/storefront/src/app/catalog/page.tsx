@@ -207,6 +207,7 @@ export default async function CatalogPage({
         basePath="/catalog"
         initialState={filterState}
         atfProducts={collectAtfBrowseProducts(browseProducts, filterState)}
+        hydratedPool={browseProducts}
         poolScope="main"
         kidsProductIds={kidsProductIds}
         promotionSlot={toClientPromotionSlot(promotionSlot)}
