@@ -35,7 +35,7 @@ const WoodrightProductsPage = () => {
 
   return (
     <Container className="divide-y p-0">
-      <DeskFrame title="Каталог" lead="Цена, фото и видимость в одном списке" active="catalog">
+      <DeskFrame title="Все товары" lead="Список карточек. Очередь дел на экране Сегодня" active="catalog">
       <SellerProductsList
         products={data?.products ?? []}
         loading={loading}
