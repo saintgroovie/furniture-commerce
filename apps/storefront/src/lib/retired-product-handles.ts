@@ -113,7 +113,10 @@ export function retiredProductRedirect(
   handle: string
 ): { survivorHandle: string; variantId: string } | null {
   const key = handle.trim().toLowerCase()
-  return RETIRED_PRODUCT_HANDLES[key] ?? RETIRED_PRODUCT_IDS[key] ?? null
+  const own = Object.prototype.hasOwnProperty
+  if (own.call(RETIRED_PRODUCT_HANDLES, key)) return RETIRED_PRODUCT_HANDLES[key]!
+  if (own.call(RETIRED_PRODUCT_IDS, key)) return RETIRED_PRODUCT_IDS[key]!
+  return null
 }
 
 /** A still-published product keeps its own URL. Redirect only after it is gone. */

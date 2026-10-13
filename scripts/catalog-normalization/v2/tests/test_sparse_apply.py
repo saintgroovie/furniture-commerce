@@ -130,6 +130,37 @@ class AlignBuyerPublicTitle(unittest.TestCase):
             "medusa-store",
         )
 
+        class RedirectedConn(Conn):
+            def get_dsn_parameters(self):
+                return {"host": self.host, "hostaddr": "10.23.45.67"}
+
+        with self.assertRaises(SystemExit):
+            assert_identity(RedirectedConn("127.0.0.1", "medusa-store", "10.23.45.67"))
+
+    def test_database_url_refuses_connection_overrides(self):
+        from unittest import mock
+
+        from catalog_norm.export_inventory import database_url
+
+        local = "postgresql://postgres:postgres@127.0.0.1:5432/medusa-store"
+        refused = [
+            ({"DATABASE_URL": "postgresql://127.0.0.1/medusa-store?hostaddr=10.23.45.67"}),
+            ({"DATABASE_URL": "host=localhost hostaddr=10.23.45.67 dbname=medusa-store"}),
+            ({"DATABASE_URL": "postgresql://127.0.0.1/medusa-store?service=remote"}),
+            ({"DATABASE_URL": "postgresql://127.0.0.1,db.example.org/medusa-store"}),
+            ({"DATABASE_URL": "postgresql:///medusa-store"}),
+            ({"DATABASE_URL": "postgresql://db.example.org/medusa-store"}),
+            ({"DATABASE_URL": local, "PGHOSTADDR": "10.23.45.67"}),
+            ({"DATABASE_URL": local, "PGSERVICE": "remote"}),
+        ]
+        for env in refused:
+            with mock.patch.dict("os.environ", env, clear=True):
+                with self.assertRaises(SystemExit, msg=str(env)):
+                    database_url()
+        for url in (local, "postgresql://localhost/medusa-store", "postgresql://[::1]:5432/medusa-store"):
+            with mock.patch.dict("os.environ", {"DATABASE_URL": url}, clear=True):
+                self.assertEqual(database_url(), url)
+
 
 if __name__ == "__main__":
     unittest.main()

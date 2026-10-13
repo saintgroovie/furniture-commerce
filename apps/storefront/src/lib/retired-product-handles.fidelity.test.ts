@@ -13,6 +13,10 @@ assert.equal(ol15.variantId, "variant_01KNTBXBMBX03GX9WTGQAA35HW")
 assert.equal(retiredProductRedirect("ol-14-1"), null)
 assert.equal(retiredProductRedirect("OL-15-1")?.survivorHandle, "ol-14-1")
 assert.equal(retiredProductRedirect("not-a-product"), null)
+for (const inherited of ["__proto__", "constructor", "toString", "hasOwnProperty"]) {
+  assert.equal(retiredProductRedirect(inherited), null, inherited)
+  assert.equal(retiredRedirectTarget(inherited, false), null, inherited)
+}
 const legacyShell = retiredProductRedirect("prod_01KNTBXADFNYAQGPEQKCM4NPZE")
 assert.ok(legacyShell)
 assert.equal(legacyShell.survivorHandle, "ol-14-1")

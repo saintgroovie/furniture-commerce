@@ -38,6 +38,8 @@ def assert_identity(conn) -> dict[str, str]:
     host = (dsn.get("host") or "").lower()
     if host not in LOCAL_HOSTS:
         raise SystemExit(f"refusing non-local database host {host}")
+    if dsn.get("hostaddr"):
+        raise SystemExit("refusing database connection override hostaddr")
     cur = conn.cursor()
     cur.execute("SELECT current_database(), inet_server_addr()::text, current_setting('transaction_read_only')")
     db, addr, readonly = cur.fetchone()

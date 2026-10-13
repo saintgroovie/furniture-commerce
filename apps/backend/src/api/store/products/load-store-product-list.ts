@@ -300,6 +300,29 @@ async function attachBrowseVariantPrices(
   })
 }
 
+/**
+ * Variant metadata (axis sort, per-SKU material tiers) is loaded in browse
+ * only so the default configuration opens on the same SKU and tier as the PDP.
+ * It is not part of the browse payload.
+ */
+function dropBrowseVariantMetadata(
+  products: Array<Record<string, unknown>>
+): Array<Record<string, unknown>> {
+  return products.map((p) => {
+    const variants = p.variants
+    if (!Array.isArray(variants)) return p
+    return {
+      ...p,
+      variants: variants.map((variant) => {
+        if (!variant || typeof variant !== "object") return variant
+        const rest = { ...(variant as Record<string, unknown>) }
+        delete rest.metadata
+        return rest
+      }),
+    }
+  })
+}
+
 export async function loadStoreProductList(
   req: MedusaRequest,
   options?: {
@@ -380,6 +403,7 @@ export async function loadStoreProductList(
     result = projectBuyerItemTypesOntoProducts(dedupeCatalogProductsById(result))
     await yieldEventLoop()
     result = projectDefaultBuyerConfigurationsOntoProducts(result)
+    result = dropBrowseVariantMetadata(result)
     await yieldEventLoop()
     result = sortProductsByMerchandisingOrder(result)
   } else {
