@@ -60,6 +60,7 @@ export type PhotoItem = {
 export type AffectedItem = {
   handle: string
   title: string
+  product_id?: string | null
   collection_label?: string | null
 }
 
@@ -197,10 +198,10 @@ function severityLabel(severity: Severity): string {
 
 function heroUrl(product: CatalogOpsProduct | undefined): string | null {
   if (!product) return null
-  const first = product.image_urls?.find((url) => url.trim())
-  if (first) return first
   const thumb = product.thumbnail?.trim()
-  return thumb || null
+  if (thumb) return thumb
+  const first = product.image_urls?.find((url) => url.trim())
+  return first || null
 }
 
 export function photoHeroNeedsShoot(handle: string, url: string | null): boolean {
@@ -301,6 +302,7 @@ function priceTask(products: CatalogOpsProduct[]): OpsTask | null {
     affected_items: rows.map((product) => ({
       handle: product.handle,
       title: product.title,
+      product_id: product.id,
       collection_label: product.collection_label,
     })),
     affected_count: rows.length,
@@ -332,6 +334,7 @@ function invisibleTask(products: CatalogOpsProduct[]): OpsTask | null {
     affected_items: rows.map((product) => ({
       handle: product.handle,
       title: product.title,
+      product_id: product.id,
       collection_label: product.collection_label,
     })),
     affected_count: rows.length,

@@ -229,6 +229,36 @@ describe("catalog ops board", () => {
     assert.equal(secondHero.issues[0]?.code, "duplicate_hero")
   })
 
+  it("judges the buyer thumbnail, not a later gallery frame", () => {
+    const board = buildCatalogOpsBoard([
+      product({
+        handle: "pr-68-1",
+        thumbnail: `/static/${PHOTO_PLACEHOLDER_HASH}.jpg`,
+        image_urls: ["/static/pr-68-1-real.jpg"],
+      }),
+      product({
+        handle: "pr-68-2",
+        thumbnail: "/static/pr-68-2-real.jpg",
+        image_urls: [`/static/${PHOTO_PLACEHOLDER_HASH}.jpg`],
+      }),
+    ])
+    const photo = activeTasks(board).find((task) => task.task_id === "photo-catalog")
+    assert.deepEqual(
+      photo?.affected_items.map((item) => item.handle),
+      ["pr-68-1"]
+    )
+    assert.equal(board.summary.ready_photos, 1)
+    assert.equal(board.summary.waiting_photos, 1)
+  })
+
+  it("keeps a product id on a price task so the editor can be opened", () => {
+    const board = buildCatalogOpsBoard([
+      product({ handle: "aa-9", id: "prod_aa9", missing_price: true }),
+    ])
+    const price = activeTasks(board).find((task) => task.task_id === "missing-price")
+    assert.equal(price?.affected_items[0]?.product_id, "prod_aa9")
+  })
+
   it("keeps a failed catalog load visible and does not replace a snapshot with an empty board", () => {
     assert.equal(boardLoadView({ loading: true, error: null, hasSnapshot: false }), "loading")
     assert.equal(
