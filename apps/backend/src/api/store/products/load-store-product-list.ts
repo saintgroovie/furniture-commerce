@@ -86,6 +86,52 @@ type QueryGraph = {
   }) => Promise<{ data: unknown[] }>
 }
 
+/** Keep each browse graph materialization short enough for /health to run. */
+const BROWSE_PRODUCT_CHUNK = 32
+const BROWSE_VARIANT_CHUNK = 80
+
+function yieldEventLoop(): Promise<void> {
+  return new Promise((resolve) => {
+    setImmediate(resolve)
+  })
+}
+
+function chunkIds(ids: string[], size: number): string[][] {
+  const out: string[][] = []
+  for (let i = 0; i < ids.length; i += size) out.push(ids.slice(i, i + size))
+  return out
+}
+
+async function loadBrowseProductsInChunks(
+  query: QueryGraph,
+  fields: string[],
+  filters: Record<string, unknown>
+): Promise<Array<Record<string, unknown>>> {
+  const { data: idRows } = await query.graph({
+    entity: "product",
+    fields: ["id"],
+    filters,
+  })
+  const ids = (idRows ?? [])
+    .map((row) =>
+      row && typeof row === "object" ? (row as { id?: unknown }).id : undefined
+    )
+    .filter((id): id is string => typeof id === "string" && id.length > 0)
+  const result: Array<Record<string, unknown>> = []
+  for (const slice of chunkIds(ids, BROWSE_PRODUCT_CHUNK)) {
+    const { data } = await query.graph({
+      entity: "product",
+      fields,
+      filters: { ...filters, id: slice },
+    })
+    if (Array.isArray(data)) {
+      result.push(...(data as Array<Record<string, unknown>>))
+    }
+    await yieldEventLoop()
+  }
+  return result
+}
+
 function flattenVariantPrices(
   products: Array<Record<string, unknown>>
 ): Array<Record<string, unknown>> {
@@ -131,23 +177,30 @@ async function attachBrowseVariantPrices(
      calculated price (sale price lists) in one variant graph. The calculated
      context mirrors the cart line-item override (first region / currency). */
   const pricingContext = await resolveStorePricingContext(query)
-  const { data: pricedVariants } = await query.graph({
-    entity: "product_variant",
-    fields: pricingContext
-      ? ["id", "price_set.prices.amount", "calculated_price.*"]
-      : ["id", "price_set.prices.amount"],
-    filters: { id: variantIds },
-    ...(pricingContext
-      ? {
-          context: {
-            calculated_price: QueryContext({
-              region_id: pricingContext.region_id,
-              currency_code: pricingContext.currency_code,
-            }),
-          },
-        }
-      : {}),
-  })
+  const pricedVariants: unknown[] = []
+  const variantFields = pricingContext
+    ? ["id", "price_set.prices.amount", "calculated_price.*"]
+    : ["id", "price_set.prices.amount"]
+  const variantContext = pricingContext
+    ? {
+        context: {
+          calculated_price: QueryContext({
+            region_id: pricingContext.region_id,
+            currency_code: pricingContext.currency_code,
+          }),
+        },
+      }
+    : {}
+  for (const slice of chunkIds(variantIds, BROWSE_VARIANT_CHUNK)) {
+    const { data } = await query.graph({
+      entity: "product_variant",
+      fields: variantFields,
+      filters: { id: slice },
+      ...variantContext,
+    })
+    if (Array.isArray(data)) pricedVariants.push(...data)
+    await yieldEventLoop()
+  }
 
   const pricesByVariantId = new Map<string, Array<{ amount: number }>>()
   const calculatedByVariantId = new Map<string, StoreCalculatedPrice>()
@@ -234,13 +287,17 @@ export async function loadStoreProductList(
     fields = [...DEFAULT_PRODUCT_FIELDS]
   }
 
-  const { data: products } = await query.graph({
-    entity: "product",
-    fields,
-    filters: Object.keys(filters).length ? filters : undefined,
-  })
-
-  let result = (products ?? []) as Array<Record<string, unknown>>
+  let result: Array<Record<string, unknown>>
+  if (mode === "browse" && !handle && !options?.ids) {
+    result = await loadBrowseProductsInChunks(query, fields, filters)
+  } else {
+    const { data: products } = await query.graph({
+      entity: "product",
+      fields,
+      filters: Object.keys(filters).length ? filters : undefined,
+    })
+    result = (products ?? []) as Array<Record<string, unknown>>
+  }
 
   if (mode === "browse") {
     result = await attachBrowseVariantPrices(query, result)
@@ -274,7 +331,9 @@ export async function loadStoreProductList(
   // handle-based PDP fallback shares the same opening price contract as browse.
   if (mode === "browse") {
     result = projectBuyerItemTypesOntoProducts(dedupeCatalogProductsById(result))
+    await yieldEventLoop()
     result = projectDefaultBuyerConfigurationsOntoProducts(result)
+    await yieldEventLoop()
     result = sortProductsByMerchandisingOrder(result)
   } else {
     result = projectDefaultBuyerConfigurationsOntoProducts(result)

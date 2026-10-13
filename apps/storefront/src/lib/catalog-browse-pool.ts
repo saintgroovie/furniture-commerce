@@ -1,10 +1,9 @@
 /**
  * Catalog browse pool for RSC HTML budget.
  *
- * CatalogBrowseClient must not receive the full scoped list (~111 products):
- * Next serializes client props into `__next_f.push` and that flight is the
- * bulk of `/catalog` HTML. SSR ships ATF representatives only; the browser
- * loads `/store/catalog-products` and re-scopes with the same membership ids.
+ * The catalog page loads `/store/catalog-products` once on the server and
+ * passes the scoped pool into CatalogBrowseClient. The browser must not
+ * fetch that endpoint again for the same page.
  */
 
 import { CATALOG_ATF_EAGER_COUNT } from "./catalog-atf"

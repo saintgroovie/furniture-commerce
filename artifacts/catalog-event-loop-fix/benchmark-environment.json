@@ -1,0 +1,17 @@
+{
+  "method": "local disposable postgres:15-alpine container wr-catalog-bench-pg-local on 127.0.0.1:5545",
+  "dump_sha256": "34209efca2d083231690e2e2dd8292849e454e109464c0f86a384d52a1397c0c",
+  "recovery_point": "recovery-point-20261011T162731Z",
+  "dump_bytes": 791639,
+  "postgres_version": "15.19",
+  "db_counts": {"published": 263, "draft": 46, "image_rows_at_restore": 1928},
+  "browse_response_products": 248,
+  "operator_database": "not used",
+  "production_database": "not modified",
+  "runtimes": {
+    "baseline": {"sha": "424f637937e46f377b0b46c50cfa9b41cee3ff5e", "port": 9411, "command": "medusa develop"},
+    "candidate": {"sha": "cad01d097d9f09416f56bc5c10b7af7e4787cc13", "port": 9412, "command": "medusa develop"}
+  },
+  "redis": "disposable redis:7-alpine on 127.0.0.1:6380",
+  "note": "Absolute times are this workstation with medusa develop, not the production container. The same snapshot and config were used for both SHAs."
+}

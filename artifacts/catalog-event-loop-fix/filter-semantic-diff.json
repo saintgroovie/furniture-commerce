@@ -1,0 +1,12 @@
+{
+  "unexpected_differences": 0,
+  "cases": [
+    {"query": "handle=ol-57-2", "baseline_n": 1, "candidate_n": 1, "ids_equal": true},
+    {"query": "category_id=%20", "baseline_n": 0, "candidate_n": 0, "ids_equal": true},
+    {"query": "category_id=", "baseline_n": 248, "candidate_n": 248, "ids_equal": true},
+    {"query": "product_type=%20", "baseline_n": 0, "candidate_n": 0, "ids_equal": true},
+    {"query": "handle=%20", "baseline_n": 0, "candidate_n": 0, "ids_equal": true},
+    {"query": "product_type=BED", "baseline_n": 0, "candidate_n": 0, "ids_equal": true}
+  ],
+  "note": "Empty category_id matches the unfiltered 248 on both runtimes. The coalesce key still refuses that query, so it does not share the in-flight full-catalog slot. Whitespace filters return 0 on both."
+}
