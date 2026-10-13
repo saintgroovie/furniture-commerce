@@ -1,0 +1,4 @@
+runtime,window,el_p95_ms,el_max_p50_ms,notes
+baseline,steady catalog requests under 2s,27.23,281.02,monitorEventLoopDelay inside the medusa process
+candidate,steady catalog requests under 2s,16.31,231.21,same preload
+live_production,one catalog inside the container,,,previous incident health app time max 415ms; not re-measured here
