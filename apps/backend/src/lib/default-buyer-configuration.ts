@@ -98,6 +98,35 @@ function axisSortKey(variant: Record<string, unknown>): number[] | null {
   })
 }
 
+/**
+ * Same confirmed sleeping size as the storefront mattress fallback
+ * (`buyer-variant-axis.ts`). Used only when variant_axes are missing,
+ * so array order cannot open a larger SKU than the PDP.
+ */
+function confirmedMattressSort(variant: Record<string, unknown>): number | null {
+  const meta = variant.metadata
+  if (!meta || typeof meta !== "object" || Array.isArray(meta)) return null
+  const size = (meta as { mattress_size?: unknown }).mattress_size
+  if (!size || typeof size !== "object" || Array.isArray(size)) return null
+  const row = size as {
+    source?: unknown
+    confidence?: unknown
+    width_cm?: unknown
+    length_cm?: unknown
+    display?: unknown
+    key?: unknown
+  }
+  if (row.source !== "title" || row.confidence !== "high") return null
+  if (!Number.isInteger(row.width_cm) || !Number.isInteger(row.length_cm)) return null
+  const width = row.width_cm as number
+  const length = row.length_cm as number
+  if (width <= 0 || length <= 0) return null
+  const display = `${width} × ${length} см`
+  if (row.display != null && row.display !== display) return null
+  if (row.key != null && row.key !== `${width}x${length}`) return null
+  return width * 1000 + length
+}
+
 function openingPurchasableVariant(
   product: Record<string, unknown>
 ): { id: string; basePrice: number; originalPrice: number | null } | null {
@@ -109,6 +138,9 @@ function openingPurchasableVariant(
     (item): item is Record<string, unknown> => !!item && typeof item === "object"
   )
   const keys = records.map(axisSortKey)
+  const mattressSorts = records.map(confirmedMattressSort)
+  const bySku = (a: Record<string, unknown>, b: Record<string, unknown>) =>
+    String(a.sku ?? "").localeCompare(String(b.sku ?? ""), "ru")
   const ordered =
     records.length >= 2 && keys.every((key) => key != null)
       ? [...records].sort((a, b) => {
@@ -119,9 +151,14 @@ function openingPurchasableVariant(
             const delta = (left[i] ?? 0) - (right[i] ?? 0)
             if (delta) return delta
           }
-          return String(a.sku ?? "").localeCompare(String(b.sku ?? ""), "ru")
+          return bySku(a, b)
         })
-      : records
+      : records.length >= 2 && mattressSorts.every((key) => key != null)
+        ? [...records].sort((a, b) => {
+            const delta = (confirmedMattressSort(a) ?? 0) - (confirmedMattressSort(b) ?? 0)
+            return delta || bySku(a, b)
+          })
+        : records
   const raw = ordered[0]
   if (!raw) return null
   const id = typeof raw.id === "string" ? raw.id : null

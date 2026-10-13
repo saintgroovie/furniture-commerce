@@ -144,4 +144,44 @@ assert.equal(bareFull?.min_unit_price, 69_900)
 assert.equal(bareBrowse?.variant_id, bareFull?.variant_id)
 assert.equal(bareBrowse?.min_unit_price, bareFull?.min_unit_price)
 
+/* No variant_axes: the larger SKU is first, the confirmed 90 cm size opens. */
+function mattress(width: number) {
+  return {
+    source: "title",
+    confidence: "high",
+    width_cm: width,
+    length_cm: 200,
+    display: `${width} × 200 см`,
+    key: `${width}x200`,
+  }
+}
+const greenwich = {
+  id: "prod_gr",
+  handle: "greenwich-gr-09-1-bed-90",
+  metadata: tiers,
+  variants: [
+    {
+      id: "variant_gr_18",
+      sku: "GR-18-1",
+      calculated_price: { calculated_amount: 110_400, currency_code: "rub" },
+      metadata: { mattress_size: mattress(180) },
+    },
+    {
+      id: "variant_gr_09",
+      sku: "GR-09-1",
+      calculated_price: { calculated_amount: 71_900, currency_code: "rub" },
+      metadata: { mattress_size: mattress(90) },
+    },
+  ],
+}
+const greenwichFull = resolveDefaultBuyerConfiguration(greenwich)
+const greenwichBrowse = resolveDefaultBuyerConfiguration({
+  ...greenwich,
+  variants: greenwich.variants.map((variant) => slimBrowseVariantRecord(variant)),
+})
+assert.equal(greenwichFull?.variant_id, "variant_gr_09")
+assert.equal(greenwichFull?.min_unit_price, 50_330)
+assert.equal(greenwichBrowse?.variant_id, greenwichFull?.variant_id)
+assert.equal(greenwichBrowse?.min_unit_price, greenwichFull?.min_unit_price)
+
 console.log("catalog-opening-variant.fidelity.test.ts: ok")

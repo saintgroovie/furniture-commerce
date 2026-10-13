@@ -33,7 +33,7 @@ import {
 } from "@/lib/request-quote"
 import { ProductCta } from "@/components/product-cta"
 import { PdpPriceBlock } from "@/components/pdp-price-block"
-import { openingVariant } from "@/lib/opening-variant"
+import { openingVariant, selectedBuyerVariantId } from "@/lib/opening-variant"
 import { resolveOriginalBasePriceOf } from "@/lib/sale-price"
 import { PdpMaterialTierSelect } from "@/components/pdp-material-tier-select"
 import { PdpSizeChips } from "@/components/pdp-size-chips"
@@ -249,9 +249,11 @@ export default async function ProductPage({
   const requestedVariantId = Array.isArray(requestedVariant)
     ? requestedVariant[0]
     : requestedVariant
-  const selectedVariantId = sparseMap
-    ? resolveSparseVariantId(sparseMap, requestedVariantId)
-    : resolveBuyerVariantId(variantAxis, requestedVariantId)
+  const selectedVariantId =
+    selectedBuyerVariantId(product as Record<string, unknown>, requestedVariantId) ??
+    (sparseMap
+      ? resolveSparseVariantId(sparseMap, undefined)
+      : resolveBuyerVariantId(variantAxis, undefined))
   const selectedVariant =
     selectedVariantId == null
       ? null

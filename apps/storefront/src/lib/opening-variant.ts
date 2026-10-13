@@ -40,3 +40,17 @@ export function openingVariant(
   if (variants.length === 1) return variants[0] ?? null
   return null
 }
+
+/**
+ * PDP selection. A valid `?variant=` wins. Otherwise the opening SKU.
+ * Chip fallbacks stay outside this helper.
+ */
+export function selectedBuyerVariantId(
+  product: Record<string, unknown>,
+  requested: string | undefined
+): string | null {
+  const variants = variantRecords(product)
+  if (requested && variants.some((variant) => variant.id === requested)) return requested
+  const opening = openingVariant(product)
+  return typeof opening?.id === "string" ? opening.id : null
+}

@@ -4,7 +4,7 @@
  */
 import assert from "node:assert/strict"
 import { getPrice } from "./format"
-import { openingVariant } from "./opening-variant"
+import { openingVariant, selectedBuyerVariantId } from "./opening-variant"
 
 const ol15 = {
   id: "variant_ol_15_2",
@@ -42,5 +42,8 @@ assert.equal(
   null,
   "two SKUs without an opening contract do not fall back to variants[0]"
 )
+assert.equal(selectedBuyerVariantId(product, undefined), ol14.id)
+assert.equal(selectedBuyerVariantId(product, ol15.id), ol15.id)
+assert.equal(selectedBuyerVariantId(product, "variant_missing"), ol14.id)
 
 console.log("opening-variant.fidelity.test.ts: ok")

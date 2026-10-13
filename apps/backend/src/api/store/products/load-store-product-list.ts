@@ -190,6 +190,10 @@ function browseOpeningMetadata(metadata: unknown): Record<string, unknown> | nul
   if (axes && typeof axes === "object" && !Array.isArray(axes)) {
     kept.variant_axes = axes
   }
+  const mattress = src.mattress_size
+  if (mattress && typeof mattress === "object" && !Array.isArray(mattress)) {
+    kept.mattress_size = mattress
+  }
   const capabilities = src.capabilities
   if (capabilities && typeof capabilities === "object" && !Array.isArray(capabilities)) {
     /* An empty bag is an override: it blocks product-tier inheritance.
