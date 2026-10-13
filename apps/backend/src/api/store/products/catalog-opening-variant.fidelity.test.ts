@@ -123,4 +123,25 @@ const wiredCfg = (
 assert.equal(wiredCfg.variant_id, OL_14_2)
 assert.equal(wiredCfg.min_unit_price, 48_930)
 
+/* Empty capabilities suppress product-tier inheritance. Browse must keep the bag. */
+const bare = {
+  ...oliver,
+  variants: oliverVariants.map((variant, index) => ({
+    ...variant,
+    metadata: {
+      ...variant.metadata,
+      capabilities: index === 1 ? {} : tiers,
+    },
+  })),
+}
+const bareFull = resolveDefaultBuyerConfiguration(bare)
+const bareBrowse = resolveDefaultBuyerConfiguration({
+  ...bare,
+  variants: bare.variants.map((variant) => slimBrowseVariantRecord(variant)),
+})
+assert.equal(bareFull?.variant_id, OL_14_2)
+assert.equal(bareFull?.min_unit_price, 69_900)
+assert.equal(bareBrowse?.variant_id, bareFull?.variant_id)
+assert.equal(bareBrowse?.min_unit_price, bareFull?.min_unit_price)
+
 console.log("catalog-opening-variant.fidelity.test.ts: ok")

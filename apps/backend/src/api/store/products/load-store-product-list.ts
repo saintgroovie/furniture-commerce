@@ -192,10 +192,14 @@ function browseOpeningMetadata(metadata: unknown): Record<string, unknown> | nul
   }
   const capabilities = src.capabilities
   if (capabilities && typeof capabilities === "object" && !Array.isArray(capabilities)) {
-    const tiers = (capabilities as Record<string, unknown>).material_tiers
-    if (tiers && typeof tiers === "object" && !Array.isArray(tiers)) {
-      kept.capabilities = { material_tiers: tiers }
+    /* An empty bag is an override: it blocks product-tier inheritance.
+       Dropping it makes the catalog card apply a discount the PDP does not. */
+    const bag = capabilities as Record<string, unknown>
+    const slim: Record<string, unknown> = {}
+    if (Object.prototype.hasOwnProperty.call(bag, "material_tiers")) {
+      slim.material_tiers = bag.material_tiers
     }
+    kept.capabilities = slim
   }
   return Object.keys(kept).length > 0 ? kept : null
 }

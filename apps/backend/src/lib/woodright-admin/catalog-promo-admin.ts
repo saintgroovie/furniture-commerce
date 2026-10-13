@@ -5,6 +5,7 @@
  */
 import { resolveDefaultBuyerConfiguration } from "../default-buyer-configuration"
 import { parseMaterialTiers, resolveMaterialTierPrice } from "../material-tier-contract"
+import { productMetadataForVariant } from "../variant-capabilities"
 import { isPriceListActiveNow, priceAmount, type PriceListRow, type PriceRow } from "./catalog-promo-price-list"
 
 /** Graph fields needed to build promo admin rows for products. */
@@ -134,12 +135,19 @@ function withGraphBasePrices(raw: Record<string, unknown>): Record<string, unkno
   }
 }
 
-export function openingTierMultiplier(raw: Record<string, unknown>): number {
-  const meta =
+export function openingTierMultiplier(
+  raw: Record<string, unknown>,
+  variant?: Record<string, unknown> | null
+): number {
+  const productMeta =
     raw.metadata && typeof raw.metadata === "object" && !Array.isArray(raw.metadata)
       ? (raw.metadata as Record<string, unknown>)
       : null
-  const tiers = parseMaterialTiers(meta)
+  const variantMeta =
+    variant?.metadata && typeof variant.metadata === "object" && !Array.isArray(variant.metadata)
+      ? (variant.metadata as Record<string, unknown>)
+      : null
+  const tiers = parseMaterialTiers(productMetadataForVariant(productMeta, variantMeta))
   return tiers && tiers.length > 0 ? tiers[0]!.price_multiplier : 1
 }
 
@@ -194,7 +202,7 @@ export function buildCatalogPromoAdminProduct(
   else if (!isPriceListActiveNow(priceList, now)) blocker = "price_list_inactive"
   else if (!hasImage(raw)) blocker = "no_image"
 
-  const multiplier = openingTierMultiplier(raw)
+  const multiplier = openingTierMultiplier(raw, v0)
   const discount =
     basePrice != null && salePrice != null && salePrice < basePrice
       ? Math.round(((basePrice - salePrice) / basePrice) * 100)

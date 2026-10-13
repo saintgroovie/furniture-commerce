@@ -119,6 +119,66 @@ describe("buildCatalogPromoAdminProduct", () => {
     assert.equal(row.blocker, null)
   })
 
+  it("empty opening capabilities do not inherit the product material tier", () => {
+    const raw = rawProduct({
+      variants: [
+        {
+          id: "variant_big",
+          sku: "OL-15-2",
+          metadata: {
+            variant_axes: {
+              mattress_size: { sort: 1, label: "120", display: "120 × 190" },
+            },
+            capabilities: {
+              material_tiers: {
+                solid_front_ldsp_body: {
+                  key: "solid_front_ldsp_body",
+                  label_ru: "ЛДСП",
+                  description_ru: "",
+                  price_multiplier: 0.7,
+                  position: 0,
+                },
+                solid_full: {
+                  key: "solid_full",
+                  label_ru: "Массив",
+                  description_ru: "",
+                  price_multiplier: 1,
+                  position: 1,
+                },
+              },
+            },
+          },
+          price_set: {
+            id: "pset_big",
+            prices: [{ amount: 98900, currency_code: "rub", price_list_id: null }],
+          },
+        },
+        {
+          id: "variant_open",
+          sku: "OL-14-2",
+          metadata: {
+            variant_axes: {
+              mattress_size: { sort: 0, label: "90", display: "90 × 190" },
+            },
+            capabilities: {},
+          },
+          price_set: {
+            id: "pset_open",
+            prices: [{ amount: 69900, currency_code: "rub", price_list_id: null }],
+          },
+        },
+      ],
+    })
+    const promo = new Map<string, PriceRow>([
+      ["pset_open", { id: "price_sale", amount: 60000, price_set_id: "pset_open" }],
+    ])
+    const row = buildCatalogPromoAdminProduct(raw, promo, activeList, NOW)
+    assert.equal(row.variant_id, "variant_open")
+    assert.equal(row.base_price, 69900)
+    assert.equal(row.buyer_base_price, 69900)
+    assert.equal(row.buyer_sale_price, 60000)
+  })
+
   it("base price ignores price-list rows", () => {
     const raw = rawProduct({
       variants: [
