@@ -6,19 +6,29 @@ import json
 import os
 from datetime import datetime
 from decimal import Decimal
-from urllib.parse import urlparse
-
 import psycopg2
 import psycopg2.extras
+from psycopg2.extensions import parse_dsn
 
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
+# libpq connects to these instead of `host`, so a local host name proves nothing.
+REDIRECTING_PARAMS = ("hostaddr", "service")
+REDIRECTING_ENV = ("PGHOSTADDR", "PGSERVICE")
 
 
 def database_url() -> str:
     url = os.environ.get("DATABASE_URL") or "postgresql://postgres:postgres@127.0.0.1:5432/medusa-store"
-    host = (urlparse(url).hostname or "").lower()
-    if host not in LOCAL_HOSTS:
-        raise SystemExit(f"refusing non-local database host {host}")
+    try:
+        params = parse_dsn(url)
+    except psycopg2.ProgrammingError:
+        raise SystemExit("refusing unparsable DATABASE_URL") from None
+    hosts = [part.strip().lower() for part in (params.get("host") or "").split(",")]
+    if any(host not in LOCAL_HOSTS for host in hosts):
+        raise SystemExit(f"refusing non-local database host {params.get('host') or ''}")
+    overrides = [key for key in REDIRECTING_PARAMS if params.get(key)]
+    overrides += [key for key in REDIRECTING_ENV if os.environ.get(key)]
+    if overrides:
+        raise SystemExit(f"refusing database connection override {', '.join(overrides)}")
     return url
 
 
