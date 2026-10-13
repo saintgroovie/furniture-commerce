@@ -29,6 +29,21 @@ CAPABILITY_KEYS = FINISH_KEYS + (
 )
 
 
+def live_room_set_product_ids(cur, product_ids: list[str]) -> list[str]:
+    """Live room-set links that would disappear if these products were drafted."""
+    if not product_ids:
+        return []
+    cur.execute(
+        """
+        SELECT product_id
+        FROM product_product_roomsetmodule_room_set_item
+        WHERE product_id = ANY(%s) AND deleted_at IS NULL
+        """,
+        (product_ids,),
+    )
+    return [row["product_id"] for row in cur.fetchall()]
+
+
 def _mattress_bag(source: dict[str, Any], display: str) -> dict[str, Any] | None:
     raw = source.get("mattress_size")
     if isinstance(raw, dict) and raw.get("display") == display:
@@ -204,6 +219,17 @@ def _apply_family(cur, plan: dict[str, Any]) -> dict[str, Any]:
             "status": "already_applied",
             "skus": plan["skus"],
             "public_title_aligned": True,
+        }
+
+    shell_ids = [row["product_id"] for row in rows if row["product_id"] != survivor["product_id"]]
+    room_set_ids = live_room_set_product_ids(cur, shell_ids)
+    if room_set_ids:
+        return {
+            "family_key": plan["family_key"],
+            "status": "skipped",
+            "reason": "room-set membership is still on a shell that would be drafted",
+            "skus": plan["skus"],
+            "room_set_product_ids": room_set_ids,
         }
 
     cur.execute(

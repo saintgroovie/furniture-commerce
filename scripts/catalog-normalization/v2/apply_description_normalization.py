@@ -43,12 +43,16 @@ def apply(manifest_path: Path) -> dict:
                 WHERE id = %s
                   AND deleted_at IS NULL
                   AND description IS DISTINCT FROM %s
-                  AND description = %s
+                  AND (
+                    description = %s
+                    OR (description IS NULL AND %s = '')
+                  )
                 """,
                 (
                     row["proposed_description"],
                     row["product_id"],
                     row["proposed_description"],
+                    row["current_description"],
                     row["current_description"],
                 ),
             )

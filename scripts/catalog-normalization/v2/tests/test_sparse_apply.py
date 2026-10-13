@@ -4,10 +4,32 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from catalog_norm.sparse_apply import align_buyer_public_title
+from catalog_norm.sparse_apply import align_buyer_public_title, live_room_set_product_ids
+
+
+class _RoomSetCursor:
+    def __init__(self, rows):
+        self.rows = rows
+        self.sql = ""
+
+    def execute(self, sql, params):
+        self.sql = sql
+        self.params = params
+
+    def fetchall(self):
+        return self.rows
 
 
 class AlignBuyerPublicTitle(unittest.TestCase):
+    def test_live_room_set_link_is_reported(self):
+        cur = _RoomSetCursor([{"product_id": "prod_shell"}])
+        self.assertEqual(live_room_set_product_ids(cur, ["prod_shell"]), ["prod_shell"])
+        self.assertIn("deleted_at IS NULL", cur.sql)
+
+    def test_empty_room_set_check_does_not_query(self):
+        cur = _RoomSetCursor([{"product_id": "prod_shell"}])
+        self.assertEqual(live_room_set_product_ids(cur, []), [])
+        self.assertEqual(cur.sql, "")
     def test_missing_public_title_is_not_invented(self):
         meta = {"source_title": "Гардероб 2-дв. с ящиками"}
         self.assertIsNone(align_buyer_public_title(meta, "Гардероб Гринвич"))
