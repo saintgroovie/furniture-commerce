@@ -99,6 +99,41 @@ function hasImage(raw: Record<string, unknown>): boolean {
   )
 }
 
+/**
+ * Admin graph rows keep money on `price_set.prices`. The shared opening
+ * resolver only reads `calculated_price` or a flat `prices` list, so a
+ * multi-SKU product would otherwise resolve to no variant.
+ */
+function withGraphBasePrices(raw: Record<string, unknown>): Record<string, unknown> {
+  const variants = Array.isArray(raw.variants) ? raw.variants : []
+  return {
+    ...raw,
+    variants: variants.map((item) => {
+      if (!item || typeof item !== "object") return item
+      const variant = item as Record<string, unknown>
+      if (variant.calculated_price || Array.isArray(variant.prices)) return variant
+      const priceSet = variant.price_set as { prices?: unknown } | undefined
+      const rows = Array.isArray(priceSet?.prices) ? priceSet.prices : []
+      const prices: Array<{ amount: number }> = []
+      for (const row of rows) {
+        if (!row || typeof row !== "object") continue
+        const price = row as {
+          amount?: unknown
+          currency_code?: unknown
+          price_list_id?: unknown
+        }
+        if (price.price_list_id) continue
+        const currency =
+          typeof price.currency_code === "string" ? price.currency_code.toLowerCase() : "rub"
+        if (currency !== "rub") continue
+        const amount = positive(price.amount)
+        if (amount != null) prices.push({ amount })
+      }
+      return prices.length ? { ...variant, prices } : variant
+    }),
+  }
+}
+
 export function openingTierMultiplier(raw: Record<string, unknown>): number {
   const meta =
     raw.metadata && typeof raw.metadata === "object" && !Array.isArray(raw.metadata)
@@ -121,7 +156,7 @@ export function buildCatalogPromoAdminProduct(
   const variants = Array.isArray(raw.variants)
     ? (raw.variants as Array<Record<string, unknown>>)
     : []
-  const openingId = resolveDefaultBuyerConfiguration(raw)?.variant_id
+  const openingId = resolveDefaultBuyerConfiguration(withGraphBasePrices(raw))?.variant_id
   const v0 =
     (openingId ? variants.find((variant) => variant.id === openingId) : null) ??
     (variants.length === 1 ? variants[0] : null)

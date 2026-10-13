@@ -74,6 +74,51 @@ describe("buildCatalogPromoAdminProduct", () => {
     assert.equal(row.blocker, "no_sale_price")
   })
 
+  it("multi-variant graph prices open the axis SKU, not the array head", () => {
+    const raw = rawProduct({
+      variants: [
+        {
+          id: "variant_big",
+          sku: "OL-15-2",
+          metadata: {
+            variant_axes: {
+              mattress_size: { sort: 1, label: "120", display: "120 × 190" },
+            },
+          },
+          price_set: {
+            id: "pset_big",
+            prices: [{ amount: "98900", currency_code: "rub", price_list_id: null }],
+          },
+        },
+        {
+          id: "variant_open",
+          sku: "OL-14-2",
+          metadata: {
+            variant_axes: {
+              mattress_size: { sort: 0, label: "90", display: "90 × 190" },
+            },
+          },
+          price_set: {
+            id: "pset_open",
+            prices: [
+              { amount: 60000, currency_code: "rub", price_list_id: "plist_1" },
+              { amount: 69900, currency_code: "rub", price_list_id: null },
+            ],
+          },
+        },
+      ],
+    })
+    const promo = new Map<string, PriceRow>([
+      ["pset_open", { id: "price_sale", amount: 62910, price_set_id: "pset_open" }],
+    ])
+    const row = buildCatalogPromoAdminProduct(raw, promo, activeList, NOW)
+    assert.equal(row.variant_id, "variant_open")
+    assert.equal(row.sku, "OL-14-2")
+    assert.equal(row.price_set_id, "pset_open")
+    assert.equal(row.base_price, 69900)
+    assert.equal(row.blocker, null)
+  })
+
   it("base price ignores price-list rows", () => {
     const raw = rawProduct({
       variants: [
