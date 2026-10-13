@@ -19,6 +19,7 @@ const {
   digestsMatch,
   releasePairMismatchWarning,
   buildIdentityHeadersFromEnv,
+  readApplicationReleaseSha,
   selectUnifiedReleaseSha,
   SCHEMA_VERSION,
 } = require("./runtime-identity-lib.cjs")
@@ -92,22 +93,34 @@ function selfTest() {
 
   const beSha = "caf82b048b9caefae30679342aec3d4fc42a8d89"
   const sfSha = "dd304d1bf92d59c85795b5091ed0386365bcca6d"
+  const appSha = "0123456789abcdef0123456789abcdef01234567"
   cases.push([
-    "split pair omits global SHA",
-    selectUnifiedReleaseSha(beSha, sfSha, sfSha) === "",
+    "application SHA stays visible when components differ",
+    readApplicationReleaseSha(appSha) === appSha &&
+      selectUnifiedReleaseSha(beSha, sfSha, appSha) === appSha,
   ])
   const splitHdr = buildIdentityHeadersFromEnv({
-    WOODRIGHT_RUNTIME_ROLE: "non_public_candidate",
-    WOODRIGHT_EXPOSURE: "private",
+    WOODRIGHT_RUNTIME_ROLE: "public_production",
+    WOODRIGHT_EXPOSURE: "public",
     WOODRIGHT_BACKEND_SOURCE_SHA: beSha,
     WOODRIGHT_STOREFRONT_SOURCE_SHA: sfSha,
-    WOODRIGHT_RELEASE_SHA: sfSha,
+    WOODRIGHT_RELEASE_SHA: appSha,
   })
   cases.push([
-    "split headers expose component SHAs only",
+    "split headers keep application and both component SHAs",
     splitHdr["x-woodright-backend-source-sha"] === beSha &&
       splitHdr["x-woodright-storefront-source-sha"] === sfSha &&
-      !splitHdr["x-woodright-release-sha"],
+      splitHdr["x-woodright-release-sha"] === appSha,
+  ])
+  const missingComponent = buildIdentityHeadersFromEnv({
+    WOODRIGHT_RELEASE_SHA: appSha,
+    WOODRIGHT_BACKEND_SOURCE_SHA: beSha,
+  })
+  cases.push([
+    "missing storefront revision is not filled from application SHA",
+    missingComponent["x-woodright-release-sha"] === appSha &&
+      missingComponent["x-woodright-backend-source-sha"] === beSha &&
+      !missingComponent["x-woodright-storefront-source-sha"],
   ])
   const legacyHdr = buildIdentityHeadersFromEnv({
     WOODRIGHT_RUNTIME_ROLE: "non_public_candidate",

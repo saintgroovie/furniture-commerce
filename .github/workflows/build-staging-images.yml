@@ -370,6 +370,8 @@ jobs:
             woodright.image.build_profile_checksum=${{ steps.profile.outputs.WOODRIGHT_PROFILE_CHECKSUM }}
             woodright.tag.authoritative=false
             com.woodright.deployment-owner=Dokploy
+          build-args: |
+            WOODRIGHT_BACKEND_SOURCE_SHA=${{ steps.sha.outputs.sha }}
           tags: |
             ${{ env.IMAGE_PREFIX }}-backend:${{ steps.meta.outputs.unique_tag }}
 
@@ -414,6 +416,7 @@ jobs:
             WOODRIGHT_RUNTIME_EXPOSURE=${{ steps.profile.outputs.WOODRIGHT_RUNTIME_EXPOSURE }}
             WOODRIGHT_DB_ALIAS=${{ steps.profile.outputs.WOODRIGHT_DB_ALIAS }}
             WOODRIGHT_ADMIN_EXPOSURE=${{ steps.profile.outputs.WOODRIGHT_ADMIN_EXPOSURE }}
+            WOODRIGHT_STOREFRONT_SOURCE_SHA=${{ steps.sha.outputs.sha }}
 
       - name: Contamination gate (extract from the SAME loaded image that will be pushed)
         env:
@@ -568,6 +571,30 @@ jobs:
           fi
           if [ "${RELEASE_MODE}" != "isolated_storefront" ] && [ "${BE_PROFILE}" != "${BUILD_PROFILE}" ]; then
             echo "backend build_profile label mismatch BE=${BE_PROFILE} expected=${BUILD_PROFILE}" >&2
+            exit 1
+          fi
+          image_env_value() {
+            local image_ref="$1"
+            local key="$2"
+            docker buildx imagetools inspect "${image_ref}" --format '{{range .Image.Config.Env}}{{println .}}{{end}}' \
+              | awk -F= -v key="${key}" '$1==key {print substr($0, length(key)+2); exit}'
+          }
+          SF_ENV_REV="$(image_env_value "${IMAGE_PREFIX}-storefront@${STOREFRONT_DIGEST}" WOODRIGHT_STOREFRONT_SOURCE_SHA)"
+          if [ "${SF_ENV_REV}" != "${SF_REV}" ]; then
+            echo "storefront baked WOODRIGHT_STOREFRONT_SOURCE_SHA=${SF_ENV_REV:-<absent>} != OCI revision ${SF_REV}" >&2
+            exit 1
+          fi
+          BE_ENV_REV="$(image_env_value "${IMAGE_PREFIX}-backend@${BACKEND_DIGEST}" WOODRIGHT_BACKEND_SOURCE_SHA)"
+          if [ "${RELEASE_MODE}" = "isolated_storefront" ]; then
+            if [ -n "${BE_ENV_REV}" ] && [ "${BE_ENV_REV}" != "${BE_REV}" ]; then
+              echo "reused backend baked WOODRIGHT_BACKEND_SOURCE_SHA=${BE_ENV_REV} != OCI revision ${BE_REV}" >&2
+              exit 1
+            fi
+            if [ -z "${BE_ENV_REV}" ]; then
+              echo "NOTE reused backend has no baked component revision; header stays absent until the next backend bake"
+            fi
+          elif [ "${BE_ENV_REV}" != "${BE_REV}" ]; then
+            echo "backend baked WOODRIGHT_BACKEND_SOURCE_SHA=${BE_ENV_REV:-<absent>} != OCI revision ${BE_REV}" >&2
             exit 1
           fi
           mkdir -p release-artifacts

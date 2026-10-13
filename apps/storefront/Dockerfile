@@ -38,16 +38,19 @@ ARG WOODRIGHT_PAYMENT_MODE=
 # launch-contract gate branch below applies. Empty = legacy/backward-compat
 # behavior (only gated when WOODRIGHT_LAUNCH_MODE is explicitly passed).
 ARG WOODRIGHT_IMAGE_BUILD_PROFILE=
-# Runtime identity evidence baked as image ENV defaults only (labels/audit -
-# NOT what the running container actually uses at request time; see
-# apps/storefront/src/lib/runtime-identity-headers.ts, which reads the
-# *runtime* WOODRIGHT_RUNTIME_ROLE / WOODRIGHT_EXPOSURE /
-# WOODRIGHT_DATABASE_IDENTITY env set by docker-compose at container start -
-# those override these Dockerfile-baked defaults).
+# Role/exposure/db alias below are image defaults. Compose overrides them at
+# container start. WOODRIGHT_STOREFRONT_SOURCE_SHA is different: public
+# production compose does not set it, so the baked value is the runtime
+# component revision. See apps/storefront/src/lib/runtime-identity-headers.ts.
 ARG WOODRIGHT_RUNTIME_ROLE=
 ARG WOODRIGHT_RUNTIME_EXPOSURE=
 ARG WOODRIGHT_DB_ALIAS=
 ARG WOODRIGHT_ADMIN_EXPOSURE=
+# Exact storefront artifact source SHA. Empty for local/unprofiled builds.
+# Profiled bakes must pass the same 40-hex value as the OCI revision label.
+# Compose on public_production does not override this, so a component-only
+# recreate follows the image. Do not copy WOODRIGHT_RELEASE_SHA into it.
+ARG WOODRIGHT_STOREFRONT_SOURCE_SHA=
 ENV NEXT_DIST_DIR=.next-build \
     NEXT_PUBLIC_MEDUSA_BACKEND_URL=$NEXT_PUBLIC_MEDUSA_BACKEND_URL \
     MEDUSA_BACKEND_URL=$MEDUSA_BACKEND_URL \
@@ -62,6 +65,7 @@ ENV NEXT_DIST_DIR=.next-build \
     WOODRIGHT_RUNTIME_EXPOSURE=$WOODRIGHT_RUNTIME_EXPOSURE \
     WOODRIGHT_DB_ALIAS=$WOODRIGHT_DB_ALIAS \
     WOODRIGHT_ADMIN_EXPOSURE=$WOODRIGHT_ADMIN_EXPOSURE \
+    WOODRIGHT_STOREFRONT_SOURCE_SHA=$WOODRIGHT_STOREFRONT_SOURCE_SHA \
     NODE_ENV=production
 # NEXT_PUBLIC_MEDUSA_BACKEND_URL is optional: browser uses same-origin /store + /product-static.
 # Do not bake a public :9000 host into the client bundle.
@@ -181,6 +185,16 @@ RUN test -n "$MEDUSA_BACKEND_URL" \
       *) \
         echo "Unknown WOODRIGHT_IMAGE_BUILD_PROFILE: $WOODRIGHT_IMAGE_BUILD_PROFILE (expected empty|public_demo|production_candidate|public_production)" >&2; exit 1 ;; \
     esac \
+ && if [ -n "$WOODRIGHT_STOREFRONT_SOURCE_SHA" ]; then \
+      echo "$WOODRIGHT_STOREFRONT_SOURCE_SHA" | grep -Eq '^[0-9a-f]{40}$' \
+        || { echo "WOODRIGHT_STOREFRONT_SOURCE_SHA must be 40 lowercase hex" >&2; exit 1; }; \
+    fi \
+ && case "$WOODRIGHT_IMAGE_BUILD_PROFILE" in \
+      public_demo|production_candidate|public_production) \
+        [ -n "$WOODRIGHT_STOREFRONT_SOURCE_SHA" ] \
+          || { echo "profile=$WOODRIGHT_IMAGE_BUILD_PROFILE requires WOODRIGHT_STOREFRONT_SOURCE_SHA" >&2; exit 1; }; \
+        ;; \
+    esac \
  && yarn build \
  && test -f .next-build/standalone/apps/storefront/server.js \
  && (test -d .next-build/standalone/node_modules \
@@ -203,6 +217,7 @@ ARG WOODRIGHT_RUNTIME_ROLE=
 ARG WOODRIGHT_RUNTIME_EXPOSURE=
 ARG WOODRIGHT_DB_ALIAS=
 ARG WOODRIGHT_ADMIN_EXPOSURE=
+ARG WOODRIGHT_STOREFRONT_SOURCE_SHA=
 ENV NODE_ENV=production \
     PORT=3002 \
     HOSTNAME=0.0.0.0 \
@@ -211,7 +226,8 @@ ENV NODE_ENV=production \
     WOODRIGHT_RUNTIME_ROLE=$WOODRIGHT_RUNTIME_ROLE \
     WOODRIGHT_RUNTIME_EXPOSURE=$WOODRIGHT_RUNTIME_EXPOSURE \
     WOODRIGHT_DB_ALIAS=$WOODRIGHT_DB_ALIAS \
-    WOODRIGHT_ADMIN_EXPOSURE=$WOODRIGHT_ADMIN_EXPOSURE
+    WOODRIGHT_ADMIN_EXPOSURE=$WOODRIGHT_ADMIN_EXPOSURE \
+    WOODRIGHT_STOREFRONT_SOURCE_SHA=$WOODRIGHT_STOREFRONT_SOURCE_SHA
 RUN useradd --system --uid 10001 --create-home nextjs
 # Standalone tree already includes traced node_modules + server.js under apps/storefront.
 COPY --from=build --chown=nextjs:nextjs /workspace/apps/storefront/.next-build/standalone ./
