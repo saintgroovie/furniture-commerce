@@ -1,29 +1,29 @@
 canonical_family,survivor_product,source_sku,description_classification,detected_variant_claims,disposition,evidence
-already/prod_01KNTBXADB4V43P4P0KDTHVDQR,co-62-1,CO-62-1,VARIANT_SPECIFIC,120 см on CO-62-1; 43 см on CO-62-1; 220 см on CO-62-1; form,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-already/prod_01KNTBXADB5BFDKMSAB35J8Z0V,co-65-1,CO-65-2,VARIANT_SPECIFIC,side: справа,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-already/prod_01KNTBXADDACBVH2BM1JSB2MWH,ol-05-1,OL-05-1,VARIANT_SPECIFIC,90 см on OL-05-1; size,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-already/prod_01KNTBXADW0MYZ9SEBBAYPS5V4,ol-65-1,OL-65-2,VARIANT_SPECIFIC,side: слева,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-already/prod_01KNTBXAE14DE7Z6FHFMT4X3XZ,pv-65-5,PV-65-6,VARIANT_SPECIFIC,"side: слева, справа; filling",DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-country-london-paris/CONFIGURABLE/bed/-,co-14-2,CO-14-2,VARIANT_SPECIFIC,size 90x190; size 98x199; 110 см on CO-14-2; single-bed wording,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-greenwich/STANDARD/bed/-,greenwich-gr-09-1-bed-90,GR-09-1,VARIANT_SPECIFIC,size 90x200; single-bed wording,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-greenwich/STANDARD/bedside/-,greenwich-gr-08-1,GR-08-2,VARIANT_SPECIFIC,drawers,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-greenwich/STANDARD/wardrobe/-,greenwich-gr-02-1,GR-02-2,VARIANT_SPECIFIC,drawers,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-oliver/CONFIGURABLE/banquette/-,ol-55-1,OL-55-1,VARIANT_SPECIFIC,44 см on OL-55-1; size,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-oliver/CONFIGURABLE/bed/-,ol-14-1,OL-14-2,VARIANT_SPECIFIC,"size 90x190; 99 см on OL-14-2,OL-14-1; 203 см on OL-15-2,OL-16-2,OL-14-2,OL-15-1,OL-16-1,OL-14-1; 115 см on OL-15-2,OL-16-2,OL-14-2,OL-15-1,OL-16-1,OL-14-1; footboard: без изнож; single-bed wording",DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-oliver/CONFIGURABLE/book-shelf/-,ol-69-1,OL-69-1,VARIANT_SPECIFIC,47 см on OL-69-1; tiers,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-oliver/CONFIGURABLE/chest-tall/-,ol-05-3,OL-05-3,VARIANT_SPECIFIC,132 см on OL-05-3; tier,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-oliver/CONFIGURABLE/clothes-wardrobe/-,ol-02-1,OL-02-1,VARIANT_SPECIFIC,123 см on OL-02-1; 211 см on OL-02-1; 54 см on OL-02-1; doors,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-oliver/CONFIGURABLE/console/-,ol-44-1,OL-44-1,VARIANT_SPECIFIC,100 см on OL-44-1; 35 см on OL-44-1; 80 см on OL-44-1,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-oliver/CONFIGURABLE/etagere/-,ol-68-1,OL-68-1,VARIANT_SPECIFIC,91 см on OL-68-1; size,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
+already/prod_01KNTBXADB4V43P4P0KDTHVDQR,co-62-1,CO-62-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+already/prod_01KNTBXADB5BFDKMSAB35J8Z0V,co-65-1,CO-65-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+already/prod_01KNTBXADDACBVH2BM1JSB2MWH,ol-05-1,OL-05-1,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+already/prod_01KNTBXADW0MYZ9SEBBAYPS5V4,ol-65-1,OL-65-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+already/prod_01KNTBXAE14DE7Z6FHFMT4X3XZ,pv-65-5,PV-65-6,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+country-london-paris/CONFIGURABLE/bed/-,co-14-2,CO-15-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+greenwich/STANDARD/bed/-,greenwich-gr-09-1-bed-90,GR-09-1,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+greenwich/STANDARD/bedside/-,greenwich-gr-08-1,GR-08-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+greenwich/STANDARD/wardrobe/-,greenwich-gr-02-1,GR-02-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+oliver/CONFIGURABLE/banquette/-,ol-55-1,OL-55-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+oliver/CONFIGURABLE/bed/-,ol-14-1,OL-15-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+oliver/CONFIGURABLE/book-shelf/-,ol-69-1,OL-69-1,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+oliver/CONFIGURABLE/chest-tall/-,ol-05-3,OL-05-Н,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+oliver/CONFIGURABLE/clothes-wardrobe/-,ol-02-1,OL-02-1,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+oliver/CONFIGURABLE/console/-,ol-44-1,OL-44-1,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+oliver/CONFIGURABLE/etagere/-,ol-68-1,OL-68-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
 oliver/CONFIGURABLE/nightstand/-,ol-08-1,OL-08-1,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
-oliver/CONFIGURABLE/sofa/-,ol-57-1,OL-57-1,VARIANT_SPECIFIC,163 см on OL-57-1; size,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-oliver/CONFIGURABLE/transformer/-,ol-95-1,OL-95-1,VARIANT_SPECIFIC,fabric,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-oliver/STANDARD/rail/-,ol-84-1,OL-84-2,VARIANT_SPECIFIC,70 см on OL-84-1; 100 см on OL-84-2; size,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-provence/CONFIGURABLE/banquette/-,pv-55-1,PV-55-2,VARIANT_SPECIFIC,size 47x40; size,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-provence/CONFIGURABLE/bed/-,pv-14-1,PV-14-1,VARIANT_SPECIFIC,"size 90x190; size 99x201; 201 см on PV-15-1,PV-16-1,PV-14-1,PV-15-2,PV-16-2; 106 см on PV-14-1; single-bed wording",DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-provence/CONFIGURABLE/clothes-wardrobe/-,pv-02-1,PV-02-1,VARIANT_SPECIFIC,120 см on PV-02-1; 208 см on PV-02-1; doors,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-provence/CONFIGURABLE/desk-two/-,pv-66-6,PV-66-6,VARIANT_SPECIFIC,"size 153x70; layout: слева, справа",DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-provence/CONFIGURABLE/etagere/-,pv-68-1,PV-68-1,VARIANT_SPECIFIC,size 48x35; 35 см on PV-68-1; 80 см on PV-68-1; size,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-willie-winkie/CONFIGURABLE/willie-chest/Полевые цветы,pa-05-1,pa-05-3,VARIANT_SPECIFIC,form,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-willie-winkie/CONFIGURABLE/willie-chest/Рыцари,te-05-1,te-05-3,VARIANT_SPECIFIC,form,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
-willie-winkie/CONFIGURABLE/willie-chest/Сказочное королевство,fk-05-1,fk-05-3,VARIANT_SPECIFIC,form,DESCRIPTION_VARIANT_SPECIFIC_HOLD,description states a fact that is not true of every SKU in the family
+oliver/CONFIGURABLE/sofa/-,ol-57-1,OL-57-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+oliver/CONFIGURABLE/transformer/-,ol-95-1,OL-95-1,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+oliver/STANDARD/rail/-,ol-84-1,OL-84-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+provence/CONFIGURABLE/banquette/-,pv-55-1,PV-55-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+provence/CONFIGURABLE/bed/-,pv-14-1,PV-15-1,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+provence/CONFIGURABLE/clothes-wardrobe/-,pv-02-1,PV-02-1,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+provence/CONFIGURABLE/desk-two/-,pv-66-6,PV-66-6,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+provence/CONFIGURABLE/etagere/-,pv-68-1,PV-68-2,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+willie-winkie/CONFIGURABLE/willie-chest/Полевые цветы,pa-05-1,pa-05-3,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+willie-winkie/CONFIGURABLE/willie-chest/Рыцари,te-05-1,te-05-3,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"
+willie-winkie/CONFIGURABLE/willie-chest/Сказочное королевство,fk-05-1,fk-05-3,FAMILY_SAFE,,safe,"no variant-only size, axis or dimension"

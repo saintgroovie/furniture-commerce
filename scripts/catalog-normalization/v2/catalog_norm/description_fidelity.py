@@ -149,12 +149,31 @@ def classify_family_description(description: str, variants: list[dict[str, Any]]
         claims.append("tiers")
     if _varies(variants, "tier") and "ярус" in text:
         claims.append("tier")
-    if _varies(variants, "size") and re.search(r"мал|больш|широк|узк", text):
+    if _varies(variants, "size") and re.search(r"мал|больш|широк|узк|компактн", text):
         claims.append("size")
     if _varies(variants, "form") and re.search(r"широк|узк|стандарт|высок", text):
         claims.append("form")
     if _varies(variants, "mattress_size") and "односпальн" in text:
         claims.append("single-bed wording")
+    if _varies(variants, "mattress_size"):
+        mattress_words = ("двуспальн", "полутор", "узк", "компактн", "небольш", "проход")
+        hit = [word for word in mattress_words if word in text]
+        if hit:
+            claims.append("mattress wording: " + ", ".join(hit))
+    if _varies(variants, "form"):
+        displays = " ".join(_norm(str((variant.get("axes") or {}).get("form") or "")) for variant in variants)
+        if "двер" in displays and "открыт" in text:
+            claims.append("open shelves")
+    if _varies(variants, "side") or _varies(variants, "layout"):
+        side_forms = (
+            "влево", "вправо", "левая", "левой", "левую", "левый",
+            "правая", "правой", "правую", "правый",
+        )
+        hit = [phrase for phrase in side_forms if phrase in text]
+        if hit:
+            claims.append("orientation: " + ", ".join(hit))
+    if len(variants) > 1 and "без вариантов исполнения" in text:
+        claims.append("denies other variants")
 
     unique = []
     for claim in claims:
