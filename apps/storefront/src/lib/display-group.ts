@@ -1,6 +1,7 @@
 import { buildDisplayGroupColorVariants } from "./card-color-media"
 import { resolveCatalogCardPrice } from "./catalog-card-price"
 import { getPrice } from "./format"
+import { productCanonicalPath } from "./product-json-ld"
 import { pdpCopy } from "./woodright-copy"
 
 export type DisplayGroupAxis = "size" | "execution"
@@ -54,6 +55,22 @@ function hasFabricExecution(title: string): boolean {
   return title.toLowerCase().includes("с тканью")
 }
 
+/**
+ * Size-axis groups may differ only by mattress size.
+ * A fabric, footboard, or lift difference is another product.
+ */
+export function sizeAxisConstructionKey(title: string): string {
+  const text = title.toLowerCase().replace(/ё/g, "е")
+  const marks: string[] = []
+  if (text.includes("без изножья")) marks.push("no-foot")
+  if (text.includes("с тканью")) marks.push("fabric")
+  if (text.includes("подъемн")) marks.push("lift")
+  if (text.includes("трансформер")) marks.push("transformer")
+  if (text.includes("приставн")) marks.push("side-crib")
+  if (text.includes("без матраса")) marks.push("mattress-not-included")
+  return marks.join("+")
+}
+
 /** Owner-locked Provence mattress groups (OD-PROVENCE-GROUP-UX-01=B). */
 const EXECUTION_DISPLAY_GROUPS = new Set(["pv-15-bed", "pv-16-bed"])
 
@@ -90,6 +107,43 @@ export function displayGroupMemberLabel(
       : pdpCopy.fabricChipWithout
   }
   return title.trim() || "Вариант"
+}
+
+/**
+ * Size chips inside one family show only what differs: the size from the
+ * parenthetical plus its tail («90 × 200», «120 × 190 с тканью без изножья»),
+ * else the labels minus the shared leading words. Falls back to full labels
+ * when the short forms would collide or be empty.
+ */
+export function compactDisplayGroupChipLabels(labels: string[]): string[] {
+  if (labels.length < 2) return labels
+  const distinct = (out: string[]) => out.every(Boolean) && new Set(out).size === out.length
+
+  const SIZE_PAREN = /\(([^()]*\d[^()]*)\)\s*(.*)$/u
+  const bySize = labels.map((l) => {
+    const m = l.match(SIZE_PAREN)
+    return m ? `${m[1]!.trim()}${m[2] ? ` ${m[2].trim()}` : ""}` : ""
+  })
+  if (distinct(bySize)) return bySize
+
+  const split = labels.map((l) => l.trim().split(/\s+/))
+  let common = 0
+  for (;;) {
+    const word = split[0]![common]
+    if (word == null || split.some((w) => w[common] !== word)) break
+    common += 1
+  }
+  while (common > 0 && /^(с|со|без|на|для|под|по|из|и|в)$/iu.test(split[0]![common - 1]!)) common -= 1
+  if (common === 0) return labels
+  const out = split.map((words) =>
+    words
+      .slice(common)
+      .join(" ")
+      .replace(/^\(([^()]+)\)/u, "$1")
+      .replace(/^[,\s]+/u, "")
+      .trim()
+  )
+  return distinct(out) ? out : labels
 }
 
 export function displayGroupSelectorLabel(axis: DisplayGroupAxis): string {
@@ -147,6 +201,14 @@ export function groupProductsForDisplay(
     seen.add(dg)
 
     const members = sortDisplayGroupMembers(groupMembers.get(dg)!)
+    const axis = inferDisplayGroupAxis(members)
+    if (
+      axis === "size" &&
+      new Set(members.map((member) => sizeAxisConstructionKey(productTitle(member)))).size > 1
+    ) {
+      for (const member of members) result.push({ product: member })
+      continue
+    }
 
     const representative = members[0]
     const groupTitle =
@@ -160,7 +222,6 @@ export function groupProductsForDisplay(
       .map((m) => resolveCatalogCardPrice(m).amount ?? getPrice(m))
       .filter((v): v is number => v != null)
 
-    const axis = inferDisplayGroupAxis(members)
     const hint =
       axis === "execution"
         ? pluralizeExecutions(members.length)
@@ -171,7 +232,7 @@ export function groupProductsForDisplay(
         ? members.map((m) => ({
             id: String(m.id ?? ""),
             label: displayGroupMemberLabel(m, axis),
-            href: `/product/${String(m.id ?? "")}`,
+            href: productCanonicalPath(m, String(m.id ?? "")),
             isRepresentative: m.id === representative.id,
           }))
         : undefined

@@ -12,6 +12,8 @@ import {
 function motifExactNames(): Record<string, string> {
   const out: Record<string, string> = {}
   for (const [slug, ru] of Object.entries(MOTIF_BUYER_DISPLAY_NAMES_RU)) {
+    // English motif labels must not replace the title transcription map.
+    if (!/[А-Яа-яЁё]/.test(ru)) continue
     out[slug] = ru
     out[slug.replace(/-/g, " ")] = ru
   }
@@ -90,6 +92,16 @@ const EXACT_NAME_RU: Record<string, string> = {
   ...motifExactNames(),
 }
 
+/** Own keys only: `constructor` / `__proto__` must not resolve through the prototype. */
+function ownExactName(key: string): string | null {
+  return Object.prototype.hasOwnProperty.call(EXACT_NAME_RU, key) ? EXACT_NAME_RU[key]! : null
+}
+
+/** Dictionary RU name for an exact English name (case-insensitive); null instead of transliterating. */
+export function exactEnNameRu(name: string): string | null {
+  return ownExactName(name.trim().toLowerCase())
+}
+
 /** Never transliterate these (match longest first). */
 const LATIN_LOCKS = ["Woodright Kids", "Woodright"].sort((a, b) => b.length - a.length)
 
@@ -149,7 +161,8 @@ function capitalizeRu(word: string): string {
 /** Phonetic fallback for unknown Latin tokens (Title Case out). */
 export function transliterateEnToken(token: string): string {
   const lower = token.toLowerCase()
-  if (EXACT_NAME_RU[lower]) return EXACT_NAME_RU[lower]!
+  const exact = ownExactName(lower)
+  if (exact) return exact
 
   let i = 0
   let out = ""

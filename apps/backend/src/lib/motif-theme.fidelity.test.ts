@@ -10,12 +10,15 @@ import {
   buildMotifThemeDetail,
   buildMotifThemes,
   isLegacyEnglishMotifTitle,
+  isPaintingPresentationSuppressed,
+  isWillieWinkieMotifProduct,
   motifBuyerDisplayName,
   motifCtaKind,
   MOTIF_BUYER_DISPLAY_NAMES_RU,
   MOTIF_CANONICAL_SLUGS,
   MOTIF_CTA_LABELS,
   MOTIF_LEGACY_ENGLISH_TITLES,
+  PAINTING_PRESENTATION_SUPPRESSED,
 } from "./motif-theme"
 
 function ww(partial: {
@@ -107,14 +110,50 @@ const sample = [
   }),
 ]
 
-// Canonical inventory: exactly 14 Russian buyer display names
-assert.equal(MOTIF_CANONICAL_SLUGS.length, 14)
-assert.equal(Object.keys(MOTIF_BUYER_DISPLAY_NAMES_RU).length, 14)
+// Same rule already used to turn the 14 English names into slugs.
+function slugFromProvenName(name: string): string {
+  return name.toLowerCase().replace(/['’]/g, "").replace(/\s+/g, "-")
+}
+
+const ORIGINAL_RU_SLUGS = [
+  "ants-village",
+  "ballet",
+  "fairies",
+  "fantasy-kingdom",
+  "infanta",
+  "molly",
+  "pastoral",
+  "royal-lilies",
+  "rural-scenery",
+  "sweet-home",
+  "teddy-bear",
+  "templars",
+  "tiggy-winkle",
+  "tommy",
+] as const
+
+assert.equal(MOTIF_CANONICAL_SLUGS.length, 17)
+assert.equal(Object.keys(MOTIF_BUYER_DISPLAY_NAMES_RU).length, 17)
 assert.equal(MOTIF_LEGACY_ENGLISH_TITLES.length, 14)
+assert.deepEqual(MOTIF_CANONICAL_SLUGS.slice(0, 14), ORIGINAL_RU_SLUGS)
+
+for (const en of MOTIF_LEGACY_ENGLISH_TITLES) {
+  assert.ok(
+    (MOTIF_CANONICAL_SLUGS as readonly string[]).includes(slugFromProvenName(en)),
+    en
+  )
+}
+assert.equal(slugFromProvenName("Ant's Village"), "ants-village")
+assert.equal(slugFromProvenName("Albion"), "albion")
+assert.equal(slugFromProvenName("Brigantine Blue"), "brigantine-blue")
+assert.equal(slugFromProvenName("Brigantine Ivory"), "brigantine-ivory")
+assert.equal(motifBuyerDisplayName("albion"), "Albion")
+assert.equal(motifBuyerDisplayName("brigantine-blue"), "Brigantine Blue")
+assert.equal(motifBuyerDisplayName("brigantine-ivory"), "Brigantine Ivory")
 
 const displayNames = MOTIF_CANONICAL_SLUGS.map((slug) => motifBuyerDisplayName(slug))
-assert.equal(new Set(displayNames).size, 14, "display names must be unique")
-for (const slug of MOTIF_CANONICAL_SLUGS) {
+assert.equal(new Set(displayNames).size, 17, "display names must be unique")
+for (const slug of ORIGINAL_RU_SLUGS) {
   const name = motifBuyerDisplayName(slug)
   assert.ok(name.trim().length > 0, `empty display for ${slug}`)
   assert.notEqual(name.toLowerCase(), slug)
@@ -125,6 +164,7 @@ assert.equal(motifBuyerDisplayName("molly"), "Молли")
 assert.equal(motifBuyerDisplayName("tommy"), "Томми")
 assert.equal(motifBuyerDisplayName("unknown-slug"), "Роспись")
 assert.ok(!isLegacyEnglishMotifTitle("Роспись"))
+assert.ok(!isLegacyEnglishMotifTitle("Albion"))
 
 assert.equal(motifCtaKind(1), "view_product")
 assert.equal(motifCtaKind(2), "view_furniture")
@@ -274,6 +314,80 @@ assert.equal(
   const templars = themes.find((t) => t.motif_slug === "templars")!
   assert.equal(templars.motif_available_product_count, 3)
   assert.ok(!templars.preview_products.some((p) => p.handle === "te-bad"))
+}
+
+// Owner exception: a painting the catalog contradicts is not a motif product on any surface.
+{
+  const bench = ww({
+    handle: "te-55-1",
+    title: "Банкетка малая Templars",
+    motif_slug: "templars",
+    motif_title: "Templars",
+    family_key: "willie-winkie:body:55-1",
+    family_canonical_title: "Банкетка малая",
+  })
+  assert.equal(isPaintingPresentationSuppressed(bench), true)
+  assert.equal(isWillieWinkieMotifProduct(bench), false)
+  assert.equal(isWillieWinkieMotifProduct({ ...bench, handle: "te-55-9" }), true)
+  const withBench = [...sample, bench]
+  const templars = buildMotifThemes(withBench).find((t) => t.motif_slug === "templars")!
+  assert.equal(templars.motif_available_product_count, 3)
+  assert.ok(!buildMotifThemeDetail(withBench, "templars")!.products.some((p) => p.handle === "te-55-1"))
+  assert.equal(buildMotifContext({ products: withBench, handle: "te-55-1", motifQuery: null }), null)
+  assert.equal(isPaintingPresentationSuppressed({ handle: "constructor" }), false)
+  assert.ok(Object.isFrozen(PAINTING_PRESENTATION_SUPPRESSED))
+  const ivorySuppressed = ww({
+    handle: "bri-95-3",
+    title: "Кровать-трансформер Brigantine Ivory",
+    motif_slug: "brigantine-ivory",
+    motif_title: "Brigantine Ivory",
+    family_key: "willie-winkie:body:95-3",
+    family_canonical_title: "Кровать-трансформер",
+  })
+  assert.equal(isPaintingPresentationSuppressed(ivorySuppressed), true)
+  assert.equal(isWillieWinkieMotifProduct(ivorySuppressed), false)
+}
+
+// Willie registry from #308: Albion and both Brigantine themes stay registered.
+{
+  const added = [
+    ww({
+      handle: "al-08-1",
+      title: "Тумбочка прикроватная Albion",
+      motif_slug: "albion",
+      motif_title: "Albion",
+      family_key: "willie-winkie:body:08-1",
+      family_canonical_title: "Тумбочка прикроватная",
+    }),
+    ww({
+      handle: "brb-40-2",
+      title: "Шкаф комбинированный 560 Brigantine Blue",
+      motif_slug: "brigantine-blue",
+      motif_title: "Brigantine Blue",
+      family_key: "willie-winkie:body:40-2",
+      family_canonical_title: "Шкаф комбинированный",
+    }),
+    ww({
+      handle: "bri-95-9",
+      title: "Кровать-трансформер Brigantine Ivory",
+      motif_slug: "brigantine-ivory",
+      motif_title: "Brigantine Ivory",
+      family_key: "willie-winkie:body:95-3",
+      family_canonical_title: "Кровать-трансформер",
+    }),
+  ]
+  const themes = buildMotifThemes(added)
+  assert.deepEqual(
+    themes.map((t) => [t.motif_slug, t.motif_title]),
+    [
+      ["albion", "Albion"],
+      ["brigantine-blue", "Brigantine Blue"],
+      ["brigantine-ivory", "Brigantine Ivory"],
+    ]
+  )
+  assert.ok(themes.every((t) => t.motif_title !== "Роспись"))
+  const leaks = assertBuyerSafeMotifPayload({ motif_themes: themes })
+  assert.deepEqual(leaks, [], leaks.join(", "))
 }
 
 console.log("motif-theme.fidelity.test.ts: ok")

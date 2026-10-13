@@ -13,6 +13,8 @@ import {
   type CatalogFilterState,
 } from "./catalog-filters"
 import { groupProductsForDisplay } from "./display-group"
+import { productCanonicalPath } from "./product-json-ld"
+import { getBuyerFacingProductTitle } from "./product-metadata"
 import {
   isMedusaCanonicalSeedDemoProduct,
   isProductInActiveCatalogScope,
@@ -93,11 +95,8 @@ export function catalogItemListJsonLdPayload(
       return {
         "@type": "ListItem",
         position: i + 1,
-        url: `${base}/product/${String((product as { id?: unknown }).id ?? "")}`,
-        name:
-          typeof (product as { title?: unknown }).title === "string"
-            ? (product as { title: string }).title
-            : undefined,
+        url: `${base}${productCanonicalPath(product, String(product.id ?? ""))}`,
+        name: getBuyerFacingProductTitle(product) || undefined,
       }
     }),
   }
