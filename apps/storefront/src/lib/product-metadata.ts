@@ -533,7 +533,10 @@ export function getMattressSize(
  */
 export function getPdpMattressSize(product: ProductLike): MattressSize | null {
   const opening = openingVariant(product as Record<string, unknown>)
-  return getMattressSize(product, (opening as ProductLike | null) ?? null)
+  if (opening) return getMattressSize(product, opening as ProductLike)
+  const variants = Array.isArray(product.variants) ? product.variants : []
+  if (variants.length > 1) return null
+  return getMattressSize(product, (variants[0] as ProductLike | undefined) ?? null)
 }
 
 /** Resolve dimensions for a specific variant id on a product payload. */
