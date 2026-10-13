@@ -1,5 +1,6 @@
 import { Text } from "@medusajs/ui"
 import { useMemo, useState } from "react"
+import { Link } from "react-router-dom"
 import {
   activeTasks,
   buildCatalogOpsBoard,
@@ -283,7 +284,15 @@ function Inspector({ task }: { task: OpsTask | null }) {
         <ul className="flex flex-col gap-1">
           {task.affected_items.map((item) => (
             <li key={item.handle}>
-              {item.handle} · {item.title}
+              {item.product_id ? (
+                <Link to={`/woodright/products/${item.product_id}`}>
+                  {item.handle} · {item.title}
+                </Link>
+              ) : (
+                <span>
+                  {item.handle} · {item.title}
+                </span>
+              )}
             </li>
           ))}
         </ul>
