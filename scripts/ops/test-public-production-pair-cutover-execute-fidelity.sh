@@ -906,7 +906,11 @@ assert len(pin["digest"]) == 64, pin
 PY
 
 # Root-only compose pin: dry-run hashes via sudo -n sha256sum and writes nothing.
-PIN_WANT="$(shasum -a 256 "$ENV_FILE" | awk '{print $1}')"
+if command -v shasum >/dev/null 2>&1; then
+  PIN_WANT="$(shasum -a 256 "$ENV_FILE" | awk '{print $1}')"
+else
+  PIN_WANT="$(sha256sum "$ENV_FILE" | awk '{print $1}')"
+fi
 cat >"$BIN/sha256sum" <<'EOF'
 #!/bin/sh
 echo "unprivileged sha256sum must not hash the protected pin" >&2
