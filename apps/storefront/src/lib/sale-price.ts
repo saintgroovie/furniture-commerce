@@ -1,11 +1,13 @@
 /**
  * Buyer-facing sale price from native Medusa pricing.
  *
- * Source of truth is the backend: `variants[0].calculated_price` (price list)
+ * Source of truth is the backend opening variant's `calculated_price` (price list)
  * and the tier-aware `metadata.buyer_default_configuration.original_min_unit_price`.
  * The storefront never computes a discount from unrelated data - if the backend
  * does not confirm a lower price-list amount, there is no sale to show.
  */
+
+import { openingVariant } from "./opening-variant"
 
 export type SalePrice = {
   /** What the buyer pays (already the opening / tier-aware price). */
@@ -22,7 +24,7 @@ function positive(n: unknown): number | null {
 
 /**
  * Original (pre-sale) opening price for a product, or null when no sale.
- * Order: backend default configuration → variants[0].calculated_price.
+ * Order: backend default configuration, then the opening variant's calculated price.
  */
 export function resolveOriginalOpeningPrice(
   product: Record<string, unknown>
@@ -60,15 +62,13 @@ export function resolveSalePrice(
 }
 
 /**
- * Raw (pre-tier) original variant price for PDP: pairs with `getPrice()`
- * (= `calculated_amount`) so both go through the same material × color formula.
- * Null when no native price list lowers the price.
+ * Raw (pre-tier) original price of one variant. Null when that variant
+ * has no native price list, so a sibling SKU cannot lend its strike-through.
  */
-export function resolveOriginalBasePrice(
-  product: Record<string, unknown>
+export function resolveOriginalBasePriceOf(
+  variant: Record<string, unknown> | null | undefined
 ): number | null {
-  const variants = product.variants as Array<Record<string, unknown>> | undefined
-  const cp = variants?.[0]?.calculated_price as
+  const cp = variant?.calculated_price as
     | {
         calculated_amount?: unknown
         original_amount?: unknown
@@ -79,4 +79,14 @@ export function resolveOriginalBasePrice(
   const sale = positive(cp.calculated_amount)
   const original = positive(cp.original_amount)
   return sale != null && original != null && original > sale ? original : null
+}
+
+/**
+ * Raw (pre-tier) original of the opening variant. Pairs with `getPrice()`
+ * so both go through the same material × color formula.
+ */
+export function resolveOriginalBasePrice(
+  product: Record<string, unknown>
+): number | null {
+  return resolveOriginalBasePriceOf(openingVariant(product))
 }

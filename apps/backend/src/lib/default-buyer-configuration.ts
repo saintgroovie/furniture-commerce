@@ -1,7 +1,7 @@
 /**
  * Backend-resolved default buyer configuration for CONFIGURABLE products.
  *
- * SoT for the cheapest valid purchasable opening state shared by:
+ * SoT for the axis-sorted opening SKU shared by:
  * - catalog card minimum price
  * - PDP auto-selected controls
  * - cart line pricing when material_execution_code is omitted
@@ -13,6 +13,7 @@ import {
   parseMaterialTiers,
   resolveMaterialTierPrice,
 } from "./material-tier-contract"
+import { productMetadataForVariant } from "./variant-capabilities"
 
 export type BuyerDefaultConfiguration = {
   /** Cheapest valid unit price in RUB (integer). */
@@ -27,7 +28,7 @@ export type BuyerDefaultConfiguration = {
   material_execution_code: string | null
   material_execution_label: string | null
   material_price_multiplier: number
-  /** First purchasable variant id with a positive price, or null. */
+  /** Opening variant id. Not variants[0] and not the cheapest SKU. */
   variant_id: string | null
   /** Standard finish color multiplier for the default opening state. */
   color_multiplier: 1
@@ -83,21 +84,88 @@ function variantOriginalUnitPrice(
   return null
 }
 
+function axisSortKey(variant: Record<string, unknown>): number[] | null {
+  const meta = variant.metadata
+  if (!meta || typeof meta !== "object" || Array.isArray(meta)) return null
+  const axes = (meta as { variant_axes?: unknown }).variant_axes
+  if (!axes || typeof axes !== "object" || Array.isArray(axes)) return null
+  const keys = Object.keys(axes).sort()
+  if (keys.length === 0) return null
+  return keys.map((key) => {
+    const item = (axes as Record<string, { sort?: unknown }>)[key]
+    const sort = Number(item?.sort)
+    return Number.isFinite(sort) ? sort : 0
+  })
+}
+
+/**
+ * Same confirmed sleeping size as the storefront mattress fallback
+ * (`buyer-variant-axis.ts`). Used only when variant_axes are missing,
+ * so array order cannot open a larger SKU than the PDP.
+ */
+function confirmedMattressSort(variant: Record<string, unknown>): number | null {
+  const meta = variant.metadata
+  if (!meta || typeof meta !== "object" || Array.isArray(meta)) return null
+  const size = (meta as { mattress_size?: unknown }).mattress_size
+  if (!size || typeof size !== "object" || Array.isArray(size)) return null
+  const row = size as {
+    source?: unknown
+    confidence?: unknown
+    width_cm?: unknown
+    length_cm?: unknown
+    display?: unknown
+    key?: unknown
+  }
+  if (row.source !== "title" || row.confidence !== "high") return null
+  if (!Number.isInteger(row.width_cm) || !Number.isInteger(row.length_cm)) return null
+  const width = row.width_cm as number
+  const length = row.length_cm as number
+  if (width <= 0 || length <= 0) return null
+  const display = `${width} × ${length} см`
+  if (row.display != null && row.display !== display) return null
+  if (row.key != null && row.key !== `${width}x${length}`) return null
+  return width * 1000 + length
+}
+
 function openingPurchasableVariant(
   product: Record<string, unknown>
 ): { id: string; basePrice: number; originalPrice: number | null } | null {
-  /* Same opening variant as storefront getPrice / ProductCta: variants[0].
-     Do not skip to a later priced variant — that would diverge card vs PDP/cart. */
+  /* Same opening SKU as the PDP sparse map: lowest axis sort, then SKU.
+     Array order is variant_rank, which is not that order. */
   const variants = product.variants
   if (!Array.isArray(variants) || variants.length === 0) return null
-  const raw = variants[0]
-  if (!raw || typeof raw !== "object") return null
-  const v = raw as Record<string, unknown>
-  const id = typeof v.id === "string" ? v.id : null
+  const records = variants.filter(
+    (item): item is Record<string, unknown> => !!item && typeof item === "object"
+  )
+  const keys = records.map(axisSortKey)
+  const mattressSorts = records.map(confirmedMattressSort)
+  const bySku = (a: Record<string, unknown>, b: Record<string, unknown>) =>
+    String(a.sku ?? "").localeCompare(String(b.sku ?? ""), "ru")
+  const ordered =
+    records.length >= 2 && keys.every((key) => key != null)
+      ? [...records].sort((a, b) => {
+          const left = axisSortKey(a) ?? []
+          const right = axisSortKey(b) ?? []
+          const width = Math.max(left.length, right.length)
+          for (let i = 0; i < width; i++) {
+            const delta = (left[i] ?? 0) - (right[i] ?? 0)
+            if (delta) return delta
+          }
+          return bySku(a, b)
+        })
+      : records.length >= 2 && mattressSorts.every((key) => key != null)
+        ? [...records].sort((a, b) => {
+            const delta = (confirmedMattressSort(a) ?? 0) - (confirmedMattressSort(b) ?? 0)
+            return delta || bySku(a, b)
+          })
+        : records
+  const raw = ordered[0]
+  if (!raw) return null
+  const id = typeof raw.id === "string" ? raw.id : null
   if (!id) return null
-  const basePrice = variantUnitPrice(v)
+  const basePrice = variantUnitPrice(raw)
   if (basePrice == null) return null
-  return { id, basePrice, originalPrice: variantOriginalUnitPrice(v, basePrice) }
+  return { id, basePrice, originalPrice: variantOriginalUnitPrice(raw, basePrice) }
 }
 
 /**
@@ -110,12 +178,26 @@ export function resolveDefaultBuyerConfiguration(
   const purchasable = openingPurchasableVariant(product)
   if (!purchasable) return null
 
-  const meta =
+  const variants = Array.isArray(product.variants) ? product.variants : []
+  const opening = variants.find(
+    (item): item is Record<string, unknown> =>
+      !!item &&
+      typeof item === "object" &&
+      (item as { id?: unknown }).id === purchasable.id
+  )
+  const productMeta =
     product.metadata &&
     typeof product.metadata === "object" &&
     !Array.isArray(product.metadata)
       ? (product.metadata as Record<string, unknown>)
       : null
+  const variantMeta =
+    opening?.metadata &&
+    typeof opening.metadata === "object" &&
+    !Array.isArray(opening.metadata)
+      ? (opening.metadata as Record<string, unknown>)
+      : null
+  const meta = productMetadataForVariant(productMeta, variantMeta)
   const tiers = parseMaterialTiers(meta)
 
   if (tiers && tiers.length > 0) {

@@ -13,7 +13,7 @@ import {
   detectOliverGalleryColorHeroPair,
   shouldSuppressOliverFinishWhenFabricCanonical,
 } from "./oliver-finish-execution-guard"
-import { hasProvencePaintWoodDualFinishEvidence } from "./provence-finish-execution-guard"
+import { hasProvencePaintWoodDualFinishEvidence, provenceEvidenceHandle } from "./provence-finish-execution-guard"
 import { formatBuyerFacingFinishLabel } from "./buyer-finish-label"
 import { buyerFacingWoodToneLabel } from "./buyer-wood-label"
 import {
@@ -801,7 +801,7 @@ function labelsFromMetadata(
 function finishExecutionsFromMetadata(
   product: Record<string, unknown>
 ): CardColorVariant[] | undefined {
-  const handle = typeof product.handle === "string" ? product.handle : undefined
+  const handle = provenceEvidenceHandle(product) || undefined
   const meta = product.metadata as Record<string, unknown> | undefined
   if (shouldSuppressOliverFinishWhenFabricCanonical(handle, meta)) {
     return undefined
@@ -1114,7 +1114,7 @@ function collectProvenceExecutionEvidenceUrls(
 function provencePaintWoodSelectorsFromMetadata(
   product: Record<string, unknown>
 ): CardExecutionSelectors | null {
-  const handle = typeof product.handle === "string" ? product.handle : ""
+  const handle = provenceEvidenceHandle(product)
   const meta = product.metadata as Record<string, unknown> | undefined
   if (!isProvencePaintWoodSplitMeta(meta, handle)) return null
   const urls = collectProvenceExecutionEvidenceUrls(product)
@@ -1213,10 +1213,7 @@ export function buildIntraProductExecutionSelectors(
     provencePaintWoodSelectorsFromMetadata(normalizedProduct)
   if (provencePaintWood) return provencePaintWood
 
-  const handleEarly =
-    typeof normalizedProduct.handle === "string"
-      ? normalizedProduct.handle.toLowerCase()
-      : ""
+  const handleEarly = provenceEvidenceHandle(normalizedProduct)
   if (handleEarly.startsWith("pv-")) {
     const urls = collectProvenceExecutionEvidenceUrls(normalizedProduct)
     if (!hasProvencePaintWoodDualFinishEvidence(urls, handleEarly)) {
