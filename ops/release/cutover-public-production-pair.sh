@@ -520,13 +520,15 @@ check_lock_status() {
   # operator notes) and never create the lock (file already proven to exist
   # above). Brief non-blocking flock probe, then release immediately.
   WR_LOCK_STATUS="free"
-  exec 219>>"$lock_path" 2>/dev/null || { WR_LOCK_STATUS="lock_path_unreachable"; return 0; }
+  # Do not attach 2>/dev/null to a command-less exec: bash applies that
+  # redirection to the rest of the shell, and every later log line disappears.
+  exec 219>>"$lock_path" || { WR_LOCK_STATUS="lock_path_unreachable"; return 0; }
   if flock -n 219; then
     flock -u 219 || true
   else
     WR_LOCK_STATUS="held_by_other_process"
   fi
-  exec 219>&- 2>/dev/null || true
+  exec 219>&- || true
 }
 
 # Read-only image candidate inspection - never pulls.

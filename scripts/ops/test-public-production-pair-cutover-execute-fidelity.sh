@@ -817,6 +817,13 @@ else
   tree_hash() { find "$TMP/srv" "$TMP/etc" -type f -exec sha256sum {} \; | sort; }
 fi
 BEFORE_TREE="$(tree_hash)"
+# Linux CI has flock. A command-less `exec 219>>file 2>/dev/null` used to
+# discard every later log line. A stub flock forces that path on macOS too.
+cat >"$BIN/flock" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+chmod +x "$BIN/flock"
 ENVS=()
 while IFS= read -r line; do ENVS+=("$line"); done < <(base_env)
 ENVS+=("WOODRIGHT_FAKE_DOCKER_ALLOW_MUTATION=0")
@@ -927,7 +934,7 @@ env "${ENVS[@]}" bash "$SCRIPT" \
 RC=$?
 set -e
 chmod u+rw "$ENV_FILE" 2>/dev/null || true
-rm -f "$BIN/sudo" "$BIN/sha256sum"
+rm -f "$BIN/sudo" "$BIN/sha256sum" "$BIN/flock"
 [[ "$RC" -eq 0 ]] && pass "protected dry-run: exit 0" || { fail "protected dry-run: rc=$RC"; cat "$TMP/err-protected.txt"; }
 grep -q 'protected_pin_checksum=ok method=privileged env_readable_by_operator=no' "$TMP/err-protected.txt" \
   && pass "protected dry-run: privileged checksum" || fail "protected dry-run: checksum log missing"
