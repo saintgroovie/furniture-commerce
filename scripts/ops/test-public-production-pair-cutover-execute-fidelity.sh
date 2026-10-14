@@ -827,6 +827,13 @@ env "${ENVS[@]}" bash "$SCRIPT" \
 RC=$?
 set -e
 [[ "$RC" -eq 0 ]] && pass "dry-run: exit 0" || { fail "dry-run: rc=$RC"; cat "$TMP/err-dryrun.txt"; }
+grep -q 'protected_pin_checksum=ok method=unprivileged env_readable_by_operator=yes' "$TMP/err-dryrun.txt" \
+  && pass "dry-run: readable pin checksum is unprivileged" || fail "dry-run: pin checksum log missing"
+if grep -q 'MOCK_SECRET_VALUE' "$TMP/out-dryrun.txt" "$TMP/err-dryrun.txt"; then
+  fail "dry-run: pin secret leaked"
+else
+  pass "dry-run: pin secret absent"
+fi
 AFTER_TREE="$(tree_hash)"
 [[ "$BEFORE_TREE" == "$AFTER_TREE" ]] && pass "dry-run: zero writes under srv/ and etc/" || fail "dry-run: filesystem changed"
 [[ ! -f "$STATE/log/mutations.log" ]] && pass "dry-run: no docker mutation" || fail "dry-run: docker mutated"
@@ -886,6 +893,59 @@ assert "13" in codes and "incomplete" in codes["13"], codes
 # No pre-existing skew in this fixture.
 assert packet["existing_pin_runtime_skew"] is False, packet
 assert packet["normal_execute_blocked"] is False, packet
+pin = packet["protected_pin_checksum"]
+assert pin["method"] == "unprivileged", pin
+assert len(pin["digest"]) == 64, pin
+PY
+
+# Root-only compose pin: dry-run hashes via sudo -n sha256sum and writes nothing.
+PIN_WANT="$(shasum -a 256 "$ENV_FILE" | awk '{print $1}')"
+cat >"$BIN/sha256sum" <<'EOF'
+#!/bin/sh
+echo "unprivileged sha256sum must not hash the protected pin" >&2
+exit 97
+EOF
+chmod +x "$BIN/sha256sum"
+cat >"$BIN/sudo" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "\${1:-}" == "-n" && "\${2:-}" == "sha256sum" && "\${3:-}" == "--" ]]; then
+  printf '%s  %s\n' "$PIN_WANT" "\${4:-}"
+  exit 0
+fi
+echo "unexpected sudo argv: \$*" >&2
+exit 1
+EOF
+chmod +x "$BIN/sudo"
+BEFORE_TREE="$(tree_hash)"
+chmod 000 "$ENV_FILE"
+set +e
+env "${ENVS[@]}" bash "$SCRIPT" \
+  --environment public_production --component pair --source-sha "$APP_SHA" \
+  --backend-ref "$BE_REF" --storefront-ref "$SF_REF" \
+  >"$TMP/out-protected.txt" 2>"$TMP/err-protected.txt"
+RC=$?
+set -e
+chmod u+rw "$ENV_FILE" 2>/dev/null || true
+rm -f "$BIN/sudo" "$BIN/sha256sum"
+[[ "$RC" -eq 0 ]] && pass "protected dry-run: exit 0" || { fail "protected dry-run: rc=$RC"; cat "$TMP/err-protected.txt"; }
+grep -q 'protected_pin_checksum=ok method=privileged env_readable_by_operator=no' "$TMP/err-protected.txt" \
+  && pass "protected dry-run: privileged checksum" || fail "protected dry-run: checksum log missing"
+if grep -q 'MOCK_SECRET_VALUE' "$TMP/out-protected.txt" "$TMP/err-protected.txt"; then
+  fail "protected dry-run: pin secret leaked"
+else
+  pass "protected dry-run: pin secret absent"
+fi
+AFTER_TREE="$(tree_hash)"
+[[ "$BEFORE_TREE" == "$AFTER_TREE" ]] && pass "protected dry-run: zero writes" || fail "protected dry-run: filesystem changed"
+python3 - "$TMP/out-protected.txt" "$PIN_WANT" <<'PY' && pass "protected dry-run: packet digest" || fail "protected dry-run: packet digest"
+import json, sys
+raw = open(sys.argv[1]).read()
+packet = json.loads(raw[raw.index("{"):])
+pin = packet["protected_pin_checksum"]
+assert pin["method"] == "privileged", pin
+assert pin["digest"] == sys.argv[2], pin
+assert packet["no_mutation_performed"] is True
 PY
 
 # ==========================================================================
@@ -1034,8 +1094,12 @@ lock_is_free "$PD_LOCK" && pass "refusal: public_demo lock never taken" || fail 
 # ==========================================================================
 reset_harness
 EV="$TMP/ev-starting"
+# The starting marker is written when the backend is recreated. The first
+# health poll happens after the storefront recreate, so the window has to
+# outlast that gap. 3s is shorter than two compose calls on a busy host.
 run_exec "$EV" "$TMP/out-starting.txt" \
-  "WOODRIGHT_FAKE_COMPOSE_STARTING=backend" "WOODRIGHT_FAKE_COMPOSE_STARTING_SEC=3"
+  "WOODRIGHT_FAKE_COMPOSE_STARTING=backend" "WOODRIGHT_FAKE_COMPOSE_STARTING_SEC=8" \
+  "WOODRIGHT_CUTOVER_READY_DEADLINE_SEC=20"
 [[ "$RC" -eq 0 ]] && pass "starting_then_healthy: committed, starting was not treated as failure" \
   || { fail "starting_then_healthy: rc=$RC"; sed -n '1,40p' "$TMP/out-starting.txt"; }
 [[ "$(state_file "$EV")" == "committed" ]] && pass "starting_then_healthy: state committed" || fail "starting_then_healthy: state=$(state_file "$EV")"

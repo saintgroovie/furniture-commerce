@@ -233,6 +233,37 @@ sha256_of() {
   fi
 }
 
+# Profile pin checksum. Readable files stay unprivileged. A root-only
+# public_production compose .env is hashed with sudo -n sha256sum -- <realpath>
+# inside wr_compose_env_fingerprint_for_environment. Never cats the file.
+# Sets COMPOSE_ENV_FINGERPRINT and COMPOSE_ENV_FINGERPRINT_METHOD.
+# Returns 1 without exiting so the caller can stop before any pin write.
+fingerprint_protected_pin() {
+  local rec allowed_root expected
+  [[ -n "${COMPOSE_ENV_FILE:-}" ]] || { log "ERROR: compose env file unset"; return 1; }
+  expected="${WOODRIGHT_COMPOSE_ENV_FILE:-$COMPOSE_ENV_FILE}"
+  allowed_root="${WOODRIGHT_DOKPLOY_COMPOSE_DIR:-}"
+  [[ -n "$allowed_root" ]] || { log "ERROR: profile compose dir unset"; return 1; }
+  rec="$(wr_compose_env_fingerprint_for_environment public_production "$COMPOSE_ENV_FILE" "$expected" "$allowed_root")" \
+    || { log "ERROR: protected pin checksum failed (hasher is sudo -n sha256sum; contents are not read)"; return 1; }
+  case "$rec" in
+    unprivileged\ [0-9a-f]*|privileged\ [0-9a-f]*) ;;
+    *) log "ERROR: protected pin checksum returned an invalid record"; return 1 ;;
+  esac
+  COMPOSE_ENV_FINGERPRINT_METHOD="${rec%% *}"
+  COMPOSE_ENV_FINGERPRINT="${rec#* }"
+  [[ "$COMPOSE_ENV_FINGERPRINT" =~ ^[0-9a-f]{64}$ ]] || {
+    log "ERROR: protected pin checksum is not 64 hex"
+    return 1
+  }
+  if [[ -r "$COMPOSE_ENV_FILE" ]]; then
+    log "protected_pin_checksum=ok method=$COMPOSE_ENV_FINGERPRINT_METHOD env_readable_by_operator=yes"
+  else
+    log "protected_pin_checksum=ok method=$COMPOSE_ENV_FINGERPRINT_METHOD env_readable_by_operator=no"
+  fi
+  return 0
+}
+
 resolve_helper_install_sha() {
   # Canonical authority: tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt
   # (via wr_resolve_installed_governance_sha). Legacy cutover/root markers are
@@ -1234,6 +1265,8 @@ emit_packet() {
   WR_PACKET_PRE_SF_REF="${PRE_SF_REF:-$LIVE_SF_REF}" \
   WR_PACKET_PIN_BE="$PIN_BE_VALUE" \
   WR_PACKET_PIN_SF="$PIN_SF_VALUE" \
+  WR_PACKET_PIN_FINGERPRINT_METHOD="${COMPOSE_ENV_FINGERPRINT_METHOD:-}" \
+  WR_PACKET_PIN_FINGERPRINT="${COMPOSE_ENV_FINGERPRINT:-}" \
   WR_PACKET_SKEW_BE="$SKEW_BE" \
   WR_PACKET_SKEW_SF="$SKEW_SF" \
   WR_PACKET_SKEW="$EXISTING_SKEW" \
@@ -1335,6 +1368,10 @@ packet = {
         "generation": os.environ.get("WR_OA_GENERATION", ""),
         "reservation_state": os.environ.get("WR_OA_RESERVATION_STATE", ""),
         "component": os.environ.get("WR_OA_COMPONENT", ""),
+    },
+    "protected_pin_checksum": {
+        "method": os.environ.get("WR_PACKET_PIN_FINGERPRINT_METHOD", ""),
+        "digest": os.environ.get("WR_PACKET_PIN_FINGERPRINT", ""),
     },
     "helper_install_sha": os.environ.get("WR_PACKET_HELPER_SHA", ""),
     "operation_helper_install_sha": os.environ.get("WR_PACKET_HELPER_SHA", ""),
@@ -1516,6 +1553,9 @@ PY
 
 if [[ "$MODE" == "dry-run" ]]; then
   check_lock_status
+  if ! fingerprint_protected_pin; then
+    die "protected pin checksum failed during dry-run (no pin write)"
+  fi
   emit_packet dry-run planned
   if [[ "$MISMATCH" -eq 1 ]]; then
     log "DRY_RUN_MISMATCH sha=$SOURCE_SHA component=$COMPONENT - a locally present candidate image does not match the requested source-sha/profile"
@@ -2000,7 +2040,10 @@ PRELOCK_BE_ID="$(container_id "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 PRELOCK_SF_ID="$(container_id "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
 PRELOCK_BE_DIGEST="$(container_digest "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 PRELOCK_SF_DIGEST="$(container_digest "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
-PRELOCK_PIN_SHA="$(sha256_of "$COMPOSE_ENV_FILE")"
+if ! fingerprint_protected_pin; then
+  die "protected pin checksum failed before lock (no pin write)"
+fi
+PRELOCK_PIN_SHA="$COMPOSE_ENV_FINGERPRINT"
 
 # --- lock -------------------------------------------------------------------
 if [[ "${WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL:-0}" == "1" ]]; then
@@ -2044,7 +2087,10 @@ UNDER_BE_ID="$(container_id "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 UNDER_SF_ID="$(container_id "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
 UNDER_BE_DIGEST="$(container_digest "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 UNDER_SF_DIGEST="$(container_digest "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
-UNDER_PIN_SHA="$(sha256_of "$COMPOSE_ENV_FILE")"
+if ! fingerprint_protected_pin; then
+  die "protected pin checksum failed under lock (no pin write)"
+fi
+UNDER_PIN_SHA="$COMPOSE_ENV_FINGERPRINT"
 [[ "$UNDER_BE_ID" == "$PRELOCK_BE_ID" ]] || die "TOCTOU backend container id changed pre=$PRELOCK_BE_ID under=$UNDER_BE_ID"
 [[ "$UNDER_SF_ID" == "$PRELOCK_SF_ID" ]] || die "TOCTOU storefront container id changed pre=$PRELOCK_SF_ID under=$UNDER_SF_ID"
 [[ "$UNDER_BE_DIGEST" == "$PRELOCK_BE_DIGEST" ]] || die "TOCTOU backend digest changed pre=$PRELOCK_BE_DIGEST under=$UNDER_BE_DIGEST"
@@ -2097,7 +2143,14 @@ backup_file() {
   else
     return 1
   fi
-  sha256_of "$EVIDENCE_DIR/pin-backup/$name" >"$EVIDENCE_DIR/pin-backup/${name}.sha256"
+  if [[ -r "$EVIDENCE_DIR/pin-backup/$name" ]]; then
+    sha256_of "$EVIDENCE_DIR/pin-backup/$name" >"$EVIDENCE_DIR/pin-backup/${name}.sha256"
+  elif [[ "$name" == "dokploy-compose.env" ]]; then
+    wr_compose_env_sha256_auto "$EVIDENCE_DIR/pin-backup/$name" >"$EVIDENCE_DIR/pin-backup/${name}.sha256" || return 1
+  else
+    log "ERROR: pin backup is unreadable and is not the compose env copy"
+    return 1
+  fi
 }
 backup_file "$COMPOSE_ENV_FILE" dokploy-compose.env || die "compose .env backup failed"
 [[ -f "$EVIDENCE_DIR/pin-backup/dokploy-compose.env" ]] || die "compose .env backup missing after backup step"
