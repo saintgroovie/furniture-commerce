@@ -10,6 +10,8 @@
  * owner-review flags, workbook paths, or UNKNOWN material labels.
  */
 
+import { resolveDefaultBuyerConfiguration } from "./default-buyer-configuration"
+
 export const WILLIE_WINKIE_COLLECTION = "willie-winkie" as const
 
 /**
@@ -240,7 +242,16 @@ export function readFamilyKey(product: Record<string, unknown>): string | null {
 function readPriceAmount(product: Record<string, unknown>): number | null {
   const variants = product.variants
   if (!Array.isArray(variants) || variants.length === 0) return null
-  const v = variants[0]
+  const openingId = resolveDefaultBuyerConfiguration(product)?.variant_id
+  const v =
+    (openingId
+      ? variants.find(
+          (item) =>
+            !!item &&
+            typeof item === "object" &&
+            (item as { id?: unknown }).id === openingId
+        )
+      : null) ?? (variants.length === 1 ? variants[0] : null)
   if (!v || typeof v !== "object") return null
   const prices = (v as { prices?: unknown }).prices
   if (!Array.isArray(prices) || prices.length === 0) return null

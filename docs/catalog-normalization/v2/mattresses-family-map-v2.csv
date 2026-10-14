@@ -1,0 +1,6 @@
+sku,current_title,canonical_model,clean_title,width_cm,length_cm,height_cm,firmness,construction,price,medusa_presence,target_family,target_variant,decision,evidence
+OL-85-2,Кроватка приставная + матрас,,,,,,,,,present_as_other_product,,,NOT_A_MATTRESS,title mentions a mattress inside another product
+OX-14-1,Комплекс Оксфорд-1 (нижняя кровать без матраса 90*185),,,,,,,,,present_as_other_product,,,NOT_A_MATTRESS,title mentions a mattress inside another product
+OX-14-11,Нижняя кровать Оксфорд без матраса,,,,,,,,,present_as_other_product,,,NOT_A_MATTRESS,title mentions a mattress inside another product
+OX-90-2,Комплекс Оксфорд-2  без выдвижной столешницы с нижней кроватью и матрасом в чехле (ткани в ассортименте),,,,,,,,386700.0,absent,,,NOT_A_MATTRESS,retail price list sheet ОКСФОРД
+OX-14-2,"Комплекс Оксфорд-2 (нижняя кровать 90*185 с матрасом в чехле, ткани в ассортименте)",,,,,,,,64600.0,absent,,,NOT_A_MATTRESS,retail price list sheet ОКСФОРД

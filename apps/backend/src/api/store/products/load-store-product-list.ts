@@ -35,7 +35,9 @@ export type StoreProductListMode = "default" | "browse"
 const DEFAULT_PRODUCT_FIELDS = [
   "*",
   "variants.*",
+  "variants.options.*",
   "variants.price_set.prices.amount",
+  "options.*",
   "images.*",
   "product_categories.*",
   "product_classification.*",
@@ -55,12 +57,13 @@ export const BROWSE_PRODUCT_FIELDS = [
   "images.url",
   "variants.id",
   "variants.sku",
+  "variants.metadata",
   "product_categories.handle",
   "product_classification.product_type",
 ] as const
 
 /** Browse field set when category/product_type filters need relations. */
-const BROWSE_FILTERED_PRODUCT_FIELDS = [
+export const BROWSE_FILTERED_PRODUCT_FIELDS = [
   "id",
   "handle",
   "title",
@@ -70,6 +73,7 @@ const BROWSE_FILTERED_PRODUCT_FIELDS = [
   "images.url",
   "variants.id",
   "variants.sku",
+  "variants.metadata",
   "product_categories.category_id",
   "product_categories.handle",
   "product_classification.product_type",
@@ -153,6 +157,57 @@ function flattenVariantPrices(
   })
 }
 
+/**
+ * Browse variant row used by the shared opening resolver.
+ * Keeps axis sort and the variant's own material tiers. Finish URL lists
+ * stay off this row. Without `variant_axes`, opening falls through to
+ * array order and the catalog card disagrees with the PDP.
+ */
+export function slimBrowseVariantRecord(
+  variant: Record<string, unknown>,
+  prices?: Array<{ amount: number }>,
+  calculated?: StoreCalculatedPrice
+): Record<string, unknown> {
+  const slim: Record<string, unknown> = {
+    id: variant.id,
+    sku: variant.sku,
+  }
+  if (prices) slim.prices = prices
+  else if (Array.isArray(variant.prices)) slim.prices = variant.prices
+  const ownCalculated = slimStoreCalculatedPrice(variant.calculated_price)
+  if (calculated) slim.calculated_price = calculated
+  else if (ownCalculated) slim.calculated_price = ownCalculated
+  const openingMeta = browseOpeningMetadata(variant.metadata)
+  if (openingMeta) slim.metadata = openingMeta
+  return slim
+}
+
+function browseOpeningMetadata(metadata: unknown): Record<string, unknown> | null {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null
+  const src = metadata as Record<string, unknown>
+  const kept: Record<string, unknown> = {}
+  const axes = src.variant_axes
+  if (axes && typeof axes === "object" && !Array.isArray(axes)) {
+    kept.variant_axes = axes
+  }
+  const mattress = src.mattress_size
+  if (mattress && typeof mattress === "object" && !Array.isArray(mattress)) {
+    kept.mattress_size = mattress
+  }
+  const capabilities = src.capabilities
+  if (capabilities && typeof capabilities === "object" && !Array.isArray(capabilities)) {
+    /* An empty bag is an override: it blocks product-tier inheritance.
+       Dropping it makes the catalog card apply a discount the PDP does not. */
+    const bag = capabilities as Record<string, unknown>
+    const slim: Record<string, unknown> = {}
+    if (Object.prototype.hasOwnProperty.call(bag, "material_tiers")) {
+      slim.material_tiers = bag.material_tiers
+    }
+    kept.capabilities = slim
+  }
+  return Object.keys(kept).length > 0 ? kept : null
+}
+
 async function attachBrowseVariantPrices(
   query: QueryGraph,
   products: Array<Record<string, unknown>>
@@ -234,19 +289,36 @@ async function attachBrowseVariantPrices(
           const id = typeof v.id === "string" ? v.id : undefined
           const prices = id ? pricesByVariantId.get(id) : undefined
           const calculated = id ? calculatedByVariantId.get(id) : undefined
-          const slim: Record<string, unknown> = {
-            id: v.id,
-            sku: v.sku,
-          }
-          if (prices) slim.prices = prices
-          if (calculated) slim.calculated_price = calculated
-          return slim
+          return slimBrowseVariantRecord(v, prices, calculated)
         })
       : variants
     return {
       ...p,
       images: Array.isArray(p.images) ? p.images : [],
       variants: nextVariants,
+    }
+  })
+}
+
+/**
+ * Variant metadata (axis sort, per-SKU material tiers) is loaded in browse
+ * only so the default configuration opens on the same SKU and tier as the PDP.
+ * It is not part of the browse payload.
+ */
+function dropBrowseVariantMetadata(
+  products: Array<Record<string, unknown>>
+): Array<Record<string, unknown>> {
+  return products.map((p) => {
+    const variants = p.variants
+    if (!Array.isArray(variants)) return p
+    return {
+      ...p,
+      variants: variants.map((variant) => {
+        if (!variant || typeof variant !== "object") return variant
+        const rest = { ...(variant as Record<string, unknown>) }
+        delete rest.metadata
+        return rest
+      }),
     }
   })
 }
@@ -331,6 +403,7 @@ export async function loadStoreProductList(
     result = projectBuyerItemTypesOntoProducts(dedupeCatalogProductsById(result))
     await yieldEventLoop()
     result = projectDefaultBuyerConfigurationsOntoProducts(result)
+    result = dropBrowseVariantMetadata(result)
     await yieldEventLoop()
     result = sortProductsByMerchandisingOrder(result)
   } else {
