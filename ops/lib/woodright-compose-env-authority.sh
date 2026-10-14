@@ -570,6 +570,42 @@ wr_compose_env_sha256_fingerprint() {
   printf '%s %s\n' "$method" "$digest"
 }
 
+# Environment-scoped pin fingerprint.
+# Privileged hashing stays inside wr_compose_env_sha256_fingerprint
+# (sudo -n sha256sum -- <realpath> only). This wrapper only decides which
+# compose root may use that hasher. It does not read or print file contents.
+# Roots:
+#   public_production     -> woodright-public-production
+#   public_demo           -> woodright-stack-3dsdhd
+#   production            -> woodright-production
+wr_compose_env_fingerprint_for_environment() {
+  local environment="$1"
+  local path="$2"
+  local expected="$3"
+  local allowed_parent="$4"
+  local want resolved_parent base
+  case "$environment" in
+    public_production) want="woodright-public-production" ;;
+    public_demo) want="woodright-stack-3dsdhd" ;;
+    production) want="woodright-production" ;;
+    *)
+      wr_compose_env_die "unknown compose-env environment: $environment"
+      return 1
+      ;;
+  esac
+  [[ -n "$allowed_parent" ]] || { wr_compose_env_die "compose root required"; return 1; }
+  command -v realpath >/dev/null 2>&1 \
+    || { wr_compose_env_die "realpath required for compose-env environment fingerprint"; return 1; }
+  resolved_parent="$(realpath "$allowed_parent" 2>/dev/null || true)"
+  [[ -n "$resolved_parent" ]] || { wr_compose_env_die "cannot resolve compose root"; return 1; }
+  base="$(basename -- "$resolved_parent")"
+  if [[ "$base" != "$want" ]]; then
+    wr_compose_env_die "compose root ${base} is not the ${environment} pin root"
+    return 1
+  fi
+  wr_compose_env_sha256_fingerprint "$path" "$expected" "$allowed_parent"
+}
+
 # Atomic install: src temp -> dest. Temp should already live in dest's directory
 # when possible. Preserves DESTINATION owner/group/mode (not staged umask/owner).
 # Does not print file contents.
