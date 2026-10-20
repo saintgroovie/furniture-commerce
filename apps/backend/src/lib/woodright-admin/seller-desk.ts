@@ -91,6 +91,7 @@ export function buildDeskInbox(input: {
   now: Date
 }): DeskInboxItem[] {
   const items: DeskInboxItem[] = []
+  void input.products
 
   for (const req of input.requests) {
     if (req.status !== "new" && req.status !== "contacted") continue
@@ -108,41 +109,8 @@ export function buildDeskInbox(input: {
     })
   }
 
-  for (const product of input.products) {
-    if (product.published_invisible) {
-      items.push({
-        id: `cat-inv:${product.id}`,
-        kind: "catalog",
-        title: product.title,
-        hint: "Опубликован, покупатель не найдёт",
-        action: "Исправить видимость",
-        overdue: true,
-        href: `/woodright/products/${product.id}`,
-      })
-    }
-    if (product.missing_media) {
-      items.push({
-        id: `cat-media:${product.id}`,
-        kind: "catalog",
-        title: product.title,
-        hint: product.sku ? `${product.sku} - нет фото` : "Нет фото",
-        action: "Открыть карточку",
-        overdue: true,
-        href: `/woodright/products/${product.id}`,
-      })
-    }
-    if (product.missing_price) {
-      items.push({
-        id: `cat-price:${product.id}`,
-        kind: "catalog",
-        title: product.title,
-        hint: "Нет цены",
-        action: "Поставить цену",
-        overdue: false,
-        href: `/woodright/products/${product.id}`,
-      })
-    }
-  }
+  // Catalog problems are one task per resolution path in catalog-ops-board.
+  // Per-SKU inbox rows duplicated the same photo or price job.
 
   for (const process of input.processes) {
     if (process.current_stage !== "awaiting_customer_approval") continue

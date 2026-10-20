@@ -1,0 +1,2908 @@
+[
+  {
+    "family": "country-london-paris/CONFIGURABLE/bed/-",
+    "handle": "co-14-2",
+    "title": "Кровать Кантри с подъёмным механизмом",
+    "product_id": "prod_01KNTBXADASA751ZC9C33QCE9M",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBM3B5WB3BH9311NTWPT",
+        "sku": "CO-15-2",
+        "calculated_amount": 62000,
+        "variant_axes": {
+          "mattress_size": {
+            "sort": 1,
+            "label": "Размер спального места",
+            "display": "120 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBM27TJJKBJMJBJX98FV",
+        "sku": "CO-14-2",
+        "calculated_amount": 50100,
+        "variant_axes": {
+          "mattress_size": {
+            "sort": 0,
+            "label": "Размер спального места",
+            "display": "90 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "already/prod_01KNTBXADB4V43P4P0KDTHVDQR",
+    "handle": "co-62-1",
+    "title": "Стеллаж Кантри",
+    "product_id": "prod_01KNTBXADB4V43P4P0KDTHVDQR",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBM42648EXN9WWH69PPH",
+        "sku": "CO-62-2",
+        "calculated_amount": 28300,
+        "variant_axes": {
+          "form": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Узкий с дверью"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBM43HK2RHHGFQG2FT2G",
+        "sku": "CO-62-3",
+        "calculated_amount": 32100,
+        "variant_axes": {
+          "form": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "Узкий с ящиком"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBM48P9ZSXZRK0QD1ZF6",
+        "sku": "CO-62-1",
+        "calculated_amount": 64300,
+        "variant_axes": {
+          "form": {
+            "sort": 2,
+            "label": "Исполнение",
+            "display": "Широкий"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "already/prod_01KNTBXADB5BFDKMSAB35J8Z0V",
+    "handle": "co-65-1",
+    "title": "Стол письменный Кантри",
+    "product_id": "prod_01KNTBXADB5BFDKMSAB35J8Z0V",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBM5JT70C71EY83C5K95",
+        "sku": "CO-65-2",
+        "calculated_amount": 37500,
+        "variant_axes": {
+          "side": {
+            "sort": 0,
+            "label": "Ориентация",
+            "display": "Слева"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBM5CSEXNSVAP31DAVPW",
+        "sku": "CO-65-1",
+        "calculated_amount": 37500,
+        "variant_axes": {
+          "side": {
+            "sort": 1,
+            "label": "Ориентация",
+            "display": "Справа"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "willie-winkie/CONFIGURABLE/willie-chest/Сказочное королевство",
+    "handle": "fk-05-1",
+    "title": "Комод Сказочное королевство",
+    "product_id": "prod_01KV69A7AMAEGVHR09A7ZXH062",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "price_known": false,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "price_known": false,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KV69A7H6WXSE9B2XV075CRS6",
+        "sku": "fk-05-3",
+        "calculated_amount": 113080,
+        "variant_axes": {
+          "form": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Высокий"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "price_known": false,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "price_known": false,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KV69A7H6T0M8VR6SH10PKG79",
+        "sku": "fk-05-1",
+        "calculated_amount": 83820,
+        "variant_axes": {
+          "form": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "Стандартный"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "price_known": false,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "price_known": false,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "greenwich/STANDARD/wardrobe/-",
+    "handle": "greenwich-gr-02-1",
+    "title": "Гардероб Гринвич",
+    "product_id": "prod_01KM1QHNHYQKVZHCN3SM9BY42Z",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KM1QHQ65S146K0PMDM98AEMZ",
+        "sku": "GR-02-2",
+        "calculated_amount": 167450,
+        "variant_axes": {
+          "drawers": {
+            "sort": 0,
+            "label": "Ящики",
+            "display": "Без ящиков"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KM1QHQ64656BGJV5H7Y5Y20W",
+        "sku": "GR-02-1",
+        "calculated_amount": 169200,
+        "variant_axes": {
+          "drawers": {
+            "sort": 1,
+            "label": "Ящики",
+            "display": "С ящиками"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "greenwich/STANDARD/bedside/-",
+    "handle": "greenwich-gr-08-1",
+    "title": "Прикроватная тумба Гринвич",
+    "product_id": "prod_01KM1QHNHWH2M61Z8VR182RMJF",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KM1QHQ5GXJP7ETEKYEVKXDQ0",
+        "sku": "GR-08-1",
+        "calculated_amount": 36500,
+        "variant_axes": {
+          "drawers": {
+            "sort": 1,
+            "label": "Ящики",
+            "display": "2 ящика"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KM1QHQ5YNMC8J2Y5KPD3JBBJ",
+        "sku": "GR-08-2",
+        "calculated_amount": 31200,
+        "variant_axes": {
+          "drawers": {
+            "sort": 0,
+            "label": "Ящики",
+            "display": "1 ящик"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "greenwich/STANDARD/bed/-",
+    "handle": "greenwich-gr-09-1-bed-90",
+    "title": "Кровать Гринвич",
+    "product_id": "prod_01KM1QHNHZXXSRPFEKAZRSFPDE",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KM1QHQ65TXYKJN8PQJ5KM5JP",
+        "sku": "GR-09-1",
+        "calculated_amount": 71900,
+        "variant_axes": null,
+        "material_tiers": null
+      },
+      {
+        "id": "variant_01KM1QHQ6698TKR9XYZX09SFH6",
+        "sku": "GR-12-1",
+        "calculated_amount": 81100,
+        "variant_axes": null,
+        "material_tiers": null
+      },
+      {
+        "id": "variant_01KM1QHQ6791A8ZTF6SA4W47C6",
+        "sku": "GR-14-1",
+        "calculated_amount": 89700,
+        "variant_axes": null,
+        "material_tiers": null
+      },
+      {
+        "id": "variant_01KM1QHQ67950W0Q81TF7F51EM",
+        "sku": "GR-16-1",
+        "calculated_amount": 94000,
+        "variant_axes": null,
+        "material_tiers": null
+      },
+      {
+        "id": "variant_01KM1QHQ68EX7W37GWB0RQPQF9",
+        "sku": "GR-18-1",
+        "calculated_amount": 110400,
+        "variant_axes": null,
+        "material_tiers": null
+      }
+    ]
+  },
+  {
+    "family": "oliver/CONFIGURABLE/clothes-wardrobe/-",
+    "handle": "ol-02-1",
+    "title": "Шкаф для одежды Оливер",
+    "product_id": "prod_01KNTBXADCQ78KTFDG2CFXRDER",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBM7VPJHY3V0Z41RYZYQ",
+        "sku": "OL-02-1",
+        "calculated_amount": 157900,
+        "variant_axes": {
+          "doors": {
+            "sort": 0,
+            "label": "Двери",
+            "display": "2 двери"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBM8R2J15MN970KWM0F9",
+        "sku": "OL-03-1",
+        "calculated_amount": 258900,
+        "variant_axes": {
+          "doors": {
+            "sort": 1,
+            "label": "Двери",
+            "display": "3 двери"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "already/prod_01KNTBXADDACBVH2BM1JSB2MWH",
+    "handle": "ol-05-1",
+    "title": "Комод Оливер",
+    "product_id": "prod_01KNTBXADDACBVH2BM1JSB2MWH",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBM89XVPXS24SKMB1DHB",
+        "sku": "OL-05-1",
+        "calculated_amount": 89900,
+        "variant_axes": {
+          "size": {
+            "sort": 0,
+            "label": "Размер",
+            "display": "Стандартный"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBM8WFHR81Z0RAWQZ1T5",
+        "sku": "OL-05-2",
+        "calculated_amount": 123500,
+        "variant_axes": {
+          "size": {
+            "sort": 1,
+            "label": "Размер",
+            "display": "Широкий"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "oliver/CONFIGURABLE/chest-tall/-",
+    "handle": "ol-05-3",
+    "title": "Комод высокий Оливер",
+    "product_id": "prod_01KNTBXADDP2V5W6AKD074YRVF",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBM916QBNKP1B60BWPHM",
+        "sku": "OL-05-Н",
+        "calculated_amount": 110000,
+        "variant_axes": {
+          "tier": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Ниже на 1 ярус"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBM90FWBYY6MX268MJTT",
+        "sku": "OL-05-3",
+        "calculated_amount": 119500,
+        "variant_axes": {
+          "tier": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "Полный"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "oliver/CONFIGURABLE/nightstand/-",
+    "handle": "ol-08-1",
+    "title": "Тумбочка прикроватная Оливер",
+    "product_id": "prod_01KNTBXADE04TT9T88M1SRC2T7",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMAY8AB48VM5QEEKK2R",
+        "sku": "OL-08-2",
+        "calculated_amount": 39950,
+        "variant_axes": {
+          "door": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "С дверкой"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMA9QCFYFESKN9AP5ST",
+        "sku": "OL-08-1",
+        "calculated_amount": 34950,
+        "variant_axes": {
+          "door": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Без дверки"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "oliver/CONFIGURABLE/bed/-",
+    "handle": "ol-14-1",
+    "title": "Кровать Оливер",
+    "product_id": "prod_01KNTBXADFFPGAVHK024D20MEQ",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMB81GA2HENQ4Q54NDZ",
+        "sku": "OL-15-2",
+        "calculated_amount": 98900,
+        "variant_axes": {
+          "lift": {
+            "sort": 0,
+            "label": "Подъёмный механизм",
+            "display": "Без подъёмного механизма"
+          },
+          "footboard": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Без изножья"
+          },
+          "mattress_size": {
+            "sort": 1,
+            "label": "Размер спального места",
+            "display": "120 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMCT620T47GNE8ZKGH8",
+        "sku": "OL-16-2",
+        "calculated_amount": 91900,
+        "variant_axes": {
+          "lift": {
+            "sort": 0,
+            "label": "Подъёмный механизм",
+            "display": "Без подъёмного механизма"
+          },
+          "footboard": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Без изножья"
+          },
+          "mattress_size": {
+            "sort": 2,
+            "label": "Размер спального места",
+            "display": "140 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMDKGQBDKVPG0T71PS3",
+        "sku": "OL-17-2",
+        "calculated_amount": 123900,
+        "variant_axes": {
+          "lift": {
+            "sort": 0,
+            "label": "Подъёмный механизм",
+            "display": "Без подъёмного механизма"
+          },
+          "footboard": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Без изножья"
+          },
+          "mattress_size": {
+            "sort": 3,
+            "label": "Размер спального места",
+            "display": "160 × 200 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMD9G2WYEDTYHYHGMG5",
+        "sku": "OL-18-2",
+        "calculated_amount": 137900,
+        "variant_axes": {
+          "lift": {
+            "sort": 0,
+            "label": "Подъёмный механизм",
+            "display": "Без подъёмного механизма"
+          },
+          "footboard": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Без изножья"
+          },
+          "mattress_size": {
+            "sort": 4,
+            "label": "Размер спального места",
+            "display": "180 × 200 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMBTGQAE0VQC94SFJY6",
+        "sku": "OL-14-2",
+        "calculated_amount": 69900,
+        "variant_axes": {
+          "lift": {
+            "sort": 0,
+            "label": "Подъёмный механизм",
+            "display": "Без подъёмного механизма"
+          },
+          "footboard": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Без изножья"
+          },
+          "mattress_size": {
+            "sort": 0,
+            "label": "Размер спального места",
+            "display": "90 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMBX03GX9WTGQAA35HW",
+        "sku": "OL-15-1",
+        "calculated_amount": 91900,
+        "variant_axes": {
+          "lift": {
+            "sort": 0,
+            "label": "Подъёмный механизм",
+            "display": "Без подъёмного механизма"
+          },
+          "footboard": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "С изножьем"
+          },
+          "mattress_size": {
+            "sort": 1,
+            "label": "Размер спального места",
+            "display": "120 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMCHRJHHCED77MVCF82",
+        "sku": "OL-16-1",
+        "calculated_amount": 99900,
+        "variant_axes": {
+          "lift": {
+            "sort": 0,
+            "label": "Подъёмный механизм",
+            "display": "Без подъёмного механизма"
+          },
+          "footboard": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "С изножьем"
+          },
+          "mattress_size": {
+            "sort": 2,
+            "label": "Размер спального места",
+            "display": "140 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMCDTGJ1G7N27Z6SMWD",
+        "sku": "OL-17-1",
+        "calculated_amount": 134900,
+        "variant_axes": {
+          "lift": {
+            "sort": 0,
+            "label": "Подъёмный механизм",
+            "display": "Без подъёмного механизма"
+          },
+          "footboard": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "С изножьем"
+          },
+          "mattress_size": {
+            "sort": 3,
+            "label": "Размер спального места",
+            "display": "160 × 200 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMDNYZ72376HJJXGAQ6",
+        "sku": "OL-18-1",
+        "calculated_amount": 149900,
+        "variant_axes": {
+          "lift": {
+            "sort": 0,
+            "label": "Подъёмный механизм",
+            "display": "Без подъёмного механизма"
+          },
+          "footboard": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "С изножьем"
+          },
+          "mattress_size": {
+            "sort": 4,
+            "label": "Размер спального места",
+            "display": "180 × 200 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMB9XHDDS7MFKP5TYRE",
+        "sku": "OL-14-1",
+        "calculated_amount": 72900,
+        "variant_axes": {
+          "lift": {
+            "sort": 0,
+            "label": "Подъёмный механизм",
+            "display": "Без подъёмного механизма"
+          },
+          "footboard": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "С изножьем"
+          },
+          "mattress_size": {
+            "sort": 0,
+            "label": "Размер спального места",
+            "display": "90 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMD2EGBJM0R1221ZV3V",
+        "sku": "OL-17-3",
+        "calculated_amount": 156900,
+        "variant_axes": {
+          "lift": {
+            "sort": 1,
+            "label": "Подъёмный механизм",
+            "display": "С подъёмным механизмом"
+          },
+          "footboard": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "С изножьем"
+          },
+          "mattress_size": {
+            "sort": 3,
+            "label": "Размер спального места",
+            "display": "160 × 200 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "oliver/CONFIGURABLE/console/-",
+    "handle": "ol-44-1",
+    "title": "Консоль Оливер",
+    "product_id": "prod_01KNTBXADR7DXSVHCM6Q99129G",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMGKE2BCAKARCM4RCGN",
+        "sku": "OL-44-1",
+        "calculated_amount": 45900,
+        "variant_axes": {
+          "shelves": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Без полок"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMGZEWN4405RK9P7D7X",
+        "sku": "OL-44-2",
+        "calculated_amount": 70950,
+        "variant_axes": {
+          "shelves": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "С полками"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "oliver/CONFIGURABLE/banquette/-",
+    "handle": "ol-55-1",
+    "title": "Банкетка Оливер",
+    "product_id": "prod_01KNTBXADSNY1JKR33SC2FRJX5",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMHY23KPCJ1K5QP88HN",
+        "sku": "OL-55-2",
+        "calculated_amount": 19900,
+        "variant_axes": {
+          "size": {
+            "sort": 0,
+            "label": "Размер",
+            "display": "Большая"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMHZTDD70T6KVSW2KWV",
+        "sku": "OL-55-1",
+        "calculated_amount": 14500,
+        "variant_axes": {
+          "size": {
+            "sort": 1,
+            "label": "Размер",
+            "display": "Малая"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "oliver/CONFIGURABLE/sofa/-",
+    "handle": "ol-57-1",
+    "title": "Диван Оливер",
+    "product_id": "prod_01KNTBXADVZVCXPHMZ1K8VZAJS",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMJC0FFV0F9HYGKYW3T",
+        "sku": "OL-57-2",
+        "calculated_amount": 145000,
+        "variant_axes": {
+          "size": {
+            "sort": 0,
+            "label": "Размер",
+            "display": "Большой"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMHT9GJQ0RY2ZK5GP7F",
+        "sku": "OL-57-1",
+        "calculated_amount": 118000,
+        "variant_axes": {
+          "size": {
+            "sort": 1,
+            "label": "Размер",
+            "display": "Малый"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "already/prod_01KNTBXADW0MYZ9SEBBAYPS5V4",
+    "handle": "ol-65-1",
+    "title": "Стол письменный Оливер",
+    "product_id": "prod_01KNTBXADW0MYZ9SEBBAYPS5V4",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMMCN2HMK6TBHHHJ86S",
+        "sku": "OL-65-2",
+        "calculated_amount": 89900,
+        "variant_axes": {
+          "side": {
+            "sort": 0,
+            "label": "Ориентация",
+            "display": "Слева"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMK8E3CDX35TG4AWGYN",
+        "sku": "OL-65-1",
+        "calculated_amount": 89900,
+        "variant_axes": {
+          "side": {
+            "sort": 1,
+            "label": "Ориентация",
+            "display": "Справа"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "oliver/CONFIGURABLE/etagere/-",
+    "handle": "ol-68-1",
+    "title": "Этажерка Оливер",
+    "product_id": "prod_01KNTBXADW6ZWB6HTCJ0C4XPY1",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMNW495R07XEBEZSJ3T",
+        "sku": "OL-68-2",
+        "calculated_amount": 48900,
+        "variant_axes": {
+          "size": {
+            "sort": 0,
+            "label": "Размер",
+            "display": "Большая"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMNJ24B3E7Q06RB5FX5",
+        "sku": "OL-68-1",
+        "calculated_amount": 24900,
+        "variant_axes": {
+          "size": {
+            "sort": 1,
+            "label": "Размер",
+            "display": "Малая"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "oliver/CONFIGURABLE/book-shelf/-",
+    "handle": "ol-69-1",
+    "title": "Полка книжная Оливер",
+    "product_id": "prod_01KNTBXADWPT0F9X7Y2SATPPGV",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMNXM1S6P4KAGJPJ5B5",
+        "sku": "OL-69-1",
+        "calculated_amount": 14900,
+        "variant_axes": {
+          "tiers": {
+            "sort": 0,
+            "label": "Ярусы",
+            "display": "1 ярус"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMNTTFM5HMBYPNETM0Z",
+        "sku": "OL-69-2",
+        "calculated_amount": 18000,
+        "variant_axes": {
+          "tiers": {
+            "sort": 1,
+            "label": "Ярусы",
+            "display": "2 яруса"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMPJ1AKQNBQS1FNDTZ2",
+        "sku": "OL-69-3",
+        "calculated_amount": 22900,
+        "variant_axes": {
+          "tiers": {
+            "sort": 2,
+            "label": "Ярусы",
+            "display": "3 яруса"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "oliver/STANDARD/rail/-",
+    "handle": "ol-84-1",
+    "title": "Бортик к кровати",
+    "product_id": "prod_01KNTBXADX1KA6WGTERRHPPEV7",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMT206FEYP02V9TQAQT",
+        "sku": "OL-84-2",
+        "calculated_amount": 7500,
+        "variant_axes": {
+          "size": {
+            "sort": 0,
+            "label": "Размер",
+            "display": "Большой"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMSYJF0DKCXR5XEJTRX",
+        "sku": "OL-84-1",
+        "calculated_amount": 5500,
+        "variant_axes": {
+          "size": {
+            "sort": 1,
+            "label": "Размер",
+            "display": "Малый"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "oliver/CONFIGURABLE/transformer/-",
+    "handle": "ol-95-1",
+    "title": "Кровать-трансформер Оливер",
+    "product_id": "prod_01KNTBXADY06DZQTG915QFY9BW",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMW34VN5ZNM9V1W673D",
+        "sku": "OL-95-1",
+        "calculated_amount": 118000,
+        "variant_axes": {
+          "fabric": {
+            "sort": 0,
+            "label": "Ткань",
+            "display": "С рисунком"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMWT7JHF336KKKNYG8C",
+        "sku": "OL-95-3",
+        "calculated_amount": 118700,
+        "variant_axes": {
+          "fabric": {
+            "sort": 1,
+            "label": "Ткань",
+            "display": "С тканью"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "willie-winkie/CONFIGURABLE/willie-chest/Полевые цветы",
+    "handle": "pa-05-1",
+    "title": "Комод Полевые цветы",
+    "product_id": "prod_01KV69A7AMYW3Q4NJE3Q5WEFYR",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "price_known": false,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "price_known": false,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KV69A7H7D6YMFGSRS2VR3PSF",
+        "sku": "pa-05-3",
+        "calculated_amount": 113080,
+        "variant_axes": {
+          "form": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Высокий"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "price_known": false,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "price_known": false,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KV69A7H7GT4WF22X1ZWBH0SZ",
+        "sku": "pa-05-1",
+        "calculated_amount": 83820,
+        "variant_axes": {
+          "form": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "Стандартный"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "price_known": false,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "price_known": false,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "provence/CONFIGURABLE/clothes-wardrobe/-",
+    "handle": "pv-02-1",
+    "title": "Шкаф для одежды Прованс",
+    "product_id": "prod_01KNTBXADY8MGT1TX966D4CEVJ",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMWCA28ESZGK59BQCXK",
+        "sku": "PV-02-1",
+        "calculated_amount": 141300,
+        "variant_axes": {
+          "doors": {
+            "sort": 0,
+            "label": "Двери",
+            "display": "2 двери"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMW2V1NK579RXPPHVTC",
+        "sku": "PV-03-1",
+        "calculated_amount": 205700,
+        "variant_axes": {
+          "doors": {
+            "sort": 1,
+            "label": "Двери",
+            "display": "3 двери"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "provence/CONFIGURABLE/bed/-",
+    "handle": "pv-14-1",
+    "title": "Кровать Прованс без изножья",
+    "product_id": "prod_01KNTBXADZFWE9YRK0K60DDHR2",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBMYM0626YQFBN3P9PSD",
+        "sku": "PV-15-1",
+        "calculated_amount": 70300,
+        "variant_axes": {
+          "fabric": {
+            "sort": 0,
+            "label": "Ткань",
+            "display": "Без ткани"
+          },
+          "mattress_size": {
+            "sort": 1,
+            "label": "Размер спального места",
+            "display": "120 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMZ0Q9GKHY6ME76Y63H",
+        "sku": "PV-16-1",
+        "calculated_amount": 77300,
+        "variant_axes": {
+          "fabric": {
+            "sort": 0,
+            "label": "Ткань",
+            "display": "Без ткани"
+          },
+          "mattress_size": {
+            "sort": 2,
+            "label": "Размер спального места",
+            "display": "140 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBN03X7QZTXTKZ7TV9JP",
+        "sku": "PV-17-1",
+        "calculated_amount": 79700,
+        "variant_axes": {
+          "fabric": {
+            "sort": 0,
+            "label": "Ткань",
+            "display": "Без ткани"
+          },
+          "mattress_size": {
+            "sort": 3,
+            "label": "Размер спального места",
+            "display": "160 × 200 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBN04TQYFZ43BRRG3AYE",
+        "sku": "PV-18-1",
+        "calculated_amount": 82900,
+        "variant_axes": {
+          "fabric": {
+            "sort": 0,
+            "label": "Ткань",
+            "display": "Без ткани"
+          },
+          "mattress_size": {
+            "sort": 4,
+            "label": "Размер спального места",
+            "display": "180 × 200 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMYPPR2SKRZME3Y2WD3",
+        "sku": "PV-14-1",
+        "calculated_amount": 57600,
+        "variant_axes": {
+          "fabric": {
+            "sort": 0,
+            "label": "Ткань",
+            "display": "Без ткани"
+          },
+          "mattress_size": {
+            "sort": 0,
+            "label": "Размер спального места",
+            "display": "90 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBMZPCZSJ179AGEKAAB9",
+        "sku": "PV-15-2",
+        "calculated_amount": 70300,
+        "variant_axes": {
+          "fabric": {
+            "sort": 1,
+            "label": "Ткань",
+            "display": "С тканью"
+          },
+          "mattress_size": {
+            "sort": 1,
+            "label": "Размер спального места",
+            "display": "120 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KX1PJADDV8ER718D3PZ3A0B4",
+        "sku": "PV-16-2",
+        "calculated_amount": 77300,
+        "variant_axes": {
+          "fabric": {
+            "sort": 1,
+            "label": "Ткань",
+            "display": "С тканью"
+          },
+          "mattress_size": {
+            "sort": 2,
+            "label": "Размер спального места",
+            "display": "140 × 190 см"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "provence/CONFIGURABLE/banquette/-",
+    "handle": "pv-55-1",
+    "title": "Банкетка Прованс",
+    "product_id": "prod_01KNTBXAE00AE9RHVB0G00DFGM",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBN1XGHXRC7YDPXFKVTF",
+        "sku": "PV-55-2",
+        "calculated_amount": 26700,
+        "variant_axes": {
+          "size": {
+            "sort": 0,
+            "label": "Размер",
+            "display": "Большая"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBN102GKH7JKY9XETTWX",
+        "sku": "PV-55-1",
+        "calculated_amount": 19900,
+        "variant_axes": {
+          "size": {
+            "sort": 1,
+            "label": "Размер",
+            "display": "Малая"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "already/prod_01KNTBXAE14DE7Z6FHFMT4X3XZ",
+    "handle": "pv-65-5",
+    "title": "Стол письменный Прованс",
+    "product_id": "prod_01KNTBXAE14DE7Z6FHFMT4X3XZ",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBN3M85D776RF4F0HKR4",
+        "sku": "PV-65-6",
+        "calculated_amount": 68300,
+        "variant_axes": {
+          "side": {
+            "sort": 0,
+            "label": "Ориентация",
+            "display": "Слева"
+          },
+          "filling": {
+            "sort": 0,
+            "label": "Тумба",
+            "display": "Полки"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBN22DGSJKZEZ4R4WZZC",
+        "sku": "PV-65-5",
+        "calculated_amount": 68300,
+        "variant_axes": {
+          "side": {
+            "sort": 1,
+            "label": "Ориентация",
+            "display": "Справа"
+          },
+          "filling": {
+            "sort": 0,
+            "label": "Тумба",
+            "display": "Полки"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBN36TMKGCY0FAMXEXHE",
+        "sku": "PV-65-8",
+        "calculated_amount": 83000,
+        "variant_axes": {
+          "side": {
+            "sort": 0,
+            "label": "Ориентация",
+            "display": "Слева"
+          },
+          "filling": {
+            "sort": 1,
+            "label": "Тумба",
+            "display": "Ящики"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBN3QMHS0MQV3MGBKXMZ",
+        "sku": "PV-65-7",
+        "calculated_amount": 83000,
+        "variant_axes": {
+          "side": {
+            "sort": 1,
+            "label": "Ориентация",
+            "display": "Справа"
+          },
+          "filling": {
+            "sort": 1,
+            "label": "Тумба",
+            "display": "Ящики"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "provence/CONFIGURABLE/desk-two/-",
+    "handle": "pv-66-6",
+    "title": "Стол письменный двухтумбовый Прованс",
+    "product_id": "prod_01KNTBXAE1NQA13JRXRBGF8S86",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBN4QH1H9BETK6TSGS8N",
+        "sku": "PV-66-6",
+        "calculated_amount": 103700,
+        "variant_axes": {
+          "layout": {
+            "sort": 0,
+            "label": "Ориентация",
+            "display": "полки слева, ящики справа"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBN4ZYKDGVKZN39J1X9K",
+        "sku": "PV-66-7",
+        "calculated_amount": 103700,
+        "variant_axes": {
+          "layout": {
+            "sort": 1,
+            "label": "Ориентация",
+            "display": "ящики слева, полки справа"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "provence/CONFIGURABLE/etagere/-",
+    "handle": "pv-68-1",
+    "title": "Этажерка Прованс",
+    "product_id": "prod_01KNTBXAE12P62GNQEK14V0VTR",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KNTBXBN4383S02RTSAQQTC8Y",
+        "sku": "PV-68-2",
+        "calculated_amount": 58600,
+        "variant_axes": {
+          "size": {
+            "sort": 0,
+            "label": "Размер",
+            "display": "Большая"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KNTBXBN48M8R5SXQ0ZK07W7D",
+        "sku": "PV-68-1",
+        "calculated_amount": 17700,
+        "variant_axes": {
+          "size": {
+            "sort": 1,
+            "label": "Размер",
+            "display": "Малая"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  },
+  {
+    "family": "willie-winkie/CONFIGURABLE/willie-chest/Рыцари",
+    "handle": "te-05-1",
+    "title": "Комод Рыцари",
+    "product_id": "prod_01KV69A7AN5FGGQ0RRHQN9E460",
+    "material_tiers": {
+      "solid_full": {
+        "key": "solid_full",
+        "label_ru": "Полностью из массива",
+        "position": 1,
+        "price_known": false,
+        "description_ru": "Премиальное исполнение полностью из натурального массива",
+        "price_multiplier": 1
+      },
+      "solid_front_ldsp_body": {
+        "key": "solid_front_ldsp_body",
+        "label_ru": "Фасады из массива + корпус ЛДСП",
+        "position": 0,
+        "price_known": false,
+        "description_ru": "Практичное исполнение с фасадами из натурального массива",
+        "price_multiplier": 0.7
+      }
+    },
+    "variants": [
+      {
+        "id": "variant_01KV69A7HAR5G3HAQ2M1CYR2VM",
+        "sku": "te-05-3",
+        "calculated_amount": 113080,
+        "variant_axes": {
+          "form": {
+            "sort": 0,
+            "label": "Исполнение",
+            "display": "Высокий"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "price_known": false,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "price_known": false,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      },
+      {
+        "id": "variant_01KV69A7H9JE8E43N8X4FAQYK5",
+        "sku": "te-05-1",
+        "calculated_amount": 83820,
+        "variant_axes": {
+          "form": {
+            "sort": 1,
+            "label": "Исполнение",
+            "display": "Стандартный"
+          }
+        },
+        "material_tiers": {
+          "solid_full": {
+            "key": "solid_full",
+            "label_ru": "Полностью из массива",
+            "position": 1,
+            "price_known": false,
+            "description_ru": "Премиальное исполнение полностью из натурального массива",
+            "price_multiplier": 1
+          },
+          "solid_front_ldsp_body": {
+            "key": "solid_front_ldsp_body",
+            "label_ru": "Фасады из массива + корпус ЛДСП",
+            "position": 0,
+            "price_known": false,
+            "description_ru": "Практичное исполнение с фасадами из натурального массива",
+            "price_multiplier": 0.7
+          }
+        }
+      }
+    ]
+  }
+]

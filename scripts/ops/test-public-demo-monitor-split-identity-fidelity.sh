@@ -71,9 +71,13 @@ write_doc "$SPLIT" \
 got="$(resolve_pair "$SPLIT")"
 [[ "$got" == "$BE $SF" ]] && pass "B approved split" || fail "B split got=$got"
 
-# Buyer header expectation follows storefront_source_sha, not the backend SHA.
-buyer="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("storefront_source_sha") or d.get("release_sha") or "")' "$SPLIT")"
-[[ "$buyer" == "$SF" && "$buyer" != "$BE" ]] && pass "B buyer header uses storefront sha" || fail "B buyer=$buyer"
+# Application header follows release/application SHA.
+# Storefront component header follows storefront_source_sha.
+# Neither is the backend SHA. They may differ after a storefront-only release.
+app_hdr="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("release_sha") or d.get("application_source_sha") or "")' "$SPLIT")"
+sf_hdr="$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d.get("storefront_source_sha") or "")' "$SPLIT")"
+[[ "$app_hdr" == "$SF" && "$sf_hdr" == "$SF" && "$app_hdr" != "$BE" && "$sf_hdr" != "$BE" ]] \
+  && pass "B application and storefront headers are not the backend sha" || fail "B app=$app_hdr sf=$sf_hdr"
 
 # C. Unexpected backend SHA is not the approved split.
 BADBE="$TMP/bad-be.json"
@@ -151,9 +155,13 @@ PY
 got="$(resolve_pair "$SPLIT")"
 [[ "$got" == "$UNIFIED $UNIFIED" ]] && pass "K post-cutover unified" || fail "K got=$got"
 
-# Health-check buyer comparison prefers storefront_source_sha.
+# Storefront component check reads storefront_source_sha.
+# The application header check must not treat that field as the release SHA.
 grep -q 'storefront_source_sha' "$ROOT/ops/monitoring/woodright-health-check.sh" \
   && pass "buyer check reads storefront_source_sha" || fail "buyer check missing storefront_source_sha"
+grep -q 'one("release_sha") or one("application_sha")' "$ROOT/ops/monitoring/woodright-health-check.sh" \
+  && ! grep -q 'storefront_source_sha") or d.get("release_sha")' "$ROOT/ops/monitoring/woodright-health-check.sh" \
+  && pass "application header is not the storefront component SHA" || fail "application header still falls back to storefront SHA"
 
 # Unified pin rewrite records both component SHAs from EXPECTED_RELEASE_SHA only.
 grep -q 'doc\["backend_source_sha"\] = sha' "$ROOT/scripts/release/reconcile-public-image-pins.sh" \

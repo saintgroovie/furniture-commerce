@@ -38,7 +38,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     fields: [
       "*",
       "variants.*",
+      "variants.options.*",
       "variants.price_set.prices.*",
+      "options.*",
       "images.*",
       "product_classification.*",
       "product_sales_policy.*",

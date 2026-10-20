@@ -1,0 +1,102 @@
+family_key,canonical_title,survivor,source_skus,fact,fact_class,evidence
+already/prod_01KNTBXADB4V43P4P0KDTHVDQR,Стеллаж Кантри,co-62-1,CO-62-1 CO-62-2 CO-62-3,120 см,VARIANT,measurement of CO-62-1
+already/prod_01KNTBXADB4V43P4P0KDTHVDQR,Стеллаж Кантри,co-62-1,CO-62-1 CO-62-2 CO-62-3,43 см,VARIANT,measurement of CO-62-1
+already/prod_01KNTBXADB4V43P4P0KDTHVDQR,Стеллаж Кантри,co-62-1,CO-62-1 CO-62-2 CO-62-3,220 см,VARIANT,measurement of CO-62-1
+already/prod_01KNTBXADB4V43P4P0KDTHVDQR,Стеллаж Кантри,co-62-1,CO-62-1 CO-62-2 CO-62-3,form=Широкий,VARIANT,axis value is not shared
+already/prod_01KNTBXADB5BFDKMSAB35J8Z0V,Стол письменный Кантри,co-65-1,CO-65-1 CO-65-2,113x64,COMMON,every SKU has this mattress or body pair
+already/prod_01KNTBXADB5BFDKMSAB35J8Z0V,Стол письменный Кантри,co-65-1,CO-65-1 CO-65-2,64 см,COMMON,same body measurement on every SKU
+already/prod_01KNTBXADB5BFDKMSAB35J8Z0V,Стол письменный Кантри,co-65-1,CO-65-1 CO-65-2,78 см,COMMON,same body measurement on every SKU
+already/prod_01KNTBXADB5BFDKMSAB35J8Z0V,Стол письменный Кантри,co-65-1,CO-65-1 CO-65-2,side=Справа,VARIANT,axis value is not shared
+already/prod_01KNTBXADDACBVH2BM1JSB2MWH,Комод Оливер,ol-05-1,OL-05-1 OL-05-2,90 см,VARIANT,measurement of OL-05-1
+already/prod_01KNTBXADDACBVH2BM1JSB2MWH,Комод Оливер,ol-05-1,OL-05-1 OL-05-2,56 см,COMMON,same body measurement on every SKU
+already/prod_01KNTBXADDACBVH2BM1JSB2MWH,Комод Оливер,ol-05-1,OL-05-1 OL-05-2,81 см,COMMON,same body measurement on every SKU
+already/prod_01KNTBXADW0MYZ9SEBBAYPS5V4,Стол письменный Оливер,ol-65-1,OL-65-1 OL-65-2,116x60,COMMON,every SKU has this mattress or body pair
+already/prod_01KNTBXADW0MYZ9SEBBAYPS5V4,Стол письменный Оливер,ol-65-1,OL-65-1 OL-65-2,60 см,COMMON,same body measurement on every SKU
+already/prod_01KNTBXADW0MYZ9SEBBAYPS5V4,Стол письменный Оливер,ol-65-1,OL-65-1 OL-65-2,78 см,COMMON,same body measurement on every SKU
+already/prod_01KNTBXADW0MYZ9SEBBAYPS5V4,Стол письменный Оливер,ol-65-1,OL-65-1 OL-65-2,side=Слева,VARIANT,axis value is not shared
+already/prod_01KNTBXAE14DE7Z6FHFMT4X3XZ,Стол письменный Прованс,pv-65-5,PV-65-5 PV-65-6 PV-65-7 PV-65-8,114x65,COMMON,every SKU has this mattress or body pair
+already/prod_01KNTBXAE14DE7Z6FHFMT4X3XZ,Стол письменный Прованс,pv-65-5,PV-65-5 PV-65-6 PV-65-7 PV-65-8,65 см,COMMON,same body measurement on every SKU
+already/prod_01KNTBXAE14DE7Z6FHFMT4X3XZ,Стол письменный Прованс,pv-65-5,PV-65-5 PV-65-6 PV-65-7 PV-65-8,75 см,COMMON,same body measurement on every SKU
+already/prod_01KNTBXAE14DE7Z6FHFMT4X3XZ,Стол письменный Прованс,pv-65-5,PV-65-5 PV-65-6 PV-65-7 PV-65-8,side=Слева,VARIANT,axis value is not shared
+already/prod_01KNTBXAE14DE7Z6FHFMT4X3XZ,Стол письменный Прованс,pv-65-5,PV-65-5 PV-65-6 PV-65-7 PV-65-8,side=Справа,VARIANT,axis value is not shared
+country-london-paris/CONFIGURABLE/bed/-,Кровать Кантри с подъёмным механизмом,co-14-2,CO-14-2 CO-15-2,90x190,VARIANT,this pair is not on every SKU
+country-london-paris/CONFIGURABLE/bed/-,Кровать Кантри с подъёмным механизмом,co-14-2,CO-14-2 CO-15-2,98x199,VARIANT,this pair is not on every SKU
+country-london-paris/CONFIGURABLE/bed/-,Кровать Кантри с подъёмным механизмом,co-14-2,CO-14-2 CO-15-2,190 см,UNKNOWN,centimetres that are not a stored body measurement
+country-london-paris/CONFIGURABLE/bed/-,Кровать Кантри с подъёмным механизмом,co-14-2,CO-14-2 CO-15-2,199 см,COMMON,same body measurement on every SKU
+country-london-paris/CONFIGURABLE/bed/-,Кровать Кантри с подъёмным механизмом,co-14-2,CO-14-2 CO-15-2,110 см,VARIANT,measurement of CO-14-2
+country-london-paris/CONFIGURABLE/bed/-,Кровать Кантри с подъёмным механизмом,co-14-2,CO-14-2 CO-15-2,mattress_size=90 × 190 см,VARIANT,axis value is not shared
+greenwich/STANDARD/bed/-,Кровать Гринвич,greenwich-gr-09-1-bed-90,GR-09-1 GR-12-1 GR-14-1 GR-16-1 GR-18-1,90x200,VARIANT,this pair is not on every SKU
+greenwich/STANDARD/bed/-,Кровать Гринвич,greenwich-gr-09-1-bed-90,GR-09-1 GR-12-1 GR-14-1 GR-16-1 GR-18-1,200 см,UNKNOWN,centimetres that are not a stored body measurement
+greenwich/STANDARD/bed/-,Кровать Гринвич,greenwich-gr-09-1-bed-90,GR-09-1 GR-12-1 GR-14-1 GR-16-1 GR-18-1,221 см,COMMON,same body measurement on every SKU
+greenwich/STANDARD/bed/-,Кровать Гринвич,greenwich-gr-09-1-bed-90,GR-09-1 GR-12-1 GR-14-1 GR-16-1 GR-18-1,105 см,COMMON,same body measurement on every SKU
+greenwich/STANDARD/bed/-,Кровать Гринвич,greenwich-gr-09-1-bed-90,GR-09-1 GR-12-1 GR-14-1 GR-16-1 GR-18-1,mattress_size=90 × 200 см,VARIANT,axis value is not shared
+greenwich/STANDARD/bedside/-,Прикроватная тумба Гринвич,greenwich-gr-08-1,GR-08-1 GR-08-2,66 см,COMMON,same body measurement on every SKU
+greenwich/STANDARD/bedside/-,Прикроватная тумба Гринвич,greenwich-gr-08-1,GR-08-1 GR-08-2,53 см,COMMON,same body measurement on every SKU
+greenwich/STANDARD/wardrobe/-,Гардероб Гринвич,greenwich-gr-02-1,GR-02-1 GR-02-2,119x52,COMMON,every SKU has this mattress or body pair
+greenwich/STANDARD/wardrobe/-,Гардероб Гринвич,greenwich-gr-02-1,GR-02-1 GR-02-2,52 см,COMMON,same body measurement on every SKU
+greenwich/STANDARD/wardrobe/-,Гардероб Гринвич,greenwich-gr-02-1,GR-02-1 GR-02-2,210 см,COMMON,same body measurement on every SKU
+oliver/CONFIGURABLE/banquette/-,Банкетка Оливер,ol-55-1,OL-55-1 OL-55-2,42x35,COMMON,every SKU has this mattress or body pair
+oliver/CONFIGURABLE/banquette/-,Банкетка Оливер,ol-55-1,OL-55-1 OL-55-2,35 см,COMMON,same body measurement on every SKU
+oliver/CONFIGURABLE/banquette/-,Банкетка Оливер,ol-55-1,OL-55-1 OL-55-2,44 см,VARIANT,measurement of OL-55-1
+oliver/CONFIGURABLE/banquette/-,Банкетка Оливер,ol-55-1,OL-55-1 OL-55-2,size=Малая,VARIANT,axis value is not shared
+oliver/CONFIGURABLE/bed/-,Кровать Оливер,ol-14-1,OL-14-1 OL-14-2 OL-15-1 OL-15-2 OL-16-1 OL-16-2 OL-17-1 OL-17-2 OL-17-3 OL-18-1 OL-18-2,90x190,VARIANT,this pair is not on every SKU
+oliver/CONFIGURABLE/bed/-,Кровать Оливер,ol-14-1,OL-14-1 OL-14-2 OL-15-1 OL-15-2 OL-16-1 OL-16-2 OL-17-1 OL-17-2 OL-17-3 OL-18-1 OL-18-2,190 см,UNKNOWN,centimetres that are not a stored body measurement
+oliver/CONFIGURABLE/bed/-,Кровать Оливер,ol-14-1,OL-14-1 OL-14-2 OL-15-1 OL-15-2 OL-16-1 OL-16-2 OL-17-1 OL-17-2 OL-17-3 OL-18-1 OL-18-2,99 см,VARIANT,"measurement of OL-14-2,OL-14-1"
+oliver/CONFIGURABLE/bed/-,Кровать Оливер,ol-14-1,OL-14-1 OL-14-2 OL-15-1 OL-15-2 OL-16-1 OL-16-2 OL-17-1 OL-17-2 OL-17-3 OL-18-1 OL-18-2,203 см,VARIANT,"measurement of OL-15-2,OL-16-2,OL-14-2,OL-15-1,OL-16-1,OL-14-1"
+oliver/CONFIGURABLE/bed/-,Кровать Оливер,ol-14-1,OL-14-1 OL-14-2 OL-15-1 OL-15-2 OL-16-1 OL-16-2 OL-17-1 OL-17-2 OL-17-3 OL-18-1 OL-18-2,115 см,VARIANT,"measurement of OL-15-2,OL-16-2,OL-14-2,OL-15-1,OL-16-1,OL-14-1"
+oliver/CONFIGURABLE/bed/-,Кровать Оливер,ol-14-1,OL-14-1 OL-14-2 OL-15-1 OL-15-2 OL-16-1 OL-16-2 OL-17-1 OL-17-2 OL-17-3 OL-18-1 OL-18-2,footboard=Без изножья,VARIANT,axis value is not shared
+oliver/CONFIGURABLE/bed/-,Кровать Оливер,ol-14-1,OL-14-1 OL-14-2 OL-15-1 OL-15-2 OL-16-1 OL-16-2 OL-17-1 OL-17-2 OL-17-3 OL-18-1 OL-18-2,mattress_size=90 × 190 см,VARIANT,axis value is not shared
+oliver/CONFIGURABLE/book-shelf/-,Полка книжная Оливер,ol-69-1,OL-69-1 OL-69-2 OL-69-3,92 см,COMMON,same body measurement on every SKU
+oliver/CONFIGURABLE/book-shelf/-,Полка книжная Оливер,ol-69-1,OL-69-1 OL-69-2 OL-69-3,47 см,VARIANT,measurement of OL-69-1
+oliver/CONFIGURABLE/chest-tall/-,Комод высокий Оливер,ol-05-3,OL-05-3 OL-05-Н,76 см,COMMON,same body measurement on every SKU
+oliver/CONFIGURABLE/chest-tall/-,Комод высокий Оливер,ol-05-3,OL-05-3 OL-05-Н,132 см,VARIANT,measurement of OL-05-3
+oliver/CONFIGURABLE/clothes-wardrobe/-,Шкаф для одежды Оливер,ol-02-1,OL-02-1 OL-03-1,123 см,VARIANT,measurement of OL-02-1
+oliver/CONFIGURABLE/clothes-wardrobe/-,Шкаф для одежды Оливер,ol-02-1,OL-02-1 OL-03-1,211 см,VARIANT,measurement of OL-02-1
+oliver/CONFIGURABLE/clothes-wardrobe/-,Шкаф для одежды Оливер,ol-02-1,OL-02-1 OL-03-1,54 см,VARIANT,measurement of OL-02-1
+oliver/CONFIGURABLE/console/-,Консоль Оливер,ol-44-1,OL-44-1 OL-44-2,100 см,VARIANT,measurement of OL-44-1
+oliver/CONFIGURABLE/console/-,Консоль Оливер,ol-44-1,OL-44-1 OL-44-2,35 см,VARIANT,measurement of OL-44-1
+oliver/CONFIGURABLE/console/-,Консоль Оливер,ol-44-1,OL-44-1 OL-44-2,80 см,VARIANT,measurement of OL-44-1
+oliver/CONFIGURABLE/etagere/-,Этажерка Оливер,ol-68-1,OL-68-1 OL-68-2,85 см,COMMON,same body measurement on every SKU
+oliver/CONFIGURABLE/etagere/-,Этажерка Оливер,ol-68-1,OL-68-1 OL-68-2,32 см,COMMON,same body measurement on every SKU
+oliver/CONFIGURABLE/etagere/-,Этажерка Оливер,ol-68-1,OL-68-1 OL-68-2,91 см,VARIANT,measurement of OL-68-1
+oliver/CONFIGURABLE/etagere/-,Этажерка Оливер,ol-68-1,OL-68-1 OL-68-2,size=Малая,VARIANT,axis value is not shared
+oliver/CONFIGURABLE/sofa/-,Диван Оливер,ol-57-1,OL-57-1 OL-57-2,163 см,VARIANT,measurement of OL-57-1
+oliver/CONFIGURABLE/sofa/-,Диван Оливер,ol-57-1,OL-57-1 OL-57-2,91 см,COMMON,same body measurement on every SKU
+oliver/CONFIGURABLE/sofa/-,Диван Оливер,ol-57-1,OL-57-1 OL-57-2,93 см,COMMON,same body measurement on every SKU
+oliver/CONFIGURABLE/sofa/-,Диван Оливер,ol-57-1,OL-57-1 OL-57-2,size=Малый,VARIANT,axis value is not shared
+oliver/CONFIGURABLE/transformer/-,Кровать-трансформер Оливер,ol-95-1,OL-95-1 OL-95-3,80x150,COMMON,every SKU has this mattress or body pair
+oliver/CONFIGURABLE/transformer/-,Кровать-трансформер Оливер,ol-95-1,OL-95-1 OL-95-3,91x181,COMMON,every SKU has this mattress or body pair
+oliver/CONFIGURABLE/transformer/-,Кровать-трансформер Оливер,ol-95-1,OL-95-1 OL-95-3,150 см,UNKNOWN,centimetres that are not a stored body measurement
+oliver/CONFIGURABLE/transformer/-,Кровать-трансформер Оливер,ol-95-1,OL-95-1 OL-95-3,181 см,COMMON,same body measurement on every SKU
+oliver/CONFIGURABLE/transformer/-,Кровать-трансформер Оливер,ol-95-1,OL-95-1 OL-95-3,118 см,COMMON,same body measurement on every SKU
+oliver/STANDARD/rail/-,Бортик к кровати,ol-84-1,OL-84-1 OL-84-2,70 см,VARIANT,measurement of OL-84-1
+oliver/STANDARD/rail/-,Бортик к кровати,ol-84-1,OL-84-1 OL-84-2,30 см,COMMON,same body measurement on every SKU
+oliver/STANDARD/rail/-,Бортик к кровати,ol-84-1,OL-84-1 OL-84-2,100 см,VARIANT,measurement of OL-84-2
+oliver/STANDARD/rail/-,Бортик к кровати,ol-84-1,OL-84-1 OL-84-2,size=Малый,VARIANT,axis value is not shared
+provence/CONFIGURABLE/banquette/-,Банкетка Прованс,pv-55-1,PV-55-1 PV-55-2,47x40,VARIANT,this pair is not on every SKU
+provence/CONFIGURABLE/banquette/-,Банкетка Прованс,pv-55-1,PV-55-1 PV-55-2,40 см,COMMON,same body measurement on every SKU
+provence/CONFIGURABLE/banquette/-,Банкетка Прованс,pv-55-1,PV-55-1 PV-55-2,45 см,COMMON,same body measurement on every SKU
+provence/CONFIGURABLE/banquette/-,Банкетка Прованс,pv-55-1,PV-55-1 PV-55-2,size=Малая,VARIANT,axis value is not shared
+provence/CONFIGURABLE/bed/-,Кровать Прованс без изножья,pv-14-1,PV-14-1 PV-15-1 PV-15-2 PV-16-1 PV-16-2 PV-17-1 PV-18-1,90x190,VARIANT,this pair is not on every SKU
+provence/CONFIGURABLE/bed/-,Кровать Прованс без изножья,pv-14-1,PV-14-1 PV-15-1 PV-15-2 PV-16-1 PV-16-2 PV-17-1 PV-18-1,99x201,VARIANT,this pair is not on every SKU
+provence/CONFIGURABLE/bed/-,Кровать Прованс без изножья,pv-14-1,PV-14-1 PV-15-1 PV-15-2 PV-16-1 PV-16-2 PV-17-1 PV-18-1,190 см,UNKNOWN,centimetres that are not a stored body measurement
+provence/CONFIGURABLE/bed/-,Кровать Прованс без изножья,pv-14-1,PV-14-1 PV-15-1 PV-15-2 PV-16-1 PV-16-2 PV-17-1 PV-18-1,201 см,VARIANT,"measurement of PV-15-1,PV-16-1,PV-14-1,PV-15-2,PV-16-2"
+provence/CONFIGURABLE/bed/-,Кровать Прованс без изножья,pv-14-1,PV-14-1 PV-15-1 PV-15-2 PV-16-1 PV-16-2 PV-17-1 PV-18-1,106 см,VARIANT,measurement of PV-14-1
+provence/CONFIGURABLE/bed/-,Кровать Прованс без изножья,pv-14-1,PV-14-1 PV-15-1 PV-15-2 PV-16-1 PV-16-2 PV-17-1 PV-18-1,mattress_size=90 × 190 см,VARIANT,axis value is not shared
+provence/CONFIGURABLE/clothes-wardrobe/-,Шкаф для одежды Прованс,pv-02-1,PV-02-1 PV-03-1,120 см,VARIANT,measurement of PV-02-1
+provence/CONFIGURABLE/clothes-wardrobe/-,Шкаф для одежды Прованс,pv-02-1,PV-02-1 PV-03-1,63 см,COMMON,same body measurement on every SKU
+provence/CONFIGURABLE/clothes-wardrobe/-,Шкаф для одежды Прованс,pv-02-1,PV-02-1 PV-03-1,208 см,VARIANT,measurement of PV-02-1
+provence/CONFIGURABLE/desk-two/-,Стол письменный двухтумбовый Прованс,pv-66-6,PV-66-6 PV-66-7,153x70,VARIANT,this pair is not on every SKU
+provence/CONFIGURABLE/desk-two/-,Стол письменный двухтумбовый Прованс,pv-66-6,PV-66-6 PV-66-7,70 см,COMMON,same body measurement on every SKU
+provence/CONFIGURABLE/etagere/-,Этажерка Прованс,pv-68-1,PV-68-1 PV-68-2,48x35,VARIANT,this pair is not on every SKU
+provence/CONFIGURABLE/etagere/-,Этажерка Прованс,pv-68-1,PV-68-1 PV-68-2,35 см,VARIANT,measurement of PV-68-1
+provence/CONFIGURABLE/etagere/-,Этажерка Прованс,pv-68-1,PV-68-1 PV-68-2,80 см,VARIANT,measurement of PV-68-1
+provence/CONFIGURABLE/etagere/-,Этажерка Прованс,pv-68-1,PV-68-1 PV-68-2,size=Малая,VARIANT,axis value is not shared
+willie-winkie/CONFIGURABLE/willie-chest/Полевые цветы,Комод Полевые цветы,pa-05-1,pa-05-1 pa-05-3,44 см,UNKNOWN,centimetres that are not a stored body measurement
+willie-winkie/CONFIGURABLE/willie-chest/Полевые цветы,Комод Полевые цветы,pa-05-1,pa-05-1 pa-05-3,form=Высокий,VARIANT,axis value is not shared
+willie-winkie/CONFIGURABLE/willie-chest/Полевые цветы,Комод Полевые цветы,pa-05-1,pa-05-1 pa-05-3,form=Стандартный,VARIANT,axis value is not shared
+willie-winkie/CONFIGURABLE/willie-chest/Рыцари,Комод Рыцари,te-05-1,te-05-1 te-05-3,56 см,UNKNOWN,centimetres that are not a stored body measurement
+willie-winkie/CONFIGURABLE/willie-chest/Рыцари,Комод Рыцари,te-05-1,te-05-1 te-05-3,44 см,UNKNOWN,centimetres that are not a stored body measurement
+willie-winkie/CONFIGURABLE/willie-chest/Рыцари,Комод Рыцари,te-05-1,te-05-1 te-05-3,form=Стандартный,VARIANT,axis value is not shared
+willie-winkie/CONFIGURABLE/willie-chest/Сказочное королевство,Комод Сказочное королевство,fk-05-1,fk-05-1 fk-05-3,44 см,UNKNOWN,centimetres that are not a stored body measurement
+willie-winkie/CONFIGURABLE/willie-chest/Сказочное королевство,Комод Сказочное королевство,fk-05-1,fk-05-1 fk-05-3,form=Стандартный,VARIANT,axis value is not shared

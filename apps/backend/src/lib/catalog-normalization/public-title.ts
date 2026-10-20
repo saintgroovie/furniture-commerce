@@ -15,6 +15,10 @@ import {
   extractPedestalDeskCode,
 } from "./pedestal-desk-codes"
 import {
+  phraseBuyerTitle,
+  resolveTitleCollectionSlug,
+} from "./buyer-title-phrasing"
+import {
   MOTIF_LEGACY_ENGLISH_TITLES,
   motifBuyerDisplayName,
 } from "../motif-theme"
@@ -88,6 +92,11 @@ function polishMeasureStars(s: string): string {
   return s.replace(/(\d)\s*\*\s*(\d)/g, "$1 × $2")
 }
 
+/** Derived titles only: also space a bare «90×190» so sibling titles read the same. */
+function polishDerivedMeasures(s: string): string {
+  return s.replace(/(\d)\s*[*×]\s*(\d)/g, "$1 × $2")
+}
+
 function stripPedestalCode(s: string): string {
   return s.replace(/(?:^|[\s.])(ЯП|ПЯ|ЯЯ|ПП)\s*$/u, "").trim()
 }
@@ -103,6 +112,14 @@ function collectionFromHandle(handle: string | null | undefined): string | null 
 /** Legacy CS-Cart depth/width/height tails that already live in structured data. */
 const TECH_DIM_TAIL_RE =
   /\s*\(\s*(?:гл|шир|выс)\.?\s*\d+(?:\s*мм)?\s*\)\s*$/iu
+
+/** «Шкаф комбинированный 560 Albion»: a bare number is dropped only when it equals the structured depth. */
+function structuredDepthMm(meta: Record<string, unknown>): number | null {
+  const dims = meta.dimensions
+  if (!dims || typeof dims !== "object" || Array.isArray(dims)) return null
+  const depth = (dims as Record<string, unknown>).depth_mm
+  return typeof depth === "number" && Number.isInteger(depth) && depth > 0 ? depth : null
+}
 
 function isWillieOrKidsTitleScope(meta: Record<string, unknown>): boolean {
   if (meta.storefront_section === "kids") return true
@@ -219,6 +236,17 @@ export function stripLegacyKidsCatalogTitleNoise(
   if (withoutDim !== next) {
     next = withoutDim.trim()
     notes.push("stripped_technical_dimension_tail")
+  }
+  const depth = structuredDepthMm(meta)
+  if (depth) {
+    const withoutBareDepth = next.replace(
+      new RegExp(`(?<=\\p{L}\\s)${depth}(?=\\s+[A-Za-z]|\\s*$)(?!\\s*(?:мм|см|mm|cm)(?![\\p{L}]))`, "iu"),
+      " "
+    )
+    if (withoutBareDepth !== next) {
+      next = withoutBareDepth
+      notes.push("stripped_bare_depth_code")
+    }
   }
   if (hasSelectableMotif(meta)) {
     for (const phrase of collectSelectableMotifPhrases(meta)) {
@@ -384,8 +412,17 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
     notes.push("stripped_hinge_side_parenthetical")
   }
 
+  const phrased = phraseBuyerTitle(
+    publicTitle,
+    resolveTitleCollectionSlug(product.handle, meta)
+  )
+  if (phrased.title !== publicTitle) {
+    publicTitle = phrased.title
+    notes.push(...phrased.notes)
+  }
+
   return {
-    public_title: polishMeasureStars(normalizeWhitespace(publicTitle)),
+    public_title: polishDerivedMeasures(normalizeWhitespace(publicTitle)),
     source,
     legacy_title: legacy,
     pedestal_code: expanded.code ?? extractPedestalDeskCode(base),
@@ -393,4 +430,4 @@ export function resolvePublicProductTitle(product: PublicTitleInput): PublicTitl
   }
 }
 
-export const PUBLIC_TITLE_TRANSFORM_VERSION = "catalog-normalization-public-title-v3"
+export const PUBLIC_TITLE_TRANSFORM_VERSION = "catalog-normalization-public-title-v4"

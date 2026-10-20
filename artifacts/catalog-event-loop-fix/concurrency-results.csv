@@ -1,0 +1,7 @@
+runtime,n,wall_ms,statuses,bytes
+baseline,1,1041,200,558274
+baseline,2,1607,200,558274
+baseline,4,3355,200,558274
+candidate,1,1691,200,558274
+candidate,2,1292,200,558274
+candidate,4,1266,200,558274
