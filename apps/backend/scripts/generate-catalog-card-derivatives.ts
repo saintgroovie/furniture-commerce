@@ -6,12 +6,13 @@
  *   yarn generate:catalog-card-derivatives
  *   yarn generate:catalog-card-derivatives -- --limit=50
  *   yarn generate:catalog-card-derivatives -- --dry-run
+ *   yarn generate:catalog-card-derivatives -- --include-imports
  */
 import fs from "node:fs"
 import path from "node:path"
 import sharp from "sharp"
 
-const ROOT = path.resolve(process.cwd(), "static/products")
+const ROOT = path.resolve(process.cwd(), "static")
 const CARD_WIDTH = 720
 const QUALITY = 78
 const IMAGE_EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"])
@@ -19,12 +20,14 @@ const IMAGE_EXT = new Set([".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"])
 function parseArgs(argv: string[]) {
   let dryRun = false
   let limit = 0
+  let includeImports = false
   for (const a of argv) {
     if (a === "--dry-run") dryRun = true
+    if (a === "--include-imports") includeImports = true
     const m = a.match(/^--limit=(\d+)$/)
     if (m) limit = Number(m[1])
   }
-  return { dryRun, limit }
+  return { dryRun, limit, includeImports }
 }
 
 function walkImages(dir: string, out: string[] = []): string[] {
@@ -84,8 +87,11 @@ async function generateOne(
 }
 
 async function main() {
-  const { dryRun, limit } = parseArgs(process.argv.slice(2))
-  const all = walkImages(ROOT)
+  const { dryRun, limit, includeImports } = parseArgs(process.argv.slice(2))
+  const all = [
+    ...walkImages(path.join(ROOT, "products")),
+    ...(includeImports ? walkImages(path.join(ROOT, "imports")) : []),
+  ]
   const targets = limit > 0 ? all.slice(0, limit) : all
   console.log(
     JSON.stringify(

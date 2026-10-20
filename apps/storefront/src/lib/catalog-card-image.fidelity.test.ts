@@ -22,6 +22,8 @@ assert.equal(
   "/product-static/products/greenwich/derivatives/card/GR-09-1_main_01.webp"
 )
 assert.equal(toCatalogCardDerivativePath("/uploads/x.png"), null)
+assert.equal(toCatalogCardDerivativePath("/product-static/imports/batch/photo.png"), "/product-static/imports/batch/derivatives/card/photo.webp")
+assert.equal(resolveCatalogCardImageSrc("https://woodright.ru/product-static/imports/batch/photo.png", { preferDerivative: true }), "/product-static/imports/batch/derivatives/card/photo.webp")
 assert.equal(
   toCatalogCardDerivativePath(
     "/static/products/oliver/ol-05-%D0%BD_legacy_main.jpg"
