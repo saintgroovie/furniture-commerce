@@ -572,7 +572,8 @@ function ProductCardMediaGalleryCoreInner({
 
   // Catalog: keep hero on quality-resolved main unless a strip thumb is selected.
   if (layout !== "pdp" && activeGalleryUrl == null) {
-    const next = cardQualityMedia.mainSrc.trim()
+    const main = cardQualityMedia.mainSrc.trim()
+    const next = knownGoodSrcByLogical[main] ?? main
     if (next && next !== displayHeroSrc) {
       setDisplayHeroSrc(next)
       setHeroFailed(false)

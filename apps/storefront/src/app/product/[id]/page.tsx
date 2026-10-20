@@ -619,7 +619,8 @@ export default async function ProductPage({
     name: getProductSeoName(product) || "Товар",
     description: getSeoDescriptionSource(product),
     url: canonicalUrl,
-    image: mainImage,
+    images: [pdpMainSrc, ...pdpResolvedExtras],
+    dimensions: dim ? pdpDimensionCells(dim) : [],
     sku: article,
     offerPriceRub,
   })

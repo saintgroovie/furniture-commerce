@@ -44,10 +44,6 @@ import {
   resolvePdpMediaBundle,
   resolveStorefrontProductImageSrc,
 } from "@/lib/product-images"
-import {
-  resolveCatalogCardHeroSrc,
-  resolveCatalogCardMediaBundle,
-} from "@/lib/catalog-card-image"
 import { productTypeBadgeLabels, pdpCopy, promotionCopy } from "@/lib/woodright-copy"
 
 type Product = {
@@ -74,7 +70,7 @@ const BADGE_LABELS = productTypeBadgeLabels
 function cardThumbnailSrc(product: Product): string | null {
   const src = cardThumbnailSrcFromProduct(product as Record<string, unknown>)
   if (!src) return null
-  return resolveCatalogCardHeroSrc(src, resolveStorefrontProductImageSrc)
+  return resolveStorefrontProductImageSrc(src)
 }
 
 export function ProductCard({
@@ -282,15 +278,12 @@ export function ProductCard({
           ])
 
   const storefrontBundle = resolvePdpMediaBundle(mainSrc, extraSrcs)
-  const bundled = resolveCatalogCardMediaBundle(
-    storefrontBundle.mainSrc,
-    storefrontBundle.extraSrcs,
-    resolveStorefrontProductImageSrc
-  )
+  // The gallery resolves derivatives once, retaining the exact original
+  // extension for recovery when a WebP is unavailable.
   const { mainSrc: cardMainSrc, extraSrcs: cardExtraSrcs } =
     resolveCardHeroAndNearDuplicateExtras(
-      bundled.mainSrc,
-      bundled.extraSrcs,
+      storefrontBundle.mainSrc,
+      storefrontBundle.extraSrcs,
       handle
     )
 

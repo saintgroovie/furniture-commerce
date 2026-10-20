@@ -7,6 +7,12 @@ import assert from "node:assert/strict"
 import { toCatalogBrowseClientProduct } from "./catalog-browse-client-product"
 
 {
+  const unique = Array.from({ length: 6 }, (_, i) => ({ url: `/static/photo-${i}.jpg` }))
+  const out = toCatalogBrowseClientProduct({ id: "duplicate-gallery", images: unique.flatMap((i) => [i, i]) })
+  assert.deepEqual(out.images, unique.slice(0, 5))
+}
+
+{
   const raw = {
     id: "p1",
     handle: "h1",

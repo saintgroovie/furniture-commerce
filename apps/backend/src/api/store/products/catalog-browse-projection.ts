@@ -13,7 +13,7 @@
 export const CATALOG_BROWSE_MAX_IMAGES = 24
 
 /** Per finish/color token budget (main + a few strip extras). */
-export const CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN = 3
+export const CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN = 5
 
 /** Max media URLs kept per execution / matrix row on browse (main + strip). */
 export const CATALOG_BROWSE_MAX_EXECUTION_URLS = 5
@@ -226,11 +226,14 @@ function projectCatalogImages(images: unknown): Array<{ url: string }> {
   if (!Array.isArray(images)) return []
   const out: Array<{ url: string }> = []
   const perToken = new Map<string, number>()
+  const seen = new Set<string>()
   for (const entry of images) {
     if (!entry || typeof entry !== "object") continue
     const url = (entry as { url?: unknown }).url
     if (typeof url !== "string" || !url.trim()) continue
     const trimmed = url.trim()
+    if (seen.has(trimmed)) continue
+    seen.add(trimmed)
     const token = browseImageTokenKey(trimmed)
     const used = perToken.get(token) ?? 0
     if (used >= CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN) continue
