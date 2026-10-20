@@ -1,0 +1,26 @@
+name: Woodright workspace checks
+on:
+  pull_request:
+    paths:
+      - apps/workspace/**
+      - .github/workflows/workspace-checks.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  workspace:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/workspace
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/workspace/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npm run build
+      - run: node scripts/smoke-http.mjs
