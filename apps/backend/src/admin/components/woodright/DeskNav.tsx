@@ -14,13 +14,13 @@ export type DeskSection =
   | "site"
 
 const ITEMS: Array<{ id: DeskSection; label: string; to: string }> = [
-  { id: "today", label: "Сегодня", to: "/woodright" },
-  { id: "catalog", label: "Каталог", to: "/woodright/products" },
+  { id: "today", label: "Каталог", to: "/woodright" },
+  { id: "catalog", label: "Все товары", to: "/woodright/products" },
   { id: "requests", label: "Заявки", to: "/woodright/requests" },
   { id: "people", label: "Люди", to: "/woodright/people" },
   { id: "rooms", label: "Комнаты", to: "/woodright/rooms" },
   { id: "promo", label: "Акции", to: "/woodright/catalog-promo" },
-  { id: "media", label: "Медиа", to: "/woodright/media" },
+  { id: "media", label: "Съёмка", to: "/woodright/media" },
   { id: "production", label: "Производство", to: "/woodright/production" },
   { id: "site", label: "Сайт", to: "/woodright/contacts" },
 ]

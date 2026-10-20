@@ -46,6 +46,9 @@ COMPONENT="pair"
 RETAINED_REV=""
 EXPECT_CURRENT_SF=""
 EXPECT_CURRENT_BE=""
+EXPECT_CS=""
+OPERATION="approve"
+CANCEL_REASON=""
 REQUIRE_LIVE_MATCH="${WOODRIGHT_OWNER_APPROVAL_REQUIRE_LIVE_MATCH:-1}"
 
 log() { printf '%s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
@@ -91,6 +94,12 @@ while [[ $# -gt 0 ]]; do
     --expected-current-storefront-digest=*) EXPECT_CURRENT_SF="${1#--expected-current-storefront-digest=}"; shift ;;
     --expected-current-backend-digest) EXPECT_CURRENT_BE="${2:?}"; shift 2 ;;
     --expected-current-backend-digest=*) EXPECT_CURRENT_BE="${1#--expected-current-backend-digest=}"; shift ;;
+    --expected-previous-approval-checksum) EXPECT_CS="${2:?}"; shift 2 ;;
+    --expected-previous-approval-checksum=*) EXPECT_CS="${1#--expected-previous-approval-checksum=}"; shift ;;
+    --operation) OPERATION="${2:?}"; shift 2 ;;
+    --operation=*) OPERATION="${1#--operation=}"; shift ;;
+    --cancel-reason|--supersede-reason) CANCEL_REASON="${2:?}"; shift 2 ;;
+    --cancel-reason=*|--supersede-reason=*) CANCEL_REASON="${1#*=}"; shift ;;
     *) die "unknown arg: $1" ;;
   esac
 done
@@ -112,7 +121,20 @@ esac
 if [[ "$WOODRIGHT_ENVIRONMENT" == "public_production" ]]; then
   export WOODRIGHT_OWNER_APPROVAL_STRICT_ENVIRONMENT=1
 fi
+case "$OPERATION" in
+  approve|cancel|supersede) ;;
+  *) die "operation must be approve, cancel, or supersede (got $OPERATION)" ;;
+esac
 
+if [[ "$OPERATION" == "cancel" ]]; then
+  [[ ${#CANCEL_REASON} -ge 8 && ${#CANCEL_REASON} -le 160 ]] || die "cancel-reason must be 8-160 characters"
+  case "$CANCEL_REASON" in
+    *$'\n'*|*$'\r'*) die "cancel-reason must be one line" ;;
+  esac
+  [[ -n "$EVIDENCE_REF" && "$EVIDENCE_REF" == /* && -e "$EVIDENCE_REF" ]] \
+    || die "evidence-reference must be an absolute existing path"
+  [[ -n "$EVIDENCE_DIR" && "$EVIDENCE_DIR" == /* ]] || die "evidence-dir must be absolute"
+else
 [[ "$APP_SHA" =~ ^[0-9a-f]{40}$ ]] || die "application-sha must be full 40-hex"
 [[ "$BE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || die "backend-digest invalid"
 [[ "$SF_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || die "storefront-digest invalid"
@@ -138,6 +160,13 @@ export WOODRIGHT_OWNER_APPROVAL_COMPONENT="$COMPONENT"
 [[ -n "$EVIDENCE_REF" && "$EVIDENCE_REF" == /* && -e "$EVIDENCE_REF" ]] \
   || die "evidence-reference must be an absolute existing path"
 [[ -n "$EVIDENCE_DIR" && "$EVIDENCE_DIR" == /* ]] || die "evidence-dir must be absolute"
+if [[ "$OPERATION" == "supersede" ]]; then
+  [[ ${#CANCEL_REASON} -ge 8 && ${#CANCEL_REASON} -le 160 ]] || die "supersede-reason must be 8-160 characters"
+  case "$CANCEL_REASON" in
+    *$'\n'*|*$'\r'*) die "supersede-reason must be one line" ;;
+  esac
+fi
+fi
 ISSUED_AT="${ISSUED_AT:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
 
 # Never honor path override for writes - always canonical SoT.
@@ -149,14 +178,98 @@ DEST="$(wr_owner_approved_default_path "$WOODRIGHT_ENVIRONMENT")"
 DEST_DIR="$(dirname "$DEST")"
 mkdir -p "$EVIDENCE_DIR/json"
 
-STAGED="$EVIDENCE_DIR/json/OWNER_APPROVED_RELEASE.staged.json"
+if [[ "$OPERATION" == "cancel" ]]; then
+  if ! wr_owner_approved_cas_precheck "$WOODRIGHT_ENVIRONMENT" "$EXPECT_CS"; then
+    die "cancel refused result=${WR_OWNER_APPROVAL_RESULT} expected=${EXPECT_CS:-<empty>}"
+  fi
+  if [[ "$APPLY" != "1" ]]; then
+    log "PLANNED owner approval cancel env=$WOODRIGHT_ENVIRONMENT checksum=$EXPECT_CS"
+    log "PLANNED no_container_mutation no_pin_write no_image_pull"
+    log "DRY_RUN_OK (set --apply to write)"
+    exit 0
+  fi
+  [[ "$CONFIRM" == "I_UNDERSTAND_OWNER_APPROVAL_CANCEL" ]] || die "confirm-mutation required for cancel"
+  WR_STAGING_MUTATION_LOCK_DIR="$(dirname "$WR_STAGING_MUTATION_LOCK_PATH")"
+  WR_STAGING_MUTATION_LOCK_META="${WR_STAGING_MUTATION_LOCK_PATH}.meta"
+  wr_staging_mutation_lock_acquire \
+    "actor=reconcile-owner-approved-release" \
+    "command=$0 --environment $WOODRIGHT_ENVIRONMENT --operation cancel" \
+    "target=cancel" \
+    || exit 3
+  if ! wr_owner_approved_cas_precheck "$WOODRIGHT_ENVIRONMENT" "$EXPECT_CS"; then
+    die "cancel refused under lock result=${WR_OWNER_APPROVAL_RESULT}"
+  fi
+  case "${WR_OA_RESERVATION_STATE:-}" in
+    reserved|legacy) ;;
+    cancelled)
+      log "OWNER_APPROVAL_UNCHANGED checksum=$WR_OA_CHECKSUM"
+      exit 0
+      ;;
+    *) die "OWNER_APPROVAL_CANCEL_REFUSED state=${WR_OA_RESERVATION_STATE:-empty}" ;;
+  esac
+  PREVIOUS_CS="$WR_OA_CHECKSUM"
+  PREVIOUS_GEN="${WR_OA_GENERATION:-}"
+  export WR_OA_TRANSITION_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  export WR_OA_ACTOR="$(id -un)"
+  export WR_OA_PREVIOUS_GENERATION="$PREVIOUS_GEN"
+  # Private staging. The evidence copy is audit-only and is never installed.
+  STAGED="$(mktemp "$EVIDENCE_DIR/json/owner-approved-release.staged.XXXXXX")"
+  umask 027
+  python3 - "$WR_OA_PATH" "$STAGED" "$CANCEL_REASON" "$EVIDENCE_REF" "$PREVIOUS_CS" <<'PY' || die "cancel document build failed"
+import hashlib, json, os, sys
+src, dest, reason, evid, previous_cs = sys.argv[1:6]
+doc = json.loads(open(src, encoding="utf-8").read())
+issued = os.environ["WR_OA_TRANSITION_AT"]
+doc["reservation_state"] = "cancelled"
+doc["owner_decision"] = "approved"
+doc["reservation_transition_at"] = issued
+doc["reservation_transition_reason"] = reason
+doc["cancelled_by"] = os.environ.get("WR_OA_ACTOR", "")
+doc["previous_approval_checksum"] = previous_cs
+doc["evidence_reference"] = evid
+doc["tooling_schema_version"] = "owner-approved-release-v2"
+material = "|".join([
+    doc.get("environment", ""),
+    doc.get("component") or "pair",
+    doc.get("application_sha", ""),
+    previous_cs,
+    "cancelled",
+    issued,
+    reason,
+])
+doc["approval_generation"] = "apr1-" + hashlib.sha256(material.encode()).hexdigest()[:32]
+with open(dest, "w", encoding="utf-8") as handle:
+    json.dump(doc, handle, indent=2, sort_keys=True)
+    handle.write("\n")
+    handle.flush()
+    os.fsync(handle.fileno())
+PY
+  if [[ -f "$DEST" && ! -L "$DEST" ]]; then
+    cp -p "$DEST" "$EVIDENCE_DIR/json/OWNER_APPROVED_RELEASE.backup.json"
+    wr_owner_approved_sha256_file "$EVIDENCE_DIR/json/OWNER_APPROVED_RELEASE.backup.json" \
+      >"$EVIDENCE_DIR/json/owner-approved-release.backup.sha256"
+  fi
+  CS="$(wr_owner_approved_sha256_file "$STAGED")"
+  cp -p "$STAGED" "$EVIDENCE_DIR/json/OWNER_APPROVED_RELEASE.staged.json"
+  wr_owner_approved_atomic_install "$STAGED" "$DEST" "$CS" \
+    || die "atomic cancel install failed"
+  wr_owner_approved_load "$WOODRIGHT_ENVIRONMENT" || die "cancel post-write load failed"
+  wr_owner_approved_record_transition "$EVIDENCE_DIR" cancel "$PREVIOUS_CS" "$CS" "$CANCEL_REASON" || true
+  log "OWNER_APPROVAL_CANCELLED path=$DEST checksum=$CS previous=$PREVIOUS_CS"
+  exit 0
+fi
+
+STAGED="$(mktemp "$EVIDENCE_DIR/json/owner-approved-release.staged.XXXXXX")"
 umask 027
 python3 - "$STAGED" "$WOODRIGHT_ENVIRONMENT" "$APP_SHA" "$BE_DIGEST" "$SF_DIGEST" \
   "$OWNER_AUTH_ID" "$ISSUED_AT" "$PREV_SHA" "$EVIDENCE_REF" \
-  "$COMPONENT" "$RETAINED_REV" "$EXPECT_CURRENT_SF" "$EXPECT_CURRENT_BE" <<'PY'
-import json, sys
+  "$COMPONENT" "$RETAINED_REV" "$EXPECT_CURRENT_SF" "$EXPECT_CURRENT_BE" \
+  "$EXPECT_CS" "$OPERATION" "$CANCEL_REASON" <<'PY'
+import hashlib, json, os, sys
 (path, env, sha, be, sf, auth, issued, prev, evid,
- component, retained_rev, expect_sf, expect_be) = sys.argv[1:14]
+ component, retained_rev, expect_sf, expect_be,
+ previous_cs, operation, reason) = sys.argv[1:17]
+material = "|".join([env, component, sha, be, sf, issued, previous_cs, operation])
 doc = {
   "schema_version": 1,
   "environment": env,
@@ -167,8 +280,15 @@ doc = {
   "owner_authorization_id": auth,
   "issued_at": issued,
   "evidence_reference": evid,
-  "tooling_schema_version": "owner-approved-release-v1",
+  "tooling_schema_version": "owner-approved-release-v2",
+  "approval_generation": "apr1-" + hashlib.sha256(material.encode()).hexdigest()[:32],
+  "reservation_state": "reserved",
 }
+if previous_cs:
+  doc["previous_approval_checksum"] = previous_cs
+if operation == "supersede":
+  doc["reservation_transition_reason"] = reason
+  doc["supersedes_approval_checksum"] = previous_cs
 if component == "storefront":
   doc["component"] = "storefront"
   doc["retained_backend_revision"] = retained_rev
@@ -178,31 +298,60 @@ elif component != "pair":
   raise SystemExit("refused component")
 if prev:
   doc["previous_approved_application_sha"] = prev
-with open(path, "w", encoding="utf-8") as f:
-  json.dump(doc, f, indent=2, sort_keys=True)
-  f.write("\n")
+with open(path, "w", encoding="utf-8") as handle:
+  json.dump(doc, handle, indent=2, sort_keys=True)
+  handle.write("\n")
+  handle.flush()
+  os.fsync(handle.fileno())
 PY
 chmod 0644 "$STAGED"
 CS="$(wr_owner_approved_sha256_file "$STAGED")"
+# Audit snapshot only. Install stays on the private mktemp path above.
+cp -p "$STAGED" "$EVIDENCE_DIR/json/OWNER_APPROVED_RELEASE.staged.json"
 printf '%s\n' "$CS" >"$EVIDENCE_DIR/json/owner-approved-release.staged.sha256"
 printf '%s\n' "$DEST" >"$EVIDENCE_DIR/json/owner-approved-release.dest-path.txt"
 
-log "PLANNED owner approval write env=$WOODRIGHT_ENVIRONMENT sha=$APP_SHA dest=$DEST checksum=$CS"
+log "PLANNED owner approval write env=$WOODRIGHT_ENVIRONMENT sha=$APP_SHA dest=$DEST checksum=$CS operation=$OPERATION"
 log "PLANNED no_container_mutation no_pin_write no_image_pull"
 log "PLANNED require_live_match=$REQUIRE_LIVE_MATCH allow_predeploy=$ALLOW_PREDEPLOY"
 
 if [[ "$APPLY" != "1" ]]; then
+  if [[ -n "$EXPECT_CS" ]]; then
+    if ! wr_owner_approved_cas_precheck "$WOODRIGHT_ENVIRONMENT" "$EXPECT_CS"; then
+      die "dry-run CAS refused result=${WR_OWNER_APPROVAL_RESULT}"
+    fi
+    if [[ "$OPERATION" == "approve" && "${WR_OA_RESERVATION_STATE:-}" == "reserved" ]]; then
+      if wr_owner_approved_same_candidate "$APP_SHA" "$BE_DIGEST" "$SF_DIGEST" "$COMPONENT" \
+           "$RETAINED_REV" "$EXPECT_CURRENT_SF" "$EXPECT_CURRENT_BE"; then
+        log "PLANNED OWNER_APPROVAL_UNCHANGED"
+      else
+        die "OWNER_APPROVAL_RESERVED checksum=$WR_OA_CHECKSUM"
+      fi
+    fi
+    log "PLANNED cas_ok expected=$EXPECT_CS"
+  else
+    log "PLANNED cas=required_on_apply"
+  fi
   log "DRY_RUN_OK (set --apply to write)"
   exit 0
 fi
 
-[[ "$CONFIRM" == "I_UNDERSTAND_OWNER_APPROVAL_WRITE" ]] || die "confirm-mutation required for apply"
+if [[ "$OPERATION" == "supersede" ]]; then
+  [[ "$CONFIRM" == "I_UNDERSTAND_OWNER_APPROVAL_SUPERSEDE" ]] || die "confirm-mutation required for supersede"
+else
+  [[ "$CONFIRM" == "I_UNDERSTAND_OWNER_APPROVAL_WRITE" ]] || die "confirm-mutation required for apply"
+fi
 [[ "$CONFIRM_SHA" == "$APP_SHA" ]] || die "confirm-sha must exactly equal application-sha"
+if ! wr_owner_approved_cas_precheck "$WOODRIGHT_ENVIRONMENT" "$EXPECT_CS"; then
+  die "apply refused result=${WR_OWNER_APPROVAL_RESULT} expected=${EXPECT_CS:-<empty>}"
+fi
 if [[ "$ALLOW_PREDEPLOY" == "1" ]]; then
   REQUIRE_LIVE_MATCH=0
   log "WARN allow_predeploy_approval=1 live_match disabled"
 fi
 
+WR_STAGING_MUTATION_LOCK_DIR="$(dirname "$WR_STAGING_MUTATION_LOCK_PATH")"
+WR_STAGING_MUTATION_LOCK_META="${WR_STAGING_MUTATION_LOCK_PATH}.meta"
 wr_staging_mutation_lock_acquire \
   "actor=reconcile-owner-approved-release" \
   "command=$0 --environment $WOODRIGHT_ENVIRONMENT --apply" \
@@ -243,6 +392,21 @@ elif [[ "$REQUIRE_LIVE_MATCH" == "1" ]]; then
   log "live_match_ok sha=$APP_SHA"
 fi
 
+if ! wr_owner_approved_cas_precheck "$WOODRIGHT_ENVIRONMENT" "$EXPECT_CS"; then
+  die "apply refused under lock result=${WR_OWNER_APPROVAL_RESULT}"
+fi
+if [[ "${WR_OA_RESERVATION_STATE:-}" == "reserved" && "$OPERATION" != "supersede" ]]; then
+  if wr_owner_approved_same_candidate "$APP_SHA" "$BE_DIGEST" "$SF_DIGEST" "$COMPONENT" \
+       "$RETAINED_REV" "$EXPECT_CURRENT_SF" "$EXPECT_CURRENT_BE"; then
+    log "OWNER_APPROVAL_UNCHANGED checksum=$WR_OA_CHECKSUM"
+    exit 0
+  fi
+  die "OWNER_APPROVAL_RESERVED checksum=$WR_OA_CHECKSUM generation=${WR_OA_GENERATION:-legacy}"
+fi
+if [[ "$OPERATION" == "supersede" && "${WR_OA_RESERVATION_STATE:-}" != "reserved" ]]; then
+  die "OWNER_APPROVAL_SUPERSEDE_REFUSED state=${WR_OA_RESERVATION_STATE:-absent} (supersede requires a reserved approval)"
+fi
+
 mkdir -p "$DEST_DIR"
 BACKUP=""
 if [[ -f "$DEST" && ! -L "$DEST" ]]; then
@@ -251,37 +415,15 @@ if [[ -f "$DEST" && ! -L "$DEST" ]]; then
   printf '%s\n' "$(wr_owner_approved_sha256_file "$BACKUP")" >"$EVIDENCE_DIR/json/owner-approved-release.backup.sha256"
 fi
 
-# Canonical public_production approval is not operator-writable after issuance.
-# The meta directory is not group-writable, so leonid cannot mv a new inode in.
-# Install with sudo, then seal root:woodright-ops 0640. Tests retarget
-# WOODRIGHT_META_ROOT and keep the unprivileged mv path.
-if [[ "$WOODRIGHT_ENVIRONMENT" == "public_production" \
-   && "${WOODRIGHT_META_ROOT:-/srv/woodright/meta}" == "/srv/woodright/meta" \
-   && "$DEST" == "/srv/woodright/meta/public_production/OWNER_APPROVED_RELEASE.json" ]]; then
-  # Sibling + rename. Copying onto the live path can tear the previous approval.
-  SEAL_TMP="${DEST}.seal.$$"
-  [[ ! -e "$SEAL_TMP" && ! -L "$SEAL_TMP" ]] || die "approval seal temp already exists"
-  sudo -n cp "$STAGED" "$SEAL_TMP" || die "sudo stage of production approval failed"
-  sudo -n chown root:woodright-ops "$SEAL_TMP" || { sudo -n rm -f "$SEAL_TMP"; die "approval seal chown failed"; }
-  sudo -n chmod 0640 "$SEAL_TMP" || { sudo -n rm -f "$SEAL_TMP"; die "approval seal chmod failed"; }
-  SEAL_CS="$(wr_owner_approved_sha256_file "$SEAL_TMP")"
-  [[ "$SEAL_CS" == "$CS" ]] || { sudo -n rm -f "$SEAL_TMP"; die "approval seal checksum mismatch before rename"; }
-  sudo -n mv -f "$SEAL_TMP" "$DEST" || die "atomic rename of production approval failed"
-  wr_prod_ownership_apply_access "$DEST" || die "production approval seal failed (required root:woodright-ops 0640)"
-else
-  INSTALL_TMP="${DEST}.tmp.$$"
-  cp "$STAGED" "$INSTALL_TMP"
-  chmod 0644 "$INSTALL_TMP"
-  if [[ "$(id -u)" -eq 0 ]]; then
-    chown leonid:leonid "$INSTALL_TMP" 2>/dev/null || chown 1000:1000 "$INSTALL_TMP" 2>/dev/null || true
-  fi
-  mv -f "$INSTALL_TMP" "$DEST"
-fi
+wr_owner_approved_atomic_install "$STAGED" "$DEST" "$CS" || die "atomic approval install failed"
 FINAL_CS="$(wr_owner_approved_sha256_file "$DEST")"
 [[ "$FINAL_CS" == "$CS" ]] || die "post-write checksum mismatch"
-[[ ! -L "$DEST" ]] || die "dest became symlink"
+export WR_OA_ACTOR="$(id -un)"
+export WR_OA_TRANSITION_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+export WR_OA_PREVIOUS_GENERATION="${WR_OA_GENERATION:-}"
+wr_owner_approved_load "$WOODRIGHT_ENVIRONMENT" || die "post-write load failed result=${WR_OWNER_APPROVAL_RESULT}"
+wr_owner_approved_record_transition "$EVIDENCE_DIR" "$OPERATION" "$EXPECT_CS" "$FINAL_CS" "$CANCEL_REASON" || true
 
-# Post-write gate uses canonical path only (no fixture override).
 unset WOODRIGHT_OWNER_APPROVED_RELEASE_PATH
 unset WOODRIGHT_OWNER_APPROVAL_FIXTURE
 if ! wr_require_owner_approved_release "$WOODRIGHT_ENVIRONMENT" "$APP_SHA" "$BE_DIGEST" "$SF_DIGEST" "$EVIDENCE_DIR" "post_write"; then
@@ -291,18 +433,21 @@ fi
 cat >"$EVIDENCE_DIR/json/owner-approval-write-result.json" <<EOF
 {
   "result": "OWNER_APPROVAL_WRITTEN",
+  "operation": "$OPERATION",
   "path": "$DEST",
   "checksum": "$FINAL_CS",
+  "previous_approval_checksum": "$EXPECT_CS",
   "backup": "$BACKUP",
   "environment": "$WOODRIGHT_ENVIRONMENT",
+  "component": "$COMPONENT",
   "application_sha": "$APP_SHA",
   "backend_digest": "$BE_DIGEST",
   "storefront_digest": "$SF_DIGEST",
-  "owner_authorization_id": "$OWNER_AUTH_ID",
+  "reservation_state": "reserved",
   "require_live_match": "$REQUIRE_LIVE_MATCH",
   "timestamp_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }
 EOF
 
-log "OWNER_APPROVAL_WRITTEN path=$DEST checksum=$FINAL_CS"
+log "OWNER_APPROVAL_WRITTEN path=$DEST checksum=$FINAL_CS previous=$EXPECT_CS operation=$OPERATION"
 exit 0

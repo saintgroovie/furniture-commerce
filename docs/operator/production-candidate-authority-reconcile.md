@@ -214,11 +214,11 @@ mirrors must match after install.
 
 ## Header semantics
 
-`x-woodright-backend-source-sha` and `x-woodright-storefront-source-sha` reflect the component compose env keys.
+`x-woodright-backend-source-sha` and `x-woodright-storefront-source-sha` are the component artifact SHAs. On this candidate stack the compose pins still write them at cutover from the OCI revision, in the same pin transaction as the image refs. Public production does not add that pin: the value is baked into the image.
 
-`x-woodright-release-sha` is emitted only when the pair is unified (both component SHAs present and equal, and equal `WOODRIGHT_RELEASE_SHA`) or when the runtime is legacy (neither component SHA set). A split pair omits the global header.
+`x-woodright-release-sha` is always the application baseline when `WOODRIGHT_RELEASE_SHA` is 40 hex. A split pair still emits it. Application SHA != storefront SHA after a governed component release is expected, not an error.
 
-These headers are diagnostic only: not OCI authority, not a substitute for `EXPECTED_RELEASE` digests, and not a monitor compare key.
+These headers are diagnostic only: not OCI authority, not a substitute for `EXPECTED_RELEASE` digests, and not approval.
 
 ## Success matrix
 

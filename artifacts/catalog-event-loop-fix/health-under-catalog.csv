@@ -1,0 +1,5 @@
+runtime,n,p50_ms,p95_ms,max_ms,body,gt100,gt250,gt500,gt1000
+baseline_client,320,3.41,7.29,21.71,OK,0,0,0,0
+baseline_server,321,2.68,6.38,39,OK,0,0,0,0
+candidate_client,320,3.45,9.65,121.68,OK,1,0,0,0
+candidate_server,321,2.73,7.98,83.66,OK,0,0,0,0

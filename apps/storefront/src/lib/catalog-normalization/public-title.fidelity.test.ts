@@ -47,7 +47,7 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
     title: "Гардероб 2-дв. с ящиками",
     metadata: { canonical_name: "Гардероб Level" },
   })
-  assert.equal(r.public_title, "Гардероб 2-дв. с ящиками Level")
+  assert.equal(r.public_title, "Двухдверный гардероб с ящиками Level")
   assert.equal(r.source, "merged_title_canonical")
 }
 
@@ -59,7 +59,7 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
   })
   assert.equal(r.pedestal_code, "ЯП")
   assert.match(r.public_title, /ящики слева, полки справа/)
-  assert.match(r.public_title, /двухтумбовый/)
+  assert.match(r.public_title, /^Двухтумбовый письменный стол/)
   assert.match(r.public_title, /Provence/)
 }
 
@@ -105,10 +105,38 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
       source_title: "Комод высокий Fairies (гл. 560)",
     },
   })
-  assert.equal(r.public_title, "Комод высокий Fairies")
+  assert.equal(r.public_title, "Высокий комод Fairies")
   assert.equal(r.legacy_title, "Комод высокий Fairies")
   assert.doesNotMatch(r.public_title, /560/)
   assert.doesNotMatch(r.legacy_title ?? "", /560/)
+}
+
+{
+  const wardrobe = (depth: number) =>
+    resolvePublicProductTitle({
+      handle: "te-40-2",
+      title: "Шкаф комбинированный 560 Templars",
+      metadata: {
+        collection: "willie-winkie",
+        motif_slug: "templars",
+        painting_name: "Templars",
+        dimensions: { depth_mm: depth, width_mm: 1930, height_mm: 1973 },
+      },
+    }).public_title
+  assert.doesNotMatch(wardrobe(560), /560/)
+  assert.match(wardrobe(560), /^Шкаф комбинированный/)
+  assert.match(wardrobe(440), /560/)
+
+  const keeps = (title: string, depth: number) =>
+    resolvePublicProductTitle({
+      title,
+      metadata: { collection: "willie-winkie", dimensions: { depth_mm: depth } },
+    }).public_title
+  assert.match(keeps("Полка 900 × 440", 440), /900 × 440/)
+  assert.match(keeps("Полка 900*440", 440), /900 × 440/)
+  assert.match(keeps("Шкаф 560 ММ", 560), /560 ММ/)
+  assert.match(keeps("Шкаф 560 mm", 560), /560 mm/)
+  assert.match(keeps("Этажерка 6 полок", 6), /6 полок/)
 }
 
 {
@@ -172,7 +200,7 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
       family_options: { Размер: "гл.440", "Роспись (мотив)": "Ballet" },
     },
   })
-  assert.equal(r.public_title, "Стеллаж для книг")
+  assert.equal(r.public_title, "Стеллаж для книг Вилли Винки")
   assert.doesNotMatch(r.public_title, /Ballet|Баллет|гл\.|440/)
 }
 
@@ -189,7 +217,7 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
       family_options: { Размер: "гл.440", "Роспись (мотив)": "Ballet" },
     },
   })
-  assert.equal(r.public_title, "Комод высокий")
+  assert.equal(r.public_title, "Высокий комод Вилли Винки")
   assert.doesNotMatch(r.public_title, /Ballet|гл\./)
 }
 
@@ -205,7 +233,7 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
       painting_name: "Infanta",
     },
   })
-  assert.equal(r.public_title, "Стол рабочий")
+  assert.equal(r.public_title, "Рабочий стол Вилли Винки")
 }
 
 {
@@ -242,7 +270,7 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
       canonical_name: "Шкаф для одежды 1-дв. с зеркалом  (руч.лев/пр)",
     },
   })
-  assert.equal(r.public_title, "Шкаф для одежды 1-дв. с зеркалом")
+  assert.equal(r.public_title, "Однодверный шкаф для одежды Оливер с зеркалом")
   assert.doesNotMatch(r.public_title, /ручка|лев\/пр|слева\/справа/)
   assert.ok(r.notes.includes("stripped_hinge_side_parenthetical"))
 }
@@ -261,7 +289,7 @@ import { annotateExecutionPresentations } from "../../../../backend/src/lib/cata
     handle: "ol-08-2",
     title: "Тумбочка прикроватная с дверкой (ручка слева/справа)",
   })
-  assert.equal(nightstand.public_title, "Тумбочка прикроватная с дверкой")
+  assert.equal(nightstand.public_title, "Прикроватная тумба Оливер с дверкой")
 }
 
 {

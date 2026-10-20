@@ -9,6 +9,7 @@
  * mutation are forbidden. The backend image is reuse-only.
  */
 const { execFileSync } = require("child_process")
+const { createHash } = require("node:crypto")
 
 const SHA_RE = /^[0-9a-f]{40}$/
 const DIGEST_RE = /^sha256:[0-9a-f]{64}$/
@@ -61,6 +62,21 @@ function rejectionReason(file) {
   }
   if (!file.startsWith("apps/storefront/")) return `outside_storefront:${file}`
   return null
+}
+
+// The pre-component-revision production Dockerfile cannot satisfy the current
+// image provenance gate. Permit only its byte-exact upgrade already merged in
+// a13a139e (artifact revision ARG/ENV + validation). Any other Dockerfile edit,
+// including a further change to that trusted version, remains forbidden.
+function isComponentRevisionBakeBackport(repo, base, source, file) {
+  if (file !== "apps/storefront/Dockerfile") return false
+  try {
+    const hashAt = (ref) => createHash("sha256").update(execFileSync("git", ["-C", repo, "show", `${ref}:${file}`], { stdio: ["ignore", "pipe", "pipe"] })).digest("hex")
+    return hashAt(base) === "d4dd6d950d8787c6da07f91881f676a9ba2d21be9f0af2fc399f37e7926c39c2"
+      && hashAt(source) === "b9acdbddaca5f7d5742b0ba6f548482685818f0adf6e9d228785d321547f69db"
+  } catch {
+    return false
+  }
 }
 
 function parseArgs(argv) {
@@ -141,7 +157,7 @@ function validateIsolatedStorefrontBake(input) {
     `${input.productionBaseSha}...${input.sourceSha}`,
   ])
   const files = names ? names.split("\0").filter(Boolean) : []
-  const reasons = files.map(rejectionReason).filter(Boolean)
+  const reasons = files.map((file) => isComponentRevisionBakeBackport(input.repo, input.productionBaseSha, input.sourceSha, file) ? null : rejectionReason(file)).filter(Boolean)
   if (reasons.length) fail(`scope rejected: ${reasons.join(", ")}`)
   if (files.some(isMigrationPath)) fail("migration count must be zero")
 

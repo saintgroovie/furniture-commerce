@@ -1,9 +1,10 @@
 import type { Metadata } from "next"
 import { seo } from "@/lib/woodright-copy"
+import { pageTitle } from "@/lib/page-title"
 import { BespokeSubnav } from "@/components/bespoke/bespoke-subnav"
 
 export const metadata: Metadata = {
-  title: seo.bespoke.title,
+  title: pageTitle(seo.bespoke.title),
   description: seo.bespoke.description,
 }
 

@@ -57,13 +57,12 @@ function isValidTierEntry(value: unknown): value is {
  * two tiers, legacy label-only shape, missing metadata).
  */
 export function buildMaterialTierOptions(
-  product: Record<string, unknown>
+  product: Record<string, unknown>,
+  basePrice: number | null = getPrice(product)
 ): MaterialTierOption[] | null {
   const meta = product.metadata as Record<string, unknown> | undefined
   const raw = meta?.material_tiers
   if (raw == null || typeof raw !== "object" || Array.isArray(raw)) return null
-
-  const basePrice = getPrice(product)
   const options: MaterialTierOption[] = []
   for (const [code, value] of Object.entries(raw as Record<string, unknown>)) {
     if (!isValidTierEntry(value)) continue
