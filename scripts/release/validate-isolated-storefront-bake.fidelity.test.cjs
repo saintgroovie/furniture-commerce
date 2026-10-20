@@ -26,9 +26,14 @@ function git(repo, args) {
   }).trim()
 }
 
-function initRepo() {
+function initRepo(options = {}) {
   const repo = mkdtempSync(join(tmpdir(), "wr-iso-bake-"))
   git(repo, ["init", "-q"])
+  if (options.dockerfile) {
+    mkdirSync(join(repo, "apps/storefront"), { recursive: true })
+    writeFileSync(join(repo, "apps/storefront/Dockerfile"), options.dockerfile)
+    git(repo, ["add", "apps/storefront/Dockerfile"])
+  }
   git(repo, ["commit", "--allow-empty", "-m", "base"])
   const base = git(repo, ["rev-parse", "HEAD"])
   mkdirSync(join(repo, "apps/storefront/src"), { recursive: true })
@@ -71,6 +76,23 @@ assert.equal(accepted.buildBackend, false)
 assert.equal(accepted.dbMutation, "forbidden")
 assert.deepEqual(accepted.files, ["apps/storefront/src/page.tsx"])
 rmSync(ok.repo, { recursive: true, force: true })
+
+const oldDockerfile = readFileSync(join(__dirname, "fixtures/isolated-storefront/Dockerfile.pre-component-revision"), "utf8")
+const revisionDockerfile = readFileSync(join(__dirname, "../../apps/storefront/Dockerfile"), "utf8")
+function checkDockerfileBackport(baseContent, sourceContent, accepted) {
+  const sample = initRepo({ dockerfile: baseContent })
+  writeFileSync(join(sample.repo, "apps/storefront/Dockerfile"), sourceContent)
+  git(sample.repo, ["add", "apps/storefront/Dockerfile"])
+  git(sample.repo, ["commit", "-m", "component revision bake"])
+  const source = git(sample.repo, ["rev-parse", "HEAD"])
+  git(sample.repo, ["update-ref", "refs/remotes/origin/release/partners-ok", source])
+  if (accepted) assert.ok(accept({ ...sample, source }).files.includes("apps/storefront/Dockerfile"))
+  else rejects(() => accept({ ...sample, source }), /runtime:apps\/storefront\/Dockerfile/)
+  rmSync(sample.repo, { recursive: true, force: true })
+}
+checkDockerfileBackport(oldDockerfile, revisionDockerfile, true)
+checkDockerfileBackport(oldDockerfile, revisionDockerfile + "\nRUN echo unexpected-runtime-change\n", false)
+checkDockerfileBackport(oldDockerfile + "\n# unknown base\n", revisionDockerfile, false)
 
 const missingRef = initRepo()
 git(missingRef.repo, ["update-ref", "-d", "refs/remotes/origin/release/partners-ok"])
