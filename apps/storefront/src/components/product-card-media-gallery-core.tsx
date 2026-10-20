@@ -305,8 +305,12 @@ function ProductCardMediaGalleryCoreInner({
   const hasUpholstery = Boolean(
     upholsteryVariants && upholsteryVariants.length > 1
   )
-  const hasWood = Boolean(woodVariants && woodVariants.length > 1)
-  const hasFinish = Boolean(finishVariants && finishVariants.length > 1)
+  const hasWood = Boolean(
+    woodVariants && (woodVariants.length > 1 || isProvencePaintWood)
+  )
+  const hasFinish = Boolean(
+    finishVariants && (finishVariants.length > 1 || isProvencePaintWood)
+  )
 
   const [activeHeadboardKey, setActiveHeadboardKey] = useState<string | null>(
     () => bedDefaults?.headboard ?? headboardVariants?.[0]?.key ?? null
