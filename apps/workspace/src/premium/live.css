@@ -181,6 +181,11 @@
   grid-template-columns: minmax(0, 1fr) 300px;
   gap: 36px;
 }
+.live-product-layout > div,
+.live-product-layout > aside {
+  min-width: 0;
+  max-width: 100%;
+}
 .live-photos {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -318,5 +323,6 @@
   margin-top: 15px;
 }
 .live-photos:has(> a:only-child) {
-  grid-template-columns: minmax(0, 380px);
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 380px;
 }
