@@ -25,6 +25,7 @@ import { SiteHeader } from "@/components/site-header"
 import { RouteVeilProvider } from "@/lib/route-veil"
 import { SiteSectionProvider } from "@/lib/use-site-section"
 import { getShowroomOrganizationContactLd } from "@/lib/showroom-contacts"
+import { buildMerchantPolicyJsonLd } from "@/lib/merchant-policy-json-ld"
 import { CspNonceProvider } from "@/lib/csp-nonce"
 import { indexingRobotsMetadata } from "@/lib/indexing-policy"
 import {
@@ -86,6 +87,7 @@ const organizationJsonLd = {
   name: "Woodright",
   url: getSiteUrl(),
   ...getShowroomOrganizationContactLd(),
+  ...buildMerchantPolicyJsonLd(getSiteUrl()),
 }
 
 /**
