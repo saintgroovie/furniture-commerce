@@ -525,7 +525,8 @@ export default async function ProductPage({
     name: titleStr || "Товар",
     description,
     url: canonicalUrl,
-    image: mainImage,
+    images: [pdpMainSrc, ...pdpResolvedExtras],
+    dimensions: dim ? pdpDimensionCells(dim) : [],
     sku: article,
     offerPriceRub,
   })
