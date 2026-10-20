@@ -248,7 +248,7 @@ test("media policy rejects off-origin, credentials and auth paths", () => {
     ]),
   );
 });
-test("request stale check does not write", async () => {
+test("legacy request path never bypasses the transactional backend command", async () => {
   let writes = 0;
   await assert.rejects(
     executeCommand(
@@ -266,7 +266,7 @@ test("request stale check does not write", async () => {
         },
       },
     ),
-    (e) => e.status === 409,
+    (e) => e.status === 403,
   );
   assert.equal(writes, 0);
 });

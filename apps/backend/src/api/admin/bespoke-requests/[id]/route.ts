@@ -5,6 +5,8 @@ import {
   type BespokeRequestStatus,
 } from "../../../../modules/bespoke-request/models/bespoke-request"
 import BespokeRequestModuleService from "../../../../modules/bespoke-request/service"
+import { executeDeskCommand } from "../../../../lib/woodright-desk/commands"
+import { deskContext, deskFailure } from "../../../../lib/woodright-desk/http"
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const id = req.params.id as string
@@ -21,6 +23,25 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
 export async function PATCH(req: MedusaRequest, res: MedusaResponse) {
   const id = req.params.id as string
+  // Once the guarded desk is enabled, every HTTP writer uses the same row lock/CAS.
+  // Older clients get a refresh-required error instead of bypassing the version guard.
+  if (process.env.WOODRIGHT_DESK_FEATURES === "1") {
+    try {
+      const { sql, actorId } = await deskContext(req)
+      const body = (req.body ?? {}) as Record<string, any>
+      const service = req.scope.resolve(BESPOKE_REQUEST_MODULE) as BespokeRequestModuleService
+      const current = await service.retrieveBespokeRequest(id)
+      const result = await executeDeskCommand(sql, actorId, {
+        type: "request.update", id, key: body.operation_key,
+        expectedUpdatedAt: body.expected_updated_at,
+        status: body.status ?? current.status,
+        notes: body.internal_notes ?? current.internal_notes ?? "",
+      })
+      res.setHeader("Cache-Control", "private, no-store")
+      res.json(result)
+    } catch (e) { deskFailure(res, e) }
+    return
+  }
   const body = req.body as { status?: string; internal_notes?: string; quoted_at?: string }
   if (body.status != null && !BESPOKE_REQUEST_STATUS.includes(body.status as (typeof BESPOKE_REQUEST_STATUS)[number])) {
     res.status(400).json({

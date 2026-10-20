@@ -256,6 +256,7 @@ export default defineConfig({
     }),
   },
   modules: [
+    ...(process.env.WOODRIGHT_DESK_FEATURES === "1" ? [{ resolve: "./src/modules/crm" }] : []),
     {
       resolve: "./src/modules/product-extension",
     },

@@ -108,6 +108,7 @@ export async function verifiedBackend() {
     );
   return { ...health.identity, verifiedAt: new Date().toISOString() };
 }
+/** @returns {Promise<Record<string, any> & {count:number,truncated:boolean}>} */
 export async function readPaged(
   path,
   key,

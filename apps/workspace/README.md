@@ -8,9 +8,11 @@ This app reuses the first-party Next.js workspace boundary and signed httpOnly s
 
 Implemented: Medusa staff login/logout, show/hide password, bounded reads, live products/variants/prices/readiness/media, leads, bespoke requests, orders, manufacturing snapshots and rooms. Prices from the seller API are major RUB; UI amounts use integer kopeks. Product ranges remain ranges. Manufacturing, payment and fulfillment stay independent. A missing source produces an explicit error, not a demo or an empty-success fallback.
 
-The first connected candidate is read-only. `WOODRIGHT_LIVE_WRITES=0` is the deployment default. The existing order transition contract has expected version and idempotency. Request writes additionally remain refused because the currently deployed request route lacks transactional compare-and-swap. This is a code limitation, not a request for repeated owner approval.
+The production-connected candidate remains read-only: `WOODRIGHT_LIVE_WRITES=0`. The backend in this PR adds the `woodright-desk-v1` capability handshake, atomic request updates, persistent reminders, private attachments and an atomic action/operation journal. Both the deployment flag and an installed backend capability are required before enabling each action. A browser refresh preserves an unsaved request draft and shows conflicting server changes for explicit resolution.
 
-Not connected: company/assignee/follow-up modules from the unmerged OS branches, private client attachments, issuing invoices, accounting payment reconciliation, mailbox and outbound notifications. Their actions show connection requirements rather than pretending to save locally. The standalone prototype remains separate at `../../../../woodright-os` and its demo records must never be imported.
+The new saves/reminders/attachments have been exercised against a disposable PostgreSQL/Medusa runtime, including normal browser login, save, reminder creation, private upload and exact-byte download. Their migrations remain test-only and have not been applied to production. Company/assignee modules, invoice issuance/payment reconciliation, mailbox and outbound notifications remain unconnected. The separate prototype records must never be imported into a connected app.
+
+MANGO OFFICE is selected for telephony. The backend includes a disabled-by-default signed webhook receiver, durable event deduplication and monotonic call-leg projections, plus a tested callback intent. It does not make calls or expose recordings. The account/API, staff-extension mapping and provider callback route still need configuration; see `docs/architecture/woodright-os-integrations.md` from repository root.
 
 ## Data completeness
 
@@ -27,4 +29,4 @@ The local-private launcher binds loopback only and creates a session signing sec
 Base repository: `490e5c03ece346d506c6de5babf34b786d17915c`.
 Session and bounded request helpers reused from existing OS commit `51f224d1f0e4d5de152ca9191d71b09629fdb921`, not the owner's dirty checkout. The new app does not merge the incomplete CRM dependency chain or apply its migrations.
 
-Only the files under `apps/workspace` are part of this implementation. Runtime evidence belongs outside Git; credentials and local state are ignored.
+The CRM follow-up model/table is reused from committed OS source `51f224d1`, with a version field for concurrent updates; unrelated owner-branch company/mail modules remain untouched. Backend `woodright-desk` commands and the conditional CRM registration are part of this PR. Runtime evidence belongs outside Git; credentials and local state are ignored.

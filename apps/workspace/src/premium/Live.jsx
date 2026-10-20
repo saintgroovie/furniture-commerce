@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowClockwise,
   ArrowUpRight,
@@ -14,6 +14,7 @@ import {
   WarningCircle,
   Eye,
   EyeSlash,
+  Phone,
 } from "@phosphor-icons/react";
 import {
   Button,
@@ -28,6 +29,7 @@ import {
   PageHeading,
 } from "./ui.jsx";
 import { liveFetch } from "./storage.js";
+import { DeskTools, useDeskCommand } from "./DeskTools.jsx";
 const types = {
   STANDARD: "Готовое изделие",
   CONFIGURABLE: "Выбор исполнения",
@@ -166,6 +168,7 @@ export const sourceNames = {
   orders: "Заказы",
   processes: "Изготовление",
   rooms: "Комнаты",
+  reminders: "Напоминания",
 };
 export function LiveNotice({ data, refresh, busy }) {
   const failed = Object.entries(data.sourceStates).filter(([, v]) => !v.ok);
@@ -247,7 +250,7 @@ const serviceCards = [
     icon: Receipt,
     title: "1С:Бухгалтерия 8",
     subtitle: "Счета и подтверждение оплат",
-    status: "Ожидает настройки",
+    status: "Уточняем у бухгалтера",
     text: "Счёт готовится в OS и регистрируется в 1С. Номер, печатная форма и поступления возвращаются из 1С. До настройки обмена выпуск счетов недоступен.",
   },
   {
@@ -256,7 +259,15 @@ const serviceCards = [
     title: "Приватное хранилище",
     subtitle: "Договоры, чертежи и документы",
     status: "Ожидает настройки",
-    text: "Отдельное закрытое S3-хранилище для вложений. Доступ по правам сотрудника, короткие ссылки на скачивание и история изменений. Фотографии каталога уже читаются из Medusa.",
+    text: "Закрытое хранилище договоров и чертежей. Скачивание после входа сотрудника, привязка к карточке и история действий. Фотографии каталога читаются отдельно из Medusa.",
+  },
+  {
+    key: "telephony",
+    icon: Phone,
+    title: "MANGO OFFICE",
+    subtitle: "Звонки и история общения",
+    status: "Нужен доступ к ВАТС",
+    text: "Входящий звонок с карточкой клиента, история и пропущенные, звонок из обращения и записи разговоров по правам сотрудника. Подключение готовится к вашей ВАТС.",
   },
   {
     key: "mail",
@@ -299,7 +310,9 @@ export function Integrations({ data, focus, compact = false }) {
           <section className="integration-card" key={s.key}>
             <s.icon size={27} weight="light" />
             <Badge tone={s.key === "medusa" ? "positive" : "waiting"}>
-              {s.status}
+              {s.key === "files" && data?.capabilities.attachmentRead
+                ? "Подключено"
+                : s.status}
             </Badge>
             <h2>{s.title}</h2>
             <small>{s.subtitle}</small>
@@ -333,9 +346,9 @@ export function Integrations({ data, focus, compact = false }) {
             <p>
               <b>Нужен следующий серверный этап</b>
               <span>
-                Компании, назначения сотрудников, напоминания и история действий
-                требуют продвижения модулей существующей OS. Локальные записи в
-                рабочей версии не создаются.
+                Сохранение обращений с защитой от конфликтов, напоминания и
+                приватные вложения подготовлены для серверного обновления.
+                Компании и назначения сотрудников подключаются следующим этапом.
               </span>
             </p>
             <p>
@@ -441,7 +454,10 @@ export function LiveObjectDetail({
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [status, setStatus] = useState(item?.status || ""),
-    [notes, setNotes] = useState(item?.internalNotes || "");
+    [notes, setNotes] = useState(item?.internalNotes || ""),
+    [expectedUpdatedAt, setExpectedUpdatedAt] = useState(item?.updatedAt || "");
+  const sendCommand = useDeskCommand();
+  const attachmentsRef = useRef(null);
   if (!item)
     return (
       <Empty
@@ -457,18 +473,16 @@ export function LiveObjectDetail({
     setBusy(true);
     setError("");
     try {
-      await liveFetch("/api/live/commands", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          type: "request.update",
-          id,
-          status,
-          notes,
-          expectedUpdatedAt: item.updatedAt,
-        }),
+      await sendCommand({
+        type: "request.update",
+        id,
+        status,
+        notes,
+        expectedUpdatedAt,
       });
-      await refresh();
+      const latest = await refresh();
+      const updated = latest?.requests?.find((r) => r.id === id);
+      if (updated) setExpectedUpdatedAt(updated.updatedAt);
       notify("Обращение обновлено");
     } catch (e) {
       setError(e.message);
@@ -720,7 +734,11 @@ export function LiveObjectDetail({
                       disabled={!data.capabilities.requestUpdate}
                     >
                       {Object.entries(requestStatuses).map(([value, label]) => (
-                        <option key={value} value={value}>
+                        <option
+                          key={value}
+                          value={value}
+                          disabled={value === "paid" && item.status !== "paid"}
+                        >
                           {label}
                         </option>
                       ))}
@@ -742,9 +760,49 @@ export function LiveObjectDetail({
                     </Notice>
                   )}
                   <FormError>{error}</FormError>
+                  {item.updatedAt !== expectedUpdatedAt &&
+                    data.capabilities.requestUpdate && (
+                      <Notice tone="warning">
+                        <p>
+                          Карточка изменилась. Текущий статус:{" "}
+                          {item.statusLabel}.
+                        </p>
+                        <p className="preserve-lines">
+                          Заметки в базе: {item.internalNotes || "не добавлены"}
+                        </p>
+                        <div className="desk-row-actions">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                              setNotes(item.internalNotes);
+                              setStatus(item.status);
+                              setExpectedUpdatedAt(item.updatedAt);
+                              setError("");
+                            }}
+                          >
+                            Загрузить новую версию
+                          </Button>
+                          <button
+                            type="button"
+                            className="text-button"
+                            onClick={() => {
+                              setExpectedUpdatedAt(item.updatedAt);
+                              setError("");
+                            }}
+                          >
+                            Продолжить с моим текстом
+                          </button>
+                        </div>
+                      </Notice>
+                    )}
                   <Button
                     type="submit"
-                    disabled={!data.capabilities.requestUpdate || busy}
+                    disabled={
+                      !data.capabilities.requestUpdate ||
+                      busy ||
+                      item.updatedAt !== expectedUpdatedAt
+                    }
                   >
                     {busy ? "Сохраняем…" : "Сохранить"}
                   </Button>
@@ -764,7 +822,13 @@ export function LiveObjectDetail({
               <Button
                 variant="secondary"
                 icon={Paperclip}
-                onClick={() => openPanel({ type: "files", objectId: id })}
+                onClick={() => {
+                  attachmentsRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                  attachmentsRef.current?.focus({ preventScroll: true });
+                }}
               >
                 Файлы обращения
               </Button>
@@ -811,6 +875,14 @@ export function LiveObjectDetail({
           )}
         </Section>
       )}
+      <DeskTools
+        attachmentsRef={attachmentsRef}
+        kind={kind}
+        id={id}
+        data={data}
+        refresh={refresh}
+        notify={notify}
+      />
     </div>
   );
 }

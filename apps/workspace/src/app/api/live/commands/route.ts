@@ -7,7 +7,6 @@ import {
   verifiedBackend,
   LiveError,
 } from "@/server/live.mjs";
-import { executeCommand, CommandError } from "@/server/live-command.mjs";
 import { readJsonBounded } from "@/server/request-policy.mjs";
 export async function POST(request: Request) {
   try {
@@ -18,23 +17,47 @@ export async function POST(request: Request) {
         403,
         "Рабочие данные открыты для просмотра. Запись включается после проверки прав и сохранения на изолированной базе",
       );
-    if (Number(request.headers.get("content-length")) > 65536)
+    const max = 12 * 1024 * 1024;
+    if (Number(request.headers.get("content-length")) > max)
       throw new LiveError(413, "Запрос слишком большой");
-    const command = await readJsonBounded(request, 65536);
-    if (command.type === "request.update")
-      throw new LiveError(
-        403,
-        "Сохранение обращения требует атомарной проверки версии в Medusa. Защита ещё не установлена",
-      );
+    const command = await readJsonBounded(request, max);
     await verifiedBackend();
-    const result = await executeCommand(command, {
-      read: (path: string) => upstream(path, { session }),
-      send: (path: string, method: string, body: unknown) =>
-        upstream(path, { session, method, body }),
-    });
-    return NextResponse.json({ ok: true, result }, { headers: NO_STORE });
+    if (
+      [
+        "request.update",
+        "reminder.create",
+        "reminder.update",
+        "attachment.upload",
+        "attachment.remove",
+      ].includes(command.type)
+    ) {
+      const capabilities = await upstream(
+        "/admin/woodright/desk/capabilities",
+        { session },
+      );
+      const required = command.type.startsWith("reminder.")
+        ? "reminders"
+        : command.type.startsWith("attachment.")
+          ? "attachments"
+          : "requestUpdate";
+      if (
+        capabilities.contract !== "woodright-desk-v1" ||
+        capabilities[required] !== true
+      )
+        throw new LiveError(403, "Функция ещё не подключена в Medusa");
+      const result = await upstream("/admin/woodright/desk/commands", {
+        session,
+        method: "POST",
+        body: command,
+      });
+      return NextResponse.json(result, { headers: NO_STORE });
+    }
+    throw new LiveError(
+      403,
+      "Это действие ещё не подключено к рабочему контуру",
+    );
   } catch (e) {
-    const known = e instanceof LiveError || e instanceof CommandError;
+    const known = e instanceof LiveError;
     return NextResponse.json(
       { message: known ? e.message : "Не удалось сохранить" },
       { status: known ? e.status : 400, headers: NO_STORE },

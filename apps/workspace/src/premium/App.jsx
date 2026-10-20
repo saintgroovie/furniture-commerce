@@ -485,7 +485,7 @@ export function App() {
               <ObjectList kind="products" {...common} />
             ) : route.id ? (
               <LiveObjectDetail
-                key={`${route.page}/${route.id}/${data.loadedAt}`}
+                key={`${route.page}/${route.id}`}
                 kind={route.page}
                 id={route.id}
                 refresh={refresh}

@@ -52,7 +52,13 @@ const requestLabels = {
   in_production: "В производстве",
   completed: "Завершено",
 };
-export function projectLive(sources, session, sourceStates, identity) {
+export function projectLive(
+  sources,
+  session,
+  sourceStates,
+  identity,
+  features = {},
+) {
   const people = array(sources.people?.leads).map((p) => ({
     id: text(p.id),
     name: text(p.name) || "Имя не указано",
@@ -234,7 +240,17 @@ export function projectLive(sources, session, sourceStates, identity) {
     companies: [],
     invoices: [],
     files,
-    reminders: [],
+    reminders: array(sources.reminders?.reminders).map((r) => ({
+      id: text(r.id),
+      title: text(r.summary),
+      objectId: text(r.entity_id),
+      objectType: text(r.entity_type),
+      due: text(r.due_at).slice(0, 10),
+      completed: r.status !== "open",
+      status: text(r.status),
+      version: r.version,
+      assigneeId: text(r.assignee_id),
+    })),
     activity: [],
     prefs: { density: "comfortable" },
     session: { email: session.email },
@@ -242,13 +258,26 @@ export function projectLive(sources, session, sourceStates, identity) {
     identity,
     loadedAt: new Date().toISOString(),
     capabilities: {
-      requestUpdate: false,
+      requestUpdate:
+        features.contract === "woodright-desk-v1" &&
+        features.writesEnabled === true &&
+        features.requestUpdate === true,
       manufacturingTransition: false,
       documents: false,
-      attachments: false,
+      attachments:
+        features.contract === "woodright-desk-v1" &&
+        features.writesEnabled === true &&
+        features.attachments === true,
+      attachmentRead:
+        features.contract === "woodright-desk-v1" &&
+        features.attachments === true,
       crmCreate: false,
       companies: false,
-      reminders: false,
+      reminders:
+        features.contract === "woodright-desk-v1" &&
+        features.writesEnabled === true &&
+        features.reminders === true &&
+        sourceStates.reminders?.ok === true,
       mail: false,
     },
   };

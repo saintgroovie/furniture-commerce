@@ -15,37 +15,10 @@ export async function executeCommand(command, { read, send }) {
     throw new CommandError(400, "Некорректный объект");
   const id = encodeURIComponent(command.id);
   if (command.type === "request.update") {
-    const current = (await read(`/admin/bespoke-requests/${id}`))
-      .bespoke_request;
-    if (!current) throw new CommandError(404, "Обращение не найдено");
-    if (
-      !command.expectedUpdatedAt ||
-      String(current.updated_at) !== command.expectedUpdatedAt
-    )
-      throw new CommandError(
-        409,
-        "Обращение изменилось. Обновите карточку перед сохранением",
-      );
-    const statuses = [
-      "new",
-      "contacted",
-      "quote_sent",
-      "paid",
-      "in_production",
-      "completed",
-    ];
-    if (
-      !statuses.includes(command.status) ||
-      typeof command.notes !== "string" ||
-      command.notes.length > 20000
-    )
-      throw new CommandError(400, "Проверьте статус и заметки");
-    // Existing endpoint has no transactional CAS. Writes require the explicit deployment flag;
-    // callers are told about this limitation until the backend receives an atomic version guard.
-    return send(`/admin/bespoke-requests/${id}`, "PATCH", {
-      status: command.status,
-      internal_notes: command.notes,
-    });
+    throw new CommandError(
+      403,
+      "Используйте атомарную команду установленного модуля Woodright OS",
+    );
   }
   if (command.type === "order.transition") {
     if (

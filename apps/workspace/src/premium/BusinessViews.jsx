@@ -83,7 +83,14 @@ export function TodayView({ data, go, openPanel, mutate, notify, ...rest }) {
         ? go("orders", row.id)
         : row.kind === "product"
           ? go("products", row.id)
-          : openPanel({ type: "help" });
+          : row.kind === "reminder"
+            ? go(
+                { person: "people", request: "requests", order: "orders" }[
+                  data.reminders.find((r) => r.id === row.id)?.objectType
+                ] || "today",
+                row.objectId,
+              )
+            : openPanel({ type: "help" });
   const item =
     data.requests.find((x) => x.id === row?.id) ||
     data.orders.find((x) => x.id === row?.id) ||
@@ -104,9 +111,9 @@ export function TodayView({ data, go, openPanel, mutate, notify, ...rest }) {
           }).format(new Date())}
           action={
             <Button
-              disabled={!data.writeEnabled}
+              disabled={!data.capabilities.crmCreate}
               title={
-                !data.writeEnabled
+                !data.capabilities.crmCreate
                   ? "Создание будет доступно после подключения записи"
                   : undefined
               }
@@ -425,9 +432,9 @@ export function ObjectList({ kind, data, go, openPanel }) {
         description={c.description}
         action={
           <Button
-            disabled={!data.writeEnabled}
+            disabled={!data.capabilities.crmCreate}
             title={
-              !data.writeEnabled
+              !data.capabilities.crmCreate
                 ? "Создание будет доступно после подключения записи"
                 : undefined
             }

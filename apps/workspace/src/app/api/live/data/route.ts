@@ -14,6 +14,12 @@ export async function GET() {
     const session = await staff();
     const identity = await verifiedBackend();
     await upstream("/admin/users/me", { session });
+    const deskPromise = upstream("/admin/woodright/desk/capabilities", {
+      session,
+    }).catch((e: unknown) => {
+      if (e instanceof LiveError && e.status === 401) throw e;
+      return { contract: null };
+    });
     const definitions = [
       ["products", "/admin/woodright/products", "products"],
       ["people", "/admin/leads", "leads"],
@@ -22,13 +28,16 @@ export async function GET() {
       ["processes", "/admin/woodright/order-processes", "order_processes"],
       ["rooms", "/admin/room-sets", "room_sets"],
     ] as const;
-    const results = await Promise.allSettled(
-      definitions.map(([key, path]) =>
-        key === "orders"
-          ? readPaged(path, "orders", session)
-          : upstream(path, { session }),
+    const [results, desk] = await Promise.all([
+      Promise.allSettled(
+        definitions.map(([key, path]) =>
+          key === "orders"
+            ? readPaged(path, "orders", session)
+            : upstream(path, { session }),
+        ),
       ),
-    );
+      deskPromise,
+    ]);
     const sources: Record<string, unknown> = {};
     const states: Record<string, unknown> = {};
     for (let i = 0; i < definitions.length; i++) {
@@ -63,14 +72,49 @@ export async function GET() {
         };
       }
     }
-    const data = projectLive(sources, session, states, {
-      environment: identity.role,
-      databaseAlias: identity.databaseAlias,
-      backendRevision: identity.backendRevision,
-      verifiedAt: identity.verifiedAt,
-    });
+    if (desk.contract === "woodright-desk-v1" && desk.reminders === true) {
+      try {
+        const reminders = await readPaged(
+          "/admin/woodright/desk/reminders",
+          "reminders",
+          session,
+        );
+        sources.reminders = reminders;
+        states.reminders = {
+          ok: true,
+          count: reminders.reminders.length,
+          total: reminders.count,
+          truncated: reminders.truncated,
+          completeness: "paginated",
+        };
+      } catch (e) {
+        if (e instanceof LiveError && e.status === 401) throw e;
+        states.reminders = {
+          ok: false,
+          message: "Не удалось загрузить напоминания",
+        };
+      }
+    }
+    const data = projectLive(
+      sources,
+      session,
+      states,
+      {
+        environment: identity.role,
+        databaseAlias: identity.databaseAlias,
+        backendRevision: identity.backendRevision,
+        verifiedAt: identity.verifiedAt,
+      },
+      { ...desk, writesEnabled: process.env.WOODRIGHT_LIVE_WRITES === "1" },
+    );
     return NextResponse.json(
-      { ...data, writeEnabled: process.env.WOODRIGHT_LIVE_WRITES === "1" },
+      {
+        ...data,
+        writeEnabled:
+          data.capabilities.requestUpdate ||
+          data.capabilities.reminders ||
+          data.capabilities.attachments,
+      },
       { headers: NO_STORE },
     );
   } catch (e) {

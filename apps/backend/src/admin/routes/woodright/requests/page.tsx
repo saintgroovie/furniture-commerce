@@ -29,6 +29,8 @@ const WoodrightRequestsPage = () => {
         body: JSON.stringify({
           status: "quote_sent",
           quoted_at: new Date().toISOString(),
+          expected_updated_at: extras.requests.find((row) => row.id === id)?.updated_at,
+          operation_key: crypto.randomUUID(),
         }),
       })
       await extras.reload()
