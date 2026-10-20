@@ -244,7 +244,7 @@ export function todayGroups(data) {
           })),
       },
       {
-        title: "Данные каталога",
+        title: "Проверки каталога",
         tone: "waiting",
         items: data.products
           .filter((p) => p.issues.length)
@@ -253,6 +253,20 @@ export function todayGroups(data) {
             title: p.name,
             sub: p.issues.join(" · "),
             kind: "product",
+            due: "",
+          })),
+      },
+      {
+        title: "Сверка подключения каталога",
+        tone: "waiting",
+        items: data.products
+          .filter((p) => p.integrationWarnings?.length)
+          .map((p) => ({
+            id: p.id,
+            title: p.name,
+            sub: "Коллекция заполнена, но проверка Medusa её не распознаёт",
+            kind: "product",
+            systemReview: true,
             due: "",
           })),
       },

@@ -188,7 +188,19 @@ export function projectLive(sources, session, sourceStates, identity) {
       variants: array(p.variants),
       status: text(p.status),
       description: text(p.description),
-      issues: array(p.publish?.blockers).map((x) => text(x.message)),
+      issues: array(p.publish?.blockers)
+        .filter(
+          (x) => !(x.code === "missing_collection" && text(p.collection_label)),
+        )
+        .map((x) => text(x.message)),
+      integrationWarnings: array(p.publish?.blockers)
+        .filter(
+          (x) => x.code === "missing_collection" && text(p.collection_label),
+        )
+        .map(
+          () =>
+            "Коллекция заполнена в карточке, но проверка публикации Medusa её не распознаёт. Требуется сверка подключения.",
+        ),
       warnings: array(p.publish?.warnings).map((x) => text(x.message)),
       publishReady: p.publish?.ready === true,
       mainFileId: photos[0]?.id || "",

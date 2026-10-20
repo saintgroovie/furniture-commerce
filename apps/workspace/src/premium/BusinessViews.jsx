@@ -224,14 +224,20 @@ export function TodayView({ data, go, openPanel, mutate, notify, ...rest }) {
           </span>
           <h2>{item.title || item.name}</h2>
           <p className="inspector-description">
-            {item.next || item.issues?.join(" · ")}
+            {item.next ||
+              item.issues?.join(" · ") ||
+              item.integrationWarnings?.[0]}
           </p>
           <Badge tone={row?.due && row.due < TODAY ? "critical" : "attention"}>
             {row?.due && row.due < TODAY
               ? "Просрочено"
               : row?.waiting
                 ? "Ждём клиента"
-                : "Нужно действие"}
+                : row?.systemReview
+                  ? "Техническая проверка"
+                  : row?.kind === "product"
+                    ? "Проверка Medusa"
+                    : "Нужно действие"}
           </Badge>
           <Button className="full" icon={ArrowRight} onClick={() => open(row)}>
             {row.kind === "request"

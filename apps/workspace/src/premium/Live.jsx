@@ -592,9 +592,14 @@ export function LiveObjectDetail({
                       <li key={i}>{x}</li>
                     ))}
                   </ul>
-                ) : (
+                ) : item.publishReady ? (
                   <Badge tone="positive">Проверки пройдены</Badge>
+                ) : (
+                  <Badge tone="waiting">Требуется сверка проверки</Badge>
                 )}
+                {item.integrationWarnings?.map((message, i) => (
+                  <Notice key={i}>{message}</Notice>
+                ))}
                 {item.warnings.map((x, i) => (
                   <p className="muted small" key={i}>
                     {x}

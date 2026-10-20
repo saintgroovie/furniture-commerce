@@ -13,6 +13,36 @@ import {
 } from "../src/server/request-policy.mjs";
 import { todayGroups } from "../src/premium/model.mjs";
 import { identityMatches } from "../src/server/runtime-identity.mjs";
+test("a filled collection rejected by an old publish check is an integration discrepancy, not an owner data task", () => {
+  const d = projectLive(
+    {
+      products: {
+        products: [
+          {
+            id: "p",
+            title: "Товар",
+            collection_label: "Заполненная коллекция",
+            publish: {
+              ready: false,
+              blockers: [
+                { code: "missing_collection", message: "Не выбрана коллекция" },
+              ],
+            },
+          },
+        ],
+      },
+    },
+    { email: "staff" },
+    {},
+    {},
+  );
+  assert.deepEqual(d.products[0].issues, []);
+  assert.equal(d.products[0].integrationWarnings.length, 1);
+  assert.equal(d.products[0].publishReady, false);
+  const groups = todayGroups(d);
+  assert.equal(groups[0].title, "Сверка подключения каталога");
+  assert.equal(groups[0].items[0].systemReview, true);
+});
 test("live boundary refuses another database, environment or revision", () => {
   const env = {
     WOODRIGHT_DATA_ENVIRONMENT: "public_production",
