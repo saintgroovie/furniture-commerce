@@ -51,6 +51,21 @@ assert.equal(JSON.stringify(named).includes("AggregateRating"), false)
 assert.equal(JSON.stringify(named).includes("Review"), false)
 assert.equal((named.brand as { name: string }).name, "Woodright")
 
+const craft = buildProductJsonLd({
+  name: "Тумбочка для рукоделия", sku: "OL-08-Н", offerPriceRub: 32500,
+  url: "https://woodright.ru/product/ol-08-n",
+  images: ["/product-static/imports/perspective.jpg", "/product-static/imports/front.jpg", "/product-static/imports/front.jpg", "javascript:alert(1)", ""],
+  dimensions: [{ axis: "height", mm: 908 }, { axis: "width", mm: 550 }, { axis: "depth", mm: 555 }],
+})
+assert.equal(craft.sku, "OL-08-Н")
+assert.equal((craft.offers as { price: number }).price, 32500)
+assert.deepEqual(craft.image, ["https://woodright.ru/product-static/imports/perspective.jpg", "https://woodright.ru/product-static/imports/front.jpg"])
+assert.deepEqual(craft.height, { "@type": "QuantitativeValue", value: 908, unitCode: "MMT" })
+assert.deepEqual(craft.width, { "@type": "QuantitativeValue", value: 550, unitCode: "MMT" })
+assert.deepEqual(craft.depth, { "@type": "QuantitativeValue", value: 555, unitCode: "MMT" })
+const variableSize = buildProductJsonLd({ name: "Стол", url: "https://woodright.ru/product/table", dimensions: [{axis: "width"}, {axis: "height", mm: NaN}, {axis: "depth", mm: -1}] })
+assert.equal("width" in variableSize || "height" in variableSize || "depth" in variableSize, false)
+
 const baseOffer = {
   productType: "STANDARD" as const,
   requestQuote: false,

@@ -305,8 +305,12 @@ function ProductCardMediaGalleryCoreInner({
   const hasUpholstery = Boolean(
     upholsteryVariants && upholsteryVariants.length > 1
   )
-  const hasWood = Boolean(woodVariants && woodVariants.length > 1)
-  const hasFinish = Boolean(finishVariants && finishVariants.length > 1)
+  const hasWood = Boolean(
+    woodVariants && (woodVariants.length > 1 || isProvencePaintWood)
+  )
+  const hasFinish = Boolean(
+    finishVariants && (finishVariants.length > 1 || isProvencePaintWood)
+  )
 
   const [activeHeadboardKey, setActiveHeadboardKey] = useState<string | null>(
     () => bedDefaults?.headboard ?? headboardVariants?.[0]?.key ?? null
@@ -572,7 +576,8 @@ function ProductCardMediaGalleryCoreInner({
 
   // Catalog: keep hero on quality-resolved main unless a strip thumb is selected.
   if (layout !== "pdp" && activeGalleryUrl == null) {
-    const next = cardQualityMedia.mainSrc.trim()
+    const main = cardQualityMedia.mainSrc.trim()
+    const next = knownGoodSrcByLogical[main] ?? main
     if (next && next !== displayHeroSrc) {
       setDisplayHeroSrc(next)
       setHeroFailed(false)

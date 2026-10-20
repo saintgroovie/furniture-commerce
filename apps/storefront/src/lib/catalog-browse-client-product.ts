@@ -19,7 +19,7 @@ import { sanitizeGreenwichPaintMatrix } from "./greenwich-paint-media"
 import type { PromotionSlotPayload } from "./api/promotion-slot"
 
 const CATALOG_BROWSE_MAX_IMAGES = 24
-const CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN = 3
+const CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN = 5
 const CATALOG_BROWSE_MAX_EXECUTION_URLS = 5
 
 const META_ALLOW = new Set([
@@ -215,11 +215,14 @@ function projectImages(images: unknown): Array<{ url: string }> {
   if (!Array.isArray(images)) return []
   const out: Array<{ url: string }> = []
   const perToken = new Map<string, number>()
+  const seen = new Set<string>()
   for (const entry of images) {
     if (!entry || typeof entry !== "object") continue
     const url = (entry as { url?: unknown }).url
     if (typeof url !== "string" || !url.trim()) continue
     const trimmed = url.trim()
+    if (seen.has(trimmed)) continue
+    seen.add(trimmed)
     const token = browseImageTokenKey(trimmed)
     const used = perToken.get(token) ?? 0
     if (used >= CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN) continue

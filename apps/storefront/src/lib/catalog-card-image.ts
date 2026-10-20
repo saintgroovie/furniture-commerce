@@ -16,10 +16,12 @@
 
 const DERIVATIVE_MARKER = "/derivatives/card/"
 
-/** Paths that map 1:1 onto on-disk `/static/products/...` assets. */
+/** Public product media, including original photographs uploaded in batches. */
 const PRODUCT_STATIC_PREFIXES = [
   "/static/products/",
   "/product-static/products/",
+  "/static/imports/",
+  "/product-static/imports/",
 ] as const
 
 function matchProductStaticPrefix(

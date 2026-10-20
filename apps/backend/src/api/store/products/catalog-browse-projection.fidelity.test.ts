@@ -14,8 +14,15 @@ import {
 } from "./catalog-browse-projection"
 
 assert.equal(CATALOG_BROWSE_MAX_IMAGES, 24)
-assert.equal(CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN, 3)
+assert.equal(CATALOG_BROWSE_MAX_IMAGES_PER_TOKEN, 5)
 assert.equal(CATALOG_BROWSE_MAX_EXECUTION_URLS, 5)
+
+{
+  // Repeated database rows must not spend the strip's five-photo budget.
+  const unique = Array.from({ length: 6 }, (_, i) => ({ url: `/static/photo-${i}.jpg` }))
+  const out = projectCatalogBrowseProduct({ id: "duplicate-gallery", images: unique.flatMap((i) => [i, i]) })
+  assert.deepEqual(out.images, unique.slice(0, 5))
+}
 
 assert.ok(CATALOG_METADATA_ALLOW.has("material_tiers"))
 assert.ok(CATALOG_METADATA_ALLOW.has("buyer_default_configuration"))
@@ -162,7 +169,7 @@ assert.equal(CATALOG_METADATA_ALLOW.has("workbook_row_key"), false)
     variants: [],
   })
   const urls = (out.images as Array<{ url: string }>).map((i) => i.url)
-  assert.equal(urls.filter((u) => /_white\d/.test(u)).length, 3)
+  assert.equal(urls.filter((u) => /_white\d/.test(u)).length, 4)
   assert.equal(urls.filter((u) => /_graphite\d/.test(u)).length, 3)
   assert.equal(urls.filter((u) => /_green\d/.test(u)).length, 2)
 }

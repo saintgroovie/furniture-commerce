@@ -93,6 +93,8 @@ export type ProductJsonLdInput = {
   description?: string | null
   url: string
   image?: string | null
+  images?: string[]
+  dimensions?: { axis: "height" | "width" | "depth"; mm?: number }[]
   sku?: string | null
   offerPriceRub?: number | null
 }
@@ -109,8 +111,24 @@ export function buildProductJsonLd(
   }
   const description = input.description?.trim()
   if (description) ld.description = description
-  const image = input.image?.trim()
-  if (image) ld.image = image
+  const images = Array.from(new Set((input.images ?? [input.image ?? ""])
+    .map((src) => {
+      if (!src.trim()) return null
+      try {
+        const url = new URL(src.trim(), input.url)
+        return /^https?:$/.test(url.protocol) ? url.href : null
+      } catch {
+        return null
+      }
+    }).filter((src): src is string => src != null)))
+  if (images.length) ld.image = images
+  // Only scalar dimensions actually shown on the PDP; do not turn a list of
+  // folded/extended positions or alternative sizes into one invented value.
+  for (const cell of input.dimensions ?? []) {
+    if (cell.mm != null && Number.isFinite(cell.mm) && cell.mm > 0) {
+      ld[cell.axis] = { "@type": "QuantitativeValue", value: cell.mm, unitCode: "MMT" }
+    }
+  }
   const sku = input.sku?.trim()
   if (sku) ld.sku = sku
   if (
