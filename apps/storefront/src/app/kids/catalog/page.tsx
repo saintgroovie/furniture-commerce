@@ -16,11 +16,12 @@ import {
 } from "@/lib/kids"
 import { parseCatalogFilterState } from "@/lib/catalog-filter-params"
 import { actions, kidsCatalogCopy, seo } from "@/lib/woodright-copy"
+import { pageTitle } from "@/lib/page-title"
 import { CopyLines } from "@/components/copy-lines"
 import { canonicalAlternates } from "@/lib/page-canonical"
 
 export const metadata: Metadata = {
-  title: seo.kidsCatalog.title,
+  title: pageTitle(seo.kidsCatalog.title),
   description: seo.kidsCatalog.description,
   openGraph: {
     title: seo.kidsCatalog.title,
@@ -110,6 +111,7 @@ export default async function KidsCatalogPage({
         basePath="/kids/catalog"
         initialState={filterState}
         atfProducts={collectAtfBrowseProducts(browseProducts, filterState)}
+        hydratedPool={browseProducts}
         poolScope="kids"
         kidsProductIds={kidsProductIds}
         showBespokeCta

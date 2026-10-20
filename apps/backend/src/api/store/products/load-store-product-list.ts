@@ -35,7 +35,9 @@ export type StoreProductListMode = "default" | "browse"
 const DEFAULT_PRODUCT_FIELDS = [
   "*",
   "variants.*",
+  "variants.options.*",
   "variants.price_set.prices.amount",
+  "options.*",
   "images.*",
   "product_categories.*",
   "product_classification.*",
@@ -55,12 +57,13 @@ export const BROWSE_PRODUCT_FIELDS = [
   "images.url",
   "variants.id",
   "variants.sku",
+  "variants.metadata",
   "product_categories.handle",
   "product_classification.product_type",
 ] as const
 
 /** Browse field set when category/product_type filters need relations. */
-const BROWSE_FILTERED_PRODUCT_FIELDS = [
+export const BROWSE_FILTERED_PRODUCT_FIELDS = [
   "id",
   "handle",
   "title",
@@ -70,6 +73,7 @@ const BROWSE_FILTERED_PRODUCT_FIELDS = [
   "images.url",
   "variants.id",
   "variants.sku",
+  "variants.metadata",
   "product_categories.category_id",
   "product_categories.handle",
   "product_classification.product_type",
@@ -82,6 +86,52 @@ type QueryGraph = {
     filters?: Record<string, unknown>
     context?: Record<string, unknown>
   }) => Promise<{ data: unknown[] }>
+}
+
+/** Keep each browse graph materialization short enough for /health to run. */
+const BROWSE_PRODUCT_CHUNK = 32
+const BROWSE_VARIANT_CHUNK = 80
+
+function yieldEventLoop(): Promise<void> {
+  return new Promise((resolve) => {
+    setImmediate(resolve)
+  })
+}
+
+function chunkIds(ids: string[], size: number): string[][] {
+  const out: string[][] = []
+  for (let i = 0; i < ids.length; i += size) out.push(ids.slice(i, i + size))
+  return out
+}
+
+async function loadBrowseProductsInChunks(
+  query: QueryGraph,
+  fields: string[],
+  filters: Record<string, unknown>
+): Promise<Array<Record<string, unknown>>> {
+  const { data: idRows } = await query.graph({
+    entity: "product",
+    fields: ["id"],
+    filters,
+  })
+  const ids = (idRows ?? [])
+    .map((row) =>
+      row && typeof row === "object" ? (row as { id?: unknown }).id : undefined
+    )
+    .filter((id): id is string => typeof id === "string" && id.length > 0)
+  const result: Array<Record<string, unknown>> = []
+  for (const slice of chunkIds(ids, BROWSE_PRODUCT_CHUNK)) {
+    const { data } = await query.graph({
+      entity: "product",
+      fields,
+      filters: { ...filters, id: slice },
+    })
+    if (Array.isArray(data)) {
+      result.push(...(data as Array<Record<string, unknown>>))
+    }
+    await yieldEventLoop()
+  }
+  return result
 }
 
 function flattenVariantPrices(
@@ -107,6 +157,57 @@ function flattenVariantPrices(
   })
 }
 
+/**
+ * Browse variant row used by the shared opening resolver.
+ * Keeps axis sort and the variant's own material tiers. Finish URL lists
+ * stay off this row. Without `variant_axes`, opening falls through to
+ * array order and the catalog card disagrees with the PDP.
+ */
+export function slimBrowseVariantRecord(
+  variant: Record<string, unknown>,
+  prices?: Array<{ amount: number }>,
+  calculated?: StoreCalculatedPrice
+): Record<string, unknown> {
+  const slim: Record<string, unknown> = {
+    id: variant.id,
+    sku: variant.sku,
+  }
+  if (prices) slim.prices = prices
+  else if (Array.isArray(variant.prices)) slim.prices = variant.prices
+  const ownCalculated = slimStoreCalculatedPrice(variant.calculated_price)
+  if (calculated) slim.calculated_price = calculated
+  else if (ownCalculated) slim.calculated_price = ownCalculated
+  const openingMeta = browseOpeningMetadata(variant.metadata)
+  if (openingMeta) slim.metadata = openingMeta
+  return slim
+}
+
+function browseOpeningMetadata(metadata: unknown): Record<string, unknown> | null {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return null
+  const src = metadata as Record<string, unknown>
+  const kept: Record<string, unknown> = {}
+  const axes = src.variant_axes
+  if (axes && typeof axes === "object" && !Array.isArray(axes)) {
+    kept.variant_axes = axes
+  }
+  const mattress = src.mattress_size
+  if (mattress && typeof mattress === "object" && !Array.isArray(mattress)) {
+    kept.mattress_size = mattress
+  }
+  const capabilities = src.capabilities
+  if (capabilities && typeof capabilities === "object" && !Array.isArray(capabilities)) {
+    /* An empty bag is an override: it blocks product-tier inheritance.
+       Dropping it makes the catalog card apply a discount the PDP does not. */
+    const bag = capabilities as Record<string, unknown>
+    const slim: Record<string, unknown> = {}
+    if (Object.prototype.hasOwnProperty.call(bag, "material_tiers")) {
+      slim.material_tiers = bag.material_tiers
+    }
+    kept.capabilities = slim
+  }
+  return Object.keys(kept).length > 0 ? kept : null
+}
+
 async function attachBrowseVariantPrices(
   query: QueryGraph,
   products: Array<Record<string, unknown>>
@@ -129,23 +230,30 @@ async function attachBrowseVariantPrices(
      calculated price (sale price lists) in one variant graph. The calculated
      context mirrors the cart line-item override (first region / currency). */
   const pricingContext = await resolveStorePricingContext(query)
-  const { data: pricedVariants } = await query.graph({
-    entity: "product_variant",
-    fields: pricingContext
-      ? ["id", "price_set.prices.amount", "calculated_price.*"]
-      : ["id", "price_set.prices.amount"],
-    filters: { id: variantIds },
-    ...(pricingContext
-      ? {
-          context: {
-            calculated_price: QueryContext({
-              region_id: pricingContext.region_id,
-              currency_code: pricingContext.currency_code,
-            }),
-          },
-        }
-      : {}),
-  })
+  const pricedVariants: unknown[] = []
+  const variantFields = pricingContext
+    ? ["id", "price_set.prices.amount", "calculated_price.*"]
+    : ["id", "price_set.prices.amount"]
+  const variantContext = pricingContext
+    ? {
+        context: {
+          calculated_price: QueryContext({
+            region_id: pricingContext.region_id,
+            currency_code: pricingContext.currency_code,
+          }),
+        },
+      }
+    : {}
+  for (const slice of chunkIds(variantIds, BROWSE_VARIANT_CHUNK)) {
+    const { data } = await query.graph({
+      entity: "product_variant",
+      fields: variantFields,
+      filters: { id: slice },
+      ...variantContext,
+    })
+    if (Array.isArray(data)) pricedVariants.push(...data)
+    await yieldEventLoop()
+  }
 
   const pricesByVariantId = new Map<string, Array<{ amount: number }>>()
   const calculatedByVariantId = new Map<string, StoreCalculatedPrice>()
@@ -181,19 +289,36 @@ async function attachBrowseVariantPrices(
           const id = typeof v.id === "string" ? v.id : undefined
           const prices = id ? pricesByVariantId.get(id) : undefined
           const calculated = id ? calculatedByVariantId.get(id) : undefined
-          const slim: Record<string, unknown> = {
-            id: v.id,
-            sku: v.sku,
-          }
-          if (prices) slim.prices = prices
-          if (calculated) slim.calculated_price = calculated
-          return slim
+          return slimBrowseVariantRecord(v, prices, calculated)
         })
       : variants
     return {
       ...p,
       images: Array.isArray(p.images) ? p.images : [],
       variants: nextVariants,
+    }
+  })
+}
+
+/**
+ * Variant metadata (axis sort, per-SKU material tiers) is loaded in browse
+ * only so the default configuration opens on the same SKU and tier as the PDP.
+ * It is not part of the browse payload.
+ */
+function dropBrowseVariantMetadata(
+  products: Array<Record<string, unknown>>
+): Array<Record<string, unknown>> {
+  return products.map((p) => {
+    const variants = p.variants
+    if (!Array.isArray(variants)) return p
+    return {
+      ...p,
+      variants: variants.map((variant) => {
+        if (!variant || typeof variant !== "object") return variant
+        const rest = { ...(variant as Record<string, unknown>) }
+        delete rest.metadata
+        return rest
+      }),
     }
   })
 }
@@ -232,13 +357,17 @@ export async function loadStoreProductList(
     fields = [...DEFAULT_PRODUCT_FIELDS]
   }
 
-  const { data: products } = await query.graph({
-    entity: "product",
-    fields,
-    filters: Object.keys(filters).length ? filters : undefined,
-  })
-
-  let result = (products ?? []) as Array<Record<string, unknown>>
+  let result: Array<Record<string, unknown>>
+  if (mode === "browse" && !handle && !options?.ids) {
+    result = await loadBrowseProductsInChunks(query, fields, filters)
+  } else {
+    const { data: products } = await query.graph({
+      entity: "product",
+      fields,
+      filters: Object.keys(filters).length ? filters : undefined,
+    })
+    result = (products ?? []) as Array<Record<string, unknown>>
+  }
 
   if (mode === "browse") {
     result = await attachBrowseVariantPrices(query, result)
@@ -272,7 +401,10 @@ export async function loadStoreProductList(
   // handle-based PDP fallback shares the same opening price contract as browse.
   if (mode === "browse") {
     result = projectBuyerItemTypesOntoProducts(dedupeCatalogProductsById(result))
+    await yieldEventLoop()
     result = projectDefaultBuyerConfigurationsOntoProducts(result)
+    result = dropBrowseVariantMetadata(result)
+    await yieldEventLoop()
     result = sortProductsByMerchandisingOrder(result)
   } else {
     result = projectDefaultBuyerConfigurationsOntoProducts(result)

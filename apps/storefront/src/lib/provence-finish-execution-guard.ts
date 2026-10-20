@@ -118,6 +118,21 @@ function provencePaintWoodBucketForUrl(
   return null
 }
 
+export function provenceEvidenceHandle(product: {
+  handle?: unknown
+  metadata?: unknown
+}): string {
+  const meta = product.metadata
+  const media =
+    meta && typeof meta === "object" && !Array.isArray(meta)
+      ? (meta as { media_identity_handle?: unknown }).media_identity_handle
+      : undefined
+  if (typeof media === "string" && media.trim().toLowerCase().startsWith("pv-")) {
+    return media.trim().toLowerCase()
+  }
+  return typeof product.handle === "string" ? product.handle : ""
+}
+
 /** `i1` + `main` alone is scene-only — not paint×wood dual finish. */
 export function hasProvencePaintWoodDualFinishEvidence(
   urls: string[],

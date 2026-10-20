@@ -47,6 +47,7 @@ export const CATEGORY_FILTER_LABELS: Record<string, string> = {
   polki: "Полки",
   stulya: "Стулья",
   sunduki: "Сундуки",
+  "toy-box": "Ящики для игрушек",
   chasy: "Часы",
   konsoli: "Консоли",
   skameyki: "Скамейки",

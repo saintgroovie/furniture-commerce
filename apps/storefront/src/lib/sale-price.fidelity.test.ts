@@ -8,6 +8,7 @@ import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import {
   resolveOriginalBasePrice,
+  resolveOriginalBasePriceOf,
   resolveOriginalOpeningPrice,
   resolveSalePrice,
   salePercent,
@@ -131,7 +132,17 @@ assert.equal(resolveSalePrice(product(), null), null)
   assert.match(pdpBlock, /promotionCopy\.wasPriceSr/)
 
   const pdpPage = readFileSync(join(root, "app/product/[id]/page.tsx"), "utf8")
-  assert.match(pdpPage, /originalBasePrice=\{resolveOriginalBasePrice\(/)
+  assert.match(pdpPage, /originalBasePrice=\{resolveOriginalBasePriceOf\(/)
+  const sold = product().variants as Array<Record<string, unknown>>
+  const unsold = {
+    calculated_price: {
+      calculated_amount: 80_000,
+      original_amount: 80_000,
+      is_calculated_price_price_list: false,
+    },
+  }
+  assert.equal(resolveOriginalBasePriceOf(sold[0]), 109_500)
+  assert.equal(resolveOriginalBasePriceOf(unsold), null, "a sibling sale must not strike through this SKU")
 
   const promo = readFileSync(join(root, "components/promotion-card.tsx"), "utf8")
   assert.match(promo, /href=\{active\.href\}/)

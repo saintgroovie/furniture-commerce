@@ -37,26 +37,13 @@ function readSha40(raw: string | undefined): string {
 }
 
 /**
- * WOODRIGHT_RELEASE_SHA is last-unified-pair informational only.
- * Emit x-woodright-release-sha when:
- *   - both component SHAs are present, equal, and equal the global SHA, or
- *   - legacy: neither component SHA is set and the global SHA is valid.
- * A split pair (backend SHA != storefront SHA) must not advertise one global SHA.
+ * WOODRIGHT_RELEASE_SHA is the application / release baseline.
+ * Component revisions are separate and may differ after a component-only
+ * release. That divergence is expected. It must not hide this header, and
+ * this value must not be copied into a missing component header.
  */
-export function selectUnifiedReleaseSha(input: {
-  backendSha: string
-  storefrontSha: string
-  releaseSha: string
-}): string {
-  const releaseSha = readSha40(input.releaseSha)
-  if (!releaseSha) return ""
-  const backendSha = readSha40(input.backendSha)
-  const storefrontSha = readSha40(input.storefrontSha)
-  if (backendSha && storefrontSha) {
-    return backendSha === storefrontSha && backendSha === releaseSha ? releaseSha : ""
-  }
-  if (!backendSha && !storefrontSha) return releaseSha
-  return ""
+export function readApplicationReleaseSha(raw: string | undefined): string {
+  return readSha40(raw)
 }
 
 /** Prefer WOODRIGHT_DATABASE_IDENTITY; accept legacy *_ALIAS. */
@@ -72,11 +59,7 @@ export function readRuntimeIdentityFromEnv(env: NodeJS.ProcessEnv = process.env)
   const exposure = (env.WOODRIGHT_EXPOSURE || "").trim()
   const backendSha = readSha40(env.WOODRIGHT_BACKEND_SOURCE_SHA)
   const storefrontSha = readSha40(env.WOODRIGHT_STOREFRONT_SOURCE_SHA)
-  const releaseSha = selectUnifiedReleaseSha({
-    backendSha,
-    storefrontSha,
-    releaseSha: env.WOODRIGHT_RELEASE_SHA || "",
-  })
+  const releaseSha = readApplicationReleaseSha(env.WOODRIGHT_RELEASE_SHA)
   const dbAlias = readDbIdentityAlias(env)
 
   const role = normalizeRole(roleRaw)
