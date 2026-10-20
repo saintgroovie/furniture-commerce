@@ -14,6 +14,15 @@ assert.equal(
   normalizeRuUiDashes("зона у окна, - где нужна поверхность"),
   "зона у окна - где нужна поверхность"
 )
+assert.equal(
+  normalizeRuUiDashes("на 90-сантиметровом матрасе, в светло-серой обивке; Кровать-трансформер, Оксфорд-1"),
+  "на 90-сантиметровом матрасе, в светло-серой обивке; Кровать-трансформер, Оксфорд-1",
+  "hyphens inside words and numbers are not dashes"
+)
+assert.equal(normalizeRuUiDashes("Москва—принимаем"), "Москва - принимаем")
+assert.equal(normalizeRuUiDashes("Комод Oliver — 132 см"), "Комод Oliver - 132 см")
+assert.equal(normalizeRuUiDashes("высота -90 см"), "высота - 90 см")
+assert.equal(normalizeRuUiDashes("слово- слово"), "слово - слово")
 
 const step = layoutDescriptionMeaningLines(
   "Её место - проходные зоны: прихожая, простенок, зона у окна, - где нужна поверхность для ключей, цветов или зарядки, но нет глубины под полноценный стол."

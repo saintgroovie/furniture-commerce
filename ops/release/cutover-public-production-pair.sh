@@ -82,6 +82,7 @@ SOURCE_SHA=""
 SF_REF=""
 BE_REF=""
 CONFIRM=""
+EXPECTED_APPROVAL_CHECKSUM=""
 MISMATCH=0
 
 HELPER_INSTALL_SHA=""
@@ -143,6 +144,10 @@ Required:
 Optional:
   --mode dry-run|execute      (default dry-run; --dry-run/--execute also accepted)
   --confirm-mutation <token>  (execute only: I_UNDERSTAND_PUBLIC_PRODUCTION_PAIR_CUTOVER)
+  --expected-approval-checksum <64hex>
+                         execute outside the harness requires the checksum Gate A
+                         printed on the final dry-run. A mismatch dies before the
+                         mutation lock and before any pin write.
 
 Dry-run: read-only. No lock held, no pin writes, no recreate, no ACTIVE/EXPECTED writes.
 Execute: pins -> recreate (backend then storefront, --no-deps) -> readiness -> ACTIVE,
@@ -183,6 +188,8 @@ parse_args() {
       --execute) MODE="execute"; record_mode_request execute; shift ;;
       --confirm-mutation) CONFIRM="${2:?}"; shift 2 ;;
       --confirm-mutation=*) CONFIRM="${1#--confirm-mutation=}"; shift ;;
+      --expected-approval-checksum) EXPECTED_APPROVAL_CHECKSUM="${2:?}"; shift 2 ;;
+      --expected-approval-checksum=*) EXPECTED_APPROVAL_CHECKSUM="${1#--expected-approval-checksum=}"; shift ;;
       *) die "unknown argument: $1" ;;
     esac
   done
@@ -224,6 +231,37 @@ sha256_of() {
   else
     printf '%s\n' "unknown"
   fi
+}
+
+# Profile pin checksum. Readable files stay unprivileged. A root-only
+# public_production compose .env is hashed with sudo -n sha256sum -- <realpath>
+# inside wr_compose_env_fingerprint_for_environment. Never cats the file.
+# Sets COMPOSE_ENV_FINGERPRINT and COMPOSE_ENV_FINGERPRINT_METHOD.
+# Returns 1 without exiting so the caller can stop before any pin write.
+fingerprint_protected_pin() {
+  local rec allowed_root expected
+  [[ -n "${COMPOSE_ENV_FILE:-}" ]] || { log "ERROR: compose env file unset"; return 1; }
+  expected="${WOODRIGHT_COMPOSE_ENV_FILE:-$COMPOSE_ENV_FILE}"
+  allowed_root="${WOODRIGHT_DOKPLOY_COMPOSE_DIR:-}"
+  [[ -n "$allowed_root" ]] || { log "ERROR: profile compose dir unset"; return 1; }
+  rec="$(wr_compose_env_fingerprint_for_environment public_production "$COMPOSE_ENV_FILE" "$expected" "$allowed_root")" \
+    || { log "ERROR: protected pin checksum failed (hasher is sudo -n sha256sum; contents are not read)"; return 1; }
+  case "$rec" in
+    unprivileged\ [0-9a-f]*|privileged\ [0-9a-f]*) ;;
+    *) log "ERROR: protected pin checksum returned an invalid record"; return 1 ;;
+  esac
+  COMPOSE_ENV_FINGERPRINT_METHOD="${rec%% *}"
+  COMPOSE_ENV_FINGERPRINT="${rec#* }"
+  [[ "$COMPOSE_ENV_FINGERPRINT" =~ ^[0-9a-f]{64}$ ]] || {
+    log "ERROR: protected pin checksum is not 64 hex"
+    return 1
+  }
+  if [[ -r "$COMPOSE_ENV_FILE" ]]; then
+    log "protected_pin_checksum=ok method=$COMPOSE_ENV_FINGERPRINT_METHOD env_readable_by_operator=yes"
+  else
+    log "protected_pin_checksum=ok method=$COMPOSE_ENV_FINGERPRINT_METHOD env_readable_by_operator=no"
+  fi
+  return 0
 }
 
 resolve_helper_install_sha() {
@@ -316,6 +354,10 @@ if [[ "${WOODRIGHT_CUTOVER_HARNESS:-0}" == "1" ]]; then
     */locks/public_production/live-cutover.lock) ;;
     *) die "harness: lock must end in /locks/public_production/live-cutover.lock" ;;
   esac
+  # Fault injection is test-only. The same flag must not waive the execute
+  # checksum, or anything else, when the profile still points at production.
+  wr_owner_approved_harness_is_isolated \
+    || die "CUTOVER_HARNESS_PRODUCTION_PATH_REFUSED lock=${WOODRIGHT_MUTATION_LOCK_PATH} meta=${WOODRIGHT_META_ROOT:-<unset>} compose=${WOODRIGHT_COMPOSE_ENV_FILE:-<unset>}"
 else
   wr_assert_public_production_path_isolation || die "public_production path isolation failed"
 fi
@@ -342,7 +384,11 @@ fi
 [[ "${WR_OA_ENVIRONMENT:-}" == "public_production" ]] || die "Gate A environment must be exact public_production (got ${WR_OA_ENVIRONMENT:-empty})"
 GATE_A_CHECKSUM="${WR_OA_CHECKSUM:-}"
 [[ -n "$GATE_A_CHECKSUM" ]] || die "Gate A checksum missing"
-log "owner_approval_gate_a_ok checksum=$GATE_A_CHECKSUM"
+if ! wr_owner_approved_bind_preflight_checksum "$EXPECTED_APPROVAL_CHECKSUM" "$MODE"; then
+  die "preflight approval bind failed result=${WR_OWNER_APPROVAL_RESULT} gate_a=$GATE_A_CHECKSUM expected=${EXPECTED_APPROVAL_CHECKSUM:-<unset>}"
+fi
+export WR_OA_BIND_CHECKSUM="$GATE_A_CHECKSUM"
+log "owner_approval_gate_a_ok checksum=$GATE_A_CHECKSUM generation=${WR_OA_GENERATION:-legacy} reservation=${WR_OA_RESERVATION_STATE:-legacy}"
 if [[ -n "${WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST:-}" && "${WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST}" != "$OA_SF_DIGEST" ]]; then
   die "caller WOODRIGHT_OWNER_APPROVAL_PEER_SF_DIGEST mismatch vs pair plan want=$OA_SF_DIGEST"
 fi
@@ -474,13 +520,15 @@ check_lock_status() {
   # operator notes) and never create the lock (file already proven to exist
   # above). Brief non-blocking flock probe, then release immediately.
   WR_LOCK_STATUS="free"
-  exec 219>>"$lock_path" 2>/dev/null || { WR_LOCK_STATUS="lock_path_unreachable"; return 0; }
+  # Do not attach 2>/dev/null to a command-less exec: bash applies that
+  # redirection to the rest of the shell, and every later log line disappears.
+  exec 219>>"$lock_path" || { WR_LOCK_STATUS="lock_path_unreachable"; return 0; }
   if flock -n 219; then
     flock -u 219 || true
   else
     WR_LOCK_STATUS="held_by_other_process"
   fi
-  exec 219>&- 2>/dev/null || true
+  exec 219>&- || true
 }
 
 # Read-only image candidate inspection - never pulls.
@@ -1190,6 +1238,10 @@ emit_packet() {
   local packet_mode="$1" verdict="$2"
   local write_release=0
   if should_write_common_release_sha; then write_release=1; fi
+  export WR_OA_BIND_CHECKSUM="${WR_OA_BIND_CHECKSUM:-${GATE_A_CHECKSUM:-}}"
+  export WR_OA_GENERATION="${WR_OA_GENERATION:-}"
+  export WR_OA_RESERVATION_STATE="${WR_OA_RESERVATION_STATE:-}"
+  export WR_OA_COMPONENT="${WR_OA_COMPONENT:-}"
   export WR_LOCK_STATUS WR_SF_PRESENT WR_SF_REVISION WR_SF_BUILD_PROFILE WR_SF_REF \
     WR_BE_PRESENT WR_BE_REVISION WR_BE_BUILD_PROFILE WR_BE_REF \
     WR_BE_CONTAINER_PRESENT WR_SF_CONTAINER_PRESENT \
@@ -1215,6 +1267,8 @@ emit_packet() {
   WR_PACKET_PRE_SF_REF="${PRE_SF_REF:-$LIVE_SF_REF}" \
   WR_PACKET_PIN_BE="$PIN_BE_VALUE" \
   WR_PACKET_PIN_SF="$PIN_SF_VALUE" \
+  WR_PACKET_PIN_FINGERPRINT_METHOD="${COMPOSE_ENV_FINGERPRINT_METHOD:-}" \
+  WR_PACKET_PIN_FINGERPRINT="${COMPOSE_ENV_FINGERPRINT:-}" \
   WR_PACKET_SKEW_BE="$SKEW_BE" \
   WR_PACKET_SKEW_SF="$SKEW_SF" \
   WR_PACKET_SKEW="$EXISTING_SKEW" \
@@ -1311,6 +1365,16 @@ packet = {
     "component": component,
     "source_sha": source_sha,
     "application_source_sha": source_sha,
+    "owner_approval": {
+        "checksum": os.environ.get("WR_OA_BIND_CHECKSUM", ""),
+        "generation": os.environ.get("WR_OA_GENERATION", ""),
+        "reservation_state": os.environ.get("WR_OA_RESERVATION_STATE", ""),
+        "component": os.environ.get("WR_OA_COMPONENT", ""),
+    },
+    "protected_pin_checksum": {
+        "method": os.environ.get("WR_PACKET_PIN_FINGERPRINT_METHOD", ""),
+        "digest": os.environ.get("WR_PACKET_PIN_FINGERPRINT", ""),
+    },
     "helper_install_sha": os.environ.get("WR_PACKET_HELPER_SHA", ""),
     "operation_helper_install_sha": os.environ.get("WR_PACKET_HELPER_SHA", ""),
     "sha_separation_note": (
@@ -1491,6 +1555,9 @@ PY
 
 if [[ "$MODE" == "dry-run" ]]; then
   check_lock_status
+  if ! fingerprint_protected_pin; then
+    die "protected pin checksum failed during dry-run (no pin write)"
+  fi
   emit_packet dry-run planned
   if [[ "$MISMATCH" -eq 1 ]]; then
     log "DRY_RUN_MISMATCH sha=$SOURCE_SHA component=$COMPONENT - a locally present candidate image does not match the requested source-sha/profile"
@@ -1886,6 +1953,16 @@ run_rollback() {
      && "$meta_ok" == "1" && "$backend_ok" == "1" ]]; then
     ROLLBACK_RC=10
     record_state rolled_back
+    # Reservation ends only after a proven rollback. Incomplete rollback stays
+    # reserved so a second candidate cannot be approved against an open incident.
+    if [[ "${WR_OA_RESERVATION_STATE:-legacy}" == "reserved" ]]; then
+      export WR_OA_TRANSITION_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      if ! wr_owner_approved_mark_terminal public_production rolled_back "$EVIDENCE_DIR" "cutover rolled back"; then
+        log "WARN approval reservation remains reserved after rollback result=${WR_OWNER_APPROVAL_RESULT:-unknown}; explicit cancel is required before another candidate"
+      else
+        log "approval_reservation_rolled_back checksum=${WR_OA_CHECKSUM:-}"
+      fi
+    fi
     log "ROLLBACK_OK (pins restored, runtime digests == pins, RELEASE_SHA restored, private binds, media volume, no public Traefik, HTTP gates)"
     return "$ROLLBACK_RC"
   fi
@@ -1965,7 +2042,10 @@ PRELOCK_BE_ID="$(container_id "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 PRELOCK_SF_ID="$(container_id "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
 PRELOCK_BE_DIGEST="$(container_digest "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 PRELOCK_SF_DIGEST="$(container_digest "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
-PRELOCK_PIN_SHA="$(sha256_of "$COMPOSE_ENV_FILE")"
+if ! fingerprint_protected_pin; then
+  die "protected pin checksum failed before lock (no pin write)"
+fi
+PRELOCK_PIN_SHA="$COMPOSE_ENV_FINGERPRINT"
 
 # --- lock -------------------------------------------------------------------
 if [[ "${WR_STAGING_MUTATION_LOCK_ALLOW_NONCANONICAL:-0}" == "1" ]]; then
@@ -2009,7 +2089,10 @@ UNDER_BE_ID="$(container_id "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 UNDER_SF_ID="$(container_id "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
 UNDER_BE_DIGEST="$(container_digest "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 UNDER_SF_DIGEST="$(container_digest "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
-UNDER_PIN_SHA="$(sha256_of "$COMPOSE_ENV_FILE")"
+if ! fingerprint_protected_pin; then
+  die "protected pin checksum failed under lock (no pin write)"
+fi
+UNDER_PIN_SHA="$COMPOSE_ENV_FINGERPRINT"
 [[ "$UNDER_BE_ID" == "$PRELOCK_BE_ID" ]] || die "TOCTOU backend container id changed pre=$PRELOCK_BE_ID under=$UNDER_BE_ID"
 [[ "$UNDER_SF_ID" == "$PRELOCK_SF_ID" ]] || die "TOCTOU storefront container id changed pre=$PRELOCK_SF_ID under=$UNDER_SF_ID"
 [[ "$UNDER_BE_DIGEST" == "$PRELOCK_BE_DIGEST" ]] || die "TOCTOU backend digest changed pre=$PRELOCK_BE_DIGEST under=$UNDER_BE_DIGEST"
@@ -2062,7 +2145,14 @@ backup_file() {
   else
     return 1
   fi
-  sha256_of "$EVIDENCE_DIR/pin-backup/$name" >"$EVIDENCE_DIR/pin-backup/${name}.sha256"
+  if [[ -r "$EVIDENCE_DIR/pin-backup/$name" ]]; then
+    sha256_of "$EVIDENCE_DIR/pin-backup/$name" >"$EVIDENCE_DIR/pin-backup/${name}.sha256"
+  elif [[ "$name" == "dokploy-compose.env" ]]; then
+    wr_compose_env_sha256_auto "$EVIDENCE_DIR/pin-backup/$name" >"$EVIDENCE_DIR/pin-backup/${name}.sha256" || return 1
+  else
+    log "ERROR: pin backup is unreadable and is not the compose env copy"
+    return 1
+  fi
 }
 backup_file "$COMPOSE_ENV_FILE" dokploy-compose.env || die "compose .env backup failed"
 [[ -f "$EVIDENCE_DIR/pin-backup/dokploy-compose.env" ]] || die "compose .env backup missing after backup step"
@@ -2625,6 +2715,14 @@ if ! assert_backend_notouch; then
   die "backend identity moved before commit"
 fi
 log "owner_approval_gate_c_ok live_be=$LIVE_BE_DIGEST_FINAL live_sf=$LIVE_SF_DIGEST_FINAL checksum=$WR_OA_CHECKSUM"
+if [[ "${WR_OA_RESERVATION_STATE:-legacy}" == "reserved" ]]; then
+  export WR_OA_TRANSITION_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  if ! wr_owner_approved_mark_terminal public_production committed "$EVIDENCE_DIR" "cutover committed"; then
+    log "WARN approval reservation remains reserved after commit result=${WR_OWNER_APPROVAL_RESULT:-unknown}; explicit cancel is required before another candidate"
+  else
+    log "approval_reservation_committed previous=$GATE_A_CHECKSUM checksum=${WR_OA_CHECKSUM:-}"
+  fi
+fi
 COMMITTED=1
 record_state committed
 {

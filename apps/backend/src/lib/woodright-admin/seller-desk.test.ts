@@ -64,7 +64,7 @@ describe("buildDeskInbox", () => {
     assert.equal(items.length, 0)
   })
 
-  it("lists catalog blockers and waiting production", () => {
+  it("does not turn catalog rows into separate inbox cards", () => {
     const items = buildDeskInbox({
       now,
       requests: [],
@@ -94,8 +94,7 @@ describe("buildDeskInbox", () => {
         },
       ],
     })
-    assert.equal(items.some((i) => i.id === "cat-media:p1" && i.overdue), true)
-    assert.equal(items.some((i) => i.id === "cat-price:p2" && !i.overdue), true)
+    assert.equal(items.some((i) => i.kind === "catalog"), false)
     assert.equal(items.some((i) => i.kind === "production" && i.overdue), true)
   })
 })

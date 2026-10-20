@@ -41,6 +41,7 @@ import {
   sortDisplayEntries,
 } from "@/lib/catalog-filters"
 import { actions, catalogCopy, seo } from "@/lib/woodright-copy"
+import { pageTitle } from "@/lib/page-title"
 import { CopyLines } from "@/components/copy-lines"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { catalogCardAtfFlags } from "@/lib/catalog-atf"
@@ -50,7 +51,7 @@ import { catalogCardAtfFlags } from "@/lib/catalog-atf"
 const catalogCanonical = indexingCanonical(`${getSiteUrl()}/catalog`)
 
 export const metadata: Metadata = {
-  title: seo.catalog.title,
+  title: pageTitle(seo.catalog.title),
   description: seo.catalog.description,
   openGraph: {
     title: seo.catalog.title,
@@ -206,6 +207,7 @@ export default async function CatalogPage({
         basePath="/catalog"
         initialState={filterState}
         atfProducts={collectAtfBrowseProducts(browseProducts, filterState)}
+        hydratedPool={browseProducts}
         poolScope="main"
         kidsProductIds={kidsProductIds}
         promotionSlot={toClientPromotionSlot(promotionSlot)}

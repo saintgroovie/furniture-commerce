@@ -5,6 +5,7 @@ import {
 } from "@/lib/en-name-ru"
 import { isOliverKidsHandle } from "@/lib/oliver-kids-scope"
 import { resolvePublicProductTitle } from "@/lib/catalog-normalization"
+import { openingVariant } from "@/lib/opening-variant"
 
 type Dimensions = {
   width_mm?: number
@@ -246,8 +247,7 @@ export function getSubcollectionLabel(product: ProductLike): string | null {
 }
 
 export function getArticle(product: ProductLike): string | null {
-  const variants = product.variants as Array<Record<string, unknown>> | undefined
-  const sku = variants?.[0]?.sku
+  const sku = openingVariant(product as Record<string, unknown>)?.sku
   return typeof sku === "string" && sku ? sku : null
 }
 
@@ -528,14 +528,15 @@ export function getMattressSize(
 }
 
 /**
- * Size shown on the PDP. The cart button buys the first variant, so that
- * variant is the one whose bag can hide a product-level size.
+ * Size shown when the PDP has not selected a variant yet.
+ * Uses the opening SKU, so a later array row cannot hide the opening size.
  */
 export function getPdpMattressSize(product: ProductLike): MattressSize | null {
-  const variants = Array.isArray(product.variants)
-    ? (product.variants as ProductLike[])
-    : []
-  return getMattressSize(product, variants[0] ?? null)
+  const opening = openingVariant(product as Record<string, unknown>)
+  if (opening) return getMattressSize(product, opening as ProductLike)
+  const variants = Array.isArray(product.variants) ? product.variants : []
+  if (variants.length > 1) return null
+  return getMattressSize(product, (variants[0] as ProductLike | undefined) ?? null)
 }
 
 /** Resolve dimensions for a specific variant id on a product payload. */

@@ -3,6 +3,7 @@ import { LegalPageView } from "@/components/legal-page-view"
 import { buildLegalPage, type LegalPageId } from "@/lib/legal/legal-content"
 import { getSiteUrl } from "@/lib/api/base"
 import { indexingRobotsMetadata, launchCanonical } from "@/lib/indexing-policy"
+import { joinMetaSentences } from "@/lib/page-title"
 
 /**
  * Self-canonical uses `launchCanonical` (see `@/lib/indexing-policy`): once
@@ -13,13 +14,14 @@ import { indexingRobotsMetadata, launchCanonical } from "@/lib/indexing-policy"
 export function legalPageMetadata(id: LegalPageId): Metadata {
   const page = buildLegalPage(id)
   const selfCanonical = launchCanonical(`${getSiteUrl()}${page.path}`)
+  const description = joinMetaSentences(page.lead)
   return {
     title: page.title,
-    description: page.lead.join(" "),
+    description,
     robots: indexingRobotsMetadata(),
     openGraph: {
       title: page.title,
-      description: page.lead.join(" "),
+      description,
       url: page.path,
     },
     ...(selfCanonical ? { alternates: selfCanonical } : {}),

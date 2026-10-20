@@ -119,5 +119,23 @@ check(
   "workflow never sources NEXT_PUBLIC_SITE_URL from a secret (RCA fix)"
 )
 check(/woodright\.image\.build_profile/.test(wf), "workflow labels images with woodright.image.build_profile")
+check(
+  /WOODRIGHT_STOREFRONT_SOURCE_SHA=\$\{\{ steps\.sha\.outputs\.sha \}\}/.test(wf),
+  "workflow bakes storefront component SHA from the candidate SHA"
+)
+check(
+  /WOODRIGHT_BACKEND_SOURCE_SHA=\$\{\{ steps\.sha\.outputs\.sha \}\}/.test(wf),
+  "workflow bakes backend component SHA from the candidate SHA"
+)
+check(
+  /WOODRIGHT_STOREFRONT_SOURCE_SHA/.test(dockerfile) && /WOODRIGHT_BACKEND_SOURCE_SHA/.test(
+    fs.readFileSync(path.join(root, "apps/backend/Dockerfile"), "utf8")
+  ),
+  "Dockerfiles declare component source SHA build args"
+)
+check(
+  /profile=\$WOODRIGHT_IMAGE_BUILD_PROFILE requires WOODRIGHT_STOREFRONT_SOURCE_SHA/.test(dockerfile),
+  "profiled storefront bake fails closed without component SHA"
+)
 
 process.exit(failed ? 1 : 0)

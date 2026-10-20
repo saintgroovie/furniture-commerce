@@ -27,6 +27,7 @@ import { cartLineConfigurationIdentity } from "@/lib/cart-line-identity"
 import { userFacingError } from "@/lib/user-facing-error"
 import { isRequestQuoteProduct } from "@/lib/request-quote"
 import { isKidsStorefrontProduct } from "@/lib/kids"
+import { openingVariant } from "@/lib/opening-variant"
 import { actions, pdpCopy, productCta as copy } from "@/lib/woodright-copy"
 import { flatCopy } from "@/lib/format-ru-copy"
 import {
@@ -46,6 +47,8 @@ type Props = {
   requiresBuyerSelection?: boolean
   /** Ordered material tier options (position 0 = default) from metadata. */
   materialTiers?: MaterialTierOption[] | null
+  /** Sellable variant chosen on this PDP. Falls back to the first variant. */
+  variantId?: string
 }
 
 function getProductType(product: Record<string, unknown>): string | undefined {
@@ -61,10 +64,20 @@ function productKeyOf(product: Record<string, unknown>): string {
   return typeof product.id === "string" ? product.id : ""
 }
 
+function variantGalleryImage(variant: unknown): string | undefined {
+  if (!variant || typeof variant !== "object") return undefined
+  const metadata = (variant as { metadata?: { gallery_urls?: unknown } }).metadata
+  const urls = metadata?.gallery_urls
+  if (!Array.isArray(urls)) return undefined
+  const first = urls.find((url) => typeof url === "string" && url.trim())
+  return typeof first === "string" ? first : undefined
+}
+
 export function ProductCta({
   product,
   requiresBuyerSelection = false,
   materialTiers = null,
+  variantId: variantIdProp,
 }: Props) {
   const [adding, setAdding] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -98,6 +111,15 @@ export function ProductCta({
   function requestQuery(extra?: Record<string, string | undefined>): string {
     const params = new URLSearchParams()
     if (productId) params.set("product_id", productId)
+    const skuSource =
+      variantForCart && typeof variantForCart === "object" && "sku" in variantForCart
+        ? variantForCart
+        : undefined
+    const sku =
+      skuSource && typeof skuSource === "object" && "sku" in skuSource
+        ? String((skuSource as { sku?: unknown }).sku ?? "").trim()
+        : ""
+    if (sku) params.set("sku", sku)
     const tier = selectedMaterialTier()
     if (tier) params.set("material", tier.label)
     const hinge = selectedHingeSide()
@@ -118,9 +140,13 @@ export function ProductCta({
   function managerAdaptationHref(): string {
     const title = typeof product.title === "string" ? product.title : undefined
     const handle = typeof product.handle === "string" ? product.handle : undefined
+    const skuSource =
+      variantForCart && typeof variantForCart === "object" && "sku" in variantForCart
+        ? variantForCart
+        : undefined
     const sku =
-      firstVariant && typeof firstVariant === "object" && "sku" in firstVariant
-        ? String((firstVariant as { sku?: unknown }).sku ?? "")
+      skuSource && typeof skuSource === "object" && "sku" in skuSource
+        ? String((skuSource as { sku?: unknown }).sku ?? "")
         : undefined
     return requestQuery({
       from: "pdp",
@@ -135,10 +161,20 @@ export function ProductCta({
   const productType = getProductType(product)
   const isKids = isKidsStorefrontProduct(product)
   const variants = (product.variants as unknown[]) ?? []
-  const firstVariant = Array.isArray(variants) ? variants[0] : undefined
+  const chosenVariant =
+    variantIdProp && Array.isArray(variants)
+      ? variants.find(
+          (item) =>
+            item &&
+            typeof item === "object" &&
+            "id" in item &&
+            (item as { id: string }).id === variantIdProp
+        )
+      : undefined
+  const variantForCart = chosenVariant ?? openingVariant(product) ?? undefined
   const variantId =
-    firstVariant && typeof firstVariant === "object" && "id" in firstVariant
-      ? (firstVariant as { id: string }).id
+    variantForCart && typeof variantForCart === "object" && "id" in variantForCart
+      ? (variantForCart as { id: string }).id
       : undefined
   const productId = product.id as string | undefined
 
@@ -201,8 +237,13 @@ export function ProductCta({
         selection?.finishKey?.trim() ||
         selection?.gate.finishKey?.trim() ||
         null
+      const galleryImage = variantGalleryImage(variantForCart)
       const metadata: Record<string, unknown> = {
-        ...(selection?.imageSrc ? { execution_image: selection.imageSrc } : {}),
+        ...(selection?.imageSrc
+          ? { execution_image: selection.imageSrc }
+          : galleryImage
+            ? { execution_image: galleryImage }
+            : {}),
         ...(specs.length > 0 ? { execution_specs: specs } : {}),
         ...(materialTier ? { material_execution_code: materialTier.code } : {}),
         ...(finishKey ? { finish_execution_key: finishKey } : {}),

@@ -52,6 +52,8 @@ export const BUYER_ITEM_TYPE_HANDLE_ALIASES: Record<string, string> = {
  *   proposed_category=stoly-i-stoliki) + launch-a draft → `stoly`
  * - Oxford `s-ox-05`: explicit owner decision 2026-07-22 → `stupeni`
  *   (legacy workbook toy-box is intentionally ignored)
+ * - Oxford `ox-14-1`: owner decision 2026-10-11 → `krovati` (the page sells the lower
+ *   bed of the Oxford-1 complex; price row 29 000 ₽, height 257 mm)
  */
 export const CONFIRMED_PRODUCT_HANDLE_BUYER_ITEM_TYPES: Readonly<
   Record<string, string>
@@ -60,6 +62,7 @@ export const CONFIRMED_PRODUCT_HANDLE_BUYER_ITEM_TYPES: Readonly<
   "sh-81-1": "stoly",
   "fa-06-1": "stoly",
   "s-ox-05": "stupeni",
+  "ox-14-1": "krovati",
 }
 
 export type BuyerItemTypeSource =

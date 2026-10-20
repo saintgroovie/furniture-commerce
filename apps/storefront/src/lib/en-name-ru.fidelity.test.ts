@@ -4,7 +4,12 @@
  *   npx tsx src/lib/en-name-ru.fidelity.test.ts
  */
 import assert from "node:assert/strict"
-import { layoutBuyerFacingTitle, transcribeEnNamesInRuText } from "./en-name-ru"
+import {
+  exactEnNameRu,
+  layoutBuyerFacingTitle,
+  transcribeEnNamesInRuText,
+  transliterateEnToken,
+} from "./en-name-ru"
 
 const pairs: Array<[string, string]> = [
   // Greenwich models
@@ -69,5 +74,12 @@ assert.match(leftover.text, /Балет/)
 
 const cleaned = layoutBuyerFacingTitle("Стеллаж для книг")
 assert.equal(cleaned.text, "Стеллаж для книг")
+
+for (const key of ["constructor", "__proto__", "toString", "hasOwnProperty"]) {
+  assert.equal(exactEnNameRu(key), null, key)
+  assert.equal(typeof transliterateEnToken(key), "string", key)
+  assert.doesNotMatch(transliterateEnToken(key), /function|\[object/, key)
+}
+assert.equal(exactEnNameRu("Albion"), "Альбион")
 
 console.log("en-name-ru.fidelity.test.ts: ok")

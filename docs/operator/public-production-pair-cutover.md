@@ -33,6 +33,16 @@ It is **not** an apex launch.
 - **Artifact digests** = immutable RepoDigests of that bake (production profile).
 - **Ops helper SHA** = the commit that installed this script after canonical merge. Newer tooling may cut over an earlier approved application SHA. Do **not** deploy ops HEAD as application source.
 
+## Protected pin checksum
+
+The compose pin file may stay `root:root` mode `600`. The operator does not need to read it.
+
+- The helper hashes that file through `sudo -n sha256sum -- <realpath>` when the operator cannot read it.
+- A readable pin is hashed without sudo.
+- The same helper writes the pin through the existing privileged copy (`sudo -n cp` / `sudo -n mv`). It does not `sudo cat` the file and it is not run as root.
+- Checksum identity is still required before the lock and again under the lock. A changed digest blocks the release. `mtime` is not a substitute.
+- `public_demo` (`woodright-stack-3dsdhd`) and the private candidate (`woodright-production`) use the same environment-scoped fingerprint. A helper for one environment cannot hash another environment's pin.
+
 Exact already-baked `ced2510` pair (example of invocation identity, not script constants):
 
 ```
@@ -78,6 +88,10 @@ bash ops/release/reconcile-owner-approved-release.sh \
 - `--component backend` is refused.
 
 Dry-run (`--mode dry-run`, the default) runs approval, image, CAS, and the planned mutation check, then exits without a Docker write. Image or CAS mismatch exits 4.
+
+The dry-run line `owner_approval_gate_a_ok checksum=` is the preflight identity. Execute outside the test harness must pass that value as `--expected-approval-checksum`. If the approval file changed after preflight, execute exits before the mutation lock and before any pin write.
+
+`WOODRIGHT_RELEASE_SHA` stays a shared application identity. After a storefront-only cutover it can still show the previous baseline. The storefront and backend component headers come from the image env (`WOODRIGHT_STOREFRONT_SOURCE_SHA` / `WOODRIGHT_BACKEND_SOURCE_SHA`) and follow the artifact that is actually running. See `docs/operator/runtime-identity.md`. This is not part of the approval serializer.
 
 ## Canonical merge required
 

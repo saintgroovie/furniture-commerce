@@ -10,6 +10,7 @@
  *
  * Order = slot `product_ids` order. No Medusa runtime imports.
  */
+import { resolveDefaultBuyerConfiguration } from "../../lib/default-buyer-configuration"
 import { isBuyerPublicProductStatus } from "../../lib/buyer-publication"
 import {
   isSlotWithinSchedule,
@@ -75,7 +76,7 @@ function hasUsableImage(product: PromotionCandidateProduct): boolean {
 
 /**
  * Buyer opening prices. Prefers backend `buyer_default_configuration`
- * (tier-aware). Falls back to variants[0].calculated_price.
+ * (tier-aware). The price-list fallback uses that same opening variant.
  */
 export function resolvePromotionPrices(
   product: PromotionCandidateProduct
@@ -97,7 +98,21 @@ export function resolvePromotionPrices(
   }
   const variants = product.variants
   if (!Array.isArray(variants) || variants.length === 0) return null
-  const v0 = variants[0] as Record<string, unknown> | null
+  const openingId = resolveDefaultBuyerConfiguration(
+    product as unknown as Record<string, unknown>
+  )?.variant_id
+  const v0 = (
+    openingId
+      ? variants.find(
+          (item) =>
+            !!item &&
+            typeof item === "object" &&
+            (item as { id?: unknown }).id === openingId
+        )
+      : variants.length === 1
+        ? variants[0]
+        : null
+  ) as Record<string, unknown> | null
   const cp = v0?.calculated_price as
     | {
         calculated_amount?: unknown

@@ -175,6 +175,10 @@ const multiVariantWithoutBag = getPdpMattressSize({
   metadata: { mattress_size: productLevel },
   variants: [{ metadata: {} }, { metadata: { mattress_size: productLevel } }],
 })
-assert.equal(multiVariantWithoutBag?.key, "90x200")
+assert.equal(
+  multiVariantWithoutBag,
+  null,
+  "two SKUs without an opening contract do not use variants[0] or the product-level size"
+)
 
 console.log("mattress-size.fidelity.test.ts: ok")

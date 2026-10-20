@@ -1,0 +1,9 @@
+metric,live_old,candidate
+catalog_p50_ms,1266,not_measured
+catalog_p95_ms,1927,not_measured
+catalog_max_ms,3726,not_measured
+health_under_catalog_p50_ms,,not_measured
+health_under_catalog_p95_ms,,not_measured
+health_under_catalog_max_ms,415,not_measured
+event_loop_delay_max_ms,415,not_measured
+payload_bytes,559556,unchanged_by_this_diff
