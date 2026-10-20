@@ -58,7 +58,17 @@ jobs:
         run: node node_modules/tsx/dist/cli.mjs --test src/lib/woodright-desk/desk.integration.test.ts src/lib/woodright-desk/mango.fidelity.test.ts
       - name: Actual Medusa migration loader
         env:
-          DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk
+          DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk_http
           WOODRIGHT_DESK_FEATURES: "1"
           NODE_ENV: development
-        run: node node_modules/@medusajs/cli/cli.js db:migrate
+        run: |
+          node --input-type=module - <<'JS'
+          import pg from "pg";
+          const adminUrl = new URL(process.env.DATABASE_URL);
+          adminUrl.pathname = "/postgres";
+          const client = new pg.Client({ connectionString: adminUrl.toString() });
+          await client.connect();
+          try { await client.query("create database workspace_it_desk_http"); }
+          finally { await client.end(); }
+          JS
+          node node_modules/@medusajs/cli/cli.js db:migrate
