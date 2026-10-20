@@ -14,7 +14,10 @@ import {
   productCanonicalPath,
   readUniformRubAmounts,
   singleOfferPriceRub,
+  offerAvailabilityFromPurchase,
 } from "./product-json-ld"
+import { buildMerchantPolicyJsonLd, merchantPolicyIds } from "./merchant-policy-json-ld"
+import { buildLegalPage } from "./legal/legal-content"
 import { seo } from "./woodright-copy"
 
 const src = readFileSync(
@@ -56,6 +59,7 @@ const craft = buildProductJsonLd({
   url: "https://woodright.ru/product/ol-08-n",
   images: ["/product-static/imports/perspective.jpg", "/product-static/imports/front.jpg", "/product-static/imports/front.jpg", "javascript:alert(1)", ""],
   dimensions: [{ axis: "height", mm: 908 }, { axis: "width", mm: 550 }, { axis: "depth", mm: 555 }],
+  offerAvailability: offerAvailabilityFromPurchase({ sales_mode: "configurable_to_order", purchase_flow: "cart", can_purchase: true }),
 })
 assert.equal(craft.sku, "OL-08-Н")
 assert.equal((craft.offers as { price: number }).price, 32500)
@@ -63,6 +67,25 @@ assert.deepEqual(craft.image, ["https://woodright.ru/product-static/imports/pers
 assert.deepEqual(craft.height, { "@type": "QuantitativeValue", value: 908, unitCode: "MMT" })
 assert.deepEqual(craft.width, { "@type": "QuantitativeValue", value: 550, unitCode: "MMT" })
 assert.deepEqual(craft.depth, { "@type": "QuantitativeValue", value: 555, unitCode: "MMT" })
+const craftOffer = craft.offers as Record<string, unknown>
+assert.equal(craftOffer.availability, "https://schema.org/BackOrder")
+assert.deepEqual(craftOffer.hasMerchantReturnPolicy, { "@id": "https://woodright.ru/returns#return-policy" })
+assert.deepEqual(craftOffer.shippingDetails, { "@type": "OfferShippingDetails", hasShippingService: { "@id": "https://woodright.ru/delivery#shipping-service" } })
+assert.equal(offerAvailabilityFromPurchase(null), null)
+assert.equal(offerAvailabilityFromPurchase({ sales_mode: "in_stock", purchase_flow: "cart", can_purchase: true }), "https://schema.org/InStock")
+assert.equal(offerAvailabilityFromPurchase({ sales_mode: "in_stock", purchase_flow: "cart", can_purchase: false }), null)
+assert.equal(offerAvailabilityFromPurchase({ sales_mode: "made_to_order", purchase_flow: "cart" }), "https://schema.org/BackOrder")
+assert.equal(offerAvailabilityFromPurchase({ sales_mode: "made_to_order", purchase_flow: "quote" }), null)
+assert.equal(offerAvailabilityFromPurchase({ sales_mode: "unavailable" }), "https://schema.org/OutOfStock")
+assert.equal(offerAvailabilityFromPurchase({ sales_mode: "showroom_sample", purchase_flow: "cart", can_purchase: true }), null)
+const policies = buildMerchantPolicyJsonLd("https://woodright.ru/product/ol-08-n")
+assert.equal(policies.hasMerchantReturnPolicy.merchantReturnLink, "https://woodright.ru/returns")
+assert.equal(policies.hasMerchantReturnPolicy["@id"], merchantPolicyIds("https://woodright.ru").returns)
+assert.equal(policies.hasShippingService["@id"], merchantPolicyIds("https://woodright.ru").shipping)
+for (const paragraph of buildLegalPage("delivery").lead) assert.ok(policies.hasShippingService.description.includes(paragraph))
+assert.ok(policies.hasShippingService.description.includes("Публичного фиксированного тарифа нет"))
+assert.doesNotMatch(JSON.stringify(policies), /shippingRate|deliveryTime|shippingDestination|merchantReturnDays|returnPolicyCategory|AggregateRating|Review/)
+assert.match(src, /offerAvailabilityFromPurchase\(readProductPurchase\(product\)\)/)
 const variableSize = buildProductJsonLd({ name: "Стол", url: "https://woodright.ru/product/table", dimensions: [{axis: "width"}, {axis: "height", mm: NaN}, {axis: "depth", mm: -1}] })
 assert.equal("width" in variableSize || "height" in variableSize || "depth" in variableSize, false)
 
