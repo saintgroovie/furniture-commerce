@@ -192,6 +192,9 @@ RUN test -n "$MEDUSA_BACKEND_URL" \
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /workspace
+# Immutable application identity, supplied by the trusted image workflow.
+ARG WOODRIGHT_STOREFRONT_SOURCE_SHA=
+ENV WOODRIGHT_STOREFRONT_SOURCE_SHA=$WOODRIGHT_STOREFRONT_SOURCE_SHA
 # Re-declared so `docker image inspect` on the FINAL runtime image (not just
 # the intermediate build stage) shows the build-time profile/role/exposure/db
 # evidence used for check-global-lock-policy / cutover-production-candidate.sh
