@@ -9,6 +9,22 @@ const PROVENCE_PDF_CATALOG_RE = /\/Provence_White_(?:p\d+_|page_\d+)/i
 type ProvencePaintWoodBucket = "paint" | "wood"
 type ProvencePaintWoodWorkbookProfile = "standard" | "three_gallery"
 
+// Visually audited SKU-native photos (2026-10-20). The workbook fallback below
+// needs duplicate gallery/i-file aliases as evidence. These exact photo sets
+// retain both finishes after the aliases are removed; similar white-only shots
+// must not become a second finish merely because their names contain i2/main.
+const AUDITED_FINISH_PHOTOS: Record<string, { paint: string[]; wood: string[] }> = {
+  "pv-05-2": { paint: ["i1", "i2"], wood: ["i3", "i4"] },
+  "pv-06-2": { paint: ["i1", "i2"], wood: ["i3", "i4"] },
+  "pv-08-2": { paint: ["i1", "i2"], wood: ["i3", "i4"] },
+  "pv-09-1": { paint: ["i1", "i2"], wood: ["main"] },
+  "pv-55-1": { paint: ["i1", "i2"], wood: ["i3", "i4"] },
+  "pv-62-1": { paint: ["i1", "i2"], wood: ["i3", "i4"] },
+  "pv-61-1": { paint: ["i1", "i2"], wood: ["i3", "i4"] },
+  "pv-42-2": { paint: ["i1"], wood: ["gallery_02", "i3"] },
+  "pv-65-8": { paint: ["i1"], wood: ["i2", "main"] },
+}
+
 function basename(url: string): string {
   return (url.split("/").pop() ?? url).toLowerCase()
 }
@@ -111,6 +127,14 @@ export function hasProvencePaintWoodDualFinishEvidence(
   if (!h?.startsWith("pv-")) return false
   if (provencePdfCatalogContaminationDetected(urls)) return false
   const native = filterProvenceSkuNativeUrls(urls, h)
+  const audited = AUDITED_FINISH_PHOTOS[h]
+  if (audited) {
+    const names = new Set(native.map(basename))
+    const has = (suffixes: string[]) => suffixes.some((suffix) =>
+      names.has(`${h}${suffix.startsWith("i") ? "-" : "_"}${suffix}.jpg`)
+    )
+    return has(audited.paint) && has(audited.wood)
+  }
   const profile = provencePaintWoodWorkbookProfile(native, handle)
   const names = native.map(basename)
   const paint = native.filter((u) => provencePaintWoodBucketForUrl(u, profile, h) === "paint")
