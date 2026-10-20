@@ -46,6 +46,12 @@ import { PdpMaterialTierSelect } from "@/components/pdp-material-tier-select"
 import { PdpSizeChips } from "@/components/pdp-size-chips"
 import { PdpHingeSideSelect } from "@/components/pdp-hinge-side-select"
 import { buildMaterialTierOptions } from "@/lib/material-tiers"
+import {
+  buildMaterialVariantJsonLd,
+  buildSizeVariantJsonLd,
+  materialOptionsForUrl,
+  verifiedMaterialOptions,
+} from "@/lib/product-variant-json-ld"
 import { productHasHingeSideOption } from "@/lib/catalog-normalization"
 import { CopyLines } from "@/components/copy-lines"
 import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
@@ -351,14 +357,18 @@ export default async function ProductPage({
     isGreenwichBed || hasPdpExecutionControls(executionSelectors)
   const price = pdpVariantPrice(product, selectedVariant)
   /* Material execution options from metadata.material_tiers (backend SoT). */
-  const materialTiers = buildMaterialTierOptions(viewProduct, price)
+  const defaultMaterialTiers = buildMaterialTierOptions(viewProduct, price)
+  const addressableMaterialTiers = verifiedMaterialOptions(product, defaultMaterialTiers)
+  const materialTiers = addressableMaterialTiers
+    ? materialOptionsForUrl(addressableMaterialTiers, resolvedSearchParams?.material)
+    : defaultMaterialTiers
   const opening = buyerDefaultConfiguration(product)
   const tierPrice =
     materialTiers?.[0]?.price != null && Number.isFinite(materialTiers[0].price)
       ? materialTiers[0].price
       : null
   /* Opening amount follows the backend SKU, not variants[0]. An unpriced selection stays empty. */
-  const openingPrice = pdpDisplayedPrice({
+  const openingPrice = (addressableMaterialTiers ? tierPrice : null) ?? pdpDisplayedPrice({
     selectedVariantId:
       selectedVariant && typeof selectedVariant.id === "string" ? selectedVariant.id : null,
     selectedOwnPrice: price,
@@ -615,7 +625,7 @@ export default async function ProductPage({
     variantAmounts: readUniformRubAmounts(product),
     displayedPriceRub: openingPrice,
   })
-  const productJsonLd = buildProductJsonLd({
+  const scalarProductJsonLd = buildProductJsonLd({
     name: getProductSeoName(product) || "Товар",
     description: getSeoDescriptionSource(product),
     url: canonicalUrl,
@@ -624,6 +634,15 @@ export default async function ProductPage({
     sku: article,
     offerPriceRub,
   })
+  const productJsonLd =
+    (addressableMaterialTiers && buildMaterialVariantJsonLd({
+      product, options: addressableMaterialTiers, jsonLd: scalarProductJsonLd,
+      requestQuote: isRequestQuoteProduct(product),
+    })) ||
+    buildSizeVariantJsonLd({
+      product, siblings: displayGroupMembers, jsonLd: scalarProductJsonLd,
+      displayedPriceRub: openingPrice, requestQuote: isRequestQuoteProduct(product),
+    }) || scalarProductJsonLd
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(base, [
     ...(isKidsProduct ? [{ name: "Детская", path: "/kids" }] : []),
     { name: "Каталог", path: catalogHref },
