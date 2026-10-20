@@ -15,9 +15,11 @@ fail() { echo "FAIL $*"; FAILED=$((FAILED + 1)); }
 # shellcheck source=../../ops/lib/woodright-compose-env-authority.sh
 source "$LIB"
 
+ORIG_PATH="$PATH"
 TMP="$(cd "$(mktemp -d /tmp/wr-compose-env-fp-XXXXXX)" && pwd -P)"
 cleanup() {
   chmod u+rw "$TMP/etc/dokploy/compose/woodright-production/code/.env" 2>/dev/null || true
+  chmod u+rw "$TMP/etc/dokploy/compose/woodright-public-production/code/.env" 2>/dev/null || true
   if [[ "$FAILED" -eq 0 ]]; then rm -rf "$TMP"
   else echo "harness kept: $TMP"; fi
 }
@@ -246,6 +248,135 @@ if grep -qE 'woodright-public-production|woodright-stack-3dsdhd' "$CUTOVER"; the
   pass "cutover: deny-list names public/demo compose roots"
 else
   fail "cutover: missing public/demo deny-list"
+fi
+
+# --------------------------------------------------------------------------
+# 7) public_production root: environment-scoped fingerprint, no content leak.
+# --------------------------------------------------------------------------
+PUB_ROOT="$TMP/etc/dokploy/compose/woodright-public-production"
+PUB_ENV="$PUB_ROOT/code/.env"
+mkdir -p "$PUB_ROOT/code"
+chmod u+rw "$PUB_ENV" 2>/dev/null || true
+printf 'WOODRIGHT_RELEASE_SHA=fd6bf3be6c9e527011751987ac104c69dd4d0e91\nSECRET=%s\n' "$SENTINEL" >"$PUB_ENV"
+PUB_WANT="$(digest_of "$PUB_ENV")"
+PUB_RESOLVED="$(realpath "$PUB_ENV")"
+PUBBIN="$TMP/pubbin"
+mkdir -p "$PUBBIN"
+cat >"$PUBBIN/sha256sum" <<'EOF'
+#!/bin/sh
+echo "unprivileged sha256sum must not run for protected files" >&2
+exit 97
+EOF
+chmod +x "$PUBBIN/sha256sum"
+cat >"$PUBBIN/sudo" <<EOF
+#!/bin/bash
+set -euo pipefail
+if [[ "\${1:-}" == "-n" && "\${2:-}" == "sha256sum" && "\${3:-}" == "--" && "\${4:-}" == "$PUB_RESOLVED" ]]; then
+  printf '%s  %s\n' "$PUB_WANT" "\$4"
+  exit 0
+fi
+echo "unexpected sudo argv: \$*" >&2
+exit 1
+EOF
+chmod +x "$PUBBIN/sudo"
+if command -v realpath >/dev/null 2>&1; then
+  ln -sf "$(command -v realpath)" "$PUBBIN/realpath"
+fi
+if command -v date >/dev/null 2>&1; then
+  ln -sf "$(command -v date)" "$PUBBIN/date"
+fi
+if command -v basename >/dev/null 2>&1; then
+  ln -sf "$(command -v basename)" "$PUBBIN/basename"
+fi
+if command -v dirname >/dev/null 2>&1; then
+  ln -sf "$(command -v dirname)" "$PUBBIN/dirname"
+fi
+chmod 000 "$PUB_ENV"
+FP_ERR="$TMP/err-pubprod.txt"
+set +e
+GOT="$(PATH="$PUBBIN" wr_compose_env_fingerprint_for_environment public_production "$PUB_ENV" "$PUB_ENV" "$PUB_ROOT" 2>"$FP_ERR")"
+RC=$?
+set -e
+[[ "$RC" -eq 0 && "$GOT" == "privileged $PUB_WANT" ]] \
+  && pass "public_production unreadable: privileged digest" \
+  || fail "public_production unreadable: rc=$RC got=$GOT want=privileged $PUB_WANT"
+assert_no_sentinel "public_production stdout" "$GOT"
+assert_no_sentinel "public_production stderr" "$(cat "$FP_ERR")"
+
+chmod u+rw "$PUB_ENV"
+FP_ERR="$TMP/err-pubprod-read.txt"
+set +e
+GOT="$(PATH="$ORIG_PATH" wr_compose_env_fingerprint_for_environment public_production "$PUB_ENV" "$PUB_ENV" "$PUB_ROOT" 2>"$FP_ERR")"
+RC=$?
+set -e
+[[ "$RC" -eq 0 && "$GOT" == "unprivileged $PUB_WANT" ]] \
+  && pass "public_production readable: unprivileged digest" \
+  || fail "public_production readable: rc=$RC got=$GOT"
+printf '\nSECRET=%s\nDRIFT=1\n' "$SENTINEL" >>"$PUB_ENV"
+PUB_AFTER="$(digest_of "$PUB_ENV")"
+FP_ERR="$TMP/err-pubprod-drift.txt"
+set +e
+GOT="$(PATH="$ORIG_PATH" wr_compose_env_fingerprint_for_environment public_production "$PUB_ENV" "$PUB_ENV" "$PUB_ROOT" 2>"$FP_ERR")"
+RC=$?
+set -e
+[[ "$RC" -eq 0 && "$GOT" == "unprivileged $PUB_AFTER" && "$PUB_AFTER" != "$PUB_WANT" ]] \
+  && pass "public_production drift: digest changed" \
+  || fail "public_production drift: rc=$RC before=$PUB_WANT after=$PUB_AFTER got=$GOT"
+assert_no_sentinel "public_production drift stdout" "$GOT"
+
+FP_ERR="$TMP/err-cross.txt"
+set +e
+GOT="$(PATH="$BIN:$PATH" wr_compose_env_fingerprint_for_environment public_production "$ENV_FILE" "$ENV_FILE" "$COMPOSE_PARENT" 2>"$FP_ERR")"
+RC=$?
+set -e
+[[ "$RC" -ne 0 ]] && pass "public_production refuses candidate compose root" \
+  || fail "public_production hashed candidate root got=$GOT"
+assert_no_sentinel "cross-env stdout" "$GOT"
+
+PUBNOSUDO="$TMP/pubnosudo"
+mkdir -p "$PUBNOSUDO"
+cat >"$PUBNOSUDO/sha256sum" <<'EOF'
+#!/bin/sh
+exit 97
+EOF
+chmod +x "$PUBNOSUDO/sha256sum"
+if command -v realpath >/dev/null 2>&1; then
+  ln -sf "$(command -v realpath)" "$PUBNOSUDO/realpath"
+fi
+if command -v date >/dev/null 2>&1; then
+  ln -sf "$(command -v date)" "$PUBNOSUDO/date"
+fi
+if command -v basename >/dev/null 2>&1; then
+  ln -sf "$(command -v basename)" "$PUBNOSUDO/basename"
+fi
+if command -v dirname >/dev/null 2>&1; then
+  ln -sf "$(command -v dirname)" "$PUBNOSUDO/dirname"
+fi
+chmod 000 "$PUB_ENV"
+FP_ERR="$TMP/err-pub-nosudo.txt"
+set +e
+GOT="$(PATH="$PUBNOSUDO" wr_compose_env_fingerprint_for_environment public_production "$PUB_ENV" "$PUB_ENV" "$PUB_ROOT" 2>"$FP_ERR")"
+RC=$?
+set -e
+[[ "$RC" -ne 0 ]] && pass "public_production sudo missing: fail closed" \
+  || fail "public_production sudo missing: succeeded got=$GOT"
+assert_no_sentinel "public_production nosudo stdout" "$GOT"
+assert_no_sentinel "public_production nosudo stderr" "$(cat "$FP_ERR")"
+chmod u+rw "$PUB_ENV" 2>/dev/null || true
+
+PAIR="$ROOT/ops/release/cutover-public-production-pair.sh"
+grep -q 'fingerprint_protected_pin' "$PAIR" \
+  && pass "pair cutover: fingerprint_protected_pin exists" || fail "pair cutover: missing fingerprint_protected_pin"
+grep -q 'wr_compose_env_fingerprint_for_environment public_production' "$PAIR" \
+  && pass "pair cutover: environment-scoped fingerprint" || fail "pair cutover: not wired to public_production fingerprint"
+grep -q 'PRELOCK_PIN_SHA="$COMPOSE_ENV_FINGERPRINT"' "$PAIR" \
+  && grep -q 'UNDER_PIN_SHA="$COMPOSE_ENV_FINGERPRINT"' "$PAIR" \
+  && pass "pair cutover: prelock and under-lock use the fingerprint" \
+  || fail "pair cutover: pin checksum still uses raw sha256_of"
+if grep -qE 'sudo[[:space:]]+cat|sudo[[:space:]]+-n[[:space:]]+cat' "$PAIR" "$LIB"; then
+  fail "pair/lib: sudo cat present"
+else
+  pass "pair/lib: no sudo cat"
 fi
 
 if [[ "$FAILED" -eq 0 ]]; then

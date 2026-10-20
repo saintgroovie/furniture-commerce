@@ -1,0 +1,3 @@
+runtime,sql_p50,sql_max_seen,concurrency_4_wall_ms,notes
+baseline,14,57,3355,four overlapping full builds; SQL about 4x one request
+candidate,71,79,1266,four overlapping requests stayed near one chunked build, not 4x71

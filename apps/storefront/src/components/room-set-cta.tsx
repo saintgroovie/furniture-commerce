@@ -7,6 +7,7 @@ import { ensureCart } from "@/lib/cart/session"
 import { countCartItems, emitCartUpdated } from "@/lib/cart/cart-events"
 import { addLineItem } from "@/lib/api/cart"
 import { userFacingError } from "@/lib/user-facing-error"
+import { openingVariant } from "@/lib/opening-variant"
 import { actions } from "@/lib/woodright-copy"
 
 type Props = { roomSet: Record<string, unknown> }
@@ -37,11 +38,8 @@ export function RoomSetCta({ roomSet }: Props) {
       const product = item.product as Record<string, unknown> | undefined
       if (!product) continue
       if (getProductType(product) === "BESPOKE") continue
-      const variants = (product.variants as unknown[]) ?? []
-      const firstVariant = Array.isArray(variants) ? variants[0] : undefined
-      const variantId = firstVariant && typeof firstVariant === "object" && "id" in firstVariant
-        ? (firstVariant as { id: string }).id
-        : undefined
+      const opening = openingVariant(product)
+      const variantId = typeof opening?.id === "string" ? opening.id : undefined
       if (!variantId) continue
       eligible.push({ variantId, quantity: Number((item as { quantity?: number }).quantity ?? 1) })
     }

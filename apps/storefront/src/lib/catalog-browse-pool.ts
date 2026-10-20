@@ -1,10 +1,9 @@
 /**
  * Catalog browse pool for RSC HTML budget.
  *
- * CatalogBrowseClient must not receive the full scoped list (~111 products):
- * Next serializes client props into `__next_f.push` and that flight is the
- * bulk of `/catalog` HTML. SSR ships ATF representatives only; the browser
- * loads `/store/catalog-products` and re-scopes with the same membership ids.
+ * The catalog page loads `/store/catalog-products` once on the server and
+ * passes the scoped pool into CatalogBrowseClient. The browser must not
+ * fetch that endpoint again for the same page.
  */
 
 import { CATALOG_ATF_EAGER_COUNT } from "./catalog-atf"
@@ -14,6 +13,8 @@ import {
   type CatalogFilterState,
 } from "./catalog-filters"
 import { groupProductsForDisplay } from "./display-group"
+import { productCanonicalPath } from "./product-json-ld"
+import { getBuyerFacingProductTitle } from "./product-metadata"
 import {
   isMedusaCanonicalSeedDemoProduct,
   isProductInActiveCatalogScope,
@@ -94,11 +95,8 @@ export function catalogItemListJsonLdPayload(
       return {
         "@type": "ListItem",
         position: i + 1,
-        url: `${base}/product/${String((product as { id?: unknown }).id ?? "")}`,
-        name:
-          typeof (product as { title?: unknown }).title === "string"
-            ? (product as { title: string }).title
-            : undefined,
+        url: `${base}${productCanonicalPath(product, String(product.id ?? ""))}`,
+        name: getBuyerFacingProductTitle(product) || undefined,
       }
     }),
   }

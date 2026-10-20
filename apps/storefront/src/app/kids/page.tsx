@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { seo } from "@/lib/woodright-copy"
+import { pageTitle } from "@/lib/page-title"
 import { getCatalogProducts } from "@/lib/api/products"
 import { BESPOKE_PRODUCT_TYPE } from "@/lib/bespoke"
 import {
@@ -17,7 +18,7 @@ import { kidsMedia } from "@/components/home/kids-media"
 import { canonicalAlternates } from "@/lib/page-canonical"
 
 export const metadata: Metadata = {
-  title: seo.kids.title,
+  title: pageTitle(seo.kids.title),
   description: seo.kids.description,
   openGraph: {
     title: seo.kids.title,

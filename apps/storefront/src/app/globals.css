@@ -7457,12 +7457,6 @@ a.product-card-member-chip:hover {
   font-variant-numeric: tabular-nums;
 }
 
-.pdp-canonical-name {
-  font-size: 0.9rem;
-  color: var(--color-fg-muted);
-  margin-top: calc(-1 * var(--space-sm));
-}
-
 /* 2. Title — sit evenly between context row and subtitle. */
 .product-detail-header {
   display: flex;

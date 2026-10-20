@@ -20,6 +20,8 @@ assert.match(
   /variants\.price_set\.prices\.\*/,
   "retrieve must request nested price_set prices"
 )
+assert.match(routeSrc, /"options\.\*"/, "retrieve must load product options")
+assert.match(routeSrc, /"variants\.options\.\*"/, "retrieve must load variant option values")
 assert.match(
   routeSrc,
   /prices:\s*variant\.price_set\.prices/,

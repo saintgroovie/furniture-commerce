@@ -18,8 +18,8 @@
  * - `WOODRIGHT_RUNTIME_ROLE` - existing runtime identity role. This module
  *   only cares whether the role is production-like (`production` |
  *   `production_candidate`); it does not replace
- *   `apps/storefront/src/lib/runtime-identity-headers.ts`'s narrower
- *   `ALLOWED_ROLES` set used for response headers.
+ *   `apps/storefront/src/lib/runtime-identity-headers.ts`'s `ALLOWED_ROLES`
+ *   set used for response headers (`public_production` included).
  * - `WOODRIGHT_LAUNCH_MODE` - `private_noindex` | `public_indexable`.
  */
 

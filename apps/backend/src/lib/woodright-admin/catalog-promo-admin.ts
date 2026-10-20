@@ -3,7 +3,9 @@
  * Builds seller-facing rows from raw product graph + promo price list rows.
  * No Medusa runtime imports.
  */
+import { resolveDefaultBuyerConfiguration } from "../default-buyer-configuration"
 import { parseMaterialTiers, resolveMaterialTierPrice } from "../material-tier-contract"
+import { productMetadataForVariant } from "../variant-capabilities"
 import { isPriceListActiveNow, priceAmount, type PriceListRow, type PriceRow } from "./catalog-promo-price-list"
 
 /** Graph fields needed to build promo admin rows for products. */
@@ -17,6 +19,7 @@ export const CATALOG_PROMO_PRODUCT_GRAPH_FIELDS = [
   "images.url",
   "variants.id",
   "variants.sku",
+  "variants.metadata",
   "variants.price_set.id",
   "variants.price_set.prices.id",
   "variants.price_set.prices.amount",
@@ -97,18 +100,60 @@ function hasImage(raw: Record<string, unknown>): boolean {
   )
 }
 
-export function openingTierMultiplier(raw: Record<string, unknown>): number {
-  const meta =
+/**
+ * Admin graph rows keep money on `price_set.prices`. The shared opening
+ * resolver only reads `calculated_price` or a flat `prices` list, so a
+ * multi-SKU product would otherwise resolve to no variant.
+ */
+function withGraphBasePrices(raw: Record<string, unknown>): Record<string, unknown> {
+  const variants = Array.isArray(raw.variants) ? raw.variants : []
+  return {
+    ...raw,
+    variants: variants.map((item) => {
+      if (!item || typeof item !== "object") return item
+      const variant = item as Record<string, unknown>
+      if (variant.calculated_price || Array.isArray(variant.prices)) return variant
+      const priceSet = variant.price_set as { prices?: unknown } | undefined
+      const rows = Array.isArray(priceSet?.prices) ? priceSet.prices : []
+      const prices: Array<{ amount: number }> = []
+      for (const row of rows) {
+        if (!row || typeof row !== "object") continue
+        const price = row as {
+          amount?: unknown
+          currency_code?: unknown
+          price_list_id?: unknown
+        }
+        if (price.price_list_id) continue
+        const currency =
+          typeof price.currency_code === "string" ? price.currency_code.toLowerCase() : "rub"
+        if (currency !== "rub") continue
+        const amount = positive(price.amount)
+        if (amount != null) prices.push({ amount })
+      }
+      return prices.length ? { ...variant, prices } : variant
+    }),
+  }
+}
+
+export function openingTierMultiplier(
+  raw: Record<string, unknown>,
+  variant?: Record<string, unknown> | null
+): number {
+  const productMeta =
     raw.metadata && typeof raw.metadata === "object" && !Array.isArray(raw.metadata)
       ? (raw.metadata as Record<string, unknown>)
       : null
-  const tiers = parseMaterialTiers(meta)
+  const variantMeta =
+    variant?.metadata && typeof variant.metadata === "object" && !Array.isArray(variant.metadata)
+      ? (variant.metadata as Record<string, unknown>)
+      : null
+  const tiers = parseMaterialTiers(productMetadataForVariant(productMeta, variantMeta))
   return tiers && tiers.length > 0 ? tiers[0]!.price_multiplier : 1
 }
 
 /**
  * Build one admin row. `promoPrices` is keyed by price_set_id.
- * Opening variant = variants[0] (same rule as storefront / buyer defaults).
+ * Opening variant follows buyer_default_configuration, not array order.
  */
 export function buildCatalogPromoAdminProduct(
   raw: Record<string, unknown>,
@@ -119,7 +164,10 @@ export function buildCatalogPromoAdminProduct(
   const variants = Array.isArray(raw.variants)
     ? (raw.variants as Array<Record<string, unknown>>)
     : []
-  const v0 = variants[0] ?? null
+  const openingId = resolveDefaultBuyerConfiguration(withGraphBasePrices(raw))?.variant_id
+  const v0 =
+    (openingId ? variants.find((variant) => variant.id === openingId) : null) ??
+    (variants.length === 1 ? variants[0] : null)
   const priceSet = v0?.price_set as
     | { id?: unknown; prices?: Array<Record<string, unknown>> }
     | undefined
@@ -154,7 +202,7 @@ export function buildCatalogPromoAdminProduct(
   else if (!isPriceListActiveNow(priceList, now)) blocker = "price_list_inactive"
   else if (!hasImage(raw)) blocker = "no_image"
 
-  const multiplier = openingTierMultiplier(raw)
+  const multiplier = openingTierMultiplier(raw, v0)
   const discount =
     basePrice != null && salePrice != null && salePrice < basePrice
       ? Math.round(((basePrice - salePrice) / basePrice) * 100)

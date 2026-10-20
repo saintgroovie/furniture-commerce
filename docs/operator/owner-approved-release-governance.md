@@ -55,6 +55,61 @@ bash ops/release/reconcile-owner-approved-release.sh \
 
 Dry-run is the default (omit `--apply`).
 
+## Compare-and-swap
+
+A writer that replaces an existing approval must pass
+`--expected-previous-approval-checksum` equal to the current file sha256.
+The first approval in an empty slot must pass the sentinel `ABSENT`.
+Omitting the checksum is not permission to overwrite. A stale checksum
+returns `OWNER_APPROVAL_CAS_MISMATCH`.
+
+New documents set `reservation_state` to `reserved` and
+`approval_generation` to `apr1-` plus 32 hex characters. The file checksum
+remains the compare token. `mtime` is not an identity.
+
+While `reservation_state` is `reserved` (or the alias `in_flight`), a normal
+`--operation approve` cannot replace a different candidate. The same candidate
+with the current checksum is `OWNER_APPROVAL_UNCHANGED`. Replacing a reserved
+approval requires `--operation cancel` or `--operation supersede`, each with
+the current checksum. Cancel does not touch containers, pins, or the database.
+A backup JSON is audit evidence. Copying it back onto the live path is not a
+release control.
+
+After a successful cutover Gate C, a reserved approval is marked `committed`.
+The Gate A, Gate B, and Gate C checksums of that execute stay equal. The
+committed file has a new checksum, which is the CAS token for the next
+approval. A proven rollback marks the same approval `rolled_back` and also
+mints a new checksum. An incomplete rollback stays `reserved`. A crash that
+leaves `reserved` does not expire by time. The operator proves the cutover
+lock is free and runs cancel.
+
+Execute of `cutover-public-production-pair.sh` outside an isolated test harness
+requires `--expected-approval-checksum` from the final dry-run. Setting
+`WOODRIGHT_CUTOVER_HARNESS=1` does not waive that checksum when the meta root,
+lock, compose env, or compose file is the canonical production path. The
+effective compose env is `WOODRIGHT_CUTOVER_COMPOSE_ENV` when that override
+is set. Dot segments and an existing symlink are normalized before the check.
+Parent segments are applied only after the symlink they follow is resolved. A mismatch dies before the mutation lock
+and before any pin write. The staged approval document is a private file.
+The copy under the evidence directory is audit-only and is not installed.
+
+Legacy files omit `reservation_state` and load as `legacy`. They still
+authorize a cutover. Replacing them still requires the explicit checksum.
+The first canonical rewrite upgrades them to `reserved`.
+
+## Component observability
+
+`COMPONENT_RELEASE_IDENTITY_OBSERVABILITY`
+
+A storefront-only cutover still does not rewrite the shared
+`WOODRIGHT_RELEASE_SHA` pin. That header stays the application baseline.
+The running storefront image reports `x-woodright-storefront-source-sha`
+from `WOODRIGHT_STOREFRONT_SOURCE_SHA` baked at image build. The running
+backend image reports `x-woodright-backend-source-sha` the same way.
+Those values may differ. That is expected after a component-only release,
+not automatic drift. Approval files are not the place for this. See
+`docs/operator/runtime-identity.md`.
+
 ## Public production
 
 Approvals are environment-scoped. A `public_demo` approval never authorizes
