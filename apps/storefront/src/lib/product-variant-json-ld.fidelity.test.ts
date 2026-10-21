@@ -1,6 +1,7 @@
 import assert from "node:assert/strict"
 import { buildProductJsonLd } from "./product-json-ld"
 import { buildMaterialTierOptions } from "./material-tiers"
+import { getSeoDescriptionSource } from "./product-seo"
 import {
   buildMaterialVariantJsonLd, buildSizeVariantJsonLd,
   explicitVariantSize, materialOptionsForUrl, verifiedMaterialOptions,
@@ -16,10 +17,10 @@ function bed(handle: string, sku: string, size: string, price: number): Record<s
 }
 const small = bed("small", "BED-120", "120×190", 70300)
 const large = bed("large", "BED-140", "140×190", 77300)
-function sizeMarkup(product = small, siblings = [large], price = 70300) {
+function sizeMarkup(product = small, siblings = [large], price = 70300, description = getSeoDescriptionSource(product)) {
   return buildSizeVariantJsonLd({
     product, siblings, displayedPriceRub: price, requestQuote: false,
-    jsonLd: buildProductJsonLd({ name: String(product.title), sku: "BED-120", url: `https://woodright.ru/product/${product.handle}`, images: ["/product-static/new-photo.jpg"] }),
+    jsonLd: buildProductJsonLd({ name: String(product.title), description, sku: "BED-120", url: `https://woodright.ru/product/${product.handle}`, images: ["/product-static/new-photo.jpg"] }),
   })
 }
 const smallLd = sizeMarkup()!
@@ -47,6 +48,26 @@ assert.equal(sizeMarkup(small, [{ ...large, title: "Кровать (140×190) с
 assert.equal(sizeMarkup(small, [{ ...large, title: "Кровать (120×190)" }]), null)
 assert.equal(explicitVariantSize({ title: "Кровать (120×190), (140×190)" }), null)
 assert.equal(explicitVariantSize({ title: "Кровать OL-16-1" }), null)
+
+const sharedCopy = "Кровать с деревянным изголовьем."
+const describedSmall = { ...small, description: ` ${sharedCopy} ` }
+const describedLarge = { ...large, description: sharedCopy }
+const described = sizeMarkup(describedSmall, [describedLarge])!
+assert.equal((described.isVariantOf as Record<string, unknown>).description, sharedCopy)
+const withExecutionNote = { ...describedSmall, description: `${sharedCopy}\nЕсть варианты исполнения - уточним в заявке` }
+assert.equal((sizeMarkup(withExecutionNote, [describedLarge])!.isVariantOf as Record<string, unknown>).description, sharedCopy)
+assert.deepEqual(described.image, smallLd.image)
+assert.deepEqual(described.offers, smallLd.offers)
+assert.equal(described["@id"], smallLd["@id"])
+for (const markup of [
+  sizeMarkup(describedSmall, [large]),
+  sizeMarkup(describedSmall, [{ ...describedLarge, description: "Кровать с мягким изголовьем." }]),
+  sizeMarkup(describedSmall, [describedLarge], 70300, "Другой текст этой страницы."),
+  sizeMarkup({ ...small, description: " " }, [{ ...large, description: " " }]),
+]) {
+  assert.equal("description" in (markup!.isVariantOf as Record<string, unknown>), false)
+}
+assert.equal("description" in smallGroup, false)
 
 const material = {
   id: "product-MAT", handle: "material", status: "published", title: "Комод",

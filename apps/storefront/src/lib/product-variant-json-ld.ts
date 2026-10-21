@@ -2,6 +2,7 @@ import { inferDisplayGroupAxis, sizeAxisConstructionKey } from "./display-group"
 import type { MaterialTierOption } from "./material-tiers"
 import { buildOfferJsonLd, offerAvailabilityFromPurchase, readUniformRubAmounts, singleOfferPriceRub } from "./product-json-ld"
 import { isRequestQuoteProduct } from "./request-quote"
+import { getSeoDescriptionSource } from "./product-seo"
 import { readProductPurchase } from "./woodright-order/purchase-contract"
 
 type Product = Record<string, unknown>
@@ -70,12 +71,19 @@ export function buildSizeVariantJsonLd(input: {
   const productId = `${jsonLd.url}#product`
   // No group URL: sizes live on separate canonical pages. The stable @id is shared.
   const groupId = `${[...urls].sort()[0]}#group-${group}`
+  // A family description must be true for every size and match this PDP's
+  // published description. Different or missing member copy stays unshared.
+  const description = getSeoDescriptionSource(product)?.trim()
+  const sharedDescription = description && jsonLd.description === description &&
+    members.every((member) => getSeoDescriptionSource(member)?.trim() === description)
+    ? description : null
   return {
     ...jsonLd, "@id": productId, size: sizes[0],
     inProductGroupWithID: group,
     isVariantOf: {
       "@type": "ProductGroup", "@id": groupId, productGroupID: group,
       name: String(meta.display_group_title || product.title),
+      ...(sharedDescription ? { description: sharedDescription } : {}),
       brand: jsonLd.brand, variesBy: ["https://schema.org/size"],
       hasVariant: urls.map((url) => url === jsonLd.url
         ? { "@id": productId }
