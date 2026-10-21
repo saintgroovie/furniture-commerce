@@ -1,3 +1,4 @@
+import { parseMaterialTiers } from "./material-tier-contract"
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { createRequire } from "node:module"
@@ -65,3 +66,15 @@ void (async () => {
   }
   console.log("september-cart-pricing.fidelity.test.ts: 48 route cases passed")
 })().catch((error) => { console.error(error); process.exitCode = 1 })
+
+for (const [legacy, full, ldsp] of [["MN-05-2", 98670, 75800], ["MN-08-1", 27060, 22900], ["MN-61-1", 167090, 125450]] as const) {
+  const metadata = { collection: "monchelsea", woodright_recovery: { legacy_code: legacy }, material_tiers: {
+    solid_full: { key: "solid_full", label_ru: "Массив", description_ru: "", price_rub: full, price_multiplier: 1, position: 1 },
+    solid_front_ldsp_body: { key: "solid_front_ldsp_body", label_ru: "Фасады из массива + корпус ЛДСП", description_ru: "Массив", price_rub: ldsp, price_multiplier: ldsp / full, position: 0 },
+  } }
+  assert.equal(parseMaterialTiers(metadata)![0].label_ru, "ЛДСП + МДФ")
+  const product = { metadata, variants: [{ id: "test-mnm", prices: [{ amount: full, currency_code: "rub" }] }] }
+  const result = resolveDefaultBuyerConfiguration(product)!
+  assert.equal(result.material_execution_label, "ЛДСП + МДФ")
+  assert.equal(result.min_unit_price, ldsp)
+}
