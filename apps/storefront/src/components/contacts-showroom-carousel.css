@@ -78,6 +78,23 @@ main.page-section:has(.contacts-page--panorama) {
   pointer-events: none;
 }
 
+.contacts-carousel .contacts-carousel-photo-toggle {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.contacts-carousel .contacts-carousel-photo-toggle:focus-visible {
+  outline-offset: -3px;
+}
+
 .contacts-carousel-controls {
   position: absolute;
   z-index: 2;
@@ -140,19 +157,6 @@ main.page-section:has(.contacts-page--panorama) {
 
 .contacts-carousel-page-fill.is-running {
   animation: contacts-carousel-progress 3s linear both;
-}
-
-.contacts-carousel-toggle {
-  min-width: 84px;
-  min-height: 44px;
-  padding: 0 0.5rem;
-  font-size: 0.8125rem;
-}
-
-.contacts-carousel-count {
-  white-space: nowrap;
-  font-size: 0.8125rem;
-  font-variant-numeric: tabular-nums;
 }
 
 .contacts-carousel :is(button, a):hover {
@@ -231,14 +235,11 @@ main.page-section:has(.contacts-page--panorama) {
   }
 
   .contacts-carousel-page { width: 24px; }
-  .contacts-carousel-toggle { min-width: 52px; padding: 0 0.25rem; }
-  .contacts-carousel-count { font-size: 0.75rem; }
 }
 
 @media (max-width: 360px) {
   .contacts-carousel-controls { gap: 0; }
   .contacts-carousel .contacts-carousel-arrow { width: 36px; }
-  .contacts-carousel-count { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
