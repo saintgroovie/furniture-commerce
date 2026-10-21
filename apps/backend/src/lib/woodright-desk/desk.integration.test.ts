@@ -73,6 +73,9 @@ function request(
             retrieveUser: async () => ({
               id: "staff_1",
               email: "staff@example.test",
+              metadata: {
+                woodright_access: { role: "god", enabled: true, version: 1 },
+              },
             }),
           };
         return sql;
@@ -106,9 +109,13 @@ before(async () => {
   await db.raw(DESK_SCHEMA);
   await db.raw("drop table if exists woodright_desk_record, woodright_company");
   await db.raw(TEAM_SCHEMA);
-  await db.raw(`create table if not exists "user" (id text primary key,email text,first_name text,last_name text,deleted_at timestamptz);
+  await db.raw(`create table if not exists "user" (id text primary key,email text,first_name text,last_name text,deleted_at timestamptz, metadata jsonb);
+    alter table "user" add column if not exists metadata jsonb;
     insert into "user"(id,email,first_name) values ('staff_1','staff@example.test','Первый'),('staff_2','second@example.test','Второй') on conflict(id) do nothing;
     insert into "user"(id,email,deleted_at) values ('staff_deleted','removed@example.test',now()) on conflict(id) do nothing;`);
+  await db.raw(
+    `update "user" set metadata = '{"woodright_access":{"role":"god","enabled":true,"version":1}}'::jsonb where id in ('staff_1','staff_2')`,
+  );
   await db.raw(MANGO_SCHEMA);
   await db.raw("truncate woodright_mango_event, woodright_mango_call");
   await db.raw(`create table if not exists bespoke_request (id text primary key, lead_id text null, comment text null, dimensions text null, materials text null, budget text null, status text not null, internal_notes text null,
@@ -759,7 +766,8 @@ test("assignment validates active staff and companies, locks first assignment, a
   assert.ok(
     active.body.staff.every(
       (s: any) =>
-        Object.keys(s).sort().join(",") === "email,first_name,id,last_name",
+        Object.keys(s).sort().join(",") ===
+        "access,email,first_name,id,last_name",
     ),
   );
 });

@@ -344,7 +344,11 @@ export function Integrations({ data, focus, compact = false }) {
                   <div key={key}>
                     <dt>{sourceNames[key]}</dt>
                     <dd>
-                      {value.ok ? `${value.count} записей` : "Недоступно"}
+                      {value.restricted
+                        ? "Недоступно вашей роли"
+                        : value.ok
+                          ? `${value.count} записей`
+                          : "Недоступно"}
                     </dd>
                   </div>
                 ))}
@@ -369,10 +373,14 @@ export function Integrations({ data, focus, compact = false }) {
               <span>
                 {data?.capabilities.requestUpdate
                   ? "Обращения сохраняются с защитой от конфликтов. Доступны напоминания, приватные вложения и история действий. "
-                  : "Сохранение обращений, напоминания и приватные вложения появятся после подключения серверных функций. "}
+                  : data?.access
+                    ? "Действия сохранения доступны в соответствии с вашей рабочей ролью. "
+                    : "Сохранение обращений, напоминания и приватные вложения появятся после подключения серверных функций. "}
                 {data?.capabilities.assignments
                   ? "Компании и ответственные подключены к рабочей базе."
-                  : "Компании и ответственные появятся после подключения командных функций."}
+                  : data?.access
+                    ? "Назначения изменяет продавец, директор или полный администратор."
+                    : "Компании и ответственные появятся после подключения командных функций."}
               </span>
             </p>
             <p>
@@ -554,7 +562,8 @@ export function LiveObjectDetail({
           onClick: () => go(kind),
         }}
         action={
-          ["orders", "requests"].includes(kind) ? (
+          ["orders", "requests"].includes(kind) &&
+          (!data.access || data.access.pages.includes("invoices")) ? (
             <Button
               icon={Receipt}
               onClick={() => openPanel({ type: "invoices", objectId: id })}
@@ -685,7 +694,9 @@ export function LiveObjectDetail({
         <>
           <div className="order-axes">
             {[
-              ["Оплата", item.payment],
+              ...(data.access?.financial === false
+                ? []
+                : [["Оплата", item.payment]]),
               ["Изготовление", item.stage],
               ["Доставка", item.delivery],
             ].map(([label, value]) => (
@@ -699,7 +710,9 @@ export function LiveObjectDetail({
             <Definition
               items={[
                 ["Номер", item.displayId],
-                ["Сумма", formatTotal(item)],
+                ...(data.access?.financial === false
+                  ? []
+                  : [["Сумма", formatTotal(item)]]),
                 [
                   "Контакт",
                   person ? (
@@ -725,7 +738,9 @@ export function LiveObjectDetail({
                     <tr>
                       <th>Наименование</th>
                       <th>Количество</th>
-                      <th>Цена за единицу</th>
+                      {data.access?.financial !== false && (
+                        <th>Цена за единицу</th>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -733,12 +748,14 @@ export function LiveObjectDetail({
                       <tr key={l.id || i}>
                         <td>{l.name}</td>
                         <td>{l.qty}</td>
-                        <td>
-                          {new Intl.NumberFormat("ru-RU", {
-                            style: "currency",
-                            currency: item.currency || "RUB",
-                          }).format(Number(l.price))}
-                        </td>
+                        {data.access?.financial !== false && (
+                          <td>
+                            {new Intl.NumberFormat("ru-RU", {
+                              style: "currency",
+                              currency: item.currency || "RUB",
+                            }).format(Number(l.price))}
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -779,7 +796,9 @@ export function LiveObjectDetail({
                   items={[
                     ["Размеры", item.dimensions || "Не указаны"],
                     ["Материалы", item.materials || "Не указаны"],
-                    ["Бюджет", item.budget || "Не указан"],
+                    ...(data.access?.financial === false
+                      ? []
+                      : [["Бюджет", item.budget || "Не указан"]]),
                   ]}
                 />
               </Section>
@@ -795,7 +814,11 @@ export function LiveObjectDetail({
                         <option
                           key={value}
                           value={value}
-                          disabled={value === "paid" && item.status !== "paid"}
+                          disabled={
+                            (value === "paid" && item.status !== "paid") ||
+                            (data.access?.role === "production" &&
+                              !["in_production", "completed"].includes(value))
+                          }
                         >
                           {label}
                         </option>
@@ -868,15 +891,17 @@ export function LiveObjectDetail({
               </Section>
             </div>
             <aside>
-              <Section title="Контакт">
-                <Definition
-                  items={[
-                    ["Имя", person?.name || "Не указан"],
-                    ["Телефон", person?.phone || "Не указан"],
-                    ["Email", person?.email || "Не указан"],
-                  ]}
-                />
-              </Section>
+              {(!data.access || data.access.pages.includes("people")) && (
+                <Section title="Контакт">
+                  <Definition
+                    items={[
+                      ["Имя", person?.name || "Не указан"],
+                      ["Телефон", person?.phone || "Не указан"],
+                      ["Email", person?.email || "Не указан"],
+                    ]}
+                  />
+                </Section>
+              )}
               <Button
                 variant="secondary"
                 icon={Paperclip}

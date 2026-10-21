@@ -6,16 +6,24 @@ import {
 } from "../../../../../lib/woodright-desk/http";
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
-    const { sql } = await deskContext(req),
+    const { sql, access } = await deskContext(req),
       { limit, offset } = page(req.query);
     // One snapshot supplies rows and count so a concurrent insert cannot silently truncate the list.
+    const scoped =
+      access.role === "production"
+        ? "and exists (select 1 from woodright_desk_record a where a.entity_type=woodright_follow_up.entity_type and a.entity_id=woodright_follow_up.entity_id and a.assignee_id=?)"
+        : "";
+    const bindings =
+      access.role === "production"
+        ? [access.actorId, access.actorId, limit, offset]
+        : [limit, offset];
     const data = (
       await sql.raw(
         `select
-      (select count(*)::int from woodright_follow_up where deleted_at is null) as count,
+      (select count(*)::int from woodright_follow_up where deleted_at is null ${scoped}) as count,
       coalesce((select jsonb_agg(r order by r.due_at, r.id) from
-        (select * from woodright_follow_up where deleted_at is null order by due_at, id limit ? offset ?) r), '[]'::jsonb) as reminders`,
-        [limit, offset],
+        (select * from woodright_follow_up where deleted_at is null ${scoped} order by due_at, id limit ? offset ?) r), '[]'::jsonb) as reminders`,
+        bindings,
       )
     ).rows[0];
     res.setHeader("Cache-Control", "private, no-store");

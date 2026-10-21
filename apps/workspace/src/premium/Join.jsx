@@ -67,6 +67,15 @@ export function Join({ token }) {
           {invite ? (
             <form className="form-stack" onSubmit={accept}>
               <Notice>Приглашение для {invite.email}</Notice>
+              {invite.roleLabel && (
+                <p className="muted">Рабочая роль: {invite.roleLabel}</p>
+              )}
+              {invite.accessExpiresAt && (
+                <Notice>
+                  Временный доступ до{" "}
+                  {new Date(invite.accessExpiresAt).toLocaleString("ru-RU")}.
+                </Notice>
+              )}
               <Field label="Ваше имя">
                 <input
                   autoComplete="name"

@@ -1,3 +1,4 @@
+import { assertEntityAccess } from "../../../../../../../lib/woodright-desk/staff-access";
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { createHash } from "node:crypto";
 import {
@@ -13,7 +14,7 @@ import {
 import { PrivateFileStore } from "../../../../../../../lib/woodright-desk/private-files";
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
-    const { sql } = await deskContext(req);
+    const { sql, access } = await deskContext(req);
     const row = (
       await sql.raw(
         `select * from woodright_private_attachment where id = ? and deleted_at is null`,
@@ -21,6 +22,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       )
     ).rows[0];
     if (!row) throw new DeskError(404, "NOT_FOUND", "Вложение не найдено");
+    await assertEntityAccess(sql, access, row.entity_type, row.entity_id);
     await sql.transaction(async (trx) => {
       await requireEntity(trx, entity(row.entity_type), row.entity_id);
     });

@@ -9,14 +9,25 @@ import {
   removeAttachment,
   PrivateFileStore,
 } from "../../../../../lib/woodright-desk/private-files";
+import {
+  authorizeDeskCommand,
+  parseStaffAccess,
+} from "../../../../../lib/woodright-desk/staff-access";
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   try {
-    const { sql, actorId } = await deskContext(req);
+    const { sql, actorId, access } = await deskContext(req);
     const command = (req.body ?? {}) as Record<string, any>;
-    const result =
-      command.type === "attachment.upload"
+    const result = await sql.transaction(async (trx) => {
+      const user = (
+        await trx.raw(
+          'select * from "user" where id = ? and deleted_at is null for share',
+          [actorId],
+        )
+      ).rows[0];
+      await authorizeDeskCommand(trx, parseStaffAccess(user), command);
+      return command.type === "attachment.upload"
         ? await attachFile(
-            sql,
+            trx,
             actorId,
             command,
             new PrivateFileStore(
@@ -24,8 +35,9 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
             ),
           )
         : command.type === "attachment.remove"
-          ? await removeAttachment(sql, actorId, command)
-          : await executeDeskCommand(sql, actorId, command);
+          ? await removeAttachment(trx, actorId, command)
+          : await executeDeskCommand(trx, actorId, command);
+    });
     res.setHeader("Cache-Control", "private, no-store");
     res.json({ ok: true, result });
   } catch (e) {

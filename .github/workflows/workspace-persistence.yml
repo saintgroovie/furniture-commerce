@@ -60,7 +60,7 @@ jobs:
       - name: Real PostgreSQL concurrency and private file checks
         env:
           WOODRIGHT_DESK_TEST_DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk
-        run: node node_modules/tsx/dist/cli.mjs --test src/lib/woodright-desk/desk.integration.test.ts src/lib/woodright-desk/mango.fidelity.test.ts
+        run: node node_modules/tsx/dist/cli.mjs --test src/lib/woodright-desk/desk.integration.test.ts src/lib/woodright-desk/mango.fidelity.test.ts src/lib/woodright-desk/staff-access.test.ts
       - name: Targeted production migration rehearsal on disposable PostgreSQL
         env:
           DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk
@@ -94,3 +94,12 @@ jobs:
           finally { await client.end(); }
           JS
           node node_modules/@medusajs/cli/cli.js db:migrate
+      - name: Build actual workspace for employee acceptance
+        working-directory: apps/workspace
+        env:
+          NEXT_PUBLIC_WORKSPACE_BASE_PATH: /os
+        run: npm ci --no-audit --no-fund && npm run build
+      - name: Five native employee roles and shared persistent work
+        env:
+          DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk_http
+        run: node scripts/test-employee-flow.mjs

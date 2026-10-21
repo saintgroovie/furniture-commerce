@@ -78,6 +78,27 @@ export async function upstream(path, { session, method = "GET", body } = {}) {
       redirect: "error",
     });
     const raw = await response.text();
+    if (
+      !response.ok &&
+      path.startsWith("/admin/") &&
+      [401, 403, 503].includes(response.status)
+    ) {
+      let detail;
+      try {
+        detail = JSON.parse(raw);
+      } catch {}
+      if (
+        [
+          "STAFF_DISABLED",
+          "STAFF_ROLE_REQUIRED",
+          "ROLE_FORBIDDEN",
+          "ACCESS_UNAVAILABLE",
+        ].includes(detail?.code) &&
+        typeof detail.message === "string" &&
+        detail.message.length <= 500
+      )
+        throw new LiveError(response.status, detail.message);
+    }
     if (response.status === 401)
       throw new LiveError(401, "Сессия Medusa закончилась. Войдите снова");
     if (

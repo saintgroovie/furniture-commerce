@@ -28,20 +28,46 @@ export async function GET() {
       ["processes", "/admin/woodright/order-processes", "order_processes"],
       ["rooms", "/admin/room-sets", "room_sets"],
     ] as const;
-    const [results, desk] = await Promise.all([
-      Promise.allSettled(
-        definitions.map(([key, path, field]) =>
-          ["orders", "people", "requests", "processes", "rooms"].includes(key)
-            ? readPaged(path, field, session)
-            : upstream(path, { session }),
-        ),
+    const desk = await deskPromise;
+    const allDefinitions = definitions;
+    const visibleDefinitions = allDefinitions.filter(([key]) =>
+      desk.access?.role === "production"
+        ? false
+        : desk.access?.role === "accountant"
+          ? ["orders", "processes"].includes(key)
+          : true,
+    );
+    const results = await Promise.allSettled(
+      visibleDefinitions.map(([key, path, field]) =>
+        ["orders", "people", "requests", "processes", "rooms"].includes(key)
+          ? readPaged(path, field, session)
+          : upstream(path, { session }),
       ),
-      deskPromise,
-    ]);
+    );
     const sources: Record<string, unknown> = {};
     const states: Record<string, unknown> = {};
-    for (let i = 0; i < definitions.length; i++) {
-      const [key, , field] = definitions[i];
+    for (const [key, , field] of allDefinitions) {
+      if (!visibleDefinitions.some(([visible]) => visible === key)) {
+        sources[key] = { [field]: [], count: 0 };
+        states[key] = { ok: true, count: 0, total: 0, restricted: true };
+      }
+    }
+    if (desk.access?.role === "production") {
+      const workload = await upstream("/admin/woodright/desk/production", {
+        session,
+      });
+      for (const key of ["requests", "orders", "processes", "companies"]) {
+        sources[key] = workload[key];
+        states[key] = {
+          ok: true,
+          count: workload[key].count,
+          total: workload[key].count,
+          completeness: "assigned",
+        };
+      }
+    }
+    for (let i = 0; i < visibleDefinitions.length; i++) {
+      const [key, , field] = visibleDefinitions[i];
       const result = results[i];
       if (result.status === "fulfilled") {
         if (!Array.isArray(result.value[field])) {
@@ -96,12 +122,15 @@ export async function GET() {
         };
       }
     }
-    if (desk.companies === true) {
-      const definitions = [
+    if (desk.companies === true || desk.access) {
+      const allTeamDefinitions = [
         ["companies", "companies"],
         ["records", "records"],
         ["staff", "staff"],
       ] as const;
+      const definitions = allTeamDefinitions.filter(
+        ([key]) => key !== "companies" || desk.companies === true,
+      );
       const loaded = await Promise.allSettled(
         definitions.map(([path, field]) =>
           readPaged(`/admin/woodright/desk/${path}`, field, session),
