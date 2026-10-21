@@ -1,5 +1,7 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
+import { buildBreadcrumbJsonLd } from "@/lib/product-json-ld"
+import { jsonLdHtml } from "@/lib/json-ld"
 import { getSiteUrl } from "@/lib/api/base"
 import { indexingCanonical } from "@/lib/indexing-policy"
 import { seo, wallPanelsCopy } from "@/lib/woodright-copy"
@@ -42,22 +44,17 @@ export function generateMetadata(): Metadata {
 export default async function WallPanelsPage() {
   const cspNonce = (await headers()).get("x-nonce") ?? undefined
   const base = getSiteUrl()
-  const breadcrumbJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Woodright", item: `${base}/` },
-      { "@type": "ListItem", position: 2, name: wallPanelsCopy.breadcrumbs.root, item: `${base}/bespoke` },
-      { "@type": "ListItem", position: 3, name: wallPanelsCopy.breadcrumbs.current, item: `${base}${PATH}` },
-    ],
-  }
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd(base, [
+    { name: wallPanelsCopy.breadcrumbs.root, path: "/bespoke" },
+    { name: wallPanelsCopy.breadcrumbs.current, path: PATH },
+  ])
 
   return (
     <div className="hp hp--bespoke wp">
       <script
         type="application/ld+json"
         nonce={cspNonce}
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdHtml(breadcrumbJsonLd) }}
       />
       <HomeRevealObserver />
       <WpHero />

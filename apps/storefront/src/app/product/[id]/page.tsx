@@ -681,8 +681,8 @@ export default async function ProductPage({
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(base, [
     ...(isKidsProduct ? [{ name: "Детская", path: "/kids" }] : []),
     { name: "Каталог", path: catalogHref },
-    ...(collectionLabel
-      ? [{ name: collectionLabel, path: collectionHref ?? undefined }]
+    ...(collectionLabel && collectionHref
+      ? [{ name: collectionLabel, path: collectionHref }]
       : []),
     { name: titleStr || "Товар", path: canonicalPath },
   ])
@@ -780,7 +780,7 @@ export default async function ProductPage({
                   </>
                 )}
                 <Link href={catalogHref}>Каталог</Link>
-                {collectionLabel && (
+                {collectionLabel && collectionHref && (
                   <>
                     <span aria-hidden="true"> / </span>
                     {collectionHref ? (
