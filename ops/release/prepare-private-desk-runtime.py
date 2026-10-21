@@ -100,6 +100,8 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', required=True)
     parser.add_argument('--expected-current-source', required=True)
+    parser.add_argument('--expected-backend-source')
+    parser.add_argument('--expected-storefront-source')
     parser.add_argument('--expected-backend-ref', required=True)
     parser.add_argument('--expected-storefront-ref', required=True)
     parser.add_argument('--approval-checksum', required=True)
@@ -107,7 +109,11 @@ def main():
     parser.add_argument('--backup-manifest', type=Path, required=True)
     parser.add_argument('--apply', action='store_true')
     args = parser.parse_args()
-    if not re.fullmatch(r'[a-f0-9]{40}', args.source) or not re.fullmatch(r'[a-f0-9]{40}', args.expected_current_source):
+    expected_sources = {
+        'backend': args.expected_backend_source or args.expected_current_source,
+        'storefront': args.expected_storefront_source or args.expected_current_source,
+    }
+    if not all(re.fullmatch(r'[a-f0-9]{40}', value) for value in [args.source, args.expected_current_source, *expected_sources.values()]):
         raise ValueError('exact source revisions required')
     leases = []
     if args.apply:
@@ -120,7 +126,7 @@ def main():
     if sha(approval_raw) != args.approval_checksum or approval.get('application_sha') != args.source or approval.get('owner_decision') != 'approved' or approval.get('environment') != 'public_production' or approval.get('reservation_state') != 'reserved' or approval.get('component', 'pair') != 'pair':
         raise ValueError('exact reserved production pair approval required')
     for component, expected in [('backend', args.expected_backend_ref), ('storefront', args.expected_storefront_ref)]:
-        if inspect('woodright-public-production-' + component) != (expected, args.expected_current_source):
+        if inspect('woodright-public-production-' + component) != (expected, expected_sources[component]):
             raise ValueError('aborted_conflict: live pair changed')
     for name in ['ACTIVE_RELEASE.json', 'ACTIVE_OWNER.json']:
         if json.loads(read_regular(META / name)).get('application_source_sha') != args.expected_current_source:
@@ -135,6 +141,7 @@ def main():
     planned = prepare(original.decode()).encode()
     packet = {'kind': 'woodright_desk_runtime_preparation', 'source': args.source, 'mode': 'apply' if args.apply else 'plan',
               'before_sha256': sha(original), 'after_sha256': sha(planned), 'containers_changed': False,
+              'expected_current_source': args.expected_current_source, 'expected_component_sources': expected_sources,
               'private_volume': VOLUME, 'mango_enabled': False}
     if args.apply and original != planned:
         evidence = Path('/srv/woodright/evidence') / ('desk-runtime-' + args.source)
