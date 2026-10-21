@@ -137,6 +137,8 @@ export type ProductJsonLdInput = {
   images?: string[]
   dimensions?: { axis: "height" | "width" | "depth"; mm?: number; values_mm?: number[] }[]
   sku?: string | null
+  /** Explicit catalog material; never inferred from a collection or description. */
+  material?: string | null
   offerPriceRub?: number | null
   offerAvailability?: ReturnType<typeof offerAvailabilityFromPurchase>
 }
@@ -153,6 +155,8 @@ export function buildProductJsonLd(
   }
   const description = input.description?.trim()
   if (description) ld.description = description
+  const material = input.material?.trim()
+  if (material) ld.material = material
   const images = Array.from(new Set((input.images ?? [input.image ?? ""])
     .map((src) => {
       if (!src.trim()) return null

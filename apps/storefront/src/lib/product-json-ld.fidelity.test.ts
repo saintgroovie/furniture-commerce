@@ -46,6 +46,12 @@ const named = buildProductJsonLd({
   sku: "GR-67-1",
   offerPriceRub: 120000,
 })
+assert.equal("material" in named, false)
+const solid = buildProductJsonLd({ name: "Детский комод", url: "https://woodright.ru/product/pa-05-3", material: "Массив", description: "Изделие изготовлено из массива.", offerPriceRub: 113080 })
+assert.equal(solid.material, "Массив")
+assert.equal((solid.offers as { price: number }).price, 113080)
+assert.equal("height" in solid || "width" in solid || "depth" in solid, false)
+assert.equal("material" in buildProductJsonLd({ name: "Товар", url: "https://woodright.ru/product/test", material: "  " }), false)
 assert.equal(named.name, "Кровать Greenwich")
 assert.equal(named.sku, "GR-67-1")
 assert.equal((named.offers as { priceCurrency: string }).priceCurrency, "RUB")
