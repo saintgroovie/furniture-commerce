@@ -34,8 +34,11 @@ class Page(html.parser.HTMLParser):
         return any(name in a.get("class", "").split() for _, a in self.stack)
 
     def hidden(self):
-        return any("hidden" in a or a.get("aria-hidden") == "true" or
-                   "display:none" in a.get("style", "").replace(" ", "") for _, a in self.stack)
+        # React's streamed S:<n> transport div is revealed by the boundary
+        # completion script. It contains the actual PDP, not hidden UI copy.
+        return any(("hidden" in a and not (tag == "div" and re.fullmatch(r"S:\d+", a.get("id", "")))) or
+                   a.get("aria-hidden") == "true" or
+                   "display:none" in a.get("style", "").replace(" ", "") for tag, a in self.stack)
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
