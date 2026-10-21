@@ -98,7 +98,7 @@ export function PdpSizeChips({
   const hrefFor = (chip: PdpSizeChip): string => {
     const href = chip.href ?? `/product/${chip.id}`
     if (!preserveMaterialInHref || !selectedCode || !materialTiers?.some((tier) => tier.code === selectedCode)) return href
-    const url = new URL(href, "https://woodright.ru")
+    const url = new URL(href, "https://relative.invalid")
     if (!url.searchParams.has("variant")) return href
     url.searchParams.set("material", selectedCode)
     return `${url.pathname}${url.search}${url.hash}`
