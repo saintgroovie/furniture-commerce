@@ -15,7 +15,9 @@ import {
   jsonLdHtml,
   readUniformRubAmounts,
   singleOfferPriceRub,
+  offerAvailabilityFromPurchase,
 } from "@/lib/product-json-ld"
+import { readProductPurchase } from "@/lib/woodright-order/purchase-contract"
 import {
   formatRequestQuotePriceLabel,
   isRequestQuoteProduct,
@@ -541,6 +543,7 @@ export default async function ProductPage({
     dimensions: dim ? pdpDimensionCells(dim) : [],
     sku: article,
     offerPriceRub,
+    offerAvailability: offerAvailabilityFromPurchase(readProductPurchase(product)),
   })
   const productJsonLd =
     (addressableMaterialTiers && buildMaterialVariantJsonLd({
