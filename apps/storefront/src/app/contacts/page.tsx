@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import "@/components/contacts-showroom-carousel.css"
 import { ContactsPageLayout } from "@/components/contacts-page-layout"
 import { canonicalAlternates } from "@/lib/page-canonical"
 import { seo } from "@/lib/woodright-copy"

@@ -5,11 +5,10 @@ import {
   ContactPhoneAction,
 } from "@/components/contact-action"
 import { ContactMessengerActions } from "@/components/contact-messenger-actions"
-import { ContactsPodiumPhoto } from "@/components/contacts-podium-photo"
+import { ContactsShowroomCarousel } from "@/components/contacts-showroom-carousel"
 import { CopyLines } from "@/components/copy-lines"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { contactsCopy } from "@/lib/woodright-copy"
-import { showroomPodiumMedia } from "@/lib/showroom-podium-media"
 import { showroomContacts } from "@/lib/showroom-contacts"
 
 /**
@@ -21,51 +20,17 @@ import { showroomContacts } from "@/lib/showroom-contacts"
  */
 export function ContactsPageLayout() {
   return (
-    <div className="contacts-page">
-      <header className="contacts-page-masthead">
-        <h1 className="contacts-page-title">{contactsCopy.h1}</h1>
-        <p className="contacts-page-intro">{formatRuInline(contactsCopy.lead)}</p>
-        <CopyLines className="contacts-page-visit-hint" lines={contactsCopy.visitHint} />
-      </header>
+    <div className="contacts-page contacts-page--panorama">
+      <div className="contacts-showroom-hero">
+        <ContactsShowroomCarousel />
+        <header className="contacts-page-masthead">
+          <h1 className="contacts-page-title">{contactsCopy.h1}</h1>
+          <p className="contacts-page-intro">{formatRuInline(contactsCopy.lead)}</p>
+          <CopyLines className="contacts-page-visit-hint" lines={contactsCopy.visitHint} />
+        </header>
+      </div>
 
       <div className="contacts-page-stage">
-        <section
-          className="contacts-page-col contacts-page-col--showroom"
-          aria-labelledby="contacts-showroom-heading"
-        >
-          <header className="contacts-page-row contacts-page-row--header">
-            <p className="contacts-page-eyebrow">
-              {formatRuInline(contactsCopy.showroomEyebrow)}
-            </p>
-            <h2
-              id="contacts-showroom-heading"
-              className="contacts-page-col-title"
-            >
-              {formatRuInline(contactsCopy.showroomHeading)}
-            </h2>
-          </header>
-          <div className="contacts-page-row contacts-page-row--primary">
-            <address className="contacts-page-address">
-              {showroomContacts.addressLines.map((line) => (
-                <span className="contacts-page-address-line" key={line}>
-                  {formatRuInline(line)}
-                </span>
-              ))}
-            </address>
-          </div>
-          <div className="contacts-page-row contacts-page-row--secondary">
-            <ContactActionGrid density="page" className="contacts-page-action-grid">
-              <ContactPhoneAction
-                label={showroomContacts.showroomCallLabel}
-                display={showroomContacts.writeOrCall.display}
-                tel={showroomContacts.writeOrCall.tel}
-                tone="primary"
-              />
-              <ContactMapAction density="page" />
-            </ContactActionGrid>
-          </div>
-        </section>
-
         <section
           className="contacts-page-col contacts-page-col--channels"
           aria-labelledby="contacts-channels-heading"
@@ -105,48 +70,44 @@ export function ContactsPageLayout() {
             <ContactMessengerActions density="page" />
           </div>
         </section>
+
+        <section
+          className="contacts-page-col contacts-page-col--showroom"
+          aria-labelledby="contacts-showroom-heading"
+        >
+          <header className="contacts-page-row contacts-page-row--header">
+            <p className="contacts-page-eyebrow">
+              {formatRuInline(contactsCopy.showroomEyebrow)}
+            </p>
+            <h2
+              id="contacts-showroom-heading"
+              className="contacts-page-col-title"
+            >
+              {formatRuInline(contactsCopy.showroomHeading)}
+            </h2>
+          </header>
+          <div className="contacts-page-row contacts-page-row--primary">
+            <address className="contacts-page-address">
+              {showroomContacts.addressLines.map((line) => (
+                <span className="contacts-page-address-line" key={line}>
+                  {formatRuInline(line)}
+                </span>
+              ))}
+            </address>
+          </div>
+          <div className="contacts-page-row contacts-page-row--secondary">
+            <ContactActionGrid density="page" className="contacts-page-action-grid">
+              <ContactPhoneAction
+                label={showroomContacts.showroomCallLabel}
+                display={showroomContacts.writeOrCall.display}
+                tel={showroomContacts.writeOrCall.tel}
+                tone="primary"
+              />
+              <ContactMapAction density="page" />
+            </ContactActionGrid>
+          </div>
+        </section>
       </div>
-
-      <figure className="contacts-page-media">
-        <ContactsPodiumPhoto
-          frame={showroomPodiumMedia.hero}
-          sizes="100vw"
-          priority
-        />
-      </figure>
-
-      <section className="contacts-page-gallery" aria-label="Подиум в шоуруме">
-        <figure className="contacts-page-shot contacts-page-shot--lead">
-          <ContactsPodiumPhoto
-            frame={showroomPodiumMedia.alcove}
-            sizes="(min-width: 1200px) 1200px, 100vw"
-          />
-        </figure>
-        <figure className="contacts-page-shot contacts-page-shot--wardrobe">
-          <ContactsPodiumPhoto
-            frame={showroomPodiumMedia.wardrobe}
-            sizes="(min-width: 1100px) 680px, 100vw"
-          />
-        </figure>
-        <figure className="contacts-page-shot contacts-page-shot--cream">
-          <ContactsPodiumPhoto
-            frame={showroomPodiumMedia.creamBedroom}
-            sizes="(min-width: 1100px) 460px, 100vw"
-          />
-        </figure>
-        <figure className="contacts-page-shot contacts-page-shot--bed">
-          <ContactsPodiumPhoto
-            frame={showroomPodiumMedia.bed}
-            sizes="(min-width: 1100px) 460px, 100vw"
-          />
-        </figure>
-        <figure className="contacts-page-shot contacts-page-shot--kids">
-          <ContactsPodiumPhoto
-            frame={showroomPodiumMedia.kids}
-            sizes="(min-width: 1100px) 680px, 100vw"
-          />
-        </figure>
-      </section>
 
       <section className="contacts-page-cta" aria-labelledby="contacts-cta-heading">
         <div className="contacts-page-cta-copy">
