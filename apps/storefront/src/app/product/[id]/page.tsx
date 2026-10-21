@@ -922,9 +922,10 @@ export default async function ProductPage({
 
               {/* 7. CTA */}
               <ProductCta
+                initialFinishKey={provencePrices ? initialProvenceFinish : undefined}
                 product={product}
                 variantId={selectedVariantId ?? undefined}
-                variantImage={oliverDesk ? pdpMainSrc : undefined}
+                variantImage={oliverDesk || provencePrices ? pdpMainSrc : undefined}
                 requiresBuyerSelection={
                   useExecutionPdp &&
                   !isRequestQuoteProduct(product) &&
