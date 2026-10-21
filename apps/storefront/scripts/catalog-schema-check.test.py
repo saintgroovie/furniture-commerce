@@ -28,6 +28,8 @@ class Regression(unittest.TestCase):
         self.assertEqual(row["issues"], [])
         self.assertEqual(row["price_rub"], 70300)
         self.assertEqual(row["hero"], PHOTO)
+        streamed = '<div hidden id="S:1">' + html() + '</div>'
+        self.assertEqual(audit.inspect_page(streamed, URL)["issues"], [])
         # A gallery need not be fully rendered before hydration.
         product = dict(PRODUCT, image=[PHOTO, "https://woodright.ru/product-static/later-photo.jpg"])
         self.assertEqual(audit.inspect_page(html(product), URL)["issues"], [])
