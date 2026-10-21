@@ -323,16 +323,17 @@ async function main() {
         const root = getComputedStyle(document.documentElement)
         const token = (name) => root.getPropertyValue(name).trim()
         const btn =
+          document.querySelector(".wr-footer-primary") ||
           document.querySelector("a.btn.btn-primary.hp-final-btn") ||
           document.querySelector(".hp-final a.btn.btn-primary") ||
           document.querySelector(".hp-hero-actions a.btn.btn-primary")
         const hero =
           document.querySelector(".hp-hero-actions a.btn.btn-primary") ||
           document.querySelector(".hp-hero-actions a.btn")
-        const footerNav = document.querySelector(".footer-nav")
+        const footerNav = document.querySelector(".wr-footer-nav, .footer-nav")
         const kids = document.querySelector(".hp-kids-objects")
         const main = document.getElementById("main-content")
-        const footer = document.querySelector("footer.site-footer, .site-footer")
+        const footer = document.querySelector("footer.wr-footer, footer.site-footer, .site-footer")
         const lastSection = document.querySelector(".hp-final, .hp > section:last-of-type, #main-content > *:last-child")
         const rect = (el) => {
           if (!el) return null

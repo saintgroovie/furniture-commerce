@@ -17,7 +17,6 @@ import { HomeClassics } from "@/components/home/home-classics"
 import { HomeCraft } from "@/components/home/home-craft"
 import { HomeKids } from "@/components/home/home-kids"
 import { HomeProject } from "@/components/home/home-project"
-import { HomeFinal } from "@/components/home/home-final"
 import { HomeRevealObserver } from "@/components/home/home-reveal-observer"
 import { HomeRoomScene, type HomeScene } from "@/components/home/home-room-scene"
 import { pickByHandles, toHomeProduct, type HomeProduct } from "@/components/home/home-data"
@@ -233,7 +232,6 @@ async function HomeShowcaseSections() {
       <HomeCraft />
       <HomeKids products={kids} />
       <HomeProject />
-      <HomeFinal />
     </>
   )
 }

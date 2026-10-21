@@ -20,17 +20,15 @@ function read(relFromSrc: string): string {
 assert.equal(nav.partners, "Партнёры")
 assert.equal(partnersCopy.h1, "Партнёры")
 
-const woodrightCol = footer.columns.find((col) => col.title === "Woodright")
+const woodrightCol = footer.columns.find((col) => col.title === "О Woodright")
 assert.ok(woodrightCol)
 assert.deepEqual(
   woodrightCol.links.map((link) => link.href),
   [
     "/about",
-    "/partners",
-    "/designers",
     "/about/production",
     "/about/materials",
-    "/contacts",
+    "/designers",
   ]
 )
 

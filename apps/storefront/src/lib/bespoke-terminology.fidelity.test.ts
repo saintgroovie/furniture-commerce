@@ -37,7 +37,7 @@ assert.doesNotMatch(seo.bespoke.description, /bespoke, мебельное ате
 
 assert.equal(
   footer.columns.find((col) => col.links.some((l) => l.href === "/bespoke"))?.title,
-  "По проекту"
+  "Коллекции"
 )
 assert.ok(!footer.columns.some((col) => col.title === "Bespoke"))
 
