@@ -85,9 +85,13 @@ export function TodayView({ data, go, openPanel, mutate, notify, ...rest }) {
           ? go("products", row.id)
           : row.kind === "reminder"
             ? go(
-                { person: "people", request: "requests", order: "orders" }[
-                  data.reminders.find((r) => r.id === row.id)?.objectType
-                ] || "today",
+                {
+                  person: "people",
+                  request: "requests",
+                  order: "orders",
+                  company: "companies",
+                }[data.reminders.find((r) => r.id === row.id)?.objectType] ||
+                  "today",
                 row.objectId,
               )
             : openPanel({ type: "help" });

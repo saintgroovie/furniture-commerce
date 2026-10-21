@@ -4,7 +4,11 @@ import { encodeSession, decodeSession } from "../lib/session-codec.ts";
 import { sameOriginAllowed } from "./request-policy.mjs";
 import { identityMatches, readBackendIdentity } from "./runtime-identity.mjs";
 import { BASE_PATH } from "../lib/paths.mjs";
-export const COOKIE = "wr_desk";
+export const COOKIE = BASE_PATH
+  ? process.env.WOODRIGHT_WORKSPACE_RUNTIME === "local-private"
+    ? `wr_os_${process.env.PORT || "4320"}`
+    : "wr_os"
+  : "wr_desk";
 export const NO_STORE = { "Cache-Control": "private, no-store" };
 export class LiveError extends Error {
   constructor(status, message) {
@@ -76,6 +80,23 @@ export async function upstream(path, { session, method = "GET", body } = {}) {
     const raw = await response.text();
     if (response.status === 401)
       throw new LiveError(401, "Сессия Medusa закончилась. Войдите снова");
+    if (
+      !response.ok &&
+      path.startsWith("/admin/woodright/desk/") &&
+      [400, 403, 409, 428, 429].includes(response.status)
+    ) {
+      let detail;
+      try {
+        detail = JSON.parse(raw);
+      } catch {}
+      if (
+        /^[A-Z][A-Z0-9_]{1,63}$/.test(detail?.code || "") &&
+        typeof detail?.message === "string" &&
+        detail.message.length > 0 &&
+        detail.message.length <= 500
+      )
+        throw new LiveError(response.status, detail.message);
+    }
     if (!response.ok)
       throw new LiveError(
         response.status,

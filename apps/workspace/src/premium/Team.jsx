@@ -635,6 +635,19 @@ export function Team({ data }) {
             </Field>
             <Button
               variant="secondary"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(invitation.url);
+                  setError("");
+                } catch {
+                  setError("Выделите и скопируйте ссылку из поля выше");
+                }
+              }}
+            >
+              Скопировать ссылку
+            </Button>
+            <Button
+              variant="secondary"
               disabled={busy}
               onClick={() => run({ intent: "revoke", id: invitation.id })}
             >

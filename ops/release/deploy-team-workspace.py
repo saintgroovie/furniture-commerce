@@ -14,6 +14,7 @@ import subprocess
 import time
 import urllib.request
 import urllib.error
+import urllib.parse
 import uuid
 
 ROOT = Path('/srv/woodright/team-workspace')
@@ -172,7 +173,7 @@ def main():
             raise ValueError('aborted_conflict: pending workspace changed')
         evidence_raw = regular(args.dom_evidence) if args.dom_evidence else b'{}'
         evidence = json.loads(evidence_raw); samples = evidence.get('samples', [])
-        if len(samples) < 5 or not all(s.get('url', '').startswith(URL + '/') and s.get('connected') is True and s.get('heading') for s in samples):
+        if len(samples) < 5 or not all(urllib.parse.urlparse(s.get('url', '')).scheme == 'https' and urllib.parse.urlparse(s.get('url', '')).netloc == 'woodright.ru' and (urllib.parse.urlparse(s.get('url', '')).path == '/os' or urllib.parse.urlparse(s.get('url', '')).path.startswith('/os/')) and s.get('connected') is True and s.get('heading') for s in samples):
             raise ValueError('five authenticated public DOM samples required')
         if len({(s['heading'], s.get('marker')) for s in samples}) != 1 or samples[0]['at'] == samples[-1]['at']:
             raise ValueError('public DOM samples diverged')

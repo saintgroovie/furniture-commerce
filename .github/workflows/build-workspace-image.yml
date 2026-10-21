@@ -60,6 +60,8 @@ jobs:
           file: apps/workspace/Dockerfile
           push: true
           tags: ghcr.io/saintgroovie/woodright-workspace:build-${{ inputs.source_sha }}-run-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          labels: |
+            woodright.tag.namespace=build-workspace
           build-args: |
             SOURCE_SHA=${{ inputs.source_sha }}
             BUILD_RUN_ID=${{ github.run_id }}

@@ -97,6 +97,8 @@ try {
   assert.match(cookie, /HttpOnly/i);
   assert.match(cookie, /SameSite=strict/i);
   assert.match(cookie, /Max-Age=0/i);
+  assert.ok(cookie.startsWith(basePath ? `wr_os_${port}=` : "wr_desk="));
+  assert.ok(cookie.includes(`Path=${basePath || "/"};`));
   console.log(
     "Compiled HTTP smoke passed: app, CSS, authentication, CSRF, cookie and cache boundary. No Medusa connection used.",
   );

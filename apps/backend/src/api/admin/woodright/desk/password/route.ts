@@ -59,7 +59,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       !verified.success ||
       verified.authIdentity?.app_metadata?.user_id !== actorId
     )
-      throw new DeskError(401, "PASSWORD_INVALID", "Проверьте текущий пароль.");
+      throw new DeskError(400, "PASSWORD_INVALID", "Проверьте текущий пароль.");
     const updated = await auth.updateProvider("emailpass", {
       entity_id: user.email,
       password: body.newPassword,

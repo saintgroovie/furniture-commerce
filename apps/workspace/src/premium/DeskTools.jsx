@@ -168,6 +168,16 @@ function Reminders({ type, id, data, refresh, notify }) {
               onChange={(e) => setDueOn(e.target.value)}
             />
           </Field>
+          {data.capabilities.assignments && (
+            <StaffOptions
+              data={data}
+              value={assigneeId}
+              onChange={setAssigneeId}
+              disabled={busy}
+              label="Исполнитель напоминания"
+              optional={false}
+            />
+          )}
           <Button type="submit" disabled={busy || !summary.trim()}>
             {busy ? "Сохраняем…" : "Добавить напоминание"}
           </Button>
