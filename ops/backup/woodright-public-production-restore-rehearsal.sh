@@ -300,6 +300,10 @@ print(json.dumps(out))
 PY
 ) || die "aggregate count queries failed"
 
+# Private attachments must be recoverable together with their restored metadata.
+python3 "$SCRIPT_DIR/verify-private-files.py" --manifest "$MANIFEST_SNAP" --restore-container "$DISPOSABLE_CTR" \
+  >"$WORKDIR/private-files-verification.json" || die "private files restore verification failed"
+
 # Optional expected aggregates comparison
 if [[ -n "$FIXTURE_DIR" && -f "$FIXTURE_DIR/expected-aggregates.json" ]]; then
   python3 - "$AGG" "$FIXTURE_DIR/expected-aggregates.json" <<'PY'
@@ -322,9 +326,9 @@ if [[ -n "$EXPECT_MIG" ]]; then
   fi
 fi
 
-python3 - "$REPORT" "$MANIFEST_SNAP" "$CYCLE_ID" "$DB_SHA" "$MEDIA_SHA" "$AGG" "$PG_VER" "$ENC" "$MEDIA_LIST_COUNT" <<'PY'
+python3 - "$REPORT" "$MANIFEST_SNAP" "$CYCLE_ID" "$DB_SHA" "$MEDIA_SHA" "$AGG" "$PG_VER" "$ENC" "$MEDIA_LIST_COUNT" "$WORKDIR/private-files-verification.json" <<'PY'
 import json, sys, time
-report, man, cycle, db_sha, media_sha, agg, pg_ver, enc, media_list = sys.argv[1:]
+report, man, cycle, db_sha, media_sha, agg, pg_ver, enc, media_list, private_report = sys.argv[1:]
 obj = {
   "kind": "woodright_restore_rehearsal_report",
   "schema": "woodright_restore_rehearsal_v1",
@@ -337,6 +341,7 @@ obj = {
   "db_checksum_ok": True,
   "media_checksum_ok": True,
   "media_list_count": int(media_list),
+  "private_files": json.load(open(private_report)),
   "db_sha256": db_sha,
   "media_sha256": media_sha,
   "postgres_version": pg_ver,

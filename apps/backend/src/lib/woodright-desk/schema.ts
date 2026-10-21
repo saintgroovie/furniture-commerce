@@ -1,7 +1,9 @@
 export const DESK_SCHEMA = `
   do $$ begin
-    if current_database() !~ '^workspace_it[a-zA-Z0-9_]*$' then
-      raise exception 'desk migration requires a disposable workspace_it database';
+    if current_database() !~ '^workspace_it[a-zA-Z0-9_]*$'
+       and not (current_database() = 'woodright_public_production'
+         and coalesce(current_setting('woodright.desk_schema_release', true), '') = 'desk-v1-20261021') then
+      raise exception 'desk migration requires an isolated test database or the targeted production release';
     end if;
   end $$;
   create table if not exists woodright_follow_up (

@@ -12,7 +12,18 @@ import {
   readJsonBounded,
 } from "../src/server/request-policy.mjs";
 import { todayGroups } from "../src/premium/model.mjs";
-import { identityMatches } from "../src/server/runtime-identity.mjs";
+import { identityMatches, readBackendIdentity } from "../src/server/runtime-identity.mjs";
+test("workspace pins the backend component rather than a shared release SHA", () => {
+  const headers = new Headers({
+    "x-woodright-runtime-role": "public_production",
+    "x-woodright-database-identity": "public_production_db",
+    "x-woodright-release-sha": "storefront-release",
+    "x-woodright-backend-source-sha": "backend-component",
+  });
+  assert.equal(readBackendIdentity(headers).backendRevision, "backend-component");
+  headers.delete("x-woodright-backend-source-sha");
+  assert.equal(readBackendIdentity(headers).backendRevision, null);
+});
 test("a filled collection rejected by an old publish check is an integration discrepancy, not an owner data task", () => {
   const d = projectLive(
     {

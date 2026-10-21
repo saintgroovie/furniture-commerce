@@ -86,14 +86,24 @@ services:
       WOODRIGHT_DATABASE_IDENTITY: ${WOODRIGHT_DATABASE_IDENTITY}
       WOODRIGHT_DATABASE_IDENTITY_ALIAS: ${WOODRIGHT_DATABASE_IDENTITY_ALIAS}
       WOODRIGHT_LAUNCH_CORS_PROFILE: ${WOODRIGHT_LAUNCH_CORS_PROFILE:-production_buyer}
+      WOODRIGHT_DESK_FEATURES: ${WOODRIGHT_DESK_FEATURES:-0}
+      WOODRIGHT_PRIVATE_FILES_ROOT: /var/lib/woodright/private-files
+      WOODRIGHT_MANGO_ENABLED: "0"
     volumes:
       - woodright_public_media:/server/static
+      - woodright_private_files:/var/lib/woodright/private-files
     networks:
       - woodright_public
     ports:
       - "127.0.0.1:9300:9000"
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:9000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -147,7 +157,13 @@ services:
     ports:
       - "127.0.0.1:3300:3002"
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3002/').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"]
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3002/').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))",
+        ]
       interval: 30s
       timeout: 5s
       retries: 5
@@ -161,6 +177,8 @@ volumes:
   woodright_public_media:
     external: true
     name: woodright-public-production_woodright_public_media
+  woodright_private_files:
+    name: woodright-public-production_woodright_private_files
 
 networks:
   woodright_public:

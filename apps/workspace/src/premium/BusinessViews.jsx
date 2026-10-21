@@ -432,7 +432,10 @@ export function ObjectList({ kind, data, go, openPanel }) {
         description={c.description}
         action={
           <Button
-            disabled={!data.capabilities.crmCreate}
+            disabled={
+              !data.capabilities.crmCreate ||
+              !["request", "person"].includes(c.kind)
+            }
             title={
               !data.capabilities.crmCreate
                 ? "Создание будет доступно после подключения записи"

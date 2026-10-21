@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     if (process.env.WOODRIGHT_LIVE_WRITES !== "1")
       throw new LiveError(
         403,
-        "Рабочие данные открыты для просмотра. Запись включается после проверки прав и сохранения на изолированной базе",
+        "Сохранение пока не включено для этого подключения",
       );
     const max = 12 * 1024 * 1024;
     if (Number(request.headers.get("content-length")) > max)
@@ -25,6 +25,9 @@ export async function POST(request: Request) {
     if (
       [
         "request.update",
+        "request.create",
+        "person.create",
+        "person.update",
         "reminder.create",
         "reminder.update",
         "attachment.upload",
@@ -35,11 +38,17 @@ export async function POST(request: Request) {
         "/admin/woodright/desk/capabilities",
         { session },
       );
-      const required = command.type.startsWith("reminder.")
-        ? "reminders"
-        : command.type.startsWith("attachment.")
-          ? "attachments"
-          : "requestUpdate";
+      const required =
+        command.type === "person.update"
+          ? "personUpdate"
+          : command.type.endsWith(".create") &&
+              ["request.create", "person.create"].includes(command.type)
+            ? "crmCreate"
+            : command.type.startsWith("reminder.")
+              ? "reminders"
+              : command.type.startsWith("attachment.")
+                ? "attachments"
+                : "requestUpdate";
       if (
         capabilities.contract !== "woodright-desk-v1" ||
         capabilities[required] !== true

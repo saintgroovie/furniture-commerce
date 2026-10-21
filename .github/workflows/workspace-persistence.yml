@@ -4,6 +4,7 @@ on:
     paths:
       - apps/backend/**
       - apps/workspace/**
+      - ops/backup/**
       - .github/workflows/workspace-persistence.yml
   workflow_dispatch:
 permissions:
@@ -52,10 +53,25 @@ jobs:
           src/lib/woodright-desk/mango.ts src/api/hooks/woodright/mango/events/call/route.ts
           'src/api/admin/woodright/desk/attachments/[id]/content/route.ts'
           src/modules/crm/index.ts src/modules/crm/migrations/*.ts
+          src/api/admin/leads/route.ts src/api/admin/bespoke-requests/route.ts
+          src/api/admin/room-sets/route.ts src/api/admin/woodright/order-processes/route.ts
       - name: Real PostgreSQL concurrency and private file checks
         env:
           WOODRIGHT_DESK_TEST_DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk
         run: node node_modules/tsx/dist/cli.mjs --test src/lib/woodright-desk/desk.integration.test.ts src/lib/woodright-desk/mango.fidelity.test.ts
+      - name: Targeted production migration rehearsal on disposable PostgreSQL
+        env:
+          DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk
+          WOODRIGHT_DESK_TEST_DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk
+          WOODRIGHT_DESK_FEATURES: "1"
+          NODE_ENV: development
+          MEDUSA_TELEMETRY_DISABLED: "1"
+        run: |
+          node node_modules/@medusajs/cli/cli.js build
+          node --test scripts/desk-migration.test.cjs
+      - name: Private document restore integrity
+        working-directory: .
+        run: python3 ops/backup/test-private-files.py
       - name: Actual Medusa migration loader
         env:
           DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk_http

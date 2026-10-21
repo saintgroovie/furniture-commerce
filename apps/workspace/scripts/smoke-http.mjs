@@ -52,6 +52,9 @@ try {
   for (const path of [
     "/api/live/data",
     "/api/live/session",
+    "/api/live/history?entityType=person&entityId=person_test",
+    "/api/live/files",
+    "/api/live/attachments?entityType=person&entityId=person_test",
     "/api/live/media?productId=prod_test&index=0",
   ]) {
     const r = await fetch(origin + path);

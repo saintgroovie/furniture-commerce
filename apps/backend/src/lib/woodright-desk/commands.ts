@@ -55,6 +55,48 @@ function boundedText(value: unknown, max: number, required = false): string {
     throw new DeskError(400, "INVALID_TEXT", "Проверьте текст и его длину");
   return value;
 }
+function contact(raw: unknown) {
+  const p = raw as Record<string, unknown> | null;
+  if (!p || typeof p !== "object")
+    throw new DeskError(400, "CONTACT_REQUIRED", "Заполните контакт клиента");
+  const name = boundedText(p.name, 200, true).trim();
+  const email = boundedText(p.email ?? "", 254)
+    .trim()
+    .toLowerCase();
+  const phone = boundedText(p.phone ?? "", 80).trim();
+  const comment = boundedText(p.comment ?? "", 10000).trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+    throw new DeskError(400, "INVALID_EMAIL", "Проверьте email клиента");
+  if (
+    phone &&
+    (!/^[+\d\s().-]+$/.test(phone) || phone.replace(/\D/g, "").length < 7)
+  )
+    throw new DeskError(400, "INVALID_PHONE", "Проверьте телефон клиента");
+  return { name, email, phone, comment };
+}
+async function insertPerson(
+  trx: Sql,
+  actor: string,
+  id: string,
+  p: ReturnType<typeof contact>,
+) {
+  const person = (
+    await trx.raw(
+      `insert into lead (id, source, name, email, phone, comment, payload, status)
+    values (?, 'contact', ?, ?, ?, ?, ?::jsonb, 'new') returning *`,
+      [
+        id,
+        p.name,
+        p.email || null,
+        p.phone || null,
+        p.comment || null,
+        JSON.stringify({ origin: "woodright_os", created_by: actor }),
+      ],
+    )
+  ).rows[0];
+  await audit(trx, actor, "person", id, "person.created", {});
+  return person;
+}
 export async function requireEntity(sql: Sql, type: EntityType, id: string) {
   const { rows } = await sql.raw(
     `select id from "${ENTITY_TABLES[type]}" where id = ? and deleted_at is null for share`,
@@ -142,6 +184,123 @@ export async function executeDeskCommand(
     throw new DeskError(400, "INVALID_BODY", "Проверьте форму");
   const c = raw as Record<string, any>;
   const id = identifier(c.id);
+  if (c.type === "person.create") {
+    const person = contact(c.person);
+    return operation(
+      sql,
+      actor,
+      c.key,
+      { type: c.type, id, person },
+      async (trx) => {
+        return { person: await insertPerson(trx, actor, id, person) };
+      },
+    );
+  }
+  if (c.type === "person.update") {
+    const person = contact(c.person);
+    if (
+      typeof c.expectedUpdatedAt !== "string" ||
+      !Number.isFinite(Date.parse(c.expectedUpdatedAt))
+    )
+      throw new DeskError(
+        428,
+        "VERSION_REQUIRED",
+        "Обновите карточку перед сохранением",
+      );
+    return operation(
+      sql,
+      actor,
+      c.key,
+      { type: c.type, id, person, expected: c.expectedUpdatedAt },
+      async (trx) => {
+        const current = (
+          await trx.raw(
+            "select * from lead where id = ? and deleted_at is null for update",
+            [id],
+          )
+        ).rows[0];
+        if (!current) throw new DeskError(404, "NOT_FOUND", "Клиент не найден");
+        if (
+          new Date(current.updated_at).toISOString() !==
+          new Date(c.expectedUpdatedAt).toISOString()
+        )
+          throw new DeskError(
+            409,
+            "STALE_VERSION",
+            "Коллега изменил контакт. Сверьте новую версию перед сохранением",
+          );
+        const updated = (
+          await trx.raw(
+            `update lead set name = ?, email = ?, phone = ?, comment = ?,
+        updated_at = greatest(date_trunc('milliseconds', clock_timestamp()), date_trunc('milliseconds', updated_at) + interval '1 millisecond')
+        where id = ? returning *`,
+            [
+              person.name,
+              person.email || null,
+              person.phone || null,
+              person.comment || null,
+              id,
+            ],
+          )
+        ).rows[0];
+        await audit(trx, actor, "person", id, "person.updated", {
+          fields: ["name", "email", "phone", "comment"].filter(
+            (field) =>
+              (current[field] || "") !== person[field as keyof typeof person],
+          ),
+        });
+        return { person: updated };
+      },
+    );
+  }
+  if (c.type === "request.create") {
+    const title = boundedText(c.title, 200, true).trim();
+    const description = boundedText(c.description ?? "", 10000).trim();
+    const dimensions = boundedText(c.dimensions ?? "", 500).trim();
+    const materials = boundedText(c.materials ?? "", 2000).trim();
+    const budget = boundedText(c.budget ?? "", 500).trim();
+    const personId = identifier(c.personId);
+    const person = c.person ? contact(c.person) : null;
+    return operation(
+      sql,
+      actor,
+      c.key,
+      {
+        type: c.type,
+        id,
+        title,
+        description,
+        dimensions,
+        materials,
+        budget,
+        personId,
+        person,
+      },
+      async (trx) => {
+        if (person) await insertPerson(trx, actor, personId, person);
+        else await requireEntity(trx, "person", personId);
+        const request = (
+          await trx.raw(
+            `insert into bespoke_request
+        (id, lead_id, comment, dimensions, materials, budget, status)
+        values (?, ?, ?, ?, ?, ?, 'new') returning *`,
+            [
+              id,
+              personId,
+              [title, description].filter(Boolean).join("\n"),
+              dimensions || null,
+              materials || null,
+              budget || null,
+            ],
+          )
+        ).rows[0];
+        await audit(trx, actor, "request", id, "request.created", {
+          person_id: personId,
+        });
+        return { bespoke_request: request };
+      },
+    );
+  }
   if (c.type === "request.update") {
     const allowed = [
       "new",

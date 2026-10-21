@@ -71,6 +71,7 @@ export function projectLive(
     assignee: "Не назначен",
     history: [],
     comment: text(p.comment),
+    updatedAt: text(p.updated_at),
   }));
   const requests = array(sources.requests?.bespoke_requests).map((r) => ({
     id: text(r.id),
@@ -80,7 +81,11 @@ export function projectLive(
     personId: text(r.lead_id),
     status: text(r.status),
     statusLabel: requestLabels[r.status] || text(r.status),
-    source: "Сайт",
+    source:
+      sources.people?.leads?.find((p) => p.id === r.lead_id)?.payload
+        ?.origin === "woodright_os"
+        ? "Woodright OS"
+        : "Сайт",
     next: "",
     due: "",
     note: text(r.comment),
@@ -271,7 +276,16 @@ export function projectLive(
       attachmentRead:
         features.contract === "woodright-desk-v1" &&
         features.attachments === true,
-      crmCreate: false,
+      crmCreate:
+        features.contract === "woodright-desk-v1" &&
+        features.writesEnabled === true &&
+        features.crmCreate === true,
+      personUpdate:
+        features.contract === "woodright-desk-v1" &&
+        features.writesEnabled === true &&
+        features.personUpdate === true,
+      history:
+        features.contract === "woodright-desk-v1" && features.history === true,
       companies: false,
       reminders:
         features.contract === "woodright-desk-v1" &&

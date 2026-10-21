@@ -154,7 +154,7 @@ function Reminders({ type, id, data, refresh, notify }) {
     </Section>
   );
 }
-function Attachments({ type, id, data, notify }) {
+function Attachments({ type, id, data, notify, refresh }) {
   const [rows, setRows] = useState([]),
     [total, setTotal] = useState(0),
     [loading, setLoading] = useState(true);
@@ -217,6 +217,7 @@ function Attachments({ type, id, data, notify }) {
       setFile(null);
       if (input.current) input.current.value = "";
       await reload();
+      await refresh();
       notify("Файл прикреплён");
     } catch (e) {
       setError(e.message);
@@ -231,6 +232,7 @@ function Attachments({ type, id, data, notify }) {
       await send({ type: "attachment.remove", id: fileId });
       setConfirm("");
       await reload();
+      await refresh();
       notify("Вложение убрано из карточки");
     } catch (e) {
       setError(e.message);
@@ -344,7 +346,13 @@ export function DeskTools({ kind, id, data, refresh, notify, attachmentsRef }) {
         notify={notify}
       />
       <div ref={attachmentsRef} tabIndex={-1}>
-        <Attachments type={type} id={id} data={data} notify={notify} />
+        <Attachments
+          type={type}
+          id={id}
+          data={data}
+          notify={notify}
+          refresh={refresh}
+        />
       </div>
     </div>
   );

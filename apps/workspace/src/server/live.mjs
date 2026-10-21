@@ -2,7 +2,7 @@ import "server-only";
 import { cookies } from "next/headers";
 import { encodeSession, decodeSession } from "../lib/session-codec.ts";
 import { sameOriginAllowed } from "./request-policy.mjs";
-import { identityMatches } from "./runtime-identity.mjs";
+import { identityMatches, readBackendIdentity } from "./runtime-identity.mjs";
 export const COOKIE = "wr_desk";
 export const NO_STORE = { "Cache-Control": "private, no-store" };
 export class LiveError extends Error {
@@ -78,11 +78,7 @@ export async function upstream(path, { session, method = "GET", body } = {}) {
     if (path === "/health")
       return {
         ok: true,
-        identity: {
-          role: response.headers.get("x-woodright-runtime-role"),
-          databaseAlias: response.headers.get("x-woodright-database-identity"),
-          backendRevision: response.headers.get("x-woodright-release-sha"),
-        },
+        identity: readBackendIdentity(response.headers),
       };
     try {
       return JSON.parse(raw);

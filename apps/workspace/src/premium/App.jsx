@@ -52,6 +52,7 @@ import {
 } from "./Live.jsx";
 import { todayGroups, reconcileCatalog } from "./model.mjs";
 import { TodayView, ObjectList } from "./BusinessViews.jsx";
+import { Files } from "./Files.jsx";
 const NAV_NAMES = {
   today: "Рабочая очередь",
   requests: "Обращения",
@@ -478,7 +479,7 @@ export function App() {
                 </Notice>
               </div>
             ) : route.page === "files" ? (
-              <Integrations data={data} focus="files" />
+              <Files data={data} go={go} />
             ) : route.page === "invoices" ? (
               <Integrations data={data} focus="accounting" />
             ) : route.page === "storefront" ? (
@@ -593,7 +594,15 @@ export function App() {
         </Drawer>
       )}
       {panel && panel.type !== "search" && (
-        <LivePanel panel={panel} data={data} onClose={() => setPanel(null)} />
+        <LivePanel
+          key={`${panel.type}/${panel.kind || ""}`}
+          panel={panel}
+          data={data}
+          onClose={() => setPanel(null)}
+          refresh={refresh}
+          go={go}
+          notify={notify}
+        />
       )}
       <Toast toast={toast} onClose={() => setToast(null)} />
     </div>

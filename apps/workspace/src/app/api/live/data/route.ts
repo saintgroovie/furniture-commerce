@@ -30,9 +30,9 @@ export async function GET() {
     ] as const;
     const [results, desk] = await Promise.all([
       Promise.allSettled(
-        definitions.map(([key, path]) =>
-          key === "orders"
-            ? readPaged(path, "orders", session)
+        definitions.map(([key, path, field]) =>
+          ["orders", "people", "requests", "processes", "rooms"].includes(key)
+            ? readPaged(path, field, session)
             : upstream(path, { session }),
         ),
       ),
@@ -57,7 +57,8 @@ export async function GET() {
           count: result.value[field].length,
           total: result.value.count ?? null,
           truncated: result.value.truncated === true,
-          completeness: key === "orders" ? "paginated" : "upstream-unpaginated",
+          completeness:
+            key === "products" ? "upstream-unpaginated" : "paginated",
         };
       } else {
         if (result.reason instanceof LiveError && result.reason.status === 401)
@@ -111,6 +112,7 @@ export async function GET() {
       {
         ...data,
         writeEnabled:
+          data.capabilities.crmCreate ||
           data.capabilities.requestUpdate ||
           data.capabilities.reminders ||
           data.capabilities.attachments,

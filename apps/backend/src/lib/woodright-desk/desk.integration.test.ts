@@ -20,6 +20,8 @@ import { deskContext } from "./http";
 import { GET as download } from "../../api/admin/woodright/desk/attachments/[id]/content/route";
 import { GET as listReminders } from "../../api/admin/woodright/desk/reminders/route";
 import { GET as listAttachments } from "../../api/admin/woodright/desk/attachments/route";
+import { GET as listFiles } from "../../api/admin/woodright/desk/files/route";
+import { GET as listHistory } from "../../api/admin/woodright/desk/history/route";
 
 const databaseUrl = process.env.WOODRIGHT_DESK_TEST_DATABASE_URL;
 if (!databaseUrl)
@@ -102,9 +104,9 @@ before(async () => {
   await db.raw(DESK_SCHEMA);
   await db.raw(MANGO_SCHEMA);
   await db.raw("truncate woodright_mango_event, woodright_mango_call");
-  await db.raw(`create table if not exists bespoke_request (id text primary key, status text not null, internal_notes text null,
-    quoted_at timestamptz null, updated_at timestamptz not null, deleted_at timestamptz null);
-    create table if not exists lead (id text primary key, deleted_at timestamptz null);
+  await db.raw(`create table if not exists bespoke_request (id text primary key, lead_id text null, comment text null, dimensions text null, materials text null, budget text null, status text not null, internal_notes text null,
+    quoted_at timestamptz null, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), deleted_at timestamptz null);
+    create table if not exists lead (id text primary key, source text, name text, email text, phone text, comment text, payload jsonb, status text, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), deleted_at timestamptz null);
     create table if not exists "order" (id text primary key, deleted_at timestamptz null);`);
   await db.raw(`truncate woodright_follow_up, woodright_private_attachment, woodright_desk_event, woodright_desk_operation, bespoke_request, lead, "order";
     insert into bespoke_request (id, status, updated_at) values ('request_1', 'new', '2026-10-19T10:00:00Z');
@@ -416,7 +418,7 @@ test("migration refuses a non-test database", async () => {
   try {
     await assert.rejects(
       other.raw(DESK_SCHEMA),
-      /disposable workspace_it database/,
+      /isolated test database or the targeted production release/,
     );
     await assert.rejects(
       other.raw(MANGO_SCHEMA),
@@ -491,4 +493,139 @@ test("MANGO duplicate, delayed and concurrent notifications persist once without
     (await db("woodright_mango_event").count("*").first())?.count,
     "3",
   );
+});
+
+test("request creation with a new contact is atomic and lost-response retries create no duplicate", async () => {
+  const input = {
+    type: "request.create",
+    id: "request_created",
+    personId: "person_created",
+    key: key(),
+    person: {
+      name: "Тестовый контакт",
+      phone: "+7 999 000 11 22",
+      email: "contact@example.test",
+    },
+    title: "Шкаф по размерам",
+    description: "Обсудить наполнение",
+    dimensions: "200 × 240",
+    materials: "Дуб",
+    budget: "Уточняется",
+  };
+  const first = await executeDeskCommand(sql, "staff_1", input);
+  const retry = await executeDeskCommand(sql, "staff_1", input);
+  assert.equal(retry.replay, true);
+  assert.equal(first.bespoke_request.lead_id, "person_created");
+  assert.equal(
+    (await db("lead").where({ id: "person_created" }).first())?.source,
+    "contact",
+  );
+  assert.equal(
+    (
+      await db("woodright_desk_event")
+        .whereIn("entity_id", ["person_created", "request_created"])
+        .count("*")
+        .first()
+    )?.count,
+    "2",
+  );
+  const count = await db("lead").count("*").first();
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", {
+      ...input,
+      key: key(),
+      personId: "person_must_not_remain",
+    }),
+  );
+  assert.deepEqual(await db("lead").count("*").first(), count);
+});
+test("creating a request requires an existing live client or valid new contact", async () => {
+  const base = {
+    type: "request.create",
+    id: "bad_request",
+    personId: "missing_person",
+    key: key(),
+    title: "Запрос",
+  };
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", base),
+    (e: any) => e.code === "ENTITY_NOT_FOUND",
+  );
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", {
+      ...base,
+      person: { name: "", email: "bad" },
+    }),
+    (e: any) => e.code === "INVALID_TEXT",
+  );
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", {
+      ...base,
+      person: { name: "Имя", email: "bad" },
+    }),
+    (e: any) => e.code === "INVALID_EMAIL",
+  );
+  assert.equal(
+    await db("bespoke_request").where({ id: "bad_request" }).first(),
+    undefined,
+  );
+  const created = await executeDeskCommand(sql, "staff_1", {
+    ...base,
+    key: key(),
+    personId: "person_created",
+  });
+  assert.equal(created.bespoke_request.status, "new");
+});
+test("contact edits preserve source, record history, and refuse stale writers", async () => {
+  const current = (await db("lead").where({ id: "person_created" }).first())!;
+  const command = {
+    type: "person.update",
+    id: "person_created",
+    key: key(),
+    expectedUpdatedAt: current.updated_at.toISOString(),
+    person: {
+      name: "Обновлённый контакт",
+      phone: "+7 999 000 11 22",
+      email: "updated@example.test",
+      comment: "Уточнить время",
+    },
+  };
+  await executeDeskCommand(sql, "staff_1", command);
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_2", { ...command, key: key() }),
+    (e: any) => e.code === "STALE_VERSION",
+  );
+  assert.equal(
+    (await db("lead").where({ id: "person_created" }).first())?.source,
+    "contact",
+  );
+  const result = response();
+  await listHistory(
+    request({ entity_type: "person", entity_id: "person_created" }),
+    result,
+  );
+  assert.equal(result.statusCode, 200);
+  assert.equal(result.body.events[0].action, "person.updated");
+  assert.ok(!JSON.stringify(result.body).includes("updated@example.test"));
+  const denied = response();
+  await listHistory(
+    request(
+      { entity_type: "person", entity_id: "person_created" },
+      {},
+      "customer",
+    ),
+    denied,
+  );
+  assert.equal(denied.statusCode, 401);
+});
+test("global document index is staff-only and never exposes blob keys or removed files", async () => {
+  const result = response();
+  await listFiles(request({ limit: 1, offset: 0 }), result);
+  assert.equal(result.statusCode, 200);
+  assert.ok(Number.isInteger(result.body.count));
+  assert.ok(!JSON.stringify(result.body).includes("storage_key"));
+  assert.ok(!result.body.attachments.some((r: any) => r.id === "file_1"));
+  const denied = response();
+  await listFiles(request({}, {}, "api-key"), denied);
+  assert.equal(denied.statusCode, 401);
 });

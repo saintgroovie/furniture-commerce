@@ -153,6 +153,13 @@ MEDIA_OUT=$("$SCRIPT_DIR/woodright-media-backup.sh" | tee -a "$BACKUP_ROOT/logs/
 [[ ! -L "$MEDIA_OUT" ]] || die "media archive must not be symlink"
 MEDIA_SHA=$(sha256sum "$MEDIA_OUT" | awk '{print $1}')
 MEDIA_SIZE=$(wc -c <"$MEDIA_OUT" | tr -d ' ')
+PRIVATE_OUT=""
+DESK_ENABLED=$(docker exec "$BE_CONTAINER" node -e 'process.stdout.write(process.env.WOODRIGHT_DESK_FEATURES === "1" ? "1" : "0")')
+if [[ "$DESK_ENABLED" == "1" ]]; then
+  log "private files backup begin"
+  PRIVATE_OUT=$(bash "$SCRIPT_DIR/woodright-private-files-backup.sh")
+  [[ -f "$PRIVATE_OUT" && ! -L "$PRIVATE_OUT" ]] || die "private files backup missing"
+fi
 MEDIA_FILES=$(python3 -c 'import json,glob,sys; ms=sorted(glob.glob(sys.argv[1]+"/manifests/*media.json"))[-1]; d=json.load(open(ms)); print(d.get("file_count") or d.get("source_file_count") or 0)' "$BACKUP_ROOT" 2>/dev/null || echo 0)
 [[ "${MEDIA_FILES}" -gt 0 ]] || die "media file_count missing/zero in component manifest"
 PG_VER=$(docker exec "$PG_CONTAINER" psql -U "$PG_USER" -d "$PG_DB" -tAc 'SHOW server_version;' 2>/dev/null | tr -d '[:space:]' || echo unknown)
@@ -169,6 +176,18 @@ wr_build_recovery_point_v2_json \
   "${WOODRIGHT_NOTIFICATION_DECISION_STATUS:-}" \
   "${USER:-ops}" "pending_rehearsal" >"$COMBINED"
 chmod 0600 "$COMBINED"
+if [[ -n "$PRIVATE_OUT" ]]; then
+  python3 - "$COMBINED" "$PRIVATE_OUT" <<'PY'
+import hashlib, json, os, sys
+manifest, archive = sys.argv[1:]
+sha = hashlib.sha256()
+with open(archive, 'rb') as data:
+    for chunk in iter(lambda: data.read(1024*1024), b''): sha.update(chunk)
+with open(manifest) as data: obj = json.load(data)
+obj['private_files'] = {'path': archive, 'sha256': sha.hexdigest(), 'size_bytes': os.path.getsize(archive), 'required': True}
+with open(manifest, 'w') as data: json.dump(obj, data, indent=2); data.write('\n')
+PY
+fi
 wr_validate_recovery_point_manifest "$COMBINED" || die "recovery-point validation failed"
 
 if [[ "${WOODRIGHT_RUN_RETENTION:-1}" == "1" ]]; then

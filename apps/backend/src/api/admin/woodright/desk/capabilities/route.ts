@@ -18,6 +18,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     res.json({
       contract: "woodright-desk-v1",
       requestUpdate: true,
+      crmCreate: true,
+      personUpdate: true,
+      history: true,
       reminders: true,
       attachments,
       maxAttachmentBytes: 8 * 1024 * 1024,

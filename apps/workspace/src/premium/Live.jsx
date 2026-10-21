@@ -30,6 +30,9 @@ import {
 } from "./ui.jsx";
 import { liveFetch } from "./storage.js";
 import { DeskTools, useDeskCommand } from "./DeskTools.jsx";
+import { CreateRecord } from "./CreateRecord.jsx";
+import { History } from "./History.jsx";
+import { ContactEditor } from "./ContactEditor.jsx";
 const types = {
   STANDARD: "Готовое изделие",
   CONFIGURABLE: "Выбор исполнения",
@@ -364,7 +367,7 @@ export function Integrations({ data, focus, compact = false }) {
     </div>
   );
 }
-export function LivePanel({ panel, data, onClose }) {
+export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
   const [busy, setBusy] = useState(false);
   async function logout() {
     setBusy(true);
@@ -387,6 +390,21 @@ export function LivePanel({ panel, data, onClose }) {
       : panel.type === "files"
         ? "files"
         : undefined;
+  if (
+    panel.type === "create" &&
+    ["person", "request"].includes(panel.kind) &&
+    data.capabilities.crmCreate
+  )
+    return (
+      <CreateRecord
+        kind={panel.kind}
+        data={data}
+        onClose={onClose}
+        refresh={refresh}
+        go={go}
+        notify={notify}
+      />
+    );
   return (
     <Drawer
       title={
@@ -837,16 +855,20 @@ export function LiveObjectDetail({
         </>
       ) : kind === "people" ? (
         <>
-          <Section title="Контакт">
-            <Definition
-              items={[
-                ["Имя", item.name],
-                ["Телефон", item.phone || "Не указан"],
-                ["Email", item.email || "Не указан"],
-                ["Комментарий", item.comment || "Не указан"],
-              ]}
-            />
-          </Section>
+          {data.capabilities.personUpdate ? (
+            <ContactEditor item={item} refresh={refresh} notify={notify} />
+          ) : (
+            <Section title="Контакт">
+              <Definition
+                items={[
+                  ["Имя", item.name],
+                  ["Телефон", item.phone || "Не указан"],
+                  ["Email", item.email || "Не указан"],
+                  ["Комментарий", item.comment || "Не указан"],
+                ]}
+              />
+            </Section>
+          )}
           <Section title="Обращения">
             {data.requests
               .filter((r) => r.personId === id)
@@ -883,6 +905,16 @@ export function LiveObjectDetail({
         refresh={refresh}
         notify={notify}
       />
+      {data.capabilities.history &&
+        ["people", "requests", "orders"].includes(kind) && (
+          <History
+            type={
+              { people: "person", requests: "request", orders: "order" }[kind]
+            }
+            id={id}
+            updatedAt={data.loadedAt}
+          />
+        )}
     </div>
   );
 }

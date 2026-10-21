@@ -1,0 +1,36 @@
+import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+import {
+  entity,
+  identifier,
+  requireEntity,
+} from "../../../../../lib/woodright-desk/commands";
+import {
+  deskContext,
+  deskFailure,
+  page,
+} from "../../../../../lib/woodright-desk/http";
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const { sql } = await deskContext(req),
+      { limit, offset } = page(req.query);
+    const type = entity(req.query.entity_type),
+      id = identifier(req.query.entity_id);
+    await sql.transaction(async (trx) => {
+      await requireEntity(trx, type, id);
+    });
+    const data = (
+      await sql.raw(
+        `select
+      (select count(*)::int from woodright_desk_event where entity_type = ? and entity_id = ?) as count,
+      coalesce((select jsonb_agg(r order by r.created_at desc, r.id) from
+        (select id, action, actor_id, details, created_at from woodright_desk_event
+        where entity_type = ? and entity_id = ? order by created_at desc, id limit ? offset ?) r), '[]'::jsonb) as events`,
+        [type, id, type, id, limit, offset],
+      )
+    ).rows[0];
+    res.setHeader("Cache-Control", "private, no-store");
+    res.json({ ...data, limit, offset });
+  } catch (e) {
+    deskFailure(res, e);
+  }
+}
