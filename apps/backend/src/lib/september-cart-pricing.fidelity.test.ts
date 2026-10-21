@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url"
 import vm from "node:vm"
 import ts from "typescript"
 import { verifiedProvencePrices } from "./verified-september-catalog"
+import { resolveDefaultBuyerConfiguration } from "./default-buyer-configuration"
 
 // Exercise the actual route with its real pricing/metadata helpers. Replace only
 // workflow persistence and query transport, so no cart or order is written.
@@ -21,15 +22,15 @@ vm.runInNewContext(code, { exports, require(name: string) {
   return routeRequire(name)
 }}, { filename: fileURLToPath(routeUrl) })
 
-async function check(sku: string, base: number, finish: string, expected: number | null, status = 200) {
+async function check(sku: string, base: number, finish: string, expected: number | null, status = 200, variantId = "test-variant") {
   added = null
   const meta = { workbook_row_key: `provence:${sku}`, finish_color_executions: [
     { key: "cream", label: "Молочный" }, { key: "wood", label: "Тёмное дерево" },
   ], material_tiers: { solid_full: { key: "solid_full", label_ru: "Массив", position: 1, price_multiplier: 1 } } }
-  const variant = { product: { metadata: meta }, calculated_price: { calculated_amount: base }, prices: [{ amount: base, currency_code: "rub" }] }
+  const variant = { id: variantId, sku, product: { metadata: meta }, calculated_price: { calculated_amount: base }, prices: [{ amount: base, currency_code: "rub" }] }
   const query = { graph: async ({ entity }: { entity: string }) => ({ data: entity === "variant"
     ? [variant] : [{ id: "test-cart", currency_code: "rub", region_id: "test-region" }] }) }
-  const req = { params: { id: "test-cart" }, body: { variant_id: "test-variant", quantity: 1,
+  const req = { params: { id: "test-cart" }, body: { variant_id: variantId, quantity: 1,
     metadata: { finish_execution_key: finish, resolved_unit_price: 1, material_price_multiplier: 0.01, finish_color_multiplier: 0.01 } },
     scope: { resolve: () => query } }
   let responseStatus = 0
@@ -42,7 +43,10 @@ async function check(sku: string, base: number, finish: string, expected: number
     assert.ok(item)
     assert.equal(item.unit_price, expected)
     assert.equal(item.metadata.resolved_unit_price, expected, "never trust client price")
-    assert.equal(item.metadata.finish_execution_label, finish === "wood" ? "Тёмное дерево" : "Молочный")
+    if (variantId !== "test-variant") {
+      assert.equal(resolveDefaultBuyerConfiguration({ variants: [variant], metadata: meta })?.min_unit_price, expected)
+    }
+    if (finish) assert.equal(item.metadata.finish_execution_label, finish === "wood" ? "Тёмное дерево" : "Молочный")
   }
 }
 
@@ -55,5 +59,9 @@ void (async () => {
   }
   await check("PV-55-1", 19900, "forged-finish", null, 400)
   await check("PV-55-1", 20000, "wood", null, 409)
-  console.log("september-cart-pricing.fidelity.test.ts: 20 route cases passed")
+  for (const [id, sku, base, price] of [["variant_01KV69A7H4QG73VV860W96G182", "av-05-1", 83820, 87780], ["variant_01KV69A7H410GASW313SSMWF4E", "ba-05-3", 113080, 124300], ["variant_01KV69A7H6QSCESM5YZW3FBVRT", "in-67-1", 85250, 85250], ["variant_01KV69A7H5G52SZGAW6YR5PK7T", "fa-06-1", 59730, 62700], ["variant_01KV69A7H6T0M8VR6SH10PKG79", "fk-05-1", 83820, 87780], ["variant_01KV69A7H8R6FSAA3JGFT02PMK", "rl-67-1", 85250, 85250], ["variant_01KV69A7H5CMMHYFNHKXQJWE5N", "fa-67-1", 85250, 85250], ["variant_01KV69A7H8D09CRXQG8HQ1DDN5", "rl-05-3", 113080, 113080], ["variant_01KV69A7H75NQCJC0A66PE0PR5", "mo-81-1", 22660, 22660], ["variant_01KV69A7H7GT4WF22X1ZWBH0SZ", "pa-05-1", 83820, 96360], ["variant_01KV69A7H48XE5C7YE56RBRDKP", "ba-62-1", 99390, 100320], ["variant_01KV69A7HAR5G3HAQ2M1CYR2VM", "te-05-3", 113080, 124300], ["variant_01KV69A7H9NA9PDPJBT2H5P929", "tb-67-1", 85250, 85250], ["variant_01KV69A7H8QXV0PCF7SHYJRQ1M", "sh-81-1", 22660, 22660]] as const) {
+    await check(sku, base, "", price, 200, id)
+    await check(sku, base + 1, "", null, 409, id)
+  }
+  console.log("september-cart-pricing.fidelity.test.ts: 48 route cases passed")
 })().catch((error) => { console.error(error); process.exitCode = 1 })
