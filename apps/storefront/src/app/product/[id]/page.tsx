@@ -916,6 +916,7 @@ export default async function ProductPage({
               <ProductCta
                 product={product}
                 variantId={selectedVariantId ?? undefined}
+                variantImage={oliverDesk ? pdpMainSrc : undefined}
                 requiresBuyerSelection={
                   useExecutionPdp &&
                   !isRequestQuoteProduct(product) &&
