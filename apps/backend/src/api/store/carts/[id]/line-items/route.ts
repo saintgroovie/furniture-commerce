@@ -13,6 +13,7 @@ import {
   isKnownFinishExecutionKey,
 } from "../../../../../lib/finish-color-premium-contract"
 import { productMetadataForVariant } from "../../../../../lib/variant-capabilities"
+import { provencePriceEvidence, verifiedProvencePrices } from "../../../../../lib/verified-september-catalog"
 
 /**
  * Override of the core POST /store/carts/:id/line-items route.
@@ -249,11 +250,20 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       return
     }
 
-    const resolved = resolveConfiguredUnitPrice(
+    const catalogKey = typeof productMeta?.workbook_row_key === "string" ? productMeta.workbook_row_key : null
+    const catalogPrices = verifiedProvencePrices(catalogKey, base.amount)
+    if (provencePriceEvidence(catalogKey) && !catalogPrices) {
+      res.status(409).json({ message: "Finish prices need catalog revalidation.", code: "CATALOG_PRICE_CHANGED" })
+      return
+    }
+    const resolved = catalogPrices
+      ? (finishKey === "wood" ? catalogPrices.wood : catalogPrices.cream)
+      : resolveConfiguredUnitPrice(
       base.amount,
       materialMultiplier,
       colorMultiplier
     )
+    if (catalogPrices) metadata.finish_color_multiplier = resolved / base.amount
     metadata.resolved_unit_price = resolved
     /* Always pin unit_price on the configured path so Medusa cannot replace the
        amount after add-to-cart (including when resolved === base). */
