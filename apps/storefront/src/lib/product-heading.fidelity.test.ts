@@ -22,3 +22,9 @@ for (const title of [getBuyerFacingProductTitle(product), getProductSeoName(prod
 assert.equal(explicitVariantSize(product), "140×190")
 assert.equal(JSON.stringify(product), before, "presentation does not mutate raw dimensions or identity")
 console.log("product-heading.fidelity.test.ts: ok")
+
+// Heading presentation must not erase the distinct size-choice labels.
+import { compactDisplayGroupChipLabels, displayGroupMemberLabel } from "./display-group"
+const beds = [{ title: "Кровать (120×190)" }, { title: "Кровать (140×190)" }]
+assert.deepEqual(beds.map((p) => withoutHeadingDimensions(p.title)), ["Кровать", "Кровать"])
+assert.deepEqual(compactDisplayGroupChipLabels(beds.map((p) => displayGroupMemberLabel(p, "size"))), ["120×190", "140×190"])
