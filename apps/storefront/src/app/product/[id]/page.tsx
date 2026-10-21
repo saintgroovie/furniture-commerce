@@ -650,6 +650,24 @@ export default async function ProductPage({
     offerPriceRub,
     offerAvailability: offerAvailabilityFromPurchase(readProductPurchase(product)),
   })
+  const sizeVariantInput = {
+    product, siblings: displayGroupMembers, jsonLd: scalarProductJsonLd,
+    displayedPriceRub: openingPrice, requestQuote: isRequestQuoteProduct(product),
+  }
+  let sizeVariantJsonLd = buildSizeVariantJsonLd(sizeVariantInput)
+  if (sizeVariantJsonLd && scalarProductJsonLd.description && displayGroupMembers.length <= 4 &&
+      !(sizeVariantJsonLd.isVariantOf as Record<string, unknown>)?.description) {
+    // Browse DTOs intentionally omit prose. Read only this verified size
+    // family's full PDPs, never the full catalog, and keep failures unshared.
+    const sources = await Promise.all(displayGroupMembers.map(async (member) => {
+      if (typeof member.id !== "string") return null
+      try { return (await getProduct(member.id)).product as Record<string, unknown> }
+      catch { return null }
+    }))
+    sizeVariantJsonLd = buildSizeVariantJsonLd({
+      ...sizeVariantInput, descriptionMembers: [product, ...sources],
+    })
+  }
   const productJsonLd =
     (executionSelectors.provencePaintWood && buildProvenceFinishJsonLd(product, scalarProductJsonLd, [
       ...(executionSelectors.finish ?? []), ...(executionSelectors.wood ?? []),
@@ -659,10 +677,7 @@ export default async function ProductPage({
       product, options: addressableMaterialTiers, jsonLd: scalarProductJsonLd,
       requestQuote: isRequestQuoteProduct(product),
     })) ||
-    buildSizeVariantJsonLd({
-      product, siblings: displayGroupMembers, jsonLd: scalarProductJsonLd,
-      displayedPriceRub: openingPrice, requestQuote: isRequestQuoteProduct(product),
-    }) || scalarProductJsonLd
+    sizeVariantJsonLd || scalarProductJsonLd
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(base, [
     ...(isKidsProduct ? [{ name: "Детская", path: "/kids" }] : []),
     { name: "Каталог", path: catalogHref },

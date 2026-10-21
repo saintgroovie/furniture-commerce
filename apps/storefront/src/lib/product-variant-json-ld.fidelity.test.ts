@@ -2,6 +2,7 @@ import assert from "node:assert/strict"
 import { buildProductJsonLd } from "./product-json-ld"
 import { buildMaterialTierOptions } from "./material-tiers"
 import { getSeoDescriptionSource } from "./product-seo"
+import { projectCatalogBrowseProduct } from "../../../backend/src/api/store/products/catalog-browse-projection"
 import {
   buildMaterialVariantJsonLd, buildSizeVariantJsonLd,
   explicitVariantSize, materialOptionsForUrl, verifiedMaterialOptions,
@@ -68,6 +69,24 @@ for (const markup of [
   assert.equal("description" in (markup!.isVariantOf as Record<string, unknown>), false)
 }
 assert.equal("description" in smallGroup, false)
+// The production browse projection has no description. A full source must
+// reconcile by native id, handle, family and construction before sharing copy.
+function projectedFamily(sources: Array<Record<string, unknown> | null>) {
+  return buildSizeVariantJsonLd({
+    product: describedSmall, siblings: [projectCatalogBrowseProduct(describedLarge)], descriptionMembers: sources,
+    displayedPriceRub: 70300, requestQuote: false,
+    jsonLd: buildProductJsonLd({ name: "Кровать", description: sharedCopy,
+      url: "https://woodright.ru/product/small", images: ["/product-static/new-photo.jpg"] }),
+  })!
+}
+assert.equal((projectedFamily([describedSmall, describedLarge]).isVariantOf as Record<string, unknown>).description, sharedCopy)
+for (const sources of [
+  [describedSmall, null], [describedSmall],
+  [describedSmall, { ...describedLarge, id: "unrelated-product" }],
+  [describedSmall, { ...describedLarge, status: "draft" }],
+  [describedSmall, { ...describedLarge, handle: "another-size" }],
+  [describedSmall, { ...describedLarge, title: "Кровать (140×190) с тканью" }],
+]) assert.equal("description" in (projectedFamily(sources).isVariantOf as Record<string, unknown>), false)
 
 const material = {
   id: "product-MAT", handle: "material", status: "published", title: "Комод",

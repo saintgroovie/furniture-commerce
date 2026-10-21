@@ -45,6 +45,8 @@ export function buildSizeVariantJsonLd(input: {
   jsonLd: JsonLd
   displayedPriceRub: number | null
   requestQuote: boolean
+  /** Full, identity-matched PDP sources; the lean browse DTO omits descriptions. */
+  descriptionMembers?: Array<Product | null>
 }): JsonLd | null {
   const { product, jsonLd, siblings } = input
   const meta = metadata(product)
@@ -74,8 +76,14 @@ export function buildSizeVariantJsonLd(input: {
   // A family description must be true for every size and match this PDP's
   // published description. Different or missing member copy stays unshared.
   const description = getSeoDescriptionSource(product)?.trim()
+  const descriptionMembers = input.descriptionMembers ?? members
   const sharedDescription = description && jsonLd.description === description &&
-    members.every((member) => getSeoDescriptionSource(member)?.trim() === description)
+    descriptionMembers.length === members.length &&
+    descriptionMembers.every((source, index) => source &&
+      typeof source.id === "string" && source.id === members[index].id &&
+      publicHandle(source) === publicHandle(members[index]) &&
+      source.title === members[index].title && metadata(source).display_group === group &&
+      getSeoDescriptionSource(source)?.trim() === description)
     ? description : null
   return {
     ...jsonLd, "@id": productId, size: sizes[0],
