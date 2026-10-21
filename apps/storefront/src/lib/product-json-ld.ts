@@ -1,10 +1,29 @@
 /**
  * Truthful Product / BreadcrumbList JSON-LD.
- * No ratings, reviews, or invented availability.
+ * No ratings, reviews, or invented stock / shipping promises.
  * Offer is emitted only for one unambiguous purchasable RUB price.
  */
 
+import type { StorefrontPurchaseDto } from "./woodright-order/purchase-contract"
+import { merchantPolicyIds } from "./merchant-policy-json-ld"
+
 const HANDLE_RE = /^[a-z0-9][a-z0-9-]{0,120}$/i
+
+/** Use the same explicit sales contract the buyer sees; never infer stock. */
+export function offerAvailabilityFromPurchase(purchase: StorefrontPurchaseDto | null) {
+  if (!purchase) return null
+  if (purchase.sales_mode === "unavailable") return "https://schema.org/OutOfStock"
+  if (purchase.purchase_flow !== "cart") return null
+  if (purchase.sales_mode === "in_stock" && purchase.can_purchase === true) {
+    return "https://schema.org/InStock"
+  }
+  if (purchase.sales_mode === "made_to_order" || purchase.sales_mode === "configurable_to_order") {
+    // Existing products accepted for a future supply after manufacture.
+    // Google does not yet support Schema.org's newer MadeToOrder value.
+    return "https://schema.org/BackOrder"
+  }
+  return null
+}
 
 export function productCanonicalPath(
   product: { handle?: unknown },
@@ -97,6 +116,7 @@ export type ProductJsonLdInput = {
   dimensions?: { axis: "height" | "width" | "depth"; mm?: number }[]
   sku?: string | null
   offerPriceRub?: number | null
+  offerAvailability?: ReturnType<typeof offerAvailabilityFromPurchase>
 }
 
 export function buildProductJsonLd(
@@ -141,6 +161,12 @@ export function buildProductJsonLd(
       priceCurrency: "RUB",
       price: input.offerPriceRub,
       url: input.url,
+      ...(input.offerAvailability ? { availability: input.offerAvailability } : {}),
+      hasMerchantReturnPolicy: { "@id": merchantPolicyIds(input.url).returns },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        hasShippingService: { "@id": merchantPolicyIds(input.url).shipping },
+      },
     }
   }
   return ld
