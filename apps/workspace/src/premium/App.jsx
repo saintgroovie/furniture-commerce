@@ -57,6 +57,7 @@ import { Files } from "./Files.jsx";
 import { Companies, Team } from "./Team.jsx";
 import { Join } from "./Join.jsx";
 import { PasswordChange } from "./PasswordChange.jsx";
+import { RoleHome } from "./RoleHome.jsx";
 const NAV_NAMES = {
   today: "Рабочая очередь",
   requests: "Обращения",
@@ -235,7 +236,15 @@ export function App() {
   };
   const groups = todayGroups(data),
     overdue = groups.find((g) => g.title === "Просрочено")?.items.length || 0;
+  const canPage = (page) => !data.access || data.access.pages.includes(page);
+  const salesLabel =
+    data.access?.role === "production"
+      ? "Работы"
+      : data.access?.role === "accountant"
+        ? "Контрагенты"
+        : "Продажи";
   function nav(page, label, Icon, child = false) {
+    if (data.access && !data.access.pages.includes(page)) return null;
     return (
       <a
         className={`nav-item ${child ? "child" : ""} ${route.page === page ? "active" : ""}`}
@@ -304,25 +313,31 @@ export function App() {
         </a>
         <nav>
           {nav("today", "Сегодня", CalendarBlank)}
-          <div className="nav-group">
-            <button
-              className="nav-parent"
-              aria-label="Продажи"
-              onClick={() => setExpanded((x) => ({ ...x, sales: !x.sales }))}
-              aria-expanded={expanded.sales}
-            >
-              <Users size={21} weight="light" />
-              <span>Продажи</span>
-              {expanded.sales ? <CaretUp size={14} /> : <CaretDown size={14} />}
-            </button>
-            {expanded.sales && (
-              <div>
-                {nav("requests", "Обращения", ChatCircle, true)}
-                {nav("people", "Люди", User, true)}
-                {nav("companies", "Компании", Buildings, true)}
-              </div>
-            )}
-          </div>
+          {["requests", "people", "companies"].some(canPage) && (
+            <div className="nav-group">
+              <button
+                className="nav-parent"
+                aria-label={salesLabel}
+                onClick={() => setExpanded((x) => ({ ...x, sales: !x.sales }))}
+                aria-expanded={expanded.sales}
+              >
+                <Users size={21} weight="light" />
+                <span>{salesLabel}</span>
+                {expanded.sales ? (
+                  <CaretUp size={14} />
+                ) : (
+                  <CaretDown size={14} />
+                )}
+              </button>
+              {expanded.sales && (
+                <div>
+                  {nav("requests", "Обращения", ChatCircle, true)}
+                  {nav("people", "Люди", User, true)}
+                  {nav("companies", "Компании", Buildings, true)}
+                </div>
+              )}
+            </div>
+          )}
           <div className="nav-divider" />
           {nav("orders", "Заказы", Cube)}
           <div className="nav-group">
@@ -350,30 +365,32 @@ export function App() {
             )}
           </div>
           <div className="nav-divider" />
-          <div className="nav-group">
-            <button
-              className="nav-parent"
-              aria-label="Каталог"
-              onClick={() =>
-                setExpanded((x) => ({ ...x, catalog: !x.catalog }))
-              }
-              aria-expanded={expanded.catalog}
-            >
-              <BookOpen size={21} weight="light" />
-              <span>Каталог</span>
-              {expanded.catalog ? (
-                <CaretUp size={14} />
-              ) : (
-                <CaretDown size={14} />
+          {["products", "rooms"].some(canPage) && (
+            <div className="nav-group">
+              <button
+                className="nav-parent"
+                aria-label="Каталог"
+                onClick={() =>
+                  setExpanded((x) => ({ ...x, catalog: !x.catalog }))
+                }
+                aria-expanded={expanded.catalog}
+              >
+                <BookOpen size={21} weight="light" />
+                <span>Каталог</span>
+                {expanded.catalog ? (
+                  <CaretUp size={14} />
+                ) : (
+                  <CaretDown size={14} />
+                )}
+              </button>
+              {expanded.catalog && (
+                <div>
+                  {nav("products", "Товары", Armchair, true)}
+                  {nav("rooms", "Комнаты", House, true)}
+                </div>
               )}
-            </button>
-            {expanded.catalog && (
-              <div>
-                {nav("products", "Товары", Armchair, true)}
-                {nav("rooms", "Комнаты", House, true)}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
           <div className="nav-divider" />
           {nav("storefront", "Витрина", Storefront)}
           {nav("integrations", "Интеграции", SlidersHorizontal)}
@@ -399,7 +416,7 @@ export function App() {
             </span>
             <span>
               <b>Woodright OS</b>
-              <small>Рабочая база</small>
+              <small>{data.access?.label || "Рабочая база"}</small>
             </span>
             <CaretDown size={14} />
           </button>
@@ -414,7 +431,7 @@ export function App() {
             onClick={() => setMobileNav(true)}
           />
           <span className="demo-label" title="Данные действующей Medusa">
-            Medusa
+            {data.access?.label || "Medusa"}
           </span>
           <button
             className="global-search"
@@ -481,75 +498,80 @@ export function App() {
           }
           key={`${route.page}/${route.id || ""}`}
         >
-          <SourceGate page={route.page} data={data}>
-            {route.page === "today" ? (
-              <TodayView {...common} />
-            ) : route.page === "integrations" ? (
-              <Integrations data={data} />
-            ) : route.page === "companies" ? (
-              <Companies
-                key={route.id || "list"}
-                id={route.id}
-                refresh={refresh}
-                {...common}
-              />
-            ) : route.page === "profile" ? (
-              <div className="standard-page">
-                <h1>Мой профиль</h1>
-                <p className="muted">{data.session.email}</p>
-                <PasswordChange />
-              </div>
-            ) : route.page === "team" ? (
-              <Team data={data} />
-            ) : route.page === "files" ? (
-              <Files data={data} go={go} />
-            ) : route.page === "invoices" ? (
-              <Integrations data={data} focus="accounting" />
-            ) : route.page === "storefront" ? (
-              <ObjectList kind="products" {...common} />
-            ) : route.id ? (
-              <LiveObjectDetail
-                key={`${route.page}/${route.id}`}
-                kind={route.page}
-                id={route.id}
-                refresh={refresh}
-                {...common}
-              />
-            ) : (
-              <ObjectList kind={route.page} {...common} />
-            )}
-          </SourceGate>
+          {data.access && !data.access.pages.includes(route.page) ? (
+            <Empty
+              title="Раздел недоступен вашей роли"
+              text="Вернитесь в свой рабочий раздел."
+              action={<Button onClick={() => go("today")}>Моя работа</Button>}
+            />
+          ) : (
+            <SourceGate page={route.page} data={data}>
+              {route.page === "today" ? (
+                data.access && data.access.role !== "god" ? (
+                  <RoleHome {...common} />
+                ) : (
+                  <TodayView {...common} />
+                )
+              ) : route.page === "integrations" ? (
+                <Integrations data={data} />
+              ) : route.page === "companies" ? (
+                <Companies
+                  key={route.id || "list"}
+                  id={route.id}
+                  refresh={refresh}
+                  {...common}
+                />
+              ) : route.page === "profile" ? (
+                <div className="standard-page">
+                  <h1>Мой профиль</h1>
+                  <p className="muted">{data.session.email}</p>
+                  <PasswordChange />
+                </div>
+              ) : route.page === "team" ? (
+                <Team data={data} refresh={refresh} notify={notify} />
+              ) : route.page === "files" ? (
+                <Files data={data} go={go} />
+              ) : route.page === "invoices" ? (
+                <Integrations data={data} focus="accounting" />
+              ) : route.page === "storefront" ? (
+                <ObjectList kind="products" {...common} />
+              ) : route.id ? (
+                <LiveObjectDetail
+                  key={`${route.page}/${route.id}`}
+                  kind={route.page}
+                  id={route.id}
+                  refresh={refresh}
+                  {...common}
+                />
+              ) : (
+                <ObjectList kind={route.page} {...common} />
+              )}
+            </SourceGate>
+          )}
         </main>
       </div>
       <nav className="mobile-bottom-nav" aria-label="Быстрая навигация">
-        <a
-          href="#/today"
-          aria-current={route.page === "today" ? "page" : undefined}
-        >
-          <CalendarBlank size={21} />
-          Работа
-        </a>
-        <a
-          href="#/requests"
-          aria-current={route.page === "requests" ? "page" : undefined}
-        >
-          <Users size={21} />
-          Продажи
-        </a>
-        <a
-          href="#/orders"
-          aria-current={route.page === "orders" ? "page" : undefined}
-        >
-          <Cube size={21} />
-          Заказы
-        </a>
-        <a
-          href="#/invoices"
-          aria-current={route.page === "invoices" ? "page" : undefined}
-        >
-          <Receipt size={21} />
-          Счета
-        </a>
+        {[
+          { page: "today", label: "Работа", Icon: CalendarBlank },
+          {
+            page: "requests",
+            label: data.access?.role === "production" ? "Обращения" : "Продажи",
+            Icon: Users,
+          },
+          { page: "orders", label: "Заказы", Icon: Cube },
+          { page: "invoices", label: "Счета", Icon: Receipt },
+        ]
+          .filter(({ page }) => canPage(page))
+          .map(({ page, label, Icon }) => (
+            <a
+              key={page}
+              href={`#/${page}`}
+              aria-current={route.page === page ? "page" : undefined}
+            >
+              <Icon size={21} />
+              {label}
+            </a>
+          ))}
         <button onClick={() => setMobileNav(true)}>
           <List size={21} />
           Ещё
@@ -609,9 +631,11 @@ export function App() {
                 Поиск по загруженным обращениям, людям, заказам, товарам и
                 комнатам.
               </p>
-              <SectionQuick
-                onCreate={(kind) => openPanel({ type: "create", kind })}
-              />
+              {data.capabilities.crmCreate && (
+                <SectionQuick
+                  onCreate={(kind) => openPanel({ type: "create", kind })}
+                />
+              )}
             </>
           )}
         </Drawer>

@@ -1,3 +1,4 @@
+import { assertEntityAccess } from "../../../../../lib/woodright-desk/staff-access";
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import {
   entity,
@@ -11,10 +12,11 @@ import {
 } from "../../../../../lib/woodright-desk/http";
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
-    const { sql } = await deskContext(req),
+    const { sql, access } = await deskContext(req),
       { limit, offset } = page(req.query);
     const type = entity(req.query.entity_type),
       id = identifier(req.query.entity_id);
+    await assertEntityAccess(sql, access, type, id);
     await sql.transaction(async (trx) => {
       await requireEntity(trx, type, id);
     });

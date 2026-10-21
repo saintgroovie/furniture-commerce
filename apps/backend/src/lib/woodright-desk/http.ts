@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils";
 import { DeskError, type Sql } from "./commands";
+import { staffAccess } from "./staff-access";
 
 export async function deskContext(req: MedusaRequest) {
   const actor = (
@@ -16,10 +17,7 @@ export async function deskContext(req: MedusaRequest) {
       "DESK_UNAVAILABLE",
       "Функции ещё не установлены в рабочем контуре",
     );
-  const users = req.scope.resolve("user") as {
-    retrieveUser: (id: string) => Promise<unknown>;
-  };
-  await users.retrieveUser(actor.actor_id);
+  const access = await staffAccess(req);
   const sql = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION) as Sql;
   const tables = (
     await sql.raw(`select to_regclass('woodright_desk_operation') as operations,
@@ -31,7 +29,7 @@ export async function deskContext(req: MedusaRequest) {
       "DESK_SCHEMA_REQUIRED",
       "Обновление базы ещё не выполнено",
     );
-  return { sql, actorId: actor.actor_id };
+  return { sql, actorId: actor.actor_id, access };
 }
 export function deskFailure(res: MedusaResponse, error: unknown) {
   const e =

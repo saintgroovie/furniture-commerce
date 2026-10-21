@@ -2192,3 +2192,7 @@ body:has(.overlay) {
 .context-link > span {
   font-size: 14px;
 }
+
+.role-journey { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+.role-step { display:flex; flex-direction:column; align-items:flex-start; gap:10px; text-align:left; border:1px solid var(--line,#dedbd4); border-radius:10px; background:var(--surface,#fff); padding:18px; color:inherit; cursor:pointer; }
+.role-step:hover { border-color:#B8923A; }

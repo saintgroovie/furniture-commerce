@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
 import { acceptInviteWorkflow } from "@medusajs/core-flows";
+import { STAFF_ROLES } from "../../../../lib/woodright-desk/staff-access";
 export const AUTHENTICATE = false;
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   res.setHeader("Cache-Control", "private, no-store");
@@ -21,24 +22,44 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     )
       throw Error();
     const service = req.scope.resolve("user") as {
-      validateInviteToken: (token: string) => Promise<{ email: string }>;
+      validateInviteToken: (
+        token: string,
+      ) => Promise<{ email: string; metadata?: Record<string, any> }>;
     };
     const invite = await service.validateInviteToken(body.token);
+    const role = invite.metadata?.woodright_access?.role;
+    if (!STAFF_ROLES.includes(role)) throw Error();
+    const expiresAt = invite.metadata?.woodright_access?.expiresAt;
+    if (
+      expiresAt != null &&
+      (!Number.isFinite(Date.parse(expiresAt)) ||
+        Date.parse(expiresAt) <= Date.now())
+    )
+      throw Error();
     // Use the native one-use invite workflow; keep the secret token out of request URLs.
     await acceptInviteWorkflow(req.scope).run({
       input: {
         invite_token: body.token,
         auth_identity_id: context.auth_identity_id,
-        user: { email: invite.email, first_name: body.name.trim() },
+        user: {
+          email: invite.email,
+          first_name: body.name.trim(),
+          metadata: {
+            woodright_access: {
+              role,
+              version: 1,
+              enabled: true,
+              expiresAt: expiresAt || null,
+            },
+          },
+        },
       },
     });
     res.json({ ok: true });
   } catch {
-    res
-      .status(401)
-      .json({
-        message:
-          "Приглашение не принято. Проверьте срок ссылки и учётную запись.",
-      });
+    res.status(401).json({
+      message:
+        "Приглашение не принято. Проверьте срок ссылки и учётную запись.",
+    });
   }
 }

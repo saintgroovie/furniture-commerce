@@ -13,6 +13,7 @@ import {
 import { useDeskCommand, DeskTools } from "./DeskTools.jsx";
 import { History } from "./History.jsx";
 import { liveFetch } from "./storage.js";
+import { ROLE_LABELS } from "./RoleHome.jsx";
 
 export function StaffOptions({
   data,
@@ -33,12 +34,20 @@ export function StaffOptions({
         {value && !data.staff.some((s) => s.id === value) && (
           <option value={value}>Сотрудник недоступен</option>
         )}
-        {data.staff.map((s) => (
-          <option key={s.id} value={s.id}>
-            {s.name}
-            {s.id === data.session.id ? " · вы" : ""}
-          </option>
-        ))}
+        {data.staff
+          .filter(
+            (s) =>
+              (s.access?.enabled !== false &&
+                !accessExpired(s) &&
+                (!data.access || ROLE_LABELS[s.access?.role])) ||
+              s.id === value,
+          )
+          .map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.name}
+              {s.id === data.session.id ? " · вы" : ""}
+            </option>
+          ))}
       </select>
     </Field>
   );
@@ -94,8 +103,9 @@ export function Assignment({ kind, item, data, refresh, notify }) {
     return (
       <Section title="Компания и ответственный">
         <Notice>
-          Назначения недоступны до полной загрузки команды и компаний. Обновите
-          данные.
+          {data.access
+            ? `Компания: ${(kind === "companies" ? item.name : data.companies.find((c) => c.id === item.companyId)?.name) || "Без компании"}. Ответственный: ${item.assignee}. Назначение изменяет продавец, директор или полный администратор.`
+            : "Назначения недоступны до полной загрузки команды и компаний. Обновите данные."}
         </Notice>
       </Section>
     );
@@ -393,34 +403,38 @@ export function Companies({ data, go, openPanel, refresh, notify, id }) {
               refresh={refresh}
               notify={notify}
             />
-            {["people", "requests", "orders"].map((kind) => (
-              <Section
-                key={kind}
-                title={
-                  {
-                    people: "Контакты компании",
-                    requests: "Обращения компании",
-                    orders: "Заказы компании",
-                  }[kind]
-                }
-              >
-                {data[kind]
-                  .filter((r) => r.companyId === id)
-                  .map((r) => (
-                    <button
-                      key={r.id}
-                      className="live-related"
-                      onClick={() => go(kind, r.id)}
-                    >
-                      <b>{r.name || r.title}</b>
-                      <span>{r.assignee}</span>
-                    </button>
-                  ))}
-                {!data[kind].some((r) => r.companyId === id) && (
-                  <p className="muted">Связанных записей пока нет.</p>
-                )}
-              </Section>
-            ))}
+            {["people", "requests", "orders"]
+              .filter(
+                (kind) => !data.access || data.access.pages.includes(kind),
+              )
+              .map((kind) => (
+                <Section
+                  key={kind}
+                  title={
+                    {
+                      people: "Контакты компании",
+                      requests: "Обращения компании",
+                      orders: "Заказы компании",
+                    }[kind]
+                  }
+                >
+                  {data[kind]
+                    .filter((r) => r.companyId === id)
+                    .map((r) => (
+                      <button
+                        key={r.id}
+                        className="live-related"
+                        onClick={() => go(kind, r.id)}
+                      >
+                        <b>{r.name || r.title}</b>
+                        <span>{r.assignee}</span>
+                      </button>
+                    ))}
+                  {!data[kind].some((r) => r.companyId === id) && (
+                    <p className="muted">Связанных записей пока нет.</p>
+                  )}
+                </Section>
+              ))}
           </aside>
         </div>
         <DeskTools
@@ -514,14 +528,106 @@ export function Companies({ data, go, openPanel, refresh, notify, id }) {
     </div>
   );
 }
-export function Team({ data }) {
+function accessExpired(s) {
+  return s.access?.expiresAt && Date.parse(s.access.expiresAt) <= Date.now();
+}
+function localDateTime(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+}
+function StaffAccessForm({ staff, currentId, refresh, onSaved }) {
+  const [role, setRole] = useState(staff.access?.role || "seller"),
+    [enabled, setEnabled] = useState(staff.access?.enabled !== false),
+    [until, setUntil] = useState(localDateTime(staff.access?.expiresAt)),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  return (
+    <form
+      className="form-stack"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setBusy(true);
+        setError("");
+        try {
+          await liveFetch("/api/live/team", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              intent: "access.update",
+              id: staff.id,
+              role,
+              enabled,
+              expectedVersion: staff.access?.version || 0,
+              expiresAt: until ? new Date(until).toISOString() : null,
+              key: crypto.randomUUID(),
+            }),
+          });
+          await refresh();
+          onSaved();
+        } catch (e) {
+          setError(e.message);
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <Field label={`Роль: ${staff.name}`}>
+        <select
+          value={role}
+          disabled={busy || staff.id === currentId}
+          onChange={(e) => setRole(e.target.value)}
+        >
+          {Object.entries(ROLE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field label="Доступ до (пусто — бессрочно)">
+        <input
+          type="datetime-local"
+          value={until}
+          disabled={busy || staff.id === currentId}
+          onChange={(e) => setUntil(e.target.value)}
+        />
+      </Field>
+      <label>
+        <input
+          type="checkbox"
+          checked={enabled}
+          disabled={busy || staff.id === currentId}
+          onChange={(e) => setEnabled(e.target.checked)}
+        />{" "}
+        Доступ открыт
+      </label>
+      <FormError>{error}</FormError>
+      {staff.id !== currentId && (
+        <Button type="submit" variant="secondary" disabled={busy}>
+          {busy ? "Сохраняем…" : "Сохранить доступ"}
+        </Button>
+      )}
+    </form>
+  );
+}
+export function Team({ data, refresh, notify }) {
   const [email, setEmail] = useState(""),
+    [role, setRole] = useState("seller"),
+    [temporary, setTemporary] = useState(false),
     [invitation, setInvitation] = useState(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [pending, setPending] = useState([]),
-    [revision, setRevision] = useState(0);
+    [revision, setRevision] = useState(0),
+    [editing, setEditing] = useState(null),
+    [query, setQuery] = useState(""),
+    [status, setStatus] = useState("active");
   useEffect(() => {
+    if (!data.access?.manageStaff) return;
     const controller = new AbortController();
     liveFetch("/api/live/team", { signal: controller.signal })
       .then((r) => setPending(r.invitations))
@@ -529,7 +635,7 @@ export function Team({ data }) {
         if (!controller.signal.aborted) setError(e.message);
       });
     return () => controller.abort();
-  }, [revision]);
+  }, [revision, data.access?.manageStaff]);
   async function run(body) {
     setBusy(true);
     setError("");
@@ -554,18 +660,72 @@ export function Team({ data }) {
         description="Действующие учётные записи Medusa. Каждый сотрудник входит со своим паролем."
       />
       <Section title="Команда">
+        <div className="filter-row">
+          <Field label="Поиск сотрудника">
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Имя или email"
+            />
+          </Field>
+          <Field label="Доступ сотрудников">
+            <select value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="active">Открыт</option>
+              <option value="closed">Закрыт</option>
+              <option value="all">Все</option>
+            </select>
+          </Field>
+        </div>
         <ul className="desk-items">
-          {data.staff.map((s) => (
-            <li key={s.id}>
-              <div>
-                <strong>{s.name}</strong>
-                <small>{s.email}</small>
-              </div>
-              {s.id === data.session.id && <Badge>Ваш профиль</Badge>}
-            </li>
-          ))}
+          {data.staff
+            .filter(
+              (s) =>
+                (status === "all" ||
+                  (status === "closed"
+                    ? s.access?.enabled === false || accessExpired(s)
+                    : s.access?.enabled !== false && !accessExpired(s))) &&
+                `${s.name} ${s.email}`
+                  .toLowerCase()
+                  .includes(query.toLowerCase()),
+            )
+            .map((s) => (
+              <li key={s.id}>
+                <div>
+                  <strong>{s.name}</strong>
+                  <small>{s.email}</small>
+                  <small>
+                    {ROLE_LABELS[s.access?.role] || "Роль не назначена"} ·{" "}
+                    {s.access?.enabled === false || accessExpired(s)
+                      ? "Доступ закрыт"
+                      : "Доступ открыт"}
+                  </small>
+                </div>
+                {s.id === data.session.id && <Badge>Ваш профиль</Badge>}
+                {data.access?.manageStaff && (
+                  <Button variant="secondary" onClick={() => setEditing(s.id)}>
+                    Доступ
+                  </Button>
+                )}
+              </li>
+            ))}
         </ul>
       </Section>
+      {editing && data.staff.some((s) => s.id === editing) && (
+        <Drawer title="Доступ сотрудника" onClose={() => setEditing(null)}>
+          <p>{data.staff.find((s) => s.id === editing).name}</p>
+          <StaffAccessForm
+            key={`${editing}:${data.staff.find((s) => s.id === editing).access?.version}`}
+            staff={data.staff.find((s) => s.id === editing)}
+            currentId={data.session.id}
+            refresh={refresh}
+            onSaved={() => {
+              setEditing(null);
+              notify("Доступ сотрудника обновлён");
+            }}
+          />
+        </Drawer>
+      )}
       {pending.length > 0 && (
         <Section title="Ожидают присоединения">
           <ul className="desk-items">
@@ -592,70 +752,100 @@ export function Team({ data }) {
           </ul>
         </Section>
       )}
-      <Section title="Пригласить сотрудника">
-        <p className="muted">
-          Ссылка предоставляет доступ к клиентской базе и документам. Передайте
-          её только приглашённому сотруднику. Письмо автоматически не
-          отправляется.
-        </p>
-        <form
-          className="form-stack"
-          onSubmit={(e) => {
-            e.preventDefault();
-            run({ intent: "invite", email });
-          }}
-        >
-          <Field label="Email нового сотрудника">
-            <input
-              type="email"
-              required
-              maxLength={254}
-              value={email}
-              disabled={busy}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </Field>
-          <Button disabled={busy || !data.capabilities.assignments}>
-            {busy ? "Готовим…" : "Создать ссылку-приглашение"}
-          </Button>
-        </form>
-        <FormError>{error}</FormError>
-        {invitation && (
-          <div className="form-stack">
-            <Notice>
-              Приглашение для {invitation.email}. Действует до{" "}
-              {new Date(invitation.expiresAt).toLocaleDateString("ru-RU")}.
-            </Notice>
-            <Field label="Ссылка-приглашение">
+      {data.access?.manageStaff && (
+        <Section title="Пригласить сотрудника">
+          <p className="muted">
+            Ссылка предоставляет доступ к клиентской базе и документам.
+            Передайте её только приглашённому сотруднику. Письмо автоматически
+            не отправляется.
+          </p>
+          <form
+            className="form-stack"
+            onSubmit={(e) => {
+              e.preventDefault();
+              run({ intent: "invite", email, role, temporary });
+            }}
+          >
+            <Field label="Email нового сотрудника">
               <input
-                readOnly
-                value={invitation.url}
-                onFocus={(e) => e.target.select()}
+                type="email"
+                required
+                maxLength={254}
+                value={email}
+                disabled={busy}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </Field>
-            <Button
-              variant="secondary"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(invitation.url);
-                  setError("");
-                } catch {
-                  setError("Выделите и скопируйте ссылку из поля выше");
-                }
-              }}
-            >
-              Скопировать ссылку
+            <Field label="Рабочая роль">
+              <select
+                value={role}
+                disabled={busy}
+                onChange={(e) => setRole(e.target.value)}
+              >
+                {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <label>
+              <input
+                type="checkbox"
+                checked={temporary}
+                disabled={busy}
+                onChange={(e) => setTemporary(e.target.checked)}
+              />{" "}
+              Временный доступ на 1 час
+            </label>
+            {role === "god" && (
+              <Notice>
+                Полный доступ ко всем данным, настройкам и управлению
+                сотрудниками.
+              </Notice>
+            )}
+            <Button disabled={busy || !data.capabilities.assignments}>
+              {busy ? "Готовим…" : "Создать ссылку-приглашение"}
             </Button>
-            <Button
-              variant="secondary"
-              disabled={busy}
-              onClick={() => run({ intent: "revoke", id: invitation.id })}
-            >
-              Отозвать приглашение
-            </Button>
-          </div>
-        )}
-      </Section>
+          </form>
+          <FormError>{error}</FormError>
+          {invitation && (
+            <div className="form-stack">
+              <Notice>
+                Приглашение для {invitation.email}. Действует до{" "}
+                {new Date(invitation.expiresAt).toLocaleDateString("ru-RU")}.
+              </Notice>
+              <Field label="Ссылка-приглашение">
+                <input
+                  readOnly
+                  value={invitation.url}
+                  onFocus={(e) => e.target.select()}
+                />
+              </Field>
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(invitation.url);
+                    setError("");
+                  } catch {
+                    setError("Выделите и скопируйте ссылку из поля выше");
+                  }
+                }}
+              >
+                Скопировать ссылку
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={busy}
+                onClick={() => run({ intent: "revoke", id: invitation.id })}
+              >
+                Отозвать приглашение
+              </Button>
+            </div>
+          )}
+        </Section>
+      )}
     </div>
   );
 }

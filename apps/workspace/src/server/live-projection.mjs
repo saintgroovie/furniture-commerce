@@ -147,7 +147,7 @@ export function projectLive(
         id: l.id,
         name: text(l.title) || text(l.product_title) || "Позиция",
         qty: Number(l.quantity),
-        price: String(l.unit_price ?? 0),
+        price: l.unit_price == null ? "" : String(l.unit_price),
       })),
     };
   });
@@ -235,6 +235,7 @@ export function projectLive(
     compositionAvailable: false,
   }));
   const staff = array(sources.staff?.staff).map((u) => ({
+    access: u.access || null,
     id: text(u.id),
     email: text(u.email),
     name:
@@ -286,6 +287,7 @@ export function projectLive(
   }
   return {
     version: 2,
+    access: features.access || null,
     mode: "live",
     people,
     requests,

@@ -1,3 +1,4 @@
+import { parseStaffAccess } from "./staff-access";
 import {
   audit,
   DeskError,
@@ -68,14 +69,18 @@ export async function teamInstalled(sql: Sql) {
 }
 export async function requireStaff(sql: Sql, id: unknown) {
   const value = identifier(id);
-  if (
-    !(
-      await sql.raw(
-        'select id from "user" where id = ? and deleted_at is null for share',
-        [value],
-      )
-    ).rows.length
-  )
+  const row = (
+    await sql.raw(
+      'select id, metadata from "user" where id = ? and deleted_at is null for share',
+      [value],
+    )
+  ).rows[0];
+  let available = false;
+  try {
+    parseStaffAccess(row);
+    available = true;
+  } catch {}
+  if (!available)
     throw new DeskError(
       400,
       "INVALID_ASSIGNEE",

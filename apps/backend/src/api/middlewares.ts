@@ -20,6 +20,7 @@ import {
   registerHttpAccessLogRedaction,
 } from "../lib/http-access-log-redaction"
 import { attachRuntimeIdentityHeaders } from "./runtime-identity-headers"
+import { enforceStaffAccess } from "../lib/woodright-desk/staff-access"
 
 // Install morgan `url` token redaction as soon as API middlewares load.
 registerHttpAccessLogRedaction()
@@ -226,6 +227,10 @@ async function ensureNotBespokeForCart(
 
 export default defineMiddlewares({
   routes: [
+    {
+      matcher: "/admin/*",
+      middlewares: [authenticate("user", ["session", "bearer", "api-key"]), enforceStaffAccess],
+    },
     {
       matcher: "/woodright/team-invitation/accept",
       method: ["POST"],

@@ -13,6 +13,12 @@ export async function GET() {
   try {
     const session = await staff();
     await verifiedBackend();
+    const access = await upstream("/admin/woodright/desk/access", { session });
+    if (access.role !== "god")
+      return NextResponse.json(
+        { invitations: [], count: 0 },
+        { headers: NO_STORE },
+      );
     const result = await upstream("/admin/invites?limit=100&offset=0", {
       session,
     });
@@ -46,6 +52,22 @@ export async function POST(request: Request) {
     if (process.env.WOODRIGHT_LIVE_WRITES !== "1")
       throw new LiveError(403, "Приглашения ещё не включены");
     const body = await readJsonBounded(request, 8192);
+    const access = await upstream("/admin/woodright/desk/access", { session });
+    if (access.role !== "god")
+      throw new LiveError(403, "Доступом управляет полный администратор");
+    if (body.intent === "access.update") {
+      const result = await upstream("/admin/woodright/desk/access", {
+        session,
+        method: "POST",
+        body,
+      });
+      return NextResponse.json(result, { headers: NO_STORE });
+    }
+    const role = body.role || "seller";
+    if (
+      !["seller", "production", "accountant", "director", "god"].includes(role)
+    )
+      throw new LiveError(400, "Выберите рабочую роль");
     if (
       body.intent === "revoke" &&
       typeof body.id === "string" &&
@@ -71,22 +93,53 @@ export async function POST(request: Request) {
       { session },
     );
     let invite = current.invites?.find(
-      (i: { accepted: boolean; expires_at: string }) =>
-        !i.accepted && Date.parse(i.expires_at) > Date.now(),
+      (i: {
+        accepted: boolean;
+        expires_at: string;
+        metadata?: {
+          woodright_access?: { role?: string; expiresAt?: string | null };
+        };
+      }) =>
+        !i.accepted &&
+        Date.parse(i.expires_at) > Date.now() &&
+        i.metadata?.woodright_access?.role === role &&
+        Boolean(i.metadata?.woodright_access?.expiresAt) ===
+          (body.temporary === true) &&
+        (!i.metadata?.woodright_access?.expiresAt ||
+          Date.parse(i.metadata.woodright_access.expiresAt) > Date.now()),
     );
+    if (
+      !invite &&
+      current.invites?.some((i: { accepted: boolean }) => i.accepted)
+    )
+      throw new LiveError(
+        409,
+        "Сотрудник уже присоединился. Измените его роль в списке команды",
+      );
     if (!invite && current.invites?.length)
-      invite = (
-        await upstream(
-          `/admin/invites/${encodeURIComponent(current.invites[0].id)}/resend`,
-          { session, method: "POST" },
-        )
-      ).invite;
+      throw new LiveError(
+        409,
+        "Сначала отзовите старое приглашение с другой ролью или истёкшим сроком",
+      );
     if (!invite)
       invite = (
         await upstream("/admin/invites", {
           session,
           method: "POST",
-          body: { email },
+          body: {
+            email,
+            metadata: {
+              woodright_access: {
+                role,
+                version: 1,
+                enabled: true,
+                expiresAt:
+                  body.temporary === true
+                    ? new Date(Date.now() + 3600000).toISOString()
+                    : null,
+              },
+            },
+          },
         })
       ).invite;
     if (!invite?.token)
@@ -97,6 +150,7 @@ export async function POST(request: Request) {
       {
         id: invite.id,
         email: invite.email,
+        role,
         expiresAt: invite.expires_at,
         url: `${origin}${BASE_PATH}/#/join/${encodeURIComponent(invite.token)}`,
       },

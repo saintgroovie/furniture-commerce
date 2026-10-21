@@ -94,40 +94,42 @@ function Reminders({ type, id, data, refresh, notify }) {
                   optional={false}
                 />
               )}
-              {data.capabilities.reminders && (
-                <div className="desk-row-actions">
-                  <Button
-                    variant="secondary"
-                    disabled={busy}
-                    onClick={() =>
-                      run({
-                        type: "reminder.update",
-                        id: r.id,
-                        expectedVersion: r.version,
-                        status: r.status === "open" ? "done" : "open",
-                      })
-                    }
-                  >
-                    {r.status === "open" ? "Выполнено" : "Вернуть"}
-                  </Button>
-                  {r.status === "open" && (
-                    <button
-                      className="text-button"
+              {data.capabilities.reminders &&
+                (data.capabilities.assignments ||
+                  r.assigneeId === data.session.id) && (
+                  <div className="desk-row-actions">
+                    <Button
+                      variant="secondary"
                       disabled={busy}
                       onClick={() =>
                         run({
                           type: "reminder.update",
                           id: r.id,
                           expectedVersion: r.version,
-                          status: "cancelled",
+                          status: r.status === "open" ? "done" : "open",
                         })
                       }
                     >
-                      Отменить
-                    </button>
-                  )}
-                </div>
-              )}
+                      {r.status === "open" ? "Выполнено" : "Вернуть"}
+                    </Button>
+                    {r.status === "open" && (
+                      <button
+                        className="text-button"
+                        disabled={busy}
+                        onClick={() =>
+                          run({
+                            type: "reminder.update",
+                            id: r.id,
+                            expectedVersion: r.version,
+                            status: "cancelled",
+                          })
+                        }
+                      >
+                        Отменить
+                      </button>
+                    )}
+                  </div>
+                )}
             </li>
           ))}
         </ul>
@@ -308,6 +310,9 @@ function Attachments({ type, id, data, notify, refresh }) {
                 </small>
               </div>
               {data.capabilities.attachments &&
+                (!data.access ||
+                  ["god", "director"].includes(data.access.role) ||
+                  f.uploaded_by === data.session.id) &&
                 (confirm === f.id ? (
                   <div className="desk-row-actions">
                     <span>Убрать из карточки?</span>
