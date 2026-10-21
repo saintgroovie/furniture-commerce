@@ -230,9 +230,15 @@ main.page-section:has(.contacts-page--panorama) {
     gap: 0.125rem;
   }
 
-  .contacts-carousel-page { width: 20px; }
-  .contacts-carousel-toggle { min-width: 76px; padding: 0 0.25rem; }
+  .contacts-carousel-page { width: 24px; }
+  .contacts-carousel-toggle { min-width: 52px; padding: 0 0.25rem; }
   .contacts-carousel-count { font-size: 0.75rem; }
+}
+
+@media (max-width: 360px) {
+  .contacts-carousel-controls { gap: 0; }
+  .contacts-carousel .contacts-carousel-arrow { width: 36px; }
+  .contacts-carousel-count { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

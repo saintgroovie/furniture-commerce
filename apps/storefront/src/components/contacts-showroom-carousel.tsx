@@ -142,7 +142,7 @@ export function ContactsShowroomCarousel() {
             setPaused(event.detail > 0 ? pointerToggle.current : !paused)
           }}
         >
-          {paused ? "Продолжить" : "Пауза"}
+          {paused ? "Авто" : "Пауза"}
         </button>
         <span className="contacts-carousel-count" aria-hidden="true">{String(active + 1).padStart(2, "0")} / {String(COUNT).padStart(2, "0")}</span>
       </div>
