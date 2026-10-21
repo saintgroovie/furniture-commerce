@@ -21,6 +21,7 @@ type Props = {
   heroObjectPosition?: string
   productHandle?: string
   executionScopeKey?: string
+  initialProvenceFinish?: "cream" | "wood"
 }
 
 /** PDP with execution swatches — same gallery core as catalog cards. */
@@ -40,6 +41,7 @@ export function ProductPdpExecutionMediaSwitcher({
   heroObjectPosition,
   productHandle,
   executionScopeKey,
+  initialProvenceFinish,
 }: Props) {
   return (
     <ProductCardMediaGalleryCore
@@ -60,6 +62,7 @@ export function ProductPdpExecutionMediaSwitcher({
       heroObjectPosition={heroObjectPosition}
       productHandle={productHandle}
       executionScopeKey={executionScopeKey}
+      initialProvenceFinish={initialProvenceFinish}
     />
   )
 }
