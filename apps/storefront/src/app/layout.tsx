@@ -31,12 +31,11 @@ import { indexingRobotsMetadata } from "@/lib/indexing-policy"
 import {
   a11yCopy,
   bespokeSectionNav,
-  footer as footerCopy,
   nav as navCopy,
   seo,
 } from "@/lib/woodright-copy"
-import { formatRuInline } from "@/lib/format-ru-copy"
 import "./globals.css"
+import "@/components/site-footer.css"
 
 // Local Design Mode: do not use next/font/google. Google Fonts TLS stalls freeze
 // Cursor Browser / Design Mode. System stack keeps UI responsive offline.
@@ -254,50 +253,7 @@ export default async function RootLayout({
         <main id="main-content" className="container page-section" tabIndex={-1}>
           {children}
         </main>
-        <SiteFooter
-          brandBody={
-            <div className="footer-column-body footer-brand-lead">
-              {footerCopy.brandText.lead.map((line) => (
-                <span className="footer-row" key={line}>
-                  {formatRuInline(line)}
-                </span>
-              ))}
-              <ul className="footer-brand-bullets">
-                {footerCopy.brandText.bullets.map((line) => (
-                  <li className="footer-row" key={line}>
-                    {formatRuInline(line)}
-                  </li>
-                ))}
-              </ul>
-              {footerCopy.brandText.closing.map((line) => (
-                <span className="footer-row" key={line}>
-                  {formatRuInline(line)}
-                </span>
-              ))}
-            </div>
-          }
-          nav={
-            <nav className="footer-nav" aria-label="Разделы сайта">
-              {footerCopy.columns.map((column) => (
-                <div className="footer-column" key={column.title}>
-                  <h3 className="footer-column-title">{column.title}</h3>
-                  <ul className="footer-column-body footer-column-links">
-                    {column.links.map((link) => (
-                      <li className="footer-row" key={link.href}>
-                        <Link href={link.href}>{link.label}</Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </nav>
-          }
-          bottom={
-            <div className="footer-bottom">
-              <span>{footerCopy.copyright(new Date().getFullYear())}</span>
-            </div>
-          }
-        />
+        <SiteFooter year={new Date().getFullYear()} />
         </RouteVeilProvider>
         </SiteSectionProvider>
         {analytics.yandexMetrikaId ? (

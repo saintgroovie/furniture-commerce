@@ -113,66 +113,50 @@ export const systemCopy = {
 }
 
 export const footer = {
-  /** Masthead under brand wordmark. Lead + disc bullets + closing;
-   * each string is one grid row (same pitch as nav links). */
-  brandText: {
-    lead: ["Мебель из массива", "для взрослых и детских комнат"],
-    bullets: ["Готовые модели", "Окрашивание и роспись", "Стеновые панели"],
-    closing: ["Woodright Bespoke"],
+  brandText: ["Мебель из массива", "для дома и детских комнат"],
+  invitation: {
+    eyebrow: "Woodright · По проекту",
+    title: ["Ваш дом.", "Ваш характер."],
+    body: "Мебель из массива, которая складывается в ваш интерьер.",
+    primary: "Обсудить проект",
+    secondary: "Узнать о производстве",
   },
   columns: [
     {
-      title: "Каталог",
+      title: "Коллекции",
       links: [
-        { label: "Все предметы", href: "/catalog" },
-        { label: "Готовые модели", href: "/catalog?product_type=STANDARD" },
-        { label: "С выбором исполнения", href: "/catalog?product_type=CONFIGURABLE" },
+        { label: "Каталог", href: "/catalog" },
         { label: "Комнаты", href: "/rooms" },
+        { label: "Детская", href: "/kids" },
+        { label: "По проекту", href: "/bespoke" },
       ],
     },
     {
-      title: "Детская",
-      links: [
-        { label: "О разделе", href: "/kids" },
-        { label: "Каталог", href: "/kids/catalog" },
-        { label: "Росписи Вилли Винки", href: "/kids/willie-winkie" },
-        { label: "Детские комнаты", href: "/kids/rooms" },
-      ],
-    },
-    {
-      title: "По проекту",
-      links: [
-        { label: "Как это работает", href: "/bespoke" },
-        { label: "Стеновые панели", href: "/bespoke/wall-panels" },
-        { label: "Оставить заявку", href: "/bespoke/request" },
-        { label: "Дизайнерам", href: "/designers" },
-      ],
-    },
-    {
-      title: "Woodright",
+      title: "О Woodright",
       links: [
         { label: "О бренде", href: "/about" },
-        { label: "Партнёры", href: "/partners" },
-        { label: "Дизайнерам", href: "/designers" },
         { label: "Производство", href: "/about/production" },
         { label: "Материалы", href: "/about/materials" },
-        { label: "Контакты", href: "/contacts" },
+        { label: "Дизайнерам", href: "/designers" },
       ],
     },
     {
       title: "Покупателям",
       links: [
         { label: "Доставка", href: "/delivery" },
-        { label: "Оплата", href: "/payment" },
+        { label: "и оплата", href: "/payment", joinPrevious: true },
         { label: "Возврат", href: "/returns" },
-        { label: "Гарантия", href: "/warranty" },
-        { label: "Политика конфиденциальности", href: "/privacy" },
-        { label: "Условия продажи", href: "/offer" },
-        { label: "Реквизиты", href: "/requisites" },
-        { label: "Условия покупки", href: "/terms" },
-        { label: "Cookie", href: "/cookies" },
+        { label: "и гарантия", href: "/warranty", joinPrevious: true },
+        { label: "Контакты", href: "/contacts" },
       ],
     },
+  ],
+  legalLinks: [
+    { label: "Условия продажи", href: "/offer" },
+    { label: "Политика конфиденциальности", href: "/privacy" },
+    { label: "Реквизиты", href: "/requisites" },
+    { label: "Условия покупки", href: "/terms" },
+    { label: "Cookie", href: "/cookies" },
   ],
   copyright: (year: number) => `© ${year} Woodright`,
 }
