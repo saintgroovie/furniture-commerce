@@ -7,6 +7,7 @@ import { isOliverKidsHandle } from "@/lib/oliver-kids-scope"
 import { resolvePublicProductTitle } from "@/lib/catalog-normalization"
 import { openingVariant } from "@/lib/opening-variant"
 import { verifiedMissingDimensions, verifiedPositionDimensions } from "./verified-september-catalog"
+import { withoutHeadingDimensions } from "./product-heading"
 
 type Dimensions = {
   width_mm?: number
@@ -229,7 +230,7 @@ export function getBuyerFacingProductTitleLayout(
     handle: typeof product.handle === "string" ? product.handle : null,
     metadata: meta(product),
   })
-  const layout = layoutBuyerFacingTitle(resolved.public_title)
+  const layout = layoutBuyerFacingTitle(withoutHeadingDimensions(resolved.public_title))
   return {
     ...layout,
     text: formatBuyerFacingMeasureText(layout.text),

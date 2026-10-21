@@ -3,6 +3,8 @@ import type { MaterialTierOption } from "./material-tiers"
 import { buildOfferJsonLd, offerAvailabilityFromPurchase, readUniformRubAmounts, singleOfferPriceRub } from "./product-json-ld"
 import { isRequestQuoteProduct } from "./request-quote"
 import { getSeoDescriptionSource } from "./product-seo"
+import { sharedOliverBedDescription } from "./oliver-bed-family-copy"
+import { withoutHeadingDimensions } from "./product-heading"
 import { readProductPurchase } from "./woodright-order/purchase-contract"
 
 type Product = Record<string, unknown>
@@ -77,20 +79,22 @@ export function buildSizeVariantJsonLd(input: {
   // published description. Different or missing member copy stays unshared.
   const description = getSeoDescriptionSource(product)?.trim()
   const descriptionMembers = input.descriptionMembers ?? members
-  const sharedDescription = description && jsonLd.description === description &&
+  const validDescriptionSources = description && jsonLd.description === description &&
     descriptionMembers.length === members.length &&
     descriptionMembers.every((source, index) => source &&
       typeof source.id === "string" && source.id === members[index].id &&
       publicHandle(source) === publicHandle(members[index]) &&
-      source.title === members[index].title && metadata(source).display_group === group &&
-      getSeoDescriptionSource(source)?.trim() === description)
-    ? description : null
+      source.title === members[index].title && metadata(source).display_group === group)
+  const sharedDescription = validDescriptionSources
+    ? sharedOliverBedDescription(group, descriptionMembers) ||
+      (descriptionMembers.every((source) => getSeoDescriptionSource(source!)?.trim() === description) ? description : null)
+    : null
   return {
     ...jsonLd, "@id": productId, size: sizes[0],
     inProductGroupWithID: group,
     isVariantOf: {
       "@type": "ProductGroup", "@id": groupId, productGroupID: group,
-      name: String(meta.display_group_title || product.title),
+      name: withoutHeadingDimensions(String(meta.display_group_title || product.title)),
       ...(sharedDescription ? { description: sharedDescription } : {}),
       brand: jsonLd.brand, variesBy: ["https://schema.org/size"],
       hasVariant: urls.map((url) => url === jsonLd.url
