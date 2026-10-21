@@ -41,6 +41,7 @@ import {
   isRequestQuoteProduct,
 } from "@/lib/request-quote"
 import { ProductCta } from "@/components/product-cta"
+import { buildProvenceFinishJsonLd, verifiedProvenceFinishPrices } from "@/lib/provence-finish-json-ld"
 import { PdpPriceBlock } from "@/components/pdp-price-block"
 import { selectedBuyerVariantId } from "@/lib/opening-variant"
 import {
@@ -281,6 +282,8 @@ export default async function ProductPage({
           (variant) => variant.id === selectedVariantId
         ) ?? null
   const viewProduct = withVariantCapabilities(product, selectedVariant) as Record<string, unknown>
+  const provencePrices = verifiedProvenceFinishPrices(product)
+  const initialProvenceFinish = provencePrices && resolvedSearchParams?.finish === "wood" ? "wood" : "cream"
 
   const isOliver = handle.startsWith("ol-")
   const isGreenwichBed = isGreenwichBedProduct(viewProduct)
@@ -331,7 +334,7 @@ export default async function ProductPage({
     const activeHeadboard = headboardVariants?.[0]
     const activeUpholstery = upholsteryVariants?.[0]
     const activeWood = woodVariants?.[0]
-    const activeFinish = finishVariants?.[0]
+    const activeFinish = initialProvenceFinish === "wood" && executionSelectors.provencePaintWood ? undefined : finishVariants?.[0]
     const provencePaintWood = executionSelectors.provencePaintWood === true
     const mainSrc = provencePaintWood
       ? (activeFinish?.mainSrc ?? activeWood?.mainSrc ?? thumbSrc)
@@ -344,8 +347,8 @@ export default async function ProductPage({
     const extraSrcs =
       activeHeadboard != null
         ? activeHeadboard.extraSrcs
-        : provencePaintWood && activeFinish != null
-          ? activeFinish.extraSrcs
+        : provencePaintWood
+          ? (activeFinish?.extraSrcs ?? activeWood?.extraSrcs ?? [])
           : activeSeparateFabric != null
             ? activeSeparateFabric.extraSrcs
             : activeUpholstery != null
@@ -375,7 +378,7 @@ export default async function ProductPage({
       ? materialTiers[0].price
       : null
   /* Opening amount follows the backend SKU, not variants[0]. An unpriced selection stays empty. */
-  const openingPrice = (addressableMaterialTiers ? tierPrice : null) ?? pdpDisplayedPrice({
+  const openingPrice = (provencePrices ? provencePrices[initialProvenceFinish] : null) ?? (addressableMaterialTiers ? tierPrice : null) ?? pdpDisplayedPrice({
     selectedVariantId:
       selectedVariant && typeof selectedVariant.id === "string" ? selectedVariant.id : null,
     selectedOwnPrice: price,
@@ -646,6 +649,9 @@ export default async function ProductPage({
     offerAvailability: offerAvailabilityFromPurchase(readProductPurchase(product)),
   })
   const productJsonLd =
+    (executionSelectors.provencePaintWood && buildProvenceFinishJsonLd(product, scalarProductJsonLd, [
+      ...(executionSelectors.finish ?? []), ...(executionSelectors.wood ?? []),
+    ])) ||
     buildOliverDeskJsonLd(product, oliverDesk, scalarProductJsonLd) ||
     (addressableMaterialTiers && buildMaterialVariantJsonLd({
       product, options: addressableMaterialTiers, jsonLd: scalarProductJsonLd,
@@ -729,6 +735,7 @@ export default async function ProductPage({
                 heroObjectPosition={heroObjectPosition}
                 productHandle={handle}
                 executionScopeKey={selectedVariantId ?? handle}
+                initialProvenceFinish={initialProvenceFinish}
               />
             ) : isOliver ? (
               <OliverPdpMediaSwitcher
@@ -891,6 +898,7 @@ export default async function ProductPage({
 
               {/* 6. Price — after required options; gated when execution controls exist */}
               <PdpPriceBlock
+                initialFinishKey={initialProvenceFinish}
                 priceLabel={
                   requestQuotePrice != null
                     ? requestQuotePrice
