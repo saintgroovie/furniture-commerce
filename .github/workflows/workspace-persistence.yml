@@ -5,6 +5,8 @@ on:
       - apps/backend/**
       - apps/workspace/**
       - ops/backup/**
+      - ops/release/prepare-private-desk-runtime.py
+      - ops/release/test-prepare-private-desk-runtime.py
       - .github/workflows/workspace-persistence.yml
   workflow_dispatch:
 permissions:
@@ -71,7 +73,9 @@ jobs:
           node --test scripts/desk-migration.test.cjs
       - name: Private document restore integrity
         working-directory: .
-        run: python3 ops/backup/test-private-files.py
+        run: |
+          python3 ops/backup/test-private-files.py
+          python3 ops/release/test-prepare-private-desk-runtime.py
       - name: Actual Medusa migration loader
         env:
           DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk_http

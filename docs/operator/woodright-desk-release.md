@@ -16,7 +16,7 @@ The owner authorized real database saves on 2026-10-21 and explicitly deferred 1
 2. Create and checksum a fresh `public_production` recovery point through the existing backup helper, with retention disabled for this release operation. Run the disposable restore rehearsal. Record successful recovery evidence before a database or container mutation.
 3. Install the qualified governance/backup bundle through the existing governed mechanism. It must include `woodright-private-files-backup.sh` and `verify-private-files.py`; do not enable attachments while the backup path only archives public product media.
 4. Record the owner's existing authorization in the canonical release approval using the existing compare-and-swap helper. Acquire the global `/srv/woodright/locks/live-cutover.lock` and the environment lease required by the installed pair cutover helper. Keep the global lease across migration/cutover/rollback, and preserve the foreground mutation journal if SSH is lost. No ad hoc Docker replacement or root metadata rewrite.
-5. Run the immutable migration artifact on the production private network with the orchestrator-managed database configuration. Never print/extract credentials into a chat, source, shell argument or evidence file. Run the same qualified artifact in plan mode first:
+5. Prepare only the reviewed desk environment/volume delta with `prepare-private-desk-runtime.py`: bind its exact compose/approval checksums, expected current pair/source and fresh recovery manifest. Its default is a read-only plan; `--apply` acquires both leases and backs up the previous compose. It does not change image pins, secrets, containers, routing or active-release records. Then run the immutable migration artifact on the production private network with the orchestrator-managed database configuration. Never print/extract credentials into a chat, source, shell argument or evidence file. Run the same qualified artifact in plan mode first:
 
    ```sh
    node /server/scripts/desk-migration.cjs
@@ -43,4 +43,4 @@ After staff writes, disable workspace writes first, preserve a fresh recovery po
 
 ## Access boundary
 
-Production approval/active-release files are root-owned and read-only to `leonid`. The repository's `personal-data-mac-safety.mdc` forbids direct `sudo`. If the authorized controller is unavailable to the current session, prepare the exact artifact/evidence packet and report the missing server execution path. Do not work around that restriction with the Docker socket, directory replacement or permission changes.
+Production approval/active-release files are root-owned and read-only to `leonid`. Use the authorized, noninteractive production release controller for this owner-approved rollout; keep local Mac settings and services untouched. If that controller is unavailable, report the missing execution path. Never work around it with the Docker socket, directory replacement or permission changes.
