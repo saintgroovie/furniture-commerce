@@ -1,7 +1,8 @@
 import { inferDisplayGroupAxis, sizeAxisConstructionKey } from "./display-group"
 import type { MaterialTierOption } from "./material-tiers"
-import { readUniformRubAmounts, singleOfferPriceRub } from "./product-json-ld"
+import { buildOfferJsonLd, offerAvailabilityFromPurchase, readUniformRubAmounts, singleOfferPriceRub } from "./product-json-ld"
 import { isRequestQuoteProduct } from "./request-quote"
+import { readProductPurchase } from "./woodright-order/purchase-contract"
 
 type Product = Record<string, unknown>
 type JsonLd = Record<string, unknown>
@@ -80,7 +81,10 @@ export function buildSizeVariantJsonLd(input: {
         ? { "@id": productId }
         : { "@type": "Product", url }),
     },
-    offers: { "@type": "Offer", priceCurrency: "RUB", price, url: jsonLd.url },
+    offers: buildOfferJsonLd({
+      url: String(jsonLd.url), priceRub: price,
+      availability: offerAvailabilityFromPurchase(readProductPurchase(product)),
+    }),
   }
 }
 
@@ -146,7 +150,10 @@ export function buildMaterialVariantJsonLd(input: {
         productID: `${variant.id}:${option.code}`,
         name: `${jsonLd.name} — ${option.label}`, material: option.label,
         inProductGroupWithID: `${product.id}:materials`, isVariantOf: { "@id": groupId },
-        offers: { "@type": "Offer", priceCurrency: "RUB", price: option.price, url: url.href },
+        offers: buildOfferJsonLd({
+          url: url.href, priceRub: option.price!,
+          availability: offerAvailabilityFromPurchase(readProductPurchase(product)),
+        }),
       }
     }),
   }

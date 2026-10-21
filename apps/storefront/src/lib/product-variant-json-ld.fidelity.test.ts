@@ -9,6 +9,7 @@ import {
 function bed(handle: string, sku: string, size: string, price: number): Record<string, unknown> {
   return {
     id: `product-${sku}`, status: "published", handle, title: `Кровать (${size})`,
+    purchase: { sales_mode: "made_to_order", purchase_flow: "cart", can_purchase: true },
     metadata: { display_group: "bed-sizes", display_group_title: "Кровать", material_tiers: { solid_full: { price_multiplier: 1 } } },
     variants: [{ id: `variant-${sku}`, sku, calculated_price: { calculated_amount: price, currency_code: "rub" } }],
   }
@@ -23,6 +24,16 @@ function sizeMarkup(product = small, siblings = [large], price = 70300) {
 }
 const smallLd = sizeMarkup()!
 const largeLd = sizeMarkup(large, [small], 77300)!
+function assertOfferPolicies(offer: Record<string, unknown>, url: string) {
+  assert.equal(offer.availability, "https://schema.org/BackOrder")
+  assert.deepEqual(offer.hasMerchantReturnPolicy, { "@id": "https://woodright.ru/returns#return-policy" })
+  assert.deepEqual(offer.shippingDetails, { "@type": "OfferShippingDetails", hasShippingService: { "@id": "https://woodright.ru/delivery#shipping-service" } })
+  assert.equal(offer.url, url)
+  assert.doesNotMatch(JSON.stringify(offer), /InStock|shippingRate|deliveryTime|shippingDestination|merchantReturnDays|aggregateRating|review/)
+}
+assertOfferPolicies(smallLd.offers as Record<string, unknown>, "https://woodright.ru/product/small")
+assertOfferPolicies(largeLd.offers as Record<string, unknown>, "https://woodright.ru/product/large")
+assert.equal("availability" in sizeMarkup({ ...small, purchase: null })!.offers!, false)
 assert.equal((smallLd.offers as Record<string, unknown>).price, 70300)
 assert.equal((largeLd.offers as Record<string, unknown>).price, 77300)
 assert.equal(smallLd.size, "120×190")
@@ -39,6 +50,7 @@ assert.equal(explicitVariantSize({ title: "Кровать OL-16-1" }), null)
 
 const material = {
   id: "product-MAT", handle: "material", status: "published", title: "Комод",
+  purchase: { sales_mode: "configurable_to_order", purchase_flow: "cart", can_purchase: true },
   metadata: {
     material_tiers: {
       solid_front_ldsp_body: { key: "solid_front_ldsp_body", label_ru: "Фасады из массива + корпус ЛДСП", price_multiplier: .75, position: 0, price_rub: 75000 },
@@ -69,11 +81,12 @@ for (const variant of variants) {
   const code = new URL(String(variant.url)).searchParams.get("material")!
   const selected = materialOptionsForUrl(options, code)[0]
   assert.equal((variant.offers as Record<string, unknown>).price, selected.price)
+  assertOfferPolicies(variant.offers as Record<string, unknown>, String(variant.url))
   assert.equal(variant.material, selected.label)
   assert.equal(variant.sku, "MAT-1")
   assert.deepEqual(variant.image, ["https://woodright.ru/product-static/new-photo.jpg"])
 }
-assert.equal(JSON.stringify(group).includes("availability"), false)
+assert.equal(JSON.stringify(group).includes("InStock"), false)
 assert.equal(verifiedMaterialOptions({ ...material, variants: [...material.variants, material.variants[0]] }, options), null)
 assert.equal(verifiedMaterialOptions({ ...material, metadata: { ...material.metadata, buyer_default_configuration: { ...material.metadata.buyer_default_configuration, min_unit_price: 74000 } } }, options), null)
 assert.equal(verifiedMaterialOptions({ ...material, metadata: { ...material.metadata, material_tiers: { ...material.metadata.material_tiers, unknown: {} } } }, options), null)
