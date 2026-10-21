@@ -1,3 +1,4 @@
+import { jsonLdHtml } from "@/lib/json-ld"
 import { headers } from "next/headers"
 import { catalogItemListJsonLdPayload } from "@/lib/catalog-browse-pool"
 
@@ -15,7 +16,7 @@ export async function CatalogItemListJsonLd({
     <script
       type="application/ld+json"
       nonce={nonce}
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(payload) }}
+      dangerouslySetInnerHTML={{ __html: jsonLdHtml(payload) }}
     />
   )
 }
