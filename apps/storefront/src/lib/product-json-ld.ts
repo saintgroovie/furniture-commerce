@@ -134,7 +134,7 @@ export type ProductJsonLdInput = {
   url: string
   image?: string | null
   images?: string[]
-  dimensions?: { axis: "height" | "width" | "depth"; mm?: number }[]
+  dimensions?: { axis: "height" | "width" | "depth"; mm?: number; values_mm?: number[] }[]
   sku?: string | null
   offerPriceRub?: number | null
   offerAvailability?: ReturnType<typeof offerAvailabilityFromPurchase>
@@ -168,6 +168,13 @@ export function buildProductJsonLd(
   for (const cell of input.dimensions ?? []) {
     if (cell.mm != null && Number.isFinite(cell.mm) && cell.mm > 0) {
       ld[cell.axis] = { "@type": "QuantitativeValue", value: cell.mm, unitCode: "MMT" }
+    } else if (cell.values_mm && cell.values_mm.length >= 2 &&
+        cell.values_mm.every((n) => Number.isFinite(n) && n > 0) &&
+        new Set(cell.values_mm).size === cell.values_mm.length) {
+      const names = { height: "Высота", width: "Ширина", depth: "Глубина" }
+      const list = (ld.additionalProperty ?? []) as Record<string, unknown>[]
+      ld.additionalProperty = [...list, { "@type": "PropertyValue", name: names[cell.axis],
+        value: cell.values_mm.join(" / "), unitText: "мм" }]
     }
   }
   const sku = input.sku?.trim()

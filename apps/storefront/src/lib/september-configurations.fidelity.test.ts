@@ -1,0 +1,58 @@
+import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { provencePriceEvidence, verifiedProvencePrices } from "./verified-september-catalog"
+import { buildProvenceFinishJsonLd, verifiedProvenceFinishPrices } from "./provence-finish-json-ld"
+import { buildProductJsonLd } from "./product-json-ld"
+import { getDimensions, pdpDimensionCells } from "./product-metadata"
+
+assert.equal(readFileSync(new URL("./verified-september-catalog.ts", import.meta.url), "utf8"),
+  readFileSync(new URL("../../../backend/src/lib/verified-september-catalog.ts", import.meta.url), "utf8"))
+
+const source = [
+  ["PV-05-2", 66600, 69900], ["PV-06-2", 47300, 47900], ["PV-08-2", 23300, 24500],
+  ["PV-09-1", 13600, 14300], ["PV-55-1", 19900, 18400], ["PV-62-1", 82100, 86300],
+  ["PV-61-1", 122100, 128200], ["PV-42-2", 47800, 50300], ["PV-65-8", 83000, 87200],
+] as const
+for (const [sku, white, dark] of source) {
+  const handle = sku.toLowerCase()
+  assert.equal(verifiedProvencePrices(handle, white)?.wood, dark)
+  assert.equal(verifiedProvencePrices(`provence:${sku}`, white)?.cream, white)
+  assert.equal(verifiedProvencePrices(handle, white + 1), null, "changed native base must not reuse evidence")
+  const product = { id: `prod-${sku}`, handle, status: "published",
+    metadata: { workbook_row_key: `provence:${sku}`, finish_metadata_source: "provence_paint_wood_split" },
+    variants: [{ id: `variant-${sku}`, sku, calculated_price: { calculated_amount: white, currency_code: "rub" } }],
+    purchase: { sales_mode: "configurable_to_order", can_purchase: true, purchase_flow: "cart", requires_configuration: true,
+      requires_manager: false, stock_relevant: false },
+  }
+  const scalar = buildProductJsonLd({ name: "Предмет", sku, url: `https://woodright.ru/product/${handle}`,
+    images: ["/cream.jpg"], dimensions: [{ axis: "width", mm: 470 }], offerPriceRub: white })
+  const group = buildProvenceFinishJsonLd(product, scalar, [
+    { key: "cream", label: "Молочный", mainSrc: "/cream.jpg", extraSrcs: ["/cream-2.jpg"] },
+    { key: "wood", label: "Тёмное дерево", mainSrc: "/wood.jpg", extraSrcs: [] },
+  ])!
+  assert.equal(group["@type"], "ProductGroup")
+  const variants = group.hasVariant as Record<string, any>[]
+  assert.deepEqual(variants.map((v) => v.offers.price), [white, dark])
+  assert.ok(variants.every((v) => v.sku === sku && v.width.value === 470 && v.offers.availability.endsWith("BackOrder")))
+  assert.ok(variants[1].url.endsWith("?finish=wood"))
+  assert.deepEqual(variants[1].image, ["https://woodright.ru/wood.jpg"])
+  assert.equal(variants[1].offers.hasMerchantReturnPolicy["@id"], "https://woodright.ru/returns#return-policy")
+  assert.equal(verifiedProvenceFinishPrices({ ...product, variants: [] }), null)
+  assert.equal(verifiedProvenceFinishPrices({ ...product, metadata: { ...product.metadata, workbook_row_key: "provence:OTHER" } }), null)
+  assert.equal(verifiedProvenceFinishPrices({ ...product, purchase: { ...product.purchase, can_purchase: false } }), null)
+}
+assert.equal(provencePriceEvidence("OL-65"), null)
+
+const dual = buildProductJsonLd({ name: "Столик", url: "https://woodright.ru/product/pv-06-2",
+  dimensions: [{ axis: "height", values_mm: [750, 1150] }, { axis: "width", mm: 1202 }] })
+assert.equal(dual.height, undefined)
+assert.deepEqual(dual.additionalProperty, [{ "@type": "PropertyValue", name: "Высота", value: "750 / 1150", unitText: "мм" }])
+
+const product = { id: "prod_01KV69A7AKTR1KH8GH90KC8YAJ", handle: "av-05-1",
+  metadata: { workbook_row_key: "ВВ:21", workbook_product_code: "WW-05-1" } }
+assert.deepEqual(getDimensions(product), { height_mm: 900, width_mm: 840, depth_mm: 440 })
+assert.equal(getDimensions({ ...product, id: "other" }), null)
+assert.equal(getDimensions({ ...product, handle: "pa-05-3" }), null, "ambiguous 560 mm body stays unfilled")
+assert.equal(getDimensions({ ...product, metadata: { ...product.metadata, dimensions: { height_mm: 123 } } })?.height_mm, 123)
+assert.equal(pdpDimensionCells(getDimensions(product)!).length, 3)
+console.log("september-configurations.fidelity.test.ts: ok")
