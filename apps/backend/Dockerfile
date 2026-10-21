@@ -54,6 +54,9 @@ RUN if [ -n "$WOODRIGHT_BACKEND_SOURCE_SHA" ]; then \
     fi
 RUN useradd --system --uid 10001 --create-home medusa \
  && mkdir -p /server/static \
+ && mkdir -p /var/lib/woodright/private-files \
+ && chown medusa:medusa /var/lib/woodright/private-files \
+ && chmod 0700 /var/lib/woodright/private-files \
  && chown -R medusa:medusa /server/static /home/medusa
 
 # App root = compiled Medusa server artifact (JS config), not TS sources.

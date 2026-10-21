@@ -226,6 +226,18 @@ async function ensureNotBespokeForCart(
 export default defineMiddlewares({
   routes: [
     {
+      matcher: "/hooks/woodright/mango/events/call",
+      method: ["POST"],
+      bodyParser: { sizeLimit: "128kb" },
+      middlewares: [],
+    },
+    {
+      matcher: "/admin/woodright/desk/commands",
+      method: ["POST"],
+      bodyParser: { sizeLimit: "12mb" },
+      middlewares: [],
+    },
+    {
       // Broad matcher: redact before publishable-key / route handlers when possible.
       matcher: "/*",
       middlewares: [redactSensitiveAccessLogUrls],
