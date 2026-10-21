@@ -4,7 +4,7 @@
  * Offer is emitted only for one unambiguous purchasable RUB price.
  */
 
-import type { StorefrontPurchaseDto } from "./woodright-order/purchase-contract"
+import { isDirectCartPurchase, type StorefrontPurchaseDto } from "./woodright-order/purchase-contract"
 import { merchantPolicyIds } from "./merchant-policy-json-ld"
 
 const HANDLE_RE = /^[a-z0-9][a-z0-9-]{0,120}$/i
@@ -13,8 +13,8 @@ const HANDLE_RE = /^[a-z0-9][a-z0-9-]{0,120}$/i
 export function offerAvailabilityFromPurchase(purchase: StorefrontPurchaseDto | null) {
   if (!purchase) return null
   if (purchase.sales_mode === "unavailable") return "https://schema.org/OutOfStock"
-  if (purchase.purchase_flow !== "cart") return null
-  if (purchase.sales_mode === "in_stock" && purchase.can_purchase === true) {
+  if (!isDirectCartPurchase(purchase)) return null
+  if (purchase.sales_mode === "in_stock") {
     return "https://schema.org/InStock"
   }
   if (purchase.sales_mode === "made_to_order" || purchase.sales_mode === "configurable_to_order") {
@@ -23,6 +23,27 @@ export function offerAvailabilityFromPurchase(purchase: StorefrontPurchaseDto | 
     return "https://schema.org/BackOrder"
   }
   return null
+}
+
+/** Shared by scalar, size and material offers so policy fields cannot drift. */
+export function buildOfferJsonLd(input: {
+  url: string
+  priceRub: number
+  availability?: ReturnType<typeof offerAvailabilityFromPurchase>
+}): Record<string, unknown> {
+  const ids = merchantPolicyIds(input.url)
+  return {
+    "@type": "Offer",
+    priceCurrency: "RUB",
+    price: input.priceRub,
+    url: input.url,
+    ...(input.availability ? { availability: input.availability } : {}),
+    hasMerchantReturnPolicy: { "@id": ids.returns },
+    shippingDetails: {
+      "@type": "OfferShippingDetails",
+      hasShippingService: { "@id": ids.shipping },
+    },
+  }
 }
 
 export function productCanonicalPath(
@@ -156,18 +177,11 @@ export function buildProductJsonLd(
     Number.isFinite(input.offerPriceRub) &&
     input.offerPriceRub > 0
   ) {
-    ld.offers = {
-      "@type": "Offer",
-      priceCurrency: "RUB",
-      price: input.offerPriceRub,
+    ld.offers = buildOfferJsonLd({
       url: input.url,
-      ...(input.offerAvailability ? { availability: input.offerAvailability } : {}),
-      hasMerchantReturnPolicy: { "@id": merchantPolicyIds(input.url).returns },
-      shippingDetails: {
-        "@type": "OfferShippingDetails",
-        hasShippingService: { "@id": merchantPolicyIds(input.url).shipping },
-      },
-    }
+      priceRub: input.offerPriceRub,
+      availability: input.offerAvailability,
+    })
   }
   return ld
 }
