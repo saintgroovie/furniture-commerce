@@ -10,6 +10,15 @@ export function sellerOrganizationId(siteUrl: string): string {
 export function buildOrganizationJsonLd(siteUrl: string) {
   const origin = new URL(siteUrl).origin
   const showroom = getShowroomOrganizationContactLd()
+  // The same wordmark is visible in the site's header/footer. This identifies
+  // the company; it does not claim to be a photograph of the showroom.
+  const brandImage = {
+    "@type": "ImageObject",
+    url: `${origin}/brand/woodright-wordmark.svg`,
+    width: 1092,
+    height: 140,
+    caption: "Логотип Woodright",
+  }
   return {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -18,12 +27,8 @@ export function buildOrganizationJsonLd(siteUrl: string) {
     legalName: woodrightSeller.fullName,
     taxID: woodrightSeller.inn,
     url: `${origin}/`,
-    logo: {
-      "@type": "ImageObject",
-      url: `${origin}/brand/woodright-wordmark.svg`,
-      width: 1092,
-      height: 140,
-    },
+    logo: brandImage,
+    image: brandImage,
     telephone: showroom.telephone,
     address: { "@type": "PostalAddress", ...sellerPostalAddress },
     location: {
