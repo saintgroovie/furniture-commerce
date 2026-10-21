@@ -255,6 +255,20 @@ const POSITIONS: Record<string, { id: string; row_key: string; original: Record<
       1392,
       1700
     ]
+  },
+  "ol-21-1": {
+    "id": "prod_01KNTBXADJNM2C7N1WJDACRGR2",
+    "row_key": "oliver:OL-21-1",
+    "original": {
+      "depth_mm": 1000,
+      "width_mm": 1940,
+      "height_mm": 780
+    },
+    "axis": "width",
+    "values": [
+      1940,
+      2440
+    ]
   }
 }
 
