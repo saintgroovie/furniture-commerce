@@ -51,6 +51,8 @@ type Props = {
   variantId?: string
   /** Proven existing photograph for a selected legacy SKU without its own gallery metadata. */
   variantImage?: string
+  /** Verified finish selected by the server before the gallery publishes its gate. */
+  initialFinishKey?: "cream" | "wood"
 }
 
 function getProductType(product: Record<string, unknown>): string | undefined {
@@ -81,6 +83,7 @@ export function ProductCta({
   materialTiers = null,
   variantId: variantIdProp,
   variantImage,
+  initialFinishKey,
 }: Props) {
   const [adding, setAdding] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -239,6 +242,7 @@ export function ProductCta({
       const finishKey =
         selection?.finishKey?.trim() ||
         selection?.gate.finishKey?.trim() ||
+        initialFinishKey ||
         null
       const galleryImage = variantGalleryImage(variantForCart) ?? variantImage
       const metadata: Record<string, unknown> = {
