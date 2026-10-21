@@ -4,8 +4,16 @@ import Image from "next/image"
 import Link from "next/link"
 import { BespokeBadge } from "@/components/bespoke-badge"
 import { WoodrightWordmark } from "@/components/woodright-wordmark"
+import { bespokeMedia } from "@/components/home/bespoke-media"
+import { kidsMedia } from "@/components/home/kids-media"
 import { footer } from "@/lib/woodright-copy"
 import { useChromeVisual, useSiteSection } from "@/lib/use-site-section"
+
+const sectionImages = {
+  main: "/images/footer/bedroom.webp",
+  kids: kidsMedia.heroSlides[0].src,
+  bespoke: bespokeMedia.directions.furniture.src,
+} as const
 
 /** Shared buyer footer. Section identity follows the header's transition. */
 export function SiteFooter({ year }: { year: number }) {
@@ -16,8 +24,8 @@ export function SiteFooter({ year }: { year: number }) {
   return (
     <footer className={`wr-footer${snap ? " is-kids-snap" : ""}`} data-section={visual} id="site-footer">
       <section className="wr-footer-invitation" aria-labelledby="footer-invitation-title">
-        <div className="wr-footer-photo">
-          <Image src="/images/footer/bedroom.webp" alt="" fill sizes="(max-width: 759px) 100vw, 55vw" loading="lazy" />
+        <div className="wr-footer-photo" data-section={section}>
+          <Image src={sectionImages[section]} alt="" fill sizes="(max-width: 759px) 100vw, 55vw" loading="lazy" unoptimized={section === "kids"} />
         </div>
         <div className="wr-footer-invitation-copy">
           <p className="wr-footer-eyebrow">{footer.invitation.eyebrow}</p>
