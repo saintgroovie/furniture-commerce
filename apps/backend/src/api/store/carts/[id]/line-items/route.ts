@@ -13,6 +13,7 @@ import {
   isKnownFinishExecutionKey,
 } from "../../../../../lib/finish-color-premium-contract"
 import { productMetadataForVariant } from "../../../../../lib/variant-capabilities"
+import { provencePriceEvidence, verifiedProvencePrices, verifiedWwPrice, wwPriceEvidence } from "../../../../../lib/verified-september-catalog"
 
 /**
  * Override of the core POST /store/carts/:id/line-items route.
@@ -155,6 +156,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     entity: "variant",
     fields: [
       "id",
+      "sku",
       "product.id",
       "product.metadata",
       "metadata",
@@ -172,6 +174,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   })
   const variant = variants?.[0] as
     | {
+        id?: string
+        sku?: string
         product?: { metadata?: Record<string, unknown> }
         metadata?: Record<string, unknown>
         calculated_price?: { calculated_amount?: number | string | null }
@@ -185,7 +189,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const productMeta = productMetadataForVariant(variant.product?.metadata, variant.metadata)
   const tiers = parseMaterialTiers(productMeta)
-  const needsConfiguredPricing = Boolean(tiers) || Boolean(executionCode) || Boolean(finishKey)
+  const needsConfiguredPricing = Boolean(tiers) || Boolean(executionCode) || Boolean(finishKey) || Boolean(wwPriceEvidence(variantId))
 
   if (needsConfiguredPricing) {
     let materialMultiplier = 1
@@ -249,11 +253,21 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       return
     }
 
-    const resolved = resolveConfiguredUnitPrice(
+    const catalogKey = typeof productMeta?.workbook_row_key === "string" ? productMeta.workbook_row_key : null
+    const catalogPrices = verifiedProvencePrices(catalogKey, base.amount)
+    const motifPrice = verifiedWwPrice(variant.id, variant.sku, base.amount)
+    if ((provencePriceEvidence(catalogKey) && !catalogPrices) || (wwPriceEvidence(variant.id) && motifPrice == null)) {
+      res.status(409).json({ message: "Finish prices need catalog revalidation.", code: "CATALOG_PRICE_CHANGED" })
+      return
+    }
+    const resolved = motifPrice ?? (catalogPrices
+      ? (finishKey === "wood" ? catalogPrices.wood : catalogPrices.cream)
+      : resolveConfiguredUnitPrice(
       base.amount,
       materialMultiplier,
       colorMultiplier
-    )
+    ))
+    if (catalogPrices) metadata.finish_color_multiplier = resolved / base.amount
     metadata.resolved_unit_price = resolved
     /* Always pin unit_price on the configured path so Medusa cannot replace the
        amount after add-to-cart (including when resolved === base). */

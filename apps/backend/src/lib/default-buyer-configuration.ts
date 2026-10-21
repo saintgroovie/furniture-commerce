@@ -14,6 +14,7 @@ import {
   resolveMaterialTierPrice,
 } from "./material-tier-contract"
 import { productMetadataForVariant } from "./variant-capabilities"
+import { verifiedWwPrice } from "./verified-september-catalog"
 
 export type BuyerDefaultConfiguration = {
   /** Cheapest valid unit price in RUB (integer). */
@@ -44,7 +45,7 @@ function variantUnitPrice(variant: Record<string, unknown>): number | null {
     Number.isFinite(calculated.calculated_amount) &&
     calculated.calculated_amount > 0
   ) {
-    return calculated.calculated_amount
+    return verifiedWwPrice(variant.id, variant.sku, calculated.calculated_amount) ?? calculated.calculated_amount
   }
   const prices = variant.prices
   if (!Array.isArray(prices)) return null
@@ -52,7 +53,7 @@ function variantUnitPrice(variant: Record<string, unknown>): number | null {
     if (!p || typeof p !== "object") continue
     const amount = (p as { amount?: unknown }).amount
     if (typeof amount === "number" && Number.isFinite(amount) && amount > 0) {
-      return amount
+      return verifiedWwPrice(variant.id, variant.sku, amount) ?? amount
     }
   }
   return null

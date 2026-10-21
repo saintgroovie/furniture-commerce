@@ -10,6 +10,7 @@
  */
 
 import { getPrice } from "@/lib/format"
+import { verifiedMaterialTierCopy } from "./verified-september-catalog"
 
 export const MATERIAL_TIER_LDSP = "solid_front_ldsp_body"
 export const MATERIAL_TIER_FULL_SOLID = "solid_full"
@@ -67,10 +68,11 @@ export function buildMaterialTierOptions(
   for (const [code, value] of Object.entries(raw as Record<string, unknown>)) {
     if (!isValidTierEntry(value)) continue
     if (value.key !== code) continue
+    const verifiedCopy = verifiedMaterialTierCopy(meta, code)
     options.push({
       code,
-      label: value.label_ru,
-      description:
+      label: verifiedCopy?.label ?? value.label_ru,
+      description: verifiedCopy ? verifiedCopy.description || null :
         typeof value.description_ru === "string" && value.description_ru.trim()
           ? value.description_ru
           : null,

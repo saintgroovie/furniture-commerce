@@ -1,3 +1,5 @@
+import { verifiedMaterialTierCopy } from "./verified-september-catalog"
+
 /**
  * Canonical material tier (construction execution) contract.
  *
@@ -82,7 +84,8 @@ export function parseMaterialTiers(
   for (const [code, value] of Object.entries(raw as Record<string, unknown>)) {
     if (!isValidTierEntry(value)) continue
     if (value.key !== code) continue
-    entries.push(value)
+    const verifiedCopy = verifiedMaterialTierCopy(metadata, code)
+    entries.push(verifiedCopy ? { ...value, label_ru: verifiedCopy.label, description_ru: verifiedCopy.description } : value)
   }
   if (entries.length < 2) return null
   return entries.slice().sort((a, b) => a.position - b.position)

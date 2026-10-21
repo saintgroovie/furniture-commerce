@@ -6,6 +6,7 @@ import {
 import { isOliverKidsHandle } from "@/lib/oliver-kids-scope"
 import { resolvePublicProductTitle } from "@/lib/catalog-normalization"
 import { openingVariant } from "@/lib/opening-variant"
+import { verifiedMissingDimensions, verifiedPositionDimensions } from "./verified-september-catalog"
 
 type Dimensions = {
   width_mm?: number
@@ -374,7 +375,7 @@ function readEntityDimensions(
     m.dimensions_normalized && typeof m.dimensions_normalized === "object"
       ? (m.dimensions_normalized as Record<string, unknown>)
       : undefined
-  const raw = dimensionBagHasValues(primary) ? primary : fallback
+  const raw = verifiedPositionDimensions(entity) ?? (dimensionBagHasValues(primary) ? primary : fallback) ?? verifiedMissingDimensions(entity)
   if (!raw || typeof raw !== "object") return { dim: null, blocked: [] }
   const bag = readAxisStates(raw)
   const dim: Dimensions = {}

@@ -87,6 +87,7 @@ type Props = {
   atfHero?: boolean
   /** Product handle for evidence-backed near-dup collapse. */
   productHandle?: string
+  initialProvenceFinish?: "cream" | "wood"
   /**
    * Selected variant id. Changing it remounts execution state so a finish
    * from the previous SKU cannot stay selected.
@@ -255,6 +256,7 @@ function ProductCardMediaGalleryCoreInner({
   priorityHero = false,
   atfHero = false,
   productHandle,
+  initialProvenceFinish = "cream",
 }: Props) {
   const isGreenwichBed = Boolean(greenwichBedMatrix && greenwichBedMatrix.length > 0)
   const bedInteriorSrcs = sharedInteriorSrcs ?? []
@@ -332,7 +334,7 @@ function ProductCardMediaGalleryCoreInner({
       null
   )
   const [activeProvenceMediaKey, setActiveProvenceMediaKey] = useState<"cream" | "wood" | null>(
-    "cream"
+    initialProvenceFinish
   )
   const [displayHeroSrc, setDisplayHeroSrc] = useState(mainSrc.trim())
   const [heroFailed, setHeroFailed] = useState(false)
@@ -1777,8 +1779,9 @@ function ProductCardMediaGalleryCoreInner({
 
     const standardFinishKey = finishVariants?.[0]?.key ?? null
     const offeredFinishKey = offeredExecutionKey(activeFinishKey, finishVariants)
-    const finishKeyForPrice =
-      showFinish || isProvencePaintWood
+    const finishKeyForPrice = isProvencePaintWood
+      ? activeProvenceMediaKey
+      : showFinish
         ? offeredFinishKey ?? standardFinishKey
         : null
 
@@ -2205,6 +2208,7 @@ export function ProductCardMediaGalleryCore(props: Props) {
       )
       .join("\u0003") ?? "",
     props.productHandle ?? "",
+    props.initialProvenceFinish ?? "",
     props.executionScopeKey ?? "",
     props.layout ?? "card",
   ].join("|")

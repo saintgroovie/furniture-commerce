@@ -15,6 +15,7 @@ import {
 } from "@/lib/finish-color-premium"
 import { formatRub } from "@/lib/format"
 import { promotionCopy } from "@/lib/woodright-copy"
+import { verifiedProvencePrices } from "@/lib/verified-september-catalog"
 
 type Props = {
   /** Preformatted price label from server (existing getPrice / request-quote). */
@@ -45,6 +46,7 @@ type Props = {
   materialTiers?: MaterialTierOption[] | null
   /** request_quote products keep the «от … ₽» reference-price shape. */
   requestQuote?: boolean
+  initialFinishKey?: "cream" | "wood"
 }
 
 /**
@@ -61,6 +63,7 @@ export function PdpPriceBlock({
   productKey,
   materialTiers = null,
   requestQuote = false,
+  initialFinishKey = "cream",
 }: Props) {
   const gate = usePdpPurchaseGate()
   const gateOk = gateMatchesProduct(gate, productKey)
@@ -88,7 +91,11 @@ export function PdpPriceBlock({
       const tier = materialTiers.find((t) => t.code === code) ?? materialTiers[0]
       materialMultiplier = tier.multiplier
     }
-    const amount = resolveConfiguredUnitPrice(
+    const catalogPrices = verifiedProvencePrices(productKey, basePrice)
+    const selectedFinish = gateOk ? gate.finishKey : initialFinishKey
+    const amount = catalogPrices
+      ? (selectedFinish === "wood" ? catalogPrices.wood : catalogPrices.cream)
+      : resolveConfiguredUnitPrice(
       basePrice,
       materialMultiplier,
       colorMultiplier
