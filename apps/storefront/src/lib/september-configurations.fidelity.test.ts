@@ -1,3 +1,5 @@
+import { buildMaterialTierOptions } from "./material-tiers"
+import { verifiedMaterialTierCopy } from "./verified-september-catalog"
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { provencePriceEvidence, verifiedProvencePrices } from "./verified-september-catalog"
@@ -69,4 +71,19 @@ for (const [id, sku, base, expected] of [["variant_01KV69A7H4QG73VV860W96G182", 
   assert.equal(resolveCatalogCardPrice(product).amount, expected)
   assert.deepEqual(readUniformRubAmounts(product), [expected])
   assert.equal(priceOfVariant({ ...variant, id: "other" }), base)
+}
+
+for (const [legacy, full, ldsp] of [["MN-05-2", 98670, 75800], ["MN-08-1", 27060, 22900], ["MN-61-1", 167090, 125450]] as const) {
+  const metadata = { collection: "monchelsea", woodright_recovery: { legacy_code: legacy }, material_tiers: {
+    solid_full: { key: "solid_full", label_ru: "Массив", price_rub: full, price_multiplier: 1, position: 1 },
+    solid_front_ldsp_body: { key: "solid_front_ldsp_body", label_ru: "Фасады из массива + корпус ЛДСП", description_ru: "Массив", price_rub: ldsp, price_multiplier: ldsp / full, position: 0 },
+  } }
+  const options = buildMaterialTierOptions({ metadata }, full)!
+  assert.equal(options[0].label, "ЛДСП + МДФ")
+  assert.equal(options[0].description, null)
+  assert.equal(options[0].price, ldsp)
+  assert.equal(options[1].label, "Массив")
+  assert.equal(verifiedMaterialTierCopy({ ...metadata, collection: "other" }, "solid_front_ldsp_body"), null)
+  assert.equal(verifiedMaterialTierCopy({ ...metadata, woodright_recovery: { legacy_code: "MN-OTHER" } }, "solid_front_ldsp_body"), null)
+  assert.equal(verifiedMaterialTierCopy({ ...metadata, material_tiers: { ...metadata.material_tiers, solid_full: { ...metadata.material_tiers.solid_full, price_rub: full + 1 } } }, "solid_front_ldsp_body"), null)
 }

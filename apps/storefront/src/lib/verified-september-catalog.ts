@@ -398,3 +398,20 @@ export function verifiedWwPrice(variantId: unknown, sku: unknown, nativeBase: nu
   const entry = wwPriceEvidence(variantId)
   return entry && sku === entry.sku && nativeBase === entry.native_base ? entry.price : null
 }
+
+// МОНЧЕЛСИ D5 names this execution «ЛДСП+МДФ»; F/G18,54,72
+// confirm these three recovered identities and their two existing prices.
+const MONCHELSEA_MATERIALS: Record<string, { full: number; ldsp: number }> = {
+  "MN-05-2": { full: 98670, ldsp: 75800 },
+  "MN-08-1": { full: 27060, ldsp: 22900 },
+  "MN-61-1": { full: 167090, ldsp: 125450 },
+}
+
+export function verifiedMaterialTierCopy(metadata: Record<string, unknown> | null | undefined, code: string) {
+  if (metadata?.collection !== "monchelsea" || code !== "solid_front_ldsp_body") return null
+  const recovery = metadata.woodright_recovery as { legacy_code?: unknown } | undefined
+  const evidence = typeof recovery?.legacy_code === "string" ? MONCHELSEA_MATERIALS[recovery.legacy_code] : null
+  const tiers = metadata.material_tiers as Record<string, { price_rub?: unknown }> | undefined
+  if (!evidence || tiers?.solid_full?.price_rub !== evidence.full || tiers?.solid_front_ldsp_body?.price_rub !== evidence.ldsp) return null
+  return { label: "ЛДСП + МДФ", description: "" }
+}
