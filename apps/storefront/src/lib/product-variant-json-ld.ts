@@ -2,6 +2,7 @@ import { inferDisplayGroupAxis, sizeAxisConstructionKey } from "./display-group"
 import type { MaterialTierOption } from "./material-tiers"
 import { buildOfferJsonLd, offerAvailabilityFromPurchase, readUniformRubAmounts, singleOfferPriceRub } from "./product-json-ld"
 import { isRequestQuoteProduct } from "./request-quote"
+import { getSeoDescriptionSource } from "./product-seo"
 import { readProductPurchase } from "./woodright-order/purchase-contract"
 
 type Product = Record<string, unknown>
@@ -44,6 +45,8 @@ export function buildSizeVariantJsonLd(input: {
   jsonLd: JsonLd
   displayedPriceRub: number | null
   requestQuote: boolean
+  /** Full, identity-matched PDP sources; the lean browse DTO omits descriptions. */
+  descriptionMembers?: Array<Product | null>
 }): JsonLd | null {
   const { product, jsonLd, siblings } = input
   const meta = metadata(product)
@@ -70,12 +73,25 @@ export function buildSizeVariantJsonLd(input: {
   const productId = `${jsonLd.url}#product`
   // No group URL: sizes live on separate canonical pages. The stable @id is shared.
   const groupId = `${[...urls].sort()[0]}#group-${group}`
+  // A family description must be true for every size and match this PDP's
+  // published description. Different or missing member copy stays unshared.
+  const description = getSeoDescriptionSource(product)?.trim()
+  const descriptionMembers = input.descriptionMembers ?? members
+  const sharedDescription = description && jsonLd.description === description &&
+    descriptionMembers.length === members.length &&
+    descriptionMembers.every((source, index) => source &&
+      typeof source.id === "string" && source.id === members[index].id &&
+      publicHandle(source) === publicHandle(members[index]) &&
+      source.title === members[index].title && metadata(source).display_group === group &&
+      getSeoDescriptionSource(source)?.trim() === description)
+    ? description : null
   return {
     ...jsonLd, "@id": productId, size: sizes[0],
     inProductGroupWithID: group,
     isVariantOf: {
       "@type": "ProductGroup", "@id": groupId, productGroupID: group,
       name: String(meta.display_group_title || product.title),
+      ...(sharedDescription ? { description: sharedDescription } : {}),
       brand: jsonLd.brand, variesBy: ["https://schema.org/size"],
       hasVariant: urls.map((url) => url === jsonLd.url
         ? { "@id": productId }

@@ -924,6 +924,16 @@ if [[ "\${1:-}" == "-n" && "\${2:-}" == "sha256sum" && "\${3:-}" == "--" ]]; the
   printf '%s  %s\n' "$PIN_WANT" "\${4:-}"
   exit 0
 fi
+# The governed reader may query only these release pins from the protected fixture.
+if [[ "\${1:-}" == "-n" && "\${2:-}" == "python3" && "\${3:-}" == "-" && "\${4:-}" == "$ENV_FILE" ]]; then
+  case "\${5:-}" in
+    WOODRIGHT_BACKEND_IMAGE) printf '%s\n' "$OLD_BE_REF" ;;
+    WOODRIGHT_STOREFRONT_IMAGE) printf '%s\n' "$OLD_SF_REF" ;;
+    WOODRIGHT_RELEASE_SHA) printf '%s\n' "9946b42aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" ;;
+    *) exit 1 ;;
+  esac
+  exit 0
+fi
 echo "unexpected sudo argv: \$*" >&2
 exit 1
 EOF

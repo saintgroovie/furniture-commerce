@@ -152,5 +152,32 @@ function run(args, extraEnv = {}) {
   check(r.status !== 0, "spoofed peer SF digest refused", r.stderr)
 }
 
+// Regression: an operator may not read the protected env file directly.
+// Missing keys are distinct from denied reads; only governed values may leave it.
+{
+  const code = fs.readFileSync(helper, "utf8").match(/pin_value_of\(\) \{[\s\S]*?\n\}/)[0]
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "wr-public-pin-reader-"))
+  const envFile = path.join(dir, ".env")
+  const library = path.join(root, "ops/lib/woodright-compose-env-authority.sh")
+  const query = (prelude = ":", key = "WOODRIGHT_STOREFRONT_IMAGE") => spawnSync("bash", [
+    "-c", `set -e; source "$1"; COMPOSE_ENV_FILE="$2"; die(){ echo "$*" >&2; exit 2; }; ${code}; ${prelude}; pin_value_of "$3"`,
+    "pin-reader-test", library, envFile, key,
+  ], { encoding: "utf8" })
+  fs.writeFileSync(envFile, "WOODRIGHT_STOREFRONT_IMAGE=repo@sha256:abc\nPRIVATE_SECRET=never-print-this\n")
+  let result = query()
+  check(result.status === 0 && result.stdout.trim() === "repo@sha256:abc", "governed pin value is read exactly")
+  check(!result.stdout.includes("never-print-this"), "pin reader does not emit unrelated env values")
+  result = query(":", "WOODRIGHT_RELEASE_SHA")
+  check(result.status === 0 && result.stdout === "", "missing governed key remains absent")
+  result = query("wr_compose_env_query_governed_value(){ return 1; }")
+  check(result.status !== 0 && /cannot read governed compose pin/.test(result.stderr), "denied pin read fails instead of becoming a missing key")
+  result = query(":", "PRIVATE_SECRET")
+  check(result.status !== 0 && !result.stdout.includes("never-print-this"), "non-governed env key is refused")
+  fs.appendFileSync(envFile, "WOODRIGHT_STOREFRONT_IMAGE=other\n")
+  result = query()
+  check(result.status !== 0 && /DUPLICATE/.test(result.stderr), "duplicate governed pins are refused")
+  fs.rmSync(dir, { recursive: true, force: true })
+}
+
 fs.rmSync(metaRoot, { recursive: true, force: true })
 process.exit(failed ? 1 : 0)
