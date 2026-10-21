@@ -99,6 +99,20 @@ def inspect(name):
     return {'container_id': identity, 'image': image, 'source': source}
 
 
+def workspace_baseline(existing, source, image, root=ROOT, route=ROUTE):
+    # A pending deployment is the latest runtime authority even when an older verified release exists.
+    metadata = root / 'PENDING_RELEASE.json'
+    if not metadata.exists() and not metadata.is_symlink():
+        metadata = root / 'ACTIVE_RELEASE.json'
+    raw = regular(metadata)
+    packet = json.loads(raw)
+    if packet.get('schema') != 'woodright-team-workspace-release-v1' or packet.get('state') not in ['deployed_not_verified', 'done_deployed_and_verified']:
+        raise ValueError('aborted_conflict: workspace release state is not updateable')
+    if not existing or existing['source'] != source or existing['image'] != image or existing != packet.get('workspace') or packet.get('source') != source or digest(regular(route)) != packet.get('route_sha256') or digest(regular(root / 'compose.json')) != packet.get('compose_sha256'):
+        raise ValueError('aborted_conflict: active workspace changed')
+    return {'state': packet['state'], 'metadata_path': str(metadata), 'metadata_sha256': digest(raw), 'raw': raw}
+
+
 def command(argv, log):
     # Remain in foreground and retain leases until the exact child has stopped, including on signals.
     with log.open('ab') as output:
@@ -182,21 +196,26 @@ def main():
         write(ROOT / 'ACTIVE_RELEASE.json', json_bytes(packet))
         write(ROOT / 'PENDING_RELEASE.json', json_bytes(packet))
         print(json.dumps({'status': packet['state'], 'url': URL, 'source': args.source})); return
+    baseline = None
     if args.expected_workspace_source == 'absent':
-        if args.expected_workspace_ref != 'absent' or existing or ROUTE.exists() or (ROOT / 'compose.json').exists(): raise ValueError('aborted_conflict: workspace already exists')
+        if args.expected_workspace_ref != 'absent' or existing or ROUTE.exists() or any((ROOT / name).exists() for name in ['compose.json', 'PENDING_RELEASE.json', 'ACTIVE_RELEASE.json']): raise ValueError('aborted_conflict: workspace already exists')
     else:
-        active = json.loads(regular(ROOT / 'ACTIVE_RELEASE.json'))
-        if not existing or existing['source'] != args.expected_workspace_source or existing['image'] != args.expected_workspace_ref or existing != active['workspace'] or digest(regular(ROUTE)) != active['route_sha256'] or digest(regular(ROOT / 'compose.json')) != active['compose_sha256']:
-            raise ValueError('aborted_conflict: active workspace changed')
+        baseline = workspace_baseline(existing, args.expected_workspace_source, args.expected_workspace_ref)
     compose = json_bytes(compose_document(args.image, args.backend_source)); route = json_bytes(router_document())
     if args.mode == 'plan':
-        print(json.dumps({'mode':'plan','url':URL,'source':args.source,'image':args.image,'backend':backend,'previous_workspace':existing,'compose_sha256':digest(compose),'route_sha256':digest(route),'anonymous_access':'login_only','public_raw_admin':False}));return
+        print(json.dumps({'mode':'plan','url':URL,'source':args.source,'image':args.image,'backend':backend,'previous_workspace':existing,'previous_release_state':baseline['state'] if baseline else None,'compose_sha256':digest(compose),'route_sha256':digest(route),'anonymous_access':'login_only','public_raw_admin':False}));return
     ROOT.mkdir(mode=0o700, exist_ok=True)
     operation = ROOT / ('operation-' + datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid.uuid4().hex[:8]); operation.mkdir(mode=0o700)
     previous_compose = regular(ROOT / 'compose.json') if (ROOT / 'compose.json').exists() else None
     previous_route = regular(ROUTE) if ROUTE.exists() else None
     if previous_compose: write(operation / 'compose.before.json', previous_compose)
     if previous_route: write(operation / 'route.before.json', previous_route)
+    previous_metadata = {}
+    for name in ['PENDING_RELEASE.json', 'ACTIVE_RELEASE.json', 'ACTIVE_OWNER.json']:
+        path = ROOT / name
+        previous_metadata[name] = regular(path) if path.exists() or path.is_symlink() else None
+        if previous_metadata[name] is not None: write(operation / (name + '.before'), previous_metadata[name])
+    if baseline: write(operation / 'baseline.json', json_bytes({key: value for key, value in baseline.items() if key != 'raw'}))
     write(operation / 'owner-intent.json', intent_raw); write(operation / 'build-manifest.json', artifact_raw)
     SECRET.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     if SECRET.exists():
@@ -222,7 +241,7 @@ def main():
             except Exception:
                 if attempt == 19: raise
                 time.sleep(1)
-        packet = {'schema':'woodright-team-workspace-release-v1','state':'deployed_not_verified','source':args.source,'workspace':inspect(CONTAINER),'backend':backend,'url':URL,'compose_sha256':digest(compose),'route_sha256':digest(route),'build_manifest_sha256':digest(artifact_raw),'workflow_run_id':artifact['workflow_run_id'],'workflow_run_attempt':artifact['workflow_run_attempt'],'owner_authorization_sha256':digest(intent_raw),'rollback_evidence':str(operation),'previous_workspace':existing,'controller':'deploy-team-workspace.py','claim_bypass_closed':False,'activated_at':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+        packet = {'schema':'woodright-team-workspace-release-v1','state':'deployed_not_verified','source':args.source,'workspace':inspect(CONTAINER),'backend':backend,'url':URL,'compose_sha256':digest(compose),'route_sha256':digest(route),'build_manifest_sha256':digest(artifact_raw),'workflow_run_id':artifact['workflow_run_id'],'workflow_run_attempt':artifact['workflow_run_attempt'],'owner_authorization_sha256':digest(intent_raw),'rollback_evidence':str(operation),'previous_workspace':existing,'previous_release_state':baseline['state'] if baseline else None,'previous_release_metadata_sha256':baseline['metadata_sha256'] if baseline else None,'controller':'deploy-team-workspace.py','claim_bypass_closed':False,'activated_at':datetime.datetime.now(datetime.timezone.utc).isoformat()}
         write(ROOT/'PENDING_RELEASE.json',json_bytes(packet))
         write(ROOT/'ACTIVE_OWNER.json',json_bytes({'owner':'deploy-team-workspace.py','runtime_role':'team_workspace','url':URL,'database':'Medusa public_production_db via authenticated BFF','auto_deploy':False,'claim_bypass_closed':False,'source':args.source}))
         print(json.dumps({'status':packet['state'],'url':URL,'source':args.source,'evidence':str(operation)}))
@@ -237,6 +256,25 @@ def main():
         else:
             write(ROOT/'compose.json',previous_compose)
             command(compose_cli + ['up','-d','--no-deps','--pull','never','workspace'], operation/'rollback.log')
+            for attempt in range(40):
+                try: check_http('http://127.0.0.1:44320/os', existing['source']); break
+                except Exception:
+                    if attempt == 39: raise
+                    time.sleep(1)
+            restored = inspect(CONTAINER)
+            if not restored or restored['image'] != existing['image'] or restored['source'] != existing['source']:
+                raise ValueError('rollback runtime identity was not confirmed')
+            write(operation / 'rollback-runtime.json', json_bytes(restored))
+        for name, raw in previous_metadata.items():
+            if raw is None: (ROOT / name).unlink(missing_ok=True)
+            else:
+                if previous_compose and name in ['PENDING_RELEASE.json', 'ACTIVE_RELEASE.json']:
+                    prior = json.loads(raw)
+                    if prior.get('workspace') == existing:
+                        prior['workspace'] = restored
+                        prior['rollback_runtime_evidence'] = str(operation / 'rollback-runtime.json')
+                        raw = json_bytes(prior)
+                write(ROOT / name, raw)
         write(operation/'failure.json',json_bytes({'status':'rolled_back','previous_workspace':existing,'live_database_touched':False}))
         raise
 
