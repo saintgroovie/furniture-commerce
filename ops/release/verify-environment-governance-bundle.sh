@@ -128,6 +128,8 @@ REQUIRED_JSON='[
   "ops/backup/woodright-private-files-backup.sh",
   "ops/backup/verify-private-files.py",
   "ops/release/prepare-private-desk-runtime.py",
+  "ops/release/deploy-team-workspace.py",
+  "docs/operator/woodright-team-workspace.md",
   "ops/backup/woodright-backup-retention.sh",
   "ops/backup/woodright-public-production-backup-run.sh",
   "ops/backup/woodright-public-production-restore-rehearsal.sh",
