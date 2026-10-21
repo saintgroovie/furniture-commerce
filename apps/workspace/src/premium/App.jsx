@@ -1,3 +1,4 @@
+import { workspacePath } from "../lib/paths.mjs";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   CalendarBlank,
@@ -53,6 +54,9 @@ import {
 import { todayGroups, reconcileCatalog } from "./model.mjs";
 import { TodayView, ObjectList } from "./BusinessViews.jsx";
 import { Files } from "./Files.jsx";
+import { Companies, Team } from "./Team.jsx";
+import { Join } from "./Join.jsx";
+import { PasswordChange } from "./PasswordChange.jsx";
 const NAV_NAMES = {
   today: "Рабочая очередь",
   requests: "Обращения",
@@ -65,6 +69,9 @@ const NAV_NAMES = {
   invoices: "Счета",
   files: "Файлы",
   integrations: "Интеграции",
+  team: "Сотрудники",
+  profile: "Мой профиль",
+  join: "Приглашение в Woodright",
 };
 const parseRoute = () => {
   const [page = "today", id] = window.location.hash
@@ -198,6 +205,7 @@ export function App() {
       setRefreshing(false);
     }
   };
+  if (route.page === "join") return <Join token={route.id || ""} />;
   if (loadError)
     return (
       <Login
@@ -208,7 +216,10 @@ export function App() {
   if (!data)
     return (
       <div className="startup" role="status">
-        <img src="/brand/woodright-white.svg" alt="Woodright" />
+        <img
+          src={workspacePath("/brand/woodright-white.svg")}
+          alt="Woodright"
+        />
         <p>Открываем рабочее пространство…</p>
         <div className="loading-bar" />
       </div>
@@ -241,7 +252,7 @@ export function App() {
     );
   }
   const searchResults = search.trim()
-    ? ["requests", "people", "orders", "products", "rooms"]
+    ? ["requests", "people", "companies", "orders", "products", "rooms"]
         .flatMap((kind) =>
           data[kind]
             .filter(
@@ -283,7 +294,10 @@ export function App() {
       >
         <a className="brand" href="#/today">
           <span className="brand-lockup">
-            <img src="/brand/woodright-white.svg" alt="Woodright" />
+            <img
+              src={workspacePath("/brand/woodright-white.svg")}
+              alt="Woodright"
+            />
             <span className="brand-os">OS</span>
           </span>
           <small>Рабочее пространство</small>
@@ -363,6 +377,8 @@ export function App() {
           <div className="nav-divider" />
           {nav("storefront", "Витрина", Storefront)}
           {nav("integrations", "Интеграции", SlidersHorizontal)}
+          {nav("team", "Сотрудники", Users)}
+          {nav("profile", "Мой профиль", User)}
         </nav>
         <footer className="sidebar-footer">
           <button
@@ -471,13 +487,20 @@ export function App() {
             ) : route.page === "integrations" ? (
               <Integrations data={data} />
             ) : route.page === "companies" ? (
+              <Companies
+                key={route.id || "list"}
+                id={route.id}
+                refresh={refresh}
+                {...common}
+              />
+            ) : route.page === "profile" ? (
               <div className="standard-page">
-                <h1>Компании</h1>
-                <Notice>
-                  Модуль компаний существующей OS ещё не установлен в рабочем
-                  контуре. Список появится после подключения CRM.
-                </Notice>
+                <h1>Мой профиль</h1>
+                <p className="muted">{data.session.email}</p>
+                <PasswordChange />
               </div>
+            ) : route.page === "team" ? (
+              <Team data={data} />
             ) : route.page === "files" ? (
               <Files data={data} go={go} />
             ) : route.page === "invoices" ? (

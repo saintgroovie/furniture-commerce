@@ -71,11 +71,13 @@ jobs:
         run: |
           node node_modules/@medusajs/cli/cli.js build
           node --test scripts/desk-migration.test.cjs
+          node --test scripts/team-migration.test.cjs
       - name: Private document restore integrity
         working-directory: .
         run: |
           python3 ops/backup/test-private-files.py
           python3 ops/release/test-prepare-private-desk-runtime.py
+          python3 ops/release/test-team-workspace.py
       - name: Actual Medusa migration loader
         env:
           DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk_http

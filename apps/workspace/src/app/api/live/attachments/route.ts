@@ -16,7 +16,7 @@ export async function GET(request: Request) {
       id = params.get("entityId");
     if (
       !type ||
-      !["person", "request", "order"].includes(type) ||
+      !["person", "request", "order", "company"].includes(type) ||
       !id ||
       !/^[A-Za-z0-9_-]{1,160}$/.test(id)
     )

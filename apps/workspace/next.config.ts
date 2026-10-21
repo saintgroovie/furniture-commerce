@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 const config: NextConfig = {
+  basePath: process.env.NEXT_PUBLIC_WORKSPACE_BASE_PATH || "",
   distDir: ".next-build",
   poweredByHeader: false,
   output: "standalone",
@@ -8,6 +9,10 @@ const config: NextConfig = {
       {
         source: "/:path*",
         headers: [
+          {
+            key: "X-Woodright-Workspace-Source-Sha",
+            value: process.env.WOODRIGHT_WORKSPACE_SOURCE_SHA || "local",
+          },
           { key: "Cache-Control", value: "private, no-store" },
           { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
           { key: "Referrer-Policy", value: "same-origin" },

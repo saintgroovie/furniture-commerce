@@ -290,6 +290,8 @@ FILES=(
   ops/backup/woodright-private-files-backup.sh
   ops/backup/verify-private-files.py
   ops/release/prepare-private-desk-runtime.py
+  ops/release/deploy-team-workspace.py
+  docs/operator/woodright-team-workspace.md
   ops/backup/woodright-backup-retention.sh
   ops/backup/woodright-public-production-backup-run.sh
   ops/backup/woodright-public-production-restore-rehearsal.sh
@@ -769,6 +771,7 @@ def role_for(rel: str) -> str:
         "ops/release/reconcile-public-production-owner-env.sh": "public_production_owner_env_reconciler",
         "ops/lib/woodright-public-production-owner-env.py": "public_production_owner_env_plan",
         "ops/release/prepare-private-desk-runtime.py": "public_production_private_desk_preparation",
+        "ops/release/deploy-team-workspace.py": "team_workspace_controller",
         "ops/release/install-environment-governance.sh": "installer",
         "ops/release/verify-environment-governance-bundle.sh": "bundle_verifier",
     }

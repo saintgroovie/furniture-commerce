@@ -49,6 +49,14 @@ export async function POST(request: Request) {
     )
       throw new LiveError(400, "Укажите email и пароль");
     const now = Date.now();
+    if (
+      process.env.WOODRIGHT_WORKSPACE_RUNTIME === "hosted" &&
+      body.password.length < 12
+    )
+      throw new LiveError(
+        403,
+        "Для командного доступа смените временный пароль в приватном профиле. Новый пароль — от 12 символов.",
+      );
     for (const [key, value] of attempts)
       if (value.until < now) attempts.delete(key);
     const attempt = attempts.get(email);

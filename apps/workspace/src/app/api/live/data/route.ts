@@ -96,6 +96,41 @@ export async function GET() {
         };
       }
     }
+    if (desk.companies === true) {
+      const definitions = [
+        ["companies", "companies"],
+        ["records", "records"],
+        ["staff", "staff"],
+      ] as const;
+      const loaded = await Promise.allSettled(
+        definitions.map(([path, field]) =>
+          readPaged(`/admin/woodright/desk/${path}`, field, session),
+        ),
+      );
+      loaded.forEach((result, i) => {
+        const [key, field] = definitions[i];
+        if (result.status === "fulfilled") {
+          sources[key] = result.value;
+          states[key] = {
+            ok: true,
+            count: result.value[field].length,
+            total: result.value.count,
+            truncated: result.value.truncated,
+            completeness: "paginated",
+          };
+        } else {
+          if (
+            result.reason instanceof LiveError &&
+            result.reason.status === 401
+          )
+            throw result.reason;
+          states[key] = {
+            ok: false,
+            message: "Не удалось загрузить данные команды",
+          };
+        }
+      });
+    }
     const data = projectLive(
       sources,
       session,

@@ -1,3 +1,4 @@
+import { workspacePath } from "../lib/paths.mjs";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowClockwise,
@@ -33,6 +34,8 @@ import { DeskTools, useDeskCommand } from "./DeskTools.jsx";
 import { CreateRecord } from "./CreateRecord.jsx";
 import { History } from "./History.jsx";
 import { ContactEditor } from "./ContactEditor.jsx";
+import { Assignment, CompanyCreate } from "./Team.jsx";
+import { PasswordChange } from "./PasswordChange.jsx";
 const types = {
   STANDARD: "Готовое изделие",
   CONFIGURABLE: "Выбор исполнения",
@@ -81,9 +84,12 @@ export function Login({ error, onLogin }) {
   return (
     <div className="live-login">
       <aside>
-        <a className="brand" href="/">
+        <a className="brand" href={workspacePath("/")}>
           <span className="brand-lockup">
-            <img src="/brand/woodright-white.svg" alt="Woodright" />
+            <img
+              src={workspacePath("/brand/woodright-white.svg")}
+              alt="Woodright"
+            />
             <span className="brand-os">OS</span>
           </span>
         </a>
@@ -172,6 +178,9 @@ export const sourceNames = {
   processes: "Изготовление",
   rooms: "Комнаты",
   reminders: "Напоминания",
+  companies: "Компании",
+  records: "Назначения",
+  staff: "Сотрудники",
 };
 export function LiveNotice({ data, refresh, busy }) {
   const failed = Object.entries(data.sourceStates).filter(([, v]) => !v.ok);
@@ -215,6 +224,8 @@ export function SourceGate({ page, data, children }) {
       storefront: "products",
       orders: "orders",
       rooms: "rooms",
+      companies: "companies",
+      team: "staff",
     }[page],
     source = data.sourceStates[key];
   if (source && !source.ok)
@@ -312,7 +323,14 @@ export function Integrations({ data, focus, compact = false }) {
         {cards.map((s) => (
           <section className="integration-card" key={s.key}>
             <s.icon size={27} weight="light" />
-            <Badge tone={s.key === "medusa" ? "positive" : "waiting"}>
+            <Badge
+              tone={
+                s.key === "medusa" ||
+                (s.key === "files" && data?.capabilities.attachmentRead)
+                  ? "positive"
+                  : "waiting"
+              }
+            >
               {s.key === "files" && data?.capabilities.attachmentRead
                 ? "Подключено"
                 : s.status}
@@ -339,7 +357,7 @@ export function Integrations({ data, focus, compact = false }) {
         <Section title="Рабочие функции">
           <div className="integration-scope">
             <p>
-              <b>Уже можно подключить без переноса базы</b>
+              <b>Данные рабочей системы</b>
               <span>
                 Каталог с исполнениями и готовностью, реальные обращения и
                 контакты, заказы с раздельными статусами оплаты, производства и
@@ -347,11 +365,14 @@ export function Integrations({ data, focus, compact = false }) {
               </span>
             </p>
             <p>
-              <b>Нужен следующий серверный этап</b>
+              <b>Сохранение и совместная работа</b>
               <span>
-                Сохранение обращений с защитой от конфликтов, напоминания и
-                приватные вложения подготовлены для серверного обновления.
-                Компании и назначения сотрудников подключаются следующим этапом.
+                {data?.capabilities.requestUpdate
+                  ? "Обращения сохраняются с защитой от конфликтов. Доступны напоминания, приватные вложения и история действий. "
+                  : "Сохранение обращений, напоминания и приватные вложения появятся после подключения серверных функций. "}
+                {data?.capabilities.assignments
+                  ? "Компании и ответственные подключены к рабочей базе."
+                  : "Компании и ответственные появятся после подключения командных функций."}
               </span>
             </p>
             <p>
@@ -390,6 +411,20 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
       : panel.type === "files"
         ? "files"
         : undefined;
+  if (
+    (panel.type === "companyCreate" ||
+      (panel.type === "create" && panel.kind === "company")) &&
+    data.capabilities.companies
+  )
+    return (
+      <CompanyCreate
+        data={data}
+        refresh={refresh}
+        go={go}
+        notify={notify}
+        onClose={onClose}
+      />
+    );
   if (
     panel.type === "create" &&
     ["person", "request"].includes(panel.kind) &&
@@ -432,6 +467,7 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
               Выйти
             </Button>
           </Section>
+          <PasswordChange />
           <Integrations data={data} compact />
         </>
       ) : (
@@ -551,12 +587,16 @@ export function LiveObjectDetail({
                     {photos.map((f, i) => (
                       <a
                         key={f.id}
-                        href={`/api/live/media?productId=${encodeURIComponent(id)}&index=${i}`}
+                        href={workspacePath(
+                          `/api/live/media?productId=${encodeURIComponent(id)}&index=${i}`,
+                        )}
                         target="_blank"
                         rel="noreferrer"
                       >
                         <img
-                          src={`/api/live/media?productId=${encodeURIComponent(id)}&index=${i}`}
+                          src={workspacePath(
+                            `/api/live/media?productId=${encodeURIComponent(id)}&index=${i}`,
+                          )}
                           alt={`${item.name}, фото ${i + 1}`}
                           loading={i ? "lazy" : "eager"}
                         />
@@ -897,6 +937,16 @@ export function LiveObjectDetail({
           )}
         </Section>
       )}
+      {["people", "requests", "orders"].includes(kind) && (
+        <Assignment
+          key={`${kind}/${id}`}
+          kind={kind}
+          item={item}
+          data={data}
+          refresh={refresh}
+          notify={notify}
+        />
+      )}
       <DeskTools
         attachmentsRef={attachmentsRef}
         kind={kind}
@@ -908,6 +958,7 @@ export function LiveObjectDetail({
       {data.capabilities.history &&
         ["people", "requests", "orders"].includes(kind) && (
           <History
+            data={data}
             type={
               { people: "person", requests: "request", orders: "order" }[kind]
             }

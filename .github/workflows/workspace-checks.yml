@@ -24,3 +24,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: node scripts/smoke-http.mjs
+      - name: Hosted workspace under /os
+        env:
+          NEXT_PUBLIC_WORKSPACE_BASE_PATH: /os
+        run: npm run build && node scripts/smoke-http.mjs

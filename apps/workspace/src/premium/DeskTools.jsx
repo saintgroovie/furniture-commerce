@@ -1,3 +1,4 @@
+import { workspacePath } from "../lib/paths.mjs";
 import React, { useEffect, useRef, useState } from "react";
 import {
   Button,
@@ -9,6 +10,7 @@ import {
   Badge,
 } from "./ui.jsx";
 import { liveFetch } from "./storage.js";
+import { StaffOptions } from "./Team.jsx";
 import { date, TODAY } from "./model.mjs";
 
 // Retain the exact operation on an uncertain response. Editing the form starts a new operation.
@@ -36,6 +38,7 @@ function Reminders({ type, id, data, refresh, notify }) {
   const [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
   const send = useDeskCommand();
+  const [assigneeId, setAssigneeId] = useState(data.session.id || "");
   const rows = data.reminders.filter(
     (r) => r.objectType === type && r.objectId === id,
   );
@@ -63,6 +66,9 @@ function Reminders({ type, id, data, refresh, notify }) {
                 <strong>{r.title}</strong>
                 <small>
                   {date(r.due, true)} ·{" "}
+                  {data.staff?.find((s) => s.id === r.assigneeId)?.name ||
+                    "Сотрудник"}{" "}
+                  ·{" "}
                   {r.status === "open"
                     ? "Запланировано"
                     : r.status === "done"
@@ -70,6 +76,24 @@ function Reminders({ type, id, data, refresh, notify }) {
                       : "Отменено"}
                 </small>
               </div>
+              {data.capabilities.assignments && (
+                <StaffOptions
+                  data={data}
+                  value={r.assigneeId}
+                  onChange={(assigneeId) =>
+                    run({
+                      type: "reminder.update",
+                      id: r.id,
+                      status: r.status,
+                      expectedVersion: r.version,
+                      assigneeId,
+                    })
+                  }
+                  disabled={busy}
+                  label={`Исполнитель: ${r.title}`}
+                  optional={false}
+                />
+              )}
               {data.capabilities.reminders && (
                 <div className="desk-row-actions">
                   <Button
@@ -121,6 +145,9 @@ function Reminders({ type, id, data, refresh, notify }) {
               entityId: id,
               summary,
               dueOn,
+              ...(data.capabilities.assignments && assigneeId
+                ? { assigneeId }
+                : {}),
             });
           }}
         >
@@ -141,6 +168,16 @@ function Reminders({ type, id, data, refresh, notify }) {
               onChange={(e) => setDueOn(e.target.value)}
             />
           </Field>
+          {data.capabilities.assignments && (
+            <StaffOptions
+              data={data}
+              value={assigneeId}
+              onChange={setAssigneeId}
+              disabled={busy}
+              label="Исполнитель напоминания"
+              optional={false}
+            />
+          )}
           <Button type="submit" disabled={busy || !summary.trim()}>
             {busy ? "Сохраняем…" : "Добавить напоминание"}
           </Button>
@@ -256,7 +293,9 @@ function Attachments({ type, id, data, notify, refresh }) {
               <div>
                 <a
                   className="inline-link"
-                  href={`/api/live/attachments/${encodeURIComponent(f.id)}`}
+                  href={workspacePath(
+                    `/api/live/attachments/${encodeURIComponent(f.id)}`,
+                  )}
                   download
                 >
                   {f.filename}
@@ -334,7 +373,12 @@ function Attachments({ type, id, data, notify, refresh }) {
   );
 }
 export function DeskTools({ kind, id, data, refresh, notify, attachmentsRef }) {
-  const type = { people: "person", requests: "request", orders: "order" }[kind];
+  const type = {
+    people: "person",
+    requests: "request",
+    orders: "order",
+    companies: "company",
+  }[kind];
   if (!type) return null;
   return (
     <div className="desk-tools">

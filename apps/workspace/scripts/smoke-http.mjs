@@ -6,6 +6,8 @@ await new Promise((resolve) => probe.listen(0, "127.0.0.1", resolve));
 const port = probe.address().port;
 await new Promise((resolve) => probe.close(resolve));
 const origin = `http://127.0.0.1:${port}`;
+const basePath = process.env.NEXT_PUBLIC_WORKSPACE_BASE_PATH || "";
+const appOrigin = origin + basePath;
 const env = {
   ...process.env,
   PORT: String(port),
@@ -26,7 +28,9 @@ try {
   let ready = false;
   for (let i = 0; i < 100; i++) {
     try {
-      const r = await fetch(origin, { signal: AbortSignal.timeout(1000) });
+      const r = await fetch(appOrigin + "/", {
+        signal: AbortSignal.timeout(1000),
+      });
       if (r.ok) {
         ready = true;
         break;
@@ -35,7 +39,7 @@ try {
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
   assert.equal(ready, true, "compiled app must start");
-  const html = await (await fetch(origin)).text();
+  const html = await (await fetch(appOrigin + "/")).text();
   assert.match(html, /Woodright OS/);
   const css = [
     ...new Set(
@@ -45,7 +49,11 @@ try {
   assert.ok(css.length);
   for (const path of css)
     assert.equal(
-      (await fetch(origin + path)).status,
+      (
+        await fetch(
+          (path.startsWith(basePath + "/_next/") ? origin : appOrigin) + path,
+        )
+      ).status,
       200,
       "compiled CSS must be served",
     );
@@ -57,12 +65,14 @@ try {
     "/api/live/attachments?entityType=person&entityId=person_test",
     "/api/live/media?productId=prod_test&index=0",
   ]) {
-    const r = await fetch(origin + path);
+    const r = await fetch(
+      (path.startsWith(basePath + "/_next/") ? origin : appOrigin) + path,
+    );
     assert.equal(r.status, 401, path);
     assert.match(r.headers.get("cache-control"), /no-store/);
   }
   const send = (path, requestOrigin) =>
-    fetch(origin + path, {
+    fetch(appOrigin + path, {
       method: "POST",
       headers: { origin: requestOrigin, "content-type": "application/json" },
       body: "{}",
@@ -77,7 +87,7 @@ try {
     403,
   );
   assert.equal((await send("/api/live/session", origin)).status, 400);
-  const logout = await fetch(origin + "/api/live/session", {
+  const logout = await fetch(appOrigin + "/api/live/session", {
     method: "POST",
     headers: { origin, "content-type": "application/json" },
     body: '{"intent":"logout"}',
@@ -87,6 +97,8 @@ try {
   assert.match(cookie, /HttpOnly/i);
   assert.match(cookie, /SameSite=strict/i);
   assert.match(cookie, /Max-Age=0/i);
+  assert.ok(cookie.startsWith(basePath ? `wr_os_${port}=` : "wr_desk="));
+  assert.ok(cookie.includes(`Path=${basePath || "/"};`));
   console.log(
     "Compiled HTTP smoke passed: app, CSS, authentication, CSRF, cookie and cache boundary. No Medusa connection used.",
   );

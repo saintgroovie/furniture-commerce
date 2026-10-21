@@ -2,6 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Button, FormError, Section } from "./ui.jsx";
 import { liveFetch } from "./storage.js";
 const labels = {
+  "company.created": "Компания добавлена",
+  "company.updated": "Компания обновлена",
+  "record.assigned": "Компания или ответственный изменены",
   "person.created": "Клиент добавлен",
   "person.updated": "Контакт клиента обновлён",
   "request.created": "Обращение создано",
@@ -12,7 +15,7 @@ const labels = {
   "attachment.removed": "Вложение удалено",
   "attachment.restored": "Вложение восстановлено",
 };
-export function History({ type, id, updatedAt }) {
+export function History({ type, id, updatedAt, data }) {
   const [rows, setRows] = useState(null),
     [error, setError] = useState("");
   const [revision, setRevision] = useState(0);
@@ -53,7 +56,24 @@ export function History({ type, id, updatedAt }) {
                       <strong>
                         {labels[event.action] || "Карточка обновлена"}
                       </strong>
+                      {event.action === "record.assigned" && (
+                        <p className="small">
+                          {data?.companies?.find(
+                            (c) => c.id === event.details?.company_id,
+                          )?.name || "Без компании"}{" "}
+                          ·{" "}
+                          {data?.staff?.find(
+                            (s) => s.id === event.details?.assignee_id,
+                          )?.name ||
+                            (event.details?.assignee_id
+                              ? "Сотрудник недоступен"
+                              : "Без ответственного")}
+                        </p>
+                      )}
                       <small>
+                        {data?.staff?.find((s) => s.id === event.actor_id)
+                          ?.name || "Сотрудник"}{" "}
+                        ·{" "}
                         {new Intl.DateTimeFormat("ru-RU", {
                           dateStyle: "medium",
                           timeStyle: "short",
