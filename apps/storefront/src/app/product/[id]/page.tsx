@@ -64,6 +64,8 @@ import { CopyLines } from "@/components/copy-lines"
 import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
 import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
 import { ProductPdpExecutionMediaSwitcher } from "@/components/product-pdp-execution-media-switcher"
+import { OliverBedUpholsteryJsonLd } from "@/components/oliver-bed-upholstery-json-ld"
+import { oliverBedUpholsteryJsonLdOptions } from "@/lib/oliver-bed-upholstery-json-ld"
 import { ProductPdpMediaSwitcher } from "@/components/product-pdp-media-switcher"
 import { PdpMotifSelector } from "@/components/pdp-motif-selector"
 import { PdpRelatedInMotif } from "@/components/pdp-related-in-motif"
@@ -686,6 +688,7 @@ export default async function ProductPage({
       : []),
     { name: titleStr || "Товар", path: canonicalPath },
   ])
+  const oliverUpholsteryOptions = oliverBedUpholsteryJsonLdOptions(product, executionSelectors)
 
   const cspNonce = (await headers()).get("x-nonce") ?? undefined
 
@@ -705,11 +708,16 @@ export default async function ProductPage({
           }}
         />
       ) : null}
-      <script
+      {oliverUpholsteryOptions ? <OliverBedUpholsteryJsonLd
+        jsonLd={productJsonLd}
+        productKey={handle}
+        options={oliverUpholsteryOptions}
+        nonce={cspNonce}
+      /> : <script
         type="application/ld+json"
         nonce={cspNonce}
         dangerouslySetInnerHTML={{ __html: jsonLdHtml(productJsonLd) }}
-      />
+      />}
       <script
         type="application/ld+json"
         nonce={cspNonce}
