@@ -1,5 +1,6 @@
+import { workspacePath } from "../lib/paths.mjs";
 export async function liveFetch(url, options = {}) {
-  const response = await fetch(url, {
+  const response = await fetch(workspacePath(url), {
     ...options,
     credentials: "same-origin",
     cache: "no-store",
@@ -31,7 +32,9 @@ export async function loadBlob(file) {
   if (!file.remote)
     throw new Error("Документ отсутствует в серверном хранилище");
   const response = await fetch(
-    `/api/live/media?productId=${encodeURIComponent(file.objectId)}&index=${file.mediaIndex}`,
+    workspacePath(
+      `/api/live/media?productId=${encodeURIComponent(file.objectId)}&index=${file.mediaIndex}`,
+    ),
     { credentials: "same-origin", cache: "no-store" },
   );
   if (!response.ok)

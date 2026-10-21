@@ -1,6 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Button, Drawer, Field, FormError, Notice } from "./ui.jsx";
 import { useDeskCommand } from "./DeskTools.jsx";
+import { OwnershipFields } from "./Team.jsx";
 
 export function CreateRecord({ kind, data, onClose, refresh, go, notify }) {
   const request = kind === "request";
@@ -21,6 +22,10 @@ export function CreateRecord({ kind, data, onClose, refresh, go, notify }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [created, setCreated] = useState(null);
+  const [ownership, setOwnership] = useState({
+    companyId: "",
+    assigneeId: data.session.id || "",
+  });
   const ids = useRef(null);
   if (!ids.current)
     ids.current = {
@@ -49,10 +54,16 @@ export function CreateRecord({ kind, data, onClose, refresh, go, notify }) {
               type: "request.create",
               id: ids.current.id,
               ...form,
+              ...(data.capabilities.assignments ? { ownership } : {}),
               personId: personId || ids.current.personId,
               ...(personId ? {} : { person }),
             }
-          : { type: "person.create", id: ids.current.personId, person },
+          : {
+              type: "person.create",
+              id: ids.current.personId,
+              person,
+              ...(data.capabilities.assignments ? { ownership } : {}),
+            },
       );
       setCreated(response.result);
       await openCreated(response.result);
@@ -187,6 +198,14 @@ export function CreateRecord({ kind, data, onClose, refresh, go, notify }) {
             </>
           )}
           <FormError>{error}</FormError>
+          {data.capabilities.assignments && (
+            <OwnershipFields
+              data={data}
+              value={ownership}
+              onChange={setOwnership}
+              disabled={busy}
+            />
+          )}
           <Button type="submit" disabled={busy || !data.capabilities.crmCreate}>
             {busy
               ? "Сохраняем…"

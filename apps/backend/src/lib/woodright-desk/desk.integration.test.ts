@@ -6,6 +6,8 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import knex from "knex";
 import { DESK_SCHEMA } from "./schema";
+import { TEAM_SCHEMA } from "./team-schema";
+import { GET as listStaff } from "../../api/admin/woodright/desk/staff/route";
 import { MANGO_SCHEMA } from "./mango-schema";
 import { mangoSignature, receiveMangoCall } from "./mango";
 import { DeskError, executeDeskCommand, type Sql } from "./commands";
@@ -102,6 +104,11 @@ function response() {
 }
 before(async () => {
   await db.raw(DESK_SCHEMA);
+  await db.raw("drop table if exists woodright_desk_record, woodright_company");
+  await db.raw(TEAM_SCHEMA);
+  await db.raw(`create table if not exists "user" (id text primary key,email text,first_name text,last_name text,deleted_at timestamptz);
+    insert into "user"(id,email,first_name) values ('staff_1','staff@example.test','Первый'),('staff_2','second@example.test','Второй') on conflict(id) do nothing;
+    insert into "user"(id,email,deleted_at) values ('staff_deleted','removed@example.test',now()) on conflict(id) do nothing;`);
   await db.raw(MANGO_SCHEMA);
   await db.raw("truncate woodright_mango_event, woodright_mango_call");
   await db.raw(`create table if not exists bespoke_request (id text primary key, lead_id text null, comment text null, dimensions text null, materials text null, budget text null, status text not null, internal_notes text null,
@@ -628,4 +635,196 @@ test("global document index is staff-only and never exposes blob keys or removed
   const denied = response();
   await listFiles(request({}, {}, "api-key"), denied);
   assert.equal(denied.statusCode, 401);
+});
+
+const companyInput = {
+  name: "Служебная студия",
+  legalName: "",
+  taxId: "",
+  kpp: "",
+  email: "studio@example.test",
+  phone: "",
+  address: "",
+  notes: "",
+  status: "active",
+};
+test("companies persist, replay and concurrent changes use one version without losing history", async () => {
+  const c = {
+    type: "company.create",
+    id: "company_1",
+    company: companyInput,
+    key: key(),
+  };
+  const first = await executeDeskCommand(sql, "staff_1", c);
+  assert.equal(first.company.version, 1);
+  assert.equal((await executeDeskCommand(sql, "staff_1", c)).replay, true);
+  const result = await Promise.allSettled(
+    ["Первый текст", "Второй текст"].map((notes) =>
+      executeDeskCommand(sql, "staff_1", {
+        type: "company.update",
+        id: c.id,
+        company: { ...companyInput, notes },
+        expectedVersion: 1,
+        key: key(),
+      }),
+    ),
+  );
+  assert.equal(result.filter((r) => r.status === "fulfilled").length, 1);
+  assert.equal(
+    (result.find((r) => r.status === "rejected") as PromiseRejectedResult)
+      .reason.code,
+    "STALE_VERSION",
+  );
+  assert.equal(
+    (await db("woodright_company").where({ id: c.id }).first()).version,
+    2,
+  );
+});
+test("assignment validates active staff and companies, locks first assignment, and preserves archived links", async () => {
+  const base = {
+    type: "record.update",
+    id: "request_1",
+    entityType: "request",
+    ownership: { companyId: "company_1", assigneeId: "staff_2" },
+    expectedVersion: 0,
+    key: key(),
+  };
+  const concurrent = await Promise.allSettled([
+    executeDeskCommand(sql, "staff_1", base),
+    executeDeskCommand(sql, "staff_2", {
+      ...base,
+      key: key(),
+      ownership: { ...base.ownership, assigneeId: "staff_1" },
+    }),
+  ]);
+  assert.equal(concurrent.filter((r) => r.status === "fulfilled").length, 1);
+  assert.equal(
+    (concurrent.find((r) => r.status === "rejected") as PromiseRejectedResult)
+      .reason.code,
+    "STALE_VERSION",
+  );
+  const row = await db("woodright_desk_record")
+    .where({ entity_id: "request_1" })
+    .first();
+  assert.equal(row.version, 1);
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", {
+      ...base,
+      key: key(),
+      expectedVersion: 1,
+      ownership: { companyId: "company_1", assigneeId: "staff_deleted" },
+    }),
+    (e: any) => e.code === "INVALID_ASSIGNEE",
+  );
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", {
+      ...base,
+      key: key(),
+      id: "missing_request",
+    }),
+    (e: any) => e.status === 404,
+  );
+  await executeDeskCommand(sql, "staff_1", {
+    type: "company.update",
+    id: "company_1",
+    company: { ...companyInput, status: "archived" },
+    expectedVersion: 2,
+    key: key(),
+  });
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", {
+      ...base,
+      key: key(),
+      entityType: "person",
+      id: "person_1",
+    }),
+    (e: any) => e.code === "COMPANY_UNAVAILABLE",
+  );
+  const retained = await executeDeskCommand(sql, "staff_1", {
+    ...base,
+    key: key(),
+    expectedVersion: 1,
+  });
+  assert.equal(retained.record.company_id, "company_1");
+  await executeDeskCommand(sql, "staff_1", {
+    type: "company.update",
+    id: "company_1",
+    company: companyInput,
+    expectedVersion: 3,
+    key: key(),
+  });
+  const active = response();
+  await listStaff(request(), active);
+  assert.equal(active.body.staff.length, 2);
+  assert.ok(
+    active.body.staff.every(
+      (s: any) =>
+        Object.keys(s).sort().join(",") === "email,first_name,id,last_name",
+    ),
+  );
+});
+test("new records and their assignments are atomic; reminders can be assigned without stale completion", async () => {
+  const base = {
+    type: "person.create",
+    id: "owned_person",
+    person: { name: "Контакт студии" },
+    ownership: { companyId: "company_1", assigneeId: "staff_2" },
+    key: key(),
+  };
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", {
+      ...base,
+      ownership: { ...base.ownership, assigneeId: "missing_staff" },
+    }),
+  );
+  assert.equal(await db("lead").where({ id: base.id }).first(), undefined);
+  await executeDeskCommand(sql, "staff_1", base);
+  assert.equal(
+    (await db("woodright_desk_record").where({ entity_id: base.id }).first())
+      .assignee_id,
+    "staff_2",
+  );
+  const r = await executeDeskCommand(sql, "staff_1", {
+    type: "reminder.create",
+    id: "team_reminder",
+    entityType: "company",
+    entityId: "company_1",
+    summary: "Согласовать состав",
+    dueOn: "2026-10-22",
+    assigneeId: "staff_2",
+    key: key(),
+  });
+  assert.equal(r.reminder.assignee_id, "staff_2");
+  await executeDeskCommand(sql, "staff_1", {
+    type: "reminder.update",
+    id: "team_reminder",
+    status: "open",
+    expectedVersion: 1,
+    assigneeId: "staff_1",
+    key: key(),
+  });
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_2", {
+      type: "reminder.update",
+      id: "team_reminder",
+      status: "done",
+      expectedVersion: 1,
+      key: key(),
+    }),
+    (e: any) => e.status === 409,
+  );
+  const file = await attachFile(
+    sql,
+    "staff_1",
+    {
+      id: "company_file",
+      entityType: "company",
+      entityId: "company_1",
+      filename: "Схема.txt",
+      content: "YWJj",
+      key: key(),
+    },
+    store,
+  );
+  assert.equal(file.attachment.entity_type, "company");
 });

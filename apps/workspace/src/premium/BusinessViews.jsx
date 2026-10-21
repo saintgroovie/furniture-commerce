@@ -329,6 +329,7 @@ export function TodayView({ data, go, openPanel, mutate, notify, ...rest }) {
 export function ObjectList({ kind, data, go, openPanel }) {
   const [query, setQuery] = useState(""),
     [filter, setFilter] = useState("all"),
+    [assigneeFilter, setAssigneeFilter] = useState("all"),
     [view, setView] = useState("list");
   const source = data[kind] || [];
   const configs = {
@@ -419,7 +420,14 @@ export function ObjectList({ kind, data, go, openPanel }) {
         : filter === "issues"
           ? r.issues?.length > 0
           : r.status === filter || r.role === filter || r.stage === filter);
-    return matches && text.toLowerCase().includes(query.toLowerCase());
+    return (
+      matches &&
+      (assigneeFilter === "all" ||
+        (assigneeFilter === "mine"
+          ? r.assigneeId === data.session.id
+          : !r.assigneeId)) &&
+      text.toLowerCase().includes(query.toLowerCase())
+    );
   });
   return (
     <div className="standard-page">
@@ -476,6 +484,19 @@ export function ObjectList({ kind, data, go, openPanel }) {
         value={filter}
         onChange={setFilter}
       />
+      {data.capabilities.assignments &&
+        ["people", "requests", "orders"].includes(kind) && (
+          <Field label="Показать по ответственному">
+            <select
+              value={assigneeFilter}
+              onChange={(e) => setAssigneeFilter(e.target.value)}
+            >
+              <option value="all">Вся команда</option>
+              <option value="mine">Мои карточки</option>
+              <option value="unassigned">Без ответственного</option>
+            </select>
+          </Field>
+        )}
       <div className="list-toolbar">
         <div className="input-search">
           <MagnifyingGlass size={18} />
@@ -626,7 +647,7 @@ export function ObjectList({ kind, data, go, openPanel }) {
                   <b>{r.title || r.name}</b>
                   <small>
                     {kind === "requests"
-                      ? `${r.id} · ${person?.name || "Без контакта"} · ${r.source}`
+                      ? `${person?.name || "Без контакта"} · ${r.assignee} · ${r.source}`
                       : kind === "people"
                         ? `${r.role} · ${r.assignee}`
                         : kind === "companies"

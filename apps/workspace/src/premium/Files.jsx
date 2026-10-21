@@ -1,8 +1,14 @@
+import { workspacePath } from "../lib/paths.mjs";
 import React, { useEffect, useState } from "react";
 import { Button, Empty, Field, FormError, Notice, PageHeading } from "./ui.jsx";
 import { liveFetch } from "./storage.js";
 import { date } from "./model.mjs";
-const kinds = { person: "people", request: "requests", order: "orders" };
+const kinds = {
+  person: "people",
+  request: "requests",
+  order: "orders",
+  company: "companies",
+};
 export function Files({ data, go }) {
   const [result, setResult] = useState(null),
     [error, setError] = useState("");
@@ -64,7 +70,9 @@ export function Files({ data, go }) {
                   <div>
                     <a
                       className="inline-link"
-                      href={`/api/live/attachments/${encodeURIComponent(f.id)}`}
+                      href={workspacePath(
+                        `/api/live/attachments/${encodeURIComponent(f.id)}`,
+                      )}
                       download
                     >
                       {f.filename}

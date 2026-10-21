@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { encodeSession, decodeSession } from "../lib/session-codec.ts";
 import { sameOriginAllowed } from "./request-policy.mjs";
 import { identityMatches, readBackendIdentity } from "./runtime-identity.mjs";
+import { BASE_PATH } from "../lib/paths.mjs";
 export const COOKIE = "wr_desk";
 export const NO_STORE = { "Cache-Control": "private, no-store" };
 export class LiveError extends Error {
@@ -26,7 +27,12 @@ export function backendBase(env = process.env) {
     throw new LiveError(503, "Некорректная конфигурация Medusa");
   if (
     url.protocol !== "https:" &&
-    !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname)
+    !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) &&
+    !(
+      env.WOODRIGHT_WORKSPACE_RUNTIME === "hosted" &&
+      url.hostname === "woodright-public-production-backend" &&
+      url.port === "9000"
+    )
   )
     throw new LiveError(503, "Для удалённой Medusa требуется HTTPS");
   return url;
@@ -46,7 +52,13 @@ export function sameOrigin(request) {
 export async function upstream(path, { session, method = "GET", body } = {}) {
   if (
     !path.startsWith("/admin/") &&
-    !["/health", "/auth/user/emailpass"].includes(path)
+    ![
+      "/health",
+      "/auth/user/emailpass",
+      "/auth/user/emailpass/register",
+      "/woodright/team-invitation",
+      "/woodright/team-invitation/accept",
+    ].includes(path)
   )
     throw new LiveError(400, "Недопустимый запрос");
   const headers = { accept: "application/json" };
@@ -137,7 +149,7 @@ export function cookieOptions(request) {
     httpOnly: true,
     sameSite: "strict",
     secure: !local,
-    path: "/",
+    path: BASE_PATH || "/",
     maxAge: 60 * 60 * 12,
   };
 }

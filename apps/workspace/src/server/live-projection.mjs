@@ -234,6 +234,56 @@ export function projectLive(
     history: [],
     compositionAvailable: false,
   }));
+  const staff = array(sources.staff?.staff).map((u) => ({
+    id: text(u.id),
+    email: text(u.email),
+    name:
+      [text(u.first_name), text(u.last_name)].filter(Boolean).join(" ") ||
+      text(u.email),
+  }));
+  const companies = array(sources.companies?.companies).map((c) => ({
+    id: text(c.id),
+    name: text(c.name),
+    legalName: text(c.legal_name),
+    taxId: text(c.tax_id),
+    kpp: text(c.kpp),
+    email: text(c.email),
+    phone: text(c.phone),
+    address: text(c.address),
+    notes: text(c.notes),
+    status: text(c.status),
+    version: c.version,
+    updatedAt: text(c.updated_at),
+  }));
+  const records = new Map(
+    array(sources.records?.records).map((r) => [
+      `${r.entity_type}:${r.entity_id}`,
+      r,
+    ]),
+  );
+  for (const [type, rows] of [
+    ["person", people],
+    ["request", requests],
+    ["order", orders],
+    ["company", companies],
+  ]) {
+    for (const item of rows) {
+      const record = records.get(`${type}:${item.id}`);
+      item.companyId = text(record?.company_id);
+      item.assigneeId = text(record?.assignee_id);
+      item.assignmentVersion = record?.version ?? 0;
+      item.assignmentKnown = Boolean(
+        record ||
+        (sourceStates.records?.ok && !sourceStates.records?.truncated),
+      );
+      item.assignee = item.assigneeId
+        ? staff.find((s) => s.id === item.assigneeId)?.name ||
+          "Сотрудник недоступен"
+        : item.assignmentKnown
+          ? "Не назначен"
+          : "Назначение не загружено";
+    }
+  }
   return {
     version: 2,
     mode: "live",
@@ -242,7 +292,8 @@ export function projectLive(
     orders,
     products,
     rooms,
-    companies: [],
+    companies,
+    staff,
     invoices: [],
     files,
     reminders: array(sources.reminders?.reminders).map((r) => ({
@@ -258,7 +309,12 @@ export function projectLive(
     })),
     activity: [],
     prefs: { density: "comfortable" },
-    session: { email: session.email },
+    session: {
+      email: session.email,
+      id:
+        staff.find((s) => s.email.toLowerCase() === session.email.toLowerCase())
+          ?.id || "",
+    },
     sourceStates,
     identity,
     loadedAt: new Date().toISOString(),
@@ -286,7 +342,19 @@ export function projectLive(
         features.personUpdate === true,
       history:
         features.contract === "woodright-desk-v1" && features.history === true,
-      companies: false,
+      companies:
+        features.contract === "woodright-desk-v1" &&
+        features.companies === true &&
+        features.writesEnabled === true &&
+        sourceStates.companies?.ok === true,
+      assignments:
+        features.contract === "woodright-desk-v1" &&
+        features.assignments === true &&
+        features.writesEnabled === true &&
+        sourceStates.records?.ok === true &&
+        !sourceStates.records?.truncated &&
+        sourceStates.staff?.ok === true &&
+        !sourceStates.staff?.truncated,
       reminders:
         features.contract === "woodright-desk-v1" &&
         features.writesEnabled === true &&

@@ -1,3 +1,4 @@
+import { workspacePath } from "../lib/paths.mjs";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ArrowClockwise,
@@ -33,6 +34,8 @@ import { DeskTools, useDeskCommand } from "./DeskTools.jsx";
 import { CreateRecord } from "./CreateRecord.jsx";
 import { History } from "./History.jsx";
 import { ContactEditor } from "./ContactEditor.jsx";
+import { Assignment, CompanyCreate } from "./Team.jsx";
+import { PasswordChange } from "./PasswordChange.jsx";
 const types = {
   STANDARD: "Готовое изделие",
   CONFIGURABLE: "Выбор исполнения",
@@ -81,9 +84,12 @@ export function Login({ error, onLogin }) {
   return (
     <div className="live-login">
       <aside>
-        <a className="brand" href="/">
+        <a className="brand" href={workspacePath("/")}>
           <span className="brand-lockup">
-            <img src="/brand/woodright-white.svg" alt="Woodright" />
+            <img
+              src={workspacePath("/brand/woodright-white.svg")}
+              alt="Woodright"
+            />
             <span className="brand-os">OS</span>
           </span>
         </a>
@@ -172,6 +178,9 @@ export const sourceNames = {
   processes: "Изготовление",
   rooms: "Комнаты",
   reminders: "Напоминания",
+  companies: "Компании",
+  records: "Назначения",
+  staff: "Сотрудники",
 };
 export function LiveNotice({ data, refresh, busy }) {
   const failed = Object.entries(data.sourceStates).filter(([, v]) => !v.ok);
@@ -215,6 +224,8 @@ export function SourceGate({ page, data, children }) {
       storefront: "products",
       orders: "orders",
       rooms: "rooms",
+      companies: "companies",
+      team: "staff",
     }[page],
     source = data.sourceStates[key];
   if (source && !source.ok)
@@ -359,7 +370,9 @@ export function Integrations({ data, focus, compact = false }) {
                 {data?.capabilities.requestUpdate
                   ? "Обращения сохраняются с защитой от конфликтов. Доступны напоминания, приватные вложения и история действий. "
                   : "Сохранение обращений, напоминания и приватные вложения появятся после подключения серверных функций. "}
-                Компании и назначения сотрудников пока не подключены.
+                {data?.capabilities.assignments
+                  ? "Компании и ответственные подключены к рабочей базе."
+                  : "Компании и ответственные появятся после подключения командных функций."}
               </span>
             </p>
             <p>
@@ -398,6 +411,20 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
       : panel.type === "files"
         ? "files"
         : undefined;
+  if (
+    (panel.type === "companyCreate" ||
+      (panel.type === "create" && panel.kind === "company")) &&
+    data.capabilities.companies
+  )
+    return (
+      <CompanyCreate
+        data={data}
+        refresh={refresh}
+        go={go}
+        notify={notify}
+        onClose={onClose}
+      />
+    );
   if (
     panel.type === "create" &&
     ["person", "request"].includes(panel.kind) &&
@@ -440,6 +467,7 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
               Выйти
             </Button>
           </Section>
+          <PasswordChange />
           <Integrations data={data} compact />
         </>
       ) : (
@@ -559,12 +587,16 @@ export function LiveObjectDetail({
                     {photos.map((f, i) => (
                       <a
                         key={f.id}
-                        href={`/api/live/media?productId=${encodeURIComponent(id)}&index=${i}`}
+                        href={workspacePath(
+                          `/api/live/media?productId=${encodeURIComponent(id)}&index=${i}`,
+                        )}
                         target="_blank"
                         rel="noreferrer"
                       >
                         <img
-                          src={`/api/live/media?productId=${encodeURIComponent(id)}&index=${i}`}
+                          src={workspacePath(
+                            `/api/live/media?productId=${encodeURIComponent(id)}&index=${i}`,
+                          )}
                           alt={`${item.name}, фото ${i + 1}`}
                           loading={i ? "lazy" : "eager"}
                         />
@@ -905,6 +937,16 @@ export function LiveObjectDetail({
           )}
         </Section>
       )}
+      {["people", "requests", "orders"].includes(kind) && (
+        <Assignment
+          key={`${kind}/${id}`}
+          kind={kind}
+          item={item}
+          data={data}
+          refresh={refresh}
+          notify={notify}
+        />
+      )}
       <DeskTools
         attachmentsRef={attachmentsRef}
         kind={kind}
@@ -916,6 +958,7 @@ export function LiveObjectDetail({
       {data.capabilities.history &&
         ["people", "requests", "orders"].includes(kind) && (
           <History
+            data={data}
             type={
               { people: "person", requests: "request", orders: "order" }[kind]
             }

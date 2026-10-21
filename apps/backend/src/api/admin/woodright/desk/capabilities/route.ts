@@ -4,9 +4,11 @@ import {
   deskFailure,
 } from "../../../../../lib/woodright-desk/http";
 import { PrivateFileStore } from "../../../../../lib/woodright-desk/private-files";
+import { teamInstalled } from "../../../../../lib/woodright-desk/team";
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
-    await deskContext(req);
+    const {sql}=await deskContext(req);
+    const team=await teamInstalled(sql);
     let attachments = false;
     if (process.env.WOODRIGHT_PRIVATE_FILES_ROOT) {
       await new PrivateFileStore(
@@ -20,6 +22,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       requestUpdate: true,
       crmCreate: true,
       personUpdate: true,
+      companies: team,
+      assignments: team,
       history: true,
       reminders: true,
       attachments,

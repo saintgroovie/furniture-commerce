@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { executeTeamCommand, requireStaff, saveRecord } from "./team";
 
 export type Sql = {
   raw: (
@@ -20,6 +21,7 @@ export const ENTITY_TABLES = {
   person: "lead",
   request: "bespoke_request",
   order: "order",
+  company: "woodright_company",
 } as const;
 export type EntityType = keyof typeof ENTITY_TABLES;
 export function entity(value: unknown): EntityType {
@@ -184,15 +186,25 @@ export async function executeDeskCommand(
     throw new DeskError(400, "INVALID_BODY", "Проверьте форму");
   const c = raw as Record<string, any>;
   const id = identifier(c.id);
+  if (["company.create", "company.update", "record.update"].includes(c.type))
+    return executeTeamCommand(sql, actor, c);
   if (c.type === "person.create") {
     const person = contact(c.person);
     return operation(
       sql,
       actor,
       c.key,
-      { type: c.type, id, person },
+      {
+        type: c.type,
+        id,
+        person,
+        ...(c.ownership ? { ownership: c.ownership } : {}),
+      },
       async (trx) => {
-        return { person: await insertPerson(trx, actor, id, person) };
+        const person = await insertPerson(trx, actor, id, contact(c.person));
+        if (c.ownership)
+          await saveRecord(trx, actor, "person", id, c.ownership, 0);
+        return { person };
       },
     );
   }
@@ -275,6 +287,7 @@ export async function executeDeskCommand(
         budget,
         personId,
         person,
+        ...(c.ownership ? { ownership: c.ownership } : {}),
       },
       async (trx) => {
         if (person) await insertPerson(trx, actor, personId, person);
@@ -297,6 +310,8 @@ export async function executeDeskCommand(
         await audit(trx, actor, "request", id, "request.created", {
           person_id: personId,
         });
+        if (c.ownership)
+          await saveRecord(trx, actor, "request", id, c.ownership, 0);
         return { bespoke_request: request };
       },
     );
@@ -378,9 +393,21 @@ export async function executeDeskCommand(
       sql,
       actor,
       c.key,
-      { type: c.type, id, entityType: type, target, dueOn, summary },
+      {
+        type: c.type,
+        id,
+        entityType: type,
+        target,
+        dueOn,
+        summary,
+        ...(c.assigneeId !== undefined ? { assigneeId: c.assigneeId } : {}),
+      },
       async (trx) => {
         await requireEntity(trx, type, target);
+        const assignee =
+          c.assigneeId !== undefined
+            ? await requireStaff(trx, c.assigneeId)
+            : actor;
         const reminder = (
           await trx.raw(
             `insert into woodright_follow_up
@@ -390,7 +417,7 @@ export async function executeDeskCommand(
               id,
               type,
               target,
-              actor,
+              assignee,
               `${dueOn}T09:00:00+03:00`,
               summary,
               actor,
@@ -420,13 +447,29 @@ export async function executeDeskCommand(
       sql,
       actor,
       c.key,
-      { type: c.type, id, status: c.status, version: c.expectedVersion },
+      {
+        type: c.type,
+        id,
+        status: c.status,
+        version: c.expectedVersion,
+        ...(c.assigneeId !== undefined ? { assigneeId: c.assigneeId } : {}),
+      },
       async (trx) => {
+        const assignee =
+          c.assigneeId !== undefined
+            ? await requireStaff(trx, c.assigneeId)
+            : null;
         const row = (
           await trx.raw(
-            `update woodright_follow_up set status = ?, version = version + 1, updated_at = now()
+            `update woodright_follow_up set status = ?, assignee_id = case when ? then ? else assignee_id end, version = version + 1, updated_at = now()
         where id = ? and version = ? and deleted_at is null returning *`,
-            [c.status, id, c.expectedVersion],
+            [
+              c.status,
+              c.assigneeId !== undefined,
+              assignee,
+              id,
+              c.expectedVersion,
+            ],
           )
         ).rows[0];
         if (!row)
@@ -441,7 +484,7 @@ export async function executeDeskCommand(
           row.entity_type,
           row.entity_id,
           "reminder.updated",
-          { reminder_id: id, status: c.status },
+          { reminder_id: id, status: c.status, assignee_id: row.assignee_id },
         );
         return { reminder: row };
       },

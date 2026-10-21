@@ -1,5 +1,6 @@
 import {
   defineMiddlewares,
+  authenticate,
   MedusaNextFunction,
   MedusaRequest,
   MedusaResponse,
@@ -225,6 +226,11 @@ async function ensureNotBespokeForCart(
 
 export default defineMiddlewares({
   routes: [
+    {
+      matcher: "/woodright/team-invitation/accept",
+      method: ["POST"],
+      middlewares: [authenticate("user", ["bearer"], { allowUnregistered: true })],
+    },
     {
       matcher: "/hooks/woodright/mango/events/call",
       method: ["POST"],
