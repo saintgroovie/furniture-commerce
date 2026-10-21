@@ -815,9 +815,15 @@ PY
 }
 
 pin_value_of() {
-  local key="$1"
-  [[ -r "$COMPOSE_ENV_FILE" ]] || return 0
-  awk -F= -v k="$key" '$1==k {sub(/^[^=]*=/, ""); print; exit}' "$COMPOSE_ENV_FILE" 2>/dev/null || true
+  local key="$1" value rc=0
+  # The protected compose file can be 0600. Query only an allowlisted pin
+  # through the existing privileged reader; never treat denied IO as absence.
+  value="$(wr_compose_env_query_governed_value "$COMPOSE_ENV_FILE" "$key")" || rc=$?
+  case "$rc" in
+    0) printf '%s\n' "$value" ;;
+    2) return 0 ;; # An absent key stays absent; rollback validation rejects it.
+    *) die "cannot read governed compose pin key=$key rc=$rc" ;;
+  esac
 }
 
 # Read-only comparison of the compose .env pins against the live runtime.
