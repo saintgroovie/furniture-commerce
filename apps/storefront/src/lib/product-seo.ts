@@ -172,8 +172,8 @@ function appendWholeSentences(lead: string, sentences: string[]): string {
  * Latin words and the description sentence has none) →
  * entity name + first sentence cut at a word → factual fallback built from the entity name.
  *
- * The entity name leads because sizes and paintings of one piece share one editorial
- * description; the name carries the size / version / painting that makes each page unique.
+ * Size stays in the snippet body, never in the title/name. This keeps descriptions
+ * of size siblings distinct without changing the owner-approved heading policy.
  */
 export function buildProductMetaDescription(
   product: ProductLike,
@@ -182,11 +182,14 @@ export function buildProductMetaDescription(
   const source = getSeoDescriptionSource(product)
   const sentences = source ? splitSentences(source) : []
   const name = normalizeSnippetText(getProductSeoName(product)).replace(/[.!?…]+$/u, "")
-  const lead = name ? `${name}.` : ""
+  const sizes = [...String(product.title ?? "").matchAll(/\d{2,3}\s*[×xх*]\s*\d{2,3}/giu)]
+  const size = /кроват/iu.test(String(product.title ?? "")) && sizes.length === 1
+    ? sizes[0]![0].replace(/\s/gu, "").replace(/[xх*]/giu, "×") : null
+  const lead = name ? `${name}.${size ? ` Размер ${size}.` : ""}` : ""
   const first = sentences[0]
-  const merged = first && name ? mergeNameIntoSentence(name, first) : null
+  const merged = first && name && !size ? mergeNameIntoSentence(name, first) : null
   const namedAlready =
-    !!first &&
+    !size && !!first &&
     !!name &&
     first.toLowerCase().startsWith(name.toLowerCase()) &&
     !/^[\p{L}\d]/u.test(first.slice(name.length))
