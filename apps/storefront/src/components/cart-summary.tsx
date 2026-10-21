@@ -277,11 +277,15 @@ export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) 
     const article = itemArticle(item)
     const total = lineTotal(item, qty)
     const productId = (item as { product_id?: string }).product_id
+    const variantId = typeof item.variant_id === "string" ? item.variant_id : ""
+    const productHref = productId
+      ? `/product/${encodeURIComponent(productId)}${variantId ? `?variant=${encodeURIComponent(variantId)}` : ""}`
+      : "#"
     return (
       <li key={lineId} className="cart-line">
         {thumbSrc ? (
           <Link
-            href={productId ? `/product/${productId}` : "#"}
+            href={productHref}
             className="cart-line-thumb"
             tabIndex={-1}
             aria-hidden="true"
@@ -293,7 +297,7 @@ export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) 
         )}
         <div className="cart-line-info">
           <Link
-            href={productId ? `/product/${productId}` : "#"}
+            href={productHref}
             className="cart-line-title"
           >
             {(item.title as string) ?? "—"}

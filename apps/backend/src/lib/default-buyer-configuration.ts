@@ -1,3 +1,4 @@
+import { explicitOpeningVariant } from "./explicit-opening-variant"
 /**
  * Backend-resolved default buyer configuration for CONFIGURABLE products.
  *
@@ -160,7 +161,8 @@ function openingPurchasableVariant(
             return delta || bySku(a, b)
           })
         : records
-  const raw = ordered[0]
+  const pinned = explicitOpeningVariant(product)
+  const raw = pinned === undefined ? ordered[0] : pinned
   if (!raw) return null
   const id = typeof raw.id === "string" ? raw.id : null
   if (!id) return null
