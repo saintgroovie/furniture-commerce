@@ -641,6 +641,8 @@ export default async function ProductPage({
   const scalarProductJsonLd = buildProductJsonLd({
     name: getProductSeoName(product) || "Товар",
     description: getSeoDescriptionSource(textProduct),
+    material: typeof (product.metadata as Record<string, unknown> | undefined)?.material === "string"
+      ? (product.metadata as Record<string, unknown>).material as string : null,
     url: canonicalUrl,
     images: [pdpMainSrc, ...pdpResolvedExtras],
     dimensions: dim ? pdpDimensionCells(dim) : [],
