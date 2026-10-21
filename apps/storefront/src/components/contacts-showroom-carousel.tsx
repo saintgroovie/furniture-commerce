@@ -11,12 +11,12 @@ export function ContactsShowroomCarousel() {
   const root = useRef<HTMLDivElement>(null)
   const touchStart = useRef<{ x: number; y: number } | null>(null)
   const pointerToggle = useRef(false)
+  const suppressPhotoClick = useRef(false)
   const [active, setActive] = useState(0)
   const [paused, setPaused] = useState(false)
-  const [hovered, setHovered] = useState(false)
   const [visible, setVisible] = useState(false)
   const [pageVisible, setPageVisible] = useState(true)
-  const running = !paused && !hovered && visible && pageVisible
+  const running = !paused && visible && pageVisible
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -59,13 +59,8 @@ export function ContactsShowroomCarousel() {
       role="region"
       aria-roledescription="карусель"
       aria-label="Фотографии шоурума Woodright"
-      tabIndex={0}
       data-active-slide={active + 1}
       data-running={running}
-      onPointerEnter={(event) => {
-        if (event.pointerType === "mouse") setHovered(true)
-      }}
-      onPointerLeave={() => setHovered(false)}
       onFocusCapture={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget)) setPaused(true)
       }}
@@ -73,21 +68,6 @@ export function ContactsShowroomCarousel() {
         if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
           event.preventDefault()
           select(active + (event.key === "ArrowLeft" ? -1 : 1))
-        }
-      }}
-      onTouchStart={(event) => {
-        const point = event.touches[0]
-        touchStart.current = { x: point.clientX, y: point.clientY }
-      }}
-      onTouchEnd={(event) => {
-        const start = touchStart.current
-        touchStart.current = null
-        if (!start) return
-        const point = event.changedTouches[0]
-        const dx = point.clientX - start.x
-        const dy = point.clientY - start.y
-        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-          select(active + (dx < 0 ? 1 : -1))
         }
       }}
     >
@@ -109,6 +89,39 @@ export function ContactsShowroomCarousel() {
         ))}
       </div>
       <div className="contacts-carousel-fade" aria-hidden="true" />
+      <button
+        type="button"
+        className="contacts-carousel-photo-toggle"
+        aria-label={paused ? "Включить автоматическое перелистывание" : "Остановить автоматическое перелистывание"}
+        onPointerDown={() => {
+          pointerToggle.current = !paused
+          suppressPhotoClick.current = false
+        }}
+        onClick={(event) => {
+          if (suppressPhotoClick.current) {
+            suppressPhotoClick.current = false
+            return
+          }
+          // Pointer intent is captured before focus pauses autoplay.
+          setPaused(event.detail > 0 ? pointerToggle.current : !paused)
+        }}
+        onTouchStart={(event) => {
+          const point = event.touches[0]
+          touchStart.current = { x: point.clientX, y: point.clientY }
+        }}
+        onTouchEnd={(event) => {
+          const start = touchStart.current
+          touchStart.current = null
+          if (!start) return
+          const point = event.changedTouches[0]
+          const dx = point.clientX - start.x
+          const dy = point.clientY - start.y
+          suppressPhotoClick.current = Math.abs(dx) > 10 || Math.abs(dy) > 10
+          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+            select(active + (dx < 0 ? 1 : -1))
+          }
+        }}
+      />
       <div className="contacts-carousel-controls">
         <button type="button" className="contacts-carousel-arrow contacts-carousel-arrow--previous" aria-label="Предыдущее фото" onClick={() => select(active - 1)}>
           <img src="/images/footer/arrow-right.svg" alt="" width={18} height={18} />
@@ -132,19 +145,6 @@ export function ContactsShowroomCarousel() {
         <button type="button" className="contacts-carousel-arrow" aria-label="Следующее фото" onClick={() => select(active + 1)}>
           <img src="/images/footer/arrow-right.svg" alt="" width={18} height={18} />
         </button>
-        <button
-          type="button"
-          className="contacts-carousel-toggle"
-          aria-label={paused ? "Включить автоматическое перелистывание" : "Остановить автоматическое перелистывание"}
-          onPointerDown={() => { pointerToggle.current = !paused }}
-          onClick={(event) => {
-            // Focus pauses the carousel before a pointer click reaches this button.
-            setPaused(event.detail > 0 ? pointerToggle.current : !paused)
-          }}
-        >
-          {paused ? "Авто" : "Пауза"}
-        </button>
-        <span className="contacts-carousel-count" aria-hidden="true">{String(active + 1).padStart(2, "0")} / {String(COUNT).padStart(2, "0")}</span>
       </div>
     </div>
   )
