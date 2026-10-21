@@ -1,77 +1,82 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
-import type { ReactNode } from "react"
 import { BespokeBadge } from "@/components/bespoke-badge"
 import { WoodrightWordmark } from "@/components/woodright-wordmark"
+import { footer } from "@/lib/woodright-copy"
 import { useChromeVisual, useSiteSection } from "@/lib/use-site-section"
 
-/**
- * Footer shell: kids sage / bespoke teal wash via data-section (same flag
- * as the header). Wordmark links to /kids or /bespoke when that section
- * is active. Visual chrome follows `useChromeVisual` so kids → PDP
- * replays enter.
- */
-export function SiteFooter({
-  brandBody,
-  nav,
-  bottom,
-}: {
-  brandBody: ReactNode
-  nav: ReactNode
-  bottom: ReactNode
-}) {
+/** Shared buyer footer. Section identity follows the header's transition. */
+export function SiteFooter({ year }: { year: number }) {
   const section = useSiteSection()
   const { section: visual, kids: visualKids, snap } = useChromeVisual()
-  const href = section === "kids" ? "/kids" : section === "bespoke" ? "/bespoke" : "/"
-  const ariaLabel =
-    section === "kids"
-      ? "Woodright Kids - на главную детской"
-      : section === "bespoke"
-        ? "Woodright Bespoke"
-        : "Woodright - на главную"
+  const homeHref = section === "kids" ? "/kids" : section === "bespoke" ? "/bespoke" : "/"
 
   return (
-    <footer
-      className={`site-footer${snap ? " is-kids-snap" : ""}`}
-      data-section={visual}
-    >
-      <div className="footer-inner">
-        <div className="footer-columns">
-          <div className="footer-column footer-brand">
-            <div className="footer-brand-copy">
-              <Link
-                href={href}
-                className="footer-column-title footer-brand-logo"
-                aria-label={ariaLabel}
-              >
-                <span className="footer-brand-mark">
-                  <span className="footer-brand-lockup">
-                    <WoodrightWordmark className="footer-brand-wordmark" />
-                    <span
-                      className={`logo-kids-slot${visualKids ? " is-visible" : ""}${snap ? " is-snap" : ""}`}
-                      aria-hidden="true"
-                    >
-                      <span className="logo-kids-badge">Kids</span>
-                    </span>
-                    {/* BESPOKE capsule sits right of the wordmark, same row as KIDS. */}
-                    <span className="logo-bespoke-slot" aria-hidden="true">
-                      <BespokeBadge />
-                    </span>
-                  </span>
-                </span>
-              </Link>
-              {brandBody}
-              {visual === "bespoke" ? (
-                <span className="footer-row footer-bespoke-line">
-                  Woodright Bespoke - мебель по проекту
-                </span>
-              ) : null}
-            </div>
-          </div>
-          {nav}
+    <footer className={`wr-footer${snap ? " is-kids-snap" : ""}`} data-section={visual} id="site-footer">
+      <section className="wr-footer-invitation" aria-labelledby="footer-invitation-title">
+        <div className="wr-footer-photo">
+          <Image src="/images/footer/bedroom.webp" alt="" fill sizes="(max-width: 759px) 100vw, 55vw" loading="lazy" />
         </div>
-        {bottom}
+        <div className="wr-footer-invitation-copy">
+          <p className="wr-footer-eyebrow">{footer.invitation.eyebrow}</p>
+          <h2 id="footer-invitation-title">
+            {footer.invitation.title.map((line) => <span key={line}>{line}</span>)}
+          </h2>
+          <p className="wr-footer-invitation-text">{footer.invitation.body}</p>
+          <div className="wr-footer-actions">
+            <Link href="/bespoke/request" className="wr-footer-primary">{footer.invitation.primary}</Link>
+            <Link href="/about/production" className="wr-footer-secondary">{footer.invitation.secondary}<Image src="/images/footer/arrow-right.svg" alt="" width={24} height={24} /></Link>
+          </div>
+        </div>
+      </section>
+
+      <div className="wr-footer-navigation">
+        <div className="wr-footer-grid">
+          <div className="wr-footer-brand">
+            <Link href={homeHref} className="wr-footer-brand-link" aria-label="Woodright - на главную">
+              <WoodrightWordmark className="wr-footer-small-wordmark" />
+              <span className={`logo-kids-slot${visualKids ? " is-visible" : ""}${snap ? " is-snap" : ""}`} aria-hidden="true">
+                <span className="logo-kids-badge">Kids</span>
+              </span>
+              {visual === "bespoke" ? <BespokeBadge /> : null}
+            </Link>
+            <p>{footer.brandText.map((line) => <span key={line}>{line}</span>)}</p>
+          </div>
+          <nav className="wr-footer-nav" aria-label="Разделы сайта">
+            {footer.columns.map((column) => (
+              <div className="wr-footer-column" key={column.title}>
+                <h3>{column.title}</h3>
+                <ul>
+                  {column.links.map((link, index) => {
+                    if ("joinPrevious" in link && link.joinPrevious) return null
+                    const next = column.links[index + 1]
+                    const continuation = next && "joinPrevious" in next && next.joinPrevious ? next : null
+                    return (
+                      <li key={link.href}>
+                        <Link href={link.href}>{link.label}</Link>
+                        {continuation ? <> <Link href={continuation.href}>{continuation.label}</Link></> : null}
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ))}
+          </nav>
+        </div>
+      </div>
+
+      <div className="wr-footer-signature">
+        <div className="wr-footer-signature-inner">
+          <Link href={homeHref} className="wr-footer-display-wordmark" aria-label="Woodright - на главную">WOODRIGHT</Link>
+          <div className="wr-footer-bottom">
+            <span>{footer.copyright(year)}</span>
+            <nav aria-label="Правовая информация">
+              <ul>{footer.legalLinks.map((link) => <li key={link.href}><Link href={link.href}>{link.label}</Link></li>)}</ul>
+            </nav>
+          </div>
+        </div>
       </div>
     </footer>
   )
