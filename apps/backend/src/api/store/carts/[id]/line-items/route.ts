@@ -12,6 +12,7 @@ import {
   finishLabelFromMetadata,
   isKnownFinishExecutionKey,
 } from "../../../../../lib/finish-color-premium-contract"
+import { productMetadataForVariant } from "../../../../../lib/variant-capabilities"
 
 /**
  * Override of the core POST /store/carts/:id/line-items route.
@@ -19,7 +20,8 @@ import {
  * Configured unit price (material tiers and/or finish premium):
  *   round(solid_full_base × material_multiplier × color_multiplier)
  *
- * - material_multiplier from `product.metadata.material_tiers`
+ * - material_multiplier from the selected variant's capabilities when present,
+ *   otherwise `product.metadata.material_tiers`
  *   (omitted code → position 0 / LDSP when tiers exist — PDP default contract)
  * - color_multiplier: 1 for the first (standard) finish, 1.05 otherwise
  *
@@ -155,6 +157,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       "id",
       "product.id",
       "product.metadata",
+      "metadata",
       "calculated_price.*",
       "prices.amount",
       "prices.currency_code",
@@ -170,6 +173,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const variant = variants?.[0] as
     | {
         product?: { metadata?: Record<string, unknown> }
+        metadata?: Record<string, unknown>
         calculated_price?: { calculated_amount?: number | string | null }
         prices?: VariantPriceRow[]
       }
@@ -179,7 +183,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return
   }
 
-  const productMeta = variant.product?.metadata
+  const productMeta = productMetadataForVariant(variant.product?.metadata, variant.metadata)
   const tiers = parseMaterialTiers(productMeta)
   const needsConfiguredPricing = Boolean(tiers) || Boolean(executionCode) || Boolean(finishKey)
 

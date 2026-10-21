@@ -6,7 +6,25 @@ import { getSiteUrl } from "@/lib/api/base"
 import { getCatalogProducts, getProduct, getProductCompatibility, NOT_FOUND } from "@/lib/api/products"
 import { PdpCompatibility } from "@/components/pdp-compatibility"
 import { getMotifContext } from "@/lib/api/motif-themes"
-import { formatRub, getPrice } from "@/lib/format"
+import {
+  buyerDefaultConfiguration,
+  formatRub,
+  getPrice,
+  pdpDisplayedPrice,
+  pdpVariantPrice,
+  priceOfVariant,
+} from "@/lib/format"
+import {
+  buyerVariantAxis,
+  resolveBuyerVariantId,
+  variantChipTarget,
+} from "@/lib/buyer-variant-axis"
+import {
+  resolveSparseVariantId,
+  sparseAxisChoices,
+  sparseVariantMap,
+  withVariantCapabilities,
+} from "@/lib/sparse-variant-map"
 import { indexingCanonical } from "@/lib/indexing-policy"
 import {
   buildBreadcrumbJsonLd,
@@ -24,7 +42,8 @@ import {
 } from "@/lib/request-quote"
 import { ProductCta } from "@/components/product-cta"
 import { PdpPriceBlock } from "@/components/pdp-price-block"
-import { resolveOriginalBasePrice } from "@/lib/sale-price"
+import { selectedBuyerVariantId } from "@/lib/opening-variant"
+import { resolveOriginalBasePriceOf } from "@/lib/sale-price"
 import { PdpMaterialTierSelect } from "@/components/pdp-material-tier-select"
 import { PdpSizeChips } from "@/components/pdp-size-chips"
 import { PdpHingeSideSelect } from "@/components/pdp-hinge-side-select"
@@ -54,6 +73,7 @@ import {
   resolveGreenwichPaintMedia,
 } from "@/lib/greenwich-paint-media"
 import {
+  compactDisplayGroupChipLabels,
   displayGroupMemberLabel,
   displayGroupSelectorLabel,
   getDisplayGroupMembers,
@@ -74,16 +94,21 @@ import { buildPdpBuyerFacingGallery } from "@/lib/pdp-buyer-gallery.server"
 import {
   getCollectionLabel,
   getSubcollectionLabel,
-  getCanonicalName,
   getBuyerFacingProductTitle,
   getBuyerFacingProductTitleLayout,
   getArticle,
   getDimensions,
+  getMattressSize,
   getPdpMattressSize,
   getPdpHeroObjectPosition,
   pdpDimensionCells,
 } from "@/lib/product-metadata"
-import { layoutBuyerFacingTitle } from "@/lib/en-name-ru"
+import {
+  buildProductMetaDescription,
+  getBuyerDescription,
+  getProductSeoName,
+  getSeoDescriptionSource,
+} from "@/lib/product-seo"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import {
   isPdpCollectionContextSentence,
@@ -103,11 +128,6 @@ function pdpHeroThumbnail(product: Record<string, unknown>): string | undefined 
 /** OG / JSON-LD: same source as PDP hero (wardrobe closed front when `_main` is interior). */
 function primaryImageForMeta(product: Record<string, unknown>): string | undefined {
   return pdpHeroThumbnail(product)
-}
-
-function truncate(str: string, max: number): string {
-  if (str.length <= max) return str
-  return str.slice(0, max - 3).trim() + "..."
 }
 
 /** Short positioning line under the H1 — real Medusa `subtitle` only. */
@@ -139,8 +159,11 @@ export async function generateMetadata({
     }
     const canonicalPath = productCanonicalPath(product, id)
     const selfCanonical = indexingCanonical(`${base}${canonicalPath}`)
-    const title = getBuyerFacingProductTitle(product)
-    const desc = product.description ? truncate(String(product.description), 160) : "Товар из каталога Woodright."
+    const title = getProductSeoName(product)
+    const desc = buildProductMetaDescription(product, {
+      hasOptions: (buildMaterialTierOptions(product)?.length ?? 0) > 0,
+      priceMode: isRequestQuoteProduct(product) ? "quote" : "price",
+    })
     const imageUrl = primaryImageForMeta(product)
     return {
       title,
@@ -229,14 +252,33 @@ export default async function ProductPage({
     )
   }
 
+  const sparseMap = sparseVariantMap(product)
+  const variantAxis = sparseMap ? null : buyerVariantAxis(product)
+  const requestedVariant = resolvedSearchParams?.variant
+  const requestedVariantId = Array.isArray(requestedVariant)
+    ? requestedVariant[0]
+    : requestedVariant
+  const selectedVariantId =
+    selectedBuyerVariantId(product as Record<string, unknown>, requestedVariantId) ??
+    (sparseMap
+      ? resolveSparseVariantId(sparseMap, undefined)
+      : resolveBuyerVariantId(variantAxis, undefined))
+  const selectedVariant =
+    selectedVariantId == null
+      ? null
+      : ((product.variants as Array<Record<string, unknown>> | undefined) ?? []).find(
+          (variant) => variant.id === selectedVariantId
+        ) ?? null
+  const viewProduct = withVariantCapabilities(product, selectedVariant) as Record<string, unknown>
+
   const isOliver = handle.startsWith("ol-")
-  const isGreenwichBed = isGreenwichBedProduct(product)
-  const thumbSrc = cardThumbnailSrcFromProduct(product)
-  const executionSelectors = buildIntraProductExecutionSelectors(product, thumbSrc)
+  const isGreenwichBed = isGreenwichBedProduct(viewProduct)
+  const thumbSrc = cardThumbnailSrcFromProduct(viewProduct)
+  const executionSelectors = buildIntraProductExecutionSelectors(viewProduct, thumbSrc)
   const greenwichBedMatrix = executionSelectors.greenwichBedMatrix
   const greenwichPaintMatrix = executionSelectors.greenwichPaintMatrix
   const bedInteriorSrcs = isGreenwichBed
-    ? greenwichBedInteriorUrlsFromProduct(product)
+    ? greenwichBedInteriorUrlsFromProduct(viewProduct)
     : []
   const bedDefaults =
     greenwichBedMatrix && greenwichBedMatrix.length > 0
@@ -302,29 +344,38 @@ export default async function ProductPage({
               : activeFinish != null
                 ? activeFinish.extraSrcs
                 : mergeUniqueExtraUrls(thumbSrc, [
-                    collectExtraProductImageUrls(product, thumbSrc),
+                    collectExtraProductImageUrls(viewProduct, thumbSrc),
                   ])
     return { mainSrc, extraSrcs }
   })()
 
   const useExecutionPdp =
     isGreenwichBed || hasPdpExecutionControls(executionSelectors)
-  const price = getPrice(product)
+  const price = pdpVariantPrice(product, selectedVariant)
   /* Material execution options from metadata.material_tiers (backend SoT). */
-  const materialTiers = buildMaterialTierOptions(product)
-  const backendDefaultMin = (() => {
-    const cfg = (product.metadata as Record<string, unknown> | undefined)
-      ?.buyer_default_configuration
-    if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) return null
-    const min = (cfg as { min_unit_price?: unknown }).min_unit_price
-    return typeof min === "number" && Number.isFinite(min) && min > 0 ? min : null
-  })()
-  /* Opening PDP amount = backend default, else cheapest tier, else solid_full. */
-  const openingPrice =
-    backendDefaultMin ??
-    (materialTiers?.[0]?.price != null && Number.isFinite(materialTiers[0].price)
+  const materialTiers = buildMaterialTierOptions(viewProduct, price)
+  const opening = buyerDefaultConfiguration(product)
+  const tierPrice =
+    materialTiers?.[0]?.price != null && Number.isFinite(materialTiers[0].price)
       ? materialTiers[0].price
-      : price)
+      : null
+  /* Opening amount follows the backend SKU, not variants[0]. An unpriced selection stays empty. */
+  const openingPrice = pdpDisplayedPrice({
+    selectedVariantId:
+      selectedVariant && typeof selectedVariant.id === "string" ? selectedVariant.id : null,
+    selectedOwnPrice: price,
+    openingVariantId: opening.variantId,
+    openingConfiguredPrice: opening.minUnitPrice,
+    selectedTierPrice: tierPrice,
+  })
+  const strikeVariant = ((): Record<string, unknown> | null => {
+    if (selectedVariant) return selectedVariant
+    const variants = product.variants as Array<Record<string, unknown>> | undefined
+    if (opening.variantId) {
+      return variants?.find((variant) => variant.id === opening.variantId) ?? null
+    }
+    return variants?.[0] ?? null
+  })()
   const requestQuotePrice = isRequestQuoteProduct(product)
     ? formatRequestQuotePriceLabel(product)
     : null
@@ -347,7 +398,7 @@ export default async function ProductPage({
 
   const oliverBuyerGallery =
     isOliver && !useExecutionPdp && !bedMatrixMedia && !paintMatrixMedia
-      ? buildPdpBuyerFacingGallery(product)
+      ? buildPdpBuyerFacingGallery(viewProduct)
       : null
 
   const mainImage =
@@ -355,7 +406,7 @@ export default async function ProductPage({
       executionPdpMedia?.mainSrc ??
       bedMatrixMedia?.mainSrc ??
       paintMatrixMedia?.mainSrc) ||
-    pdpHeroThumbnail(product)
+    pdpHeroThumbnail(viewProduct)
   const mainNorm = mainImage ?? ""
   const heroObjectPosition = getPdpHeroObjectPosition(product)
   const pdpExtraSrcs = oliverBuyerGallery
@@ -366,20 +417,20 @@ export default async function ProductPage({
         ? bedMatrixMedia.extraSrcs
         : paintMatrixMedia
           ? paintMatrixMedia.extraSrcs
-          : collectDisplayGroupExtraImageUrls([product, ...displayGroupMembers], mainNorm)
+          : collectDisplayGroupExtraImageUrls([viewProduct, ...displayGroupMembers], mainNorm)
 
   const { mainSrc: bundledMain, extraSrcs: bundledExtras } = resolvePdpMediaBundle(
     mainNorm,
-    filterProvenceSceneOnlyPdpExtras(product, mainNorm, pdpExtraSrcs)
+    filterProvenceSceneOnlyPdpExtras(viewProduct, mainNorm, pdpExtraSrcs)
   )
   // Shared PDP boundary: restore evidence-protected angles, then drop true near-dups
   // (covers Oliver buyer gallery, execution selectors, and plain collect paths).
   const restoredOrder = promoteClosedFrontHero(
-    product as Record<string, unknown>,
+    viewProduct,
     restoreEvidenceProtectedAngles(
       handle,
       [bundledMain, ...bundledExtras],
-      collectProductImageUrls(product as Record<string, unknown>)
+      collectProductImageUrls(viewProduct)
     )
   )
   const evidenced = resolveCardHeroAndNearDuplicateExtras(
@@ -393,24 +444,15 @@ export default async function ProductPage({
 
   const titleLayout = getBuyerFacingProductTitleLayout(product)
   const titleStr = getBuyerFacingProductTitle(product)
-  const canonicalName = getCanonicalName(product)
-  const canonicalLayout = canonicalName
-    ? layoutBuyerFacingTitle(canonicalName)
-    : null
-  /* Hide workbook line when it only differs by Latin vs transcribed model. */
-  const showCanonicalLine =
-    canonicalLayout != null &&
-    canonicalLayout.text.toLowerCase() !== titleStr.trim().toLowerCase()
-
   const collectionLabel = getCollectionLabel(product)
   const subcollectionLabel = getSubcollectionLabel(product)
-  const article = getArticle(product)
-  const dim = getDimensions(product)
+  const article =
+    selectedVariant && typeof selectedVariant.sku === "string"
+      ? selectedVariant.sku
+      : getArticle(product)
+  const dim = getDimensions(product, selectedVariant)
   const subtitle = getPdpSubtitle(product)
-  const description =
-    product.description != null && String(product.description).trim().length > 0
-      ? String(product.description).trim()
-      : null
+  const description = getBuyerDescription(product)
 
   /* Buyer-facing order is fixed: height → width → depth (cm hero + mm specs). */
   const dimensionLabelByAxis = {
@@ -428,7 +470,9 @@ export default async function ProductPage({
       }))
     : []
 
-  const mattress = getPdpMattressSize(product)
+  const mattress = selectedVariant
+    ? getMattressSize(product, selectedVariant)
+    : getPdpMattressSize(product)
 
   const specRows = [
     ...(mattress
@@ -476,7 +520,30 @@ export default async function ProductPage({
     product,
     ...displayGroupMembers,
   ])
-  const sizeChips =
+  const handleForVariant = typeof product.handle === "string" ? product.handle : id
+  const variants = (product.variants as Array<Record<string, unknown>> | undefined) ?? []
+  const sparseChipRows =
+    sparseMap && selectedVariantId
+      ? sparseAxisChoices(sparseMap, selectedVariantId).map((row) => ({
+          label: row.label,
+          chips: row.choices.map((choice) => {
+            const variant = variants.find((item) => item.id === choice.variantId) ?? null
+            const basePrice = priceOfVariant(variant)
+            return {
+              id: variantChipTarget(handleForVariant, choice.variantId, resolvedSearchParams),
+              label: choice.label,
+              basePrice,
+              materialTiers: buildMaterialTierOptions(
+                withVariantCapabilities(product, variant),
+                basePrice
+              ),
+              sort: choice.sort,
+              isCurrent: choice.isCurrent,
+            }
+          }),
+        }))
+      : []
+  const displayGroupChipsFull =
     displayGroupMembers.length > 0
       ? [
           {
@@ -493,6 +560,7 @@ export default async function ProductPage({
             const mMeta = m.metadata as Record<string, unknown> | undefined
             return {
               id: m.id as string,
+              href: productCanonicalPath(m, String(m.id ?? "")),
               label:
                 displayGroupAxis === "execution"
                   ? displayGroupMemberLabel(m, displayGroupAxis)
@@ -504,7 +572,33 @@ export default async function ProductPage({
           }),
         ].sort((a, b) => a.sort - b.sort)
       : []
-  const displayGroupSelector = displayGroupSelectorLabel(displayGroupAxis)
+  const compactChipLabels =
+    displayGroupAxis === "size"
+      ? compactDisplayGroupChipLabels(displayGroupChipsFull.map((c) => c.label))
+      : null
+  const displayGroupChips = compactChipLabels
+    ? displayGroupChipsFull.map((c, i) => ({ ...c, label: compactChipLabels[i]! }))
+    : displayGroupChipsFull
+  const sizeChips =
+    sparseMap
+      ? []
+      : variantAxis && selectedVariantId
+      ? variantAxis.choices.map((choice) => {
+          const variant = (
+            (product.variants as Array<Record<string, unknown>> | undefined) ?? []
+          ).find((item) => item.id === choice.id)
+          return {
+            id: variantChipTarget(handleForVariant, choice.id, resolvedSearchParams),
+            label: choice.label,
+            basePrice: priceOfVariant(variant),
+            sort: choice.sort,
+            isCurrent: choice.id === selectedVariantId,
+          }
+        })
+      : displayGroupChips
+  const displayGroupSelector = variantAxis
+    ? variantAxis.label
+    : displayGroupSelectorLabel(displayGroupAxis)
 
   const isKidsProduct = isKidsStorefrontProduct(product)
   const collectionFilterKey = getCollectionFilterKey(product)
@@ -524,8 +618,8 @@ export default async function ProductPage({
     displayedPriceRub: openingPrice,
   })
   const productJsonLd = buildProductJsonLd({
-    name: titleStr || "Товар",
-    description,
+    name: getProductSeoName(product) || "Товар",
+    description: getSeoDescriptionSource(product),
     url: canonicalUrl,
     images: [pdpMainSrc, ...pdpResolvedExtras],
     dimensions: dim ? pdpDimensionCells(dim) : [],
@@ -606,6 +700,7 @@ export default async function ProductPage({
                 separateFabricRows={executionSelectors.separateFabricRows}
                 heroObjectPosition={heroObjectPosition}
                 productHandle={handle}
+                executionScopeKey={selectedVariantId ?? handle}
               />
             ) : isOliver ? (
               <OliverPdpMediaSwitcher
@@ -672,14 +767,6 @@ export default async function ProductPage({
                 />
                 {badgeLabel && <span className="badge">{badgeLabel}</span>}
               </div>
-              {showCanonicalLine && canonicalLayout && (
-                <CopyLines
-                  as="span"
-                  className="pdp-canonical-name"
-                  lines={canonicalLayout.lines}
-                />
-              )}
-
               {/* 3. Short positioning line (real `subtitle` field only).
                   Layout only: Woodright dashes + meaning breaks via CopyLines. */}
               {subtitle && (
@@ -744,7 +831,17 @@ export default async function ProductPage({
                   requestQuote={isRequestQuoteProduct(product)}
                 />
               )}
-              {sizeChips.length > 0 && (
+              {sparseChipRows.map((row) => (
+                <PdpSizeChips
+                  key={row.label}
+                  productKey={handle || (product.id as string)}
+                  chips={row.chips}
+                  materialTiers={materialTiers}
+                  requestQuote={isRequestQuoteProduct(product)}
+                  selectorLabel={row.label}
+                />
+              ))}
+              {sparseChipRows.length === 0 && sizeChips.length > 0 && (
                 <PdpSizeChips
                   productKey={handle || (product.id as string)}
                   chips={sizeChips}
@@ -775,7 +872,7 @@ export default async function ProductPage({
                         : null
                 }
                 basePrice={price}
-                originalBasePrice={resolveOriginalBasePrice(product as Record<string, unknown>)}
+                originalBasePrice={resolveOriginalBasePriceOf(strikeVariant)}
                 requiresBuyerSelection={
                   useExecutionPdp &&
                   !isRequestQuoteProduct(product) &&
@@ -789,6 +886,7 @@ export default async function ProductPage({
               {/* 7. CTA */}
               <ProductCta
                 product={product}
+                variantId={selectedVariantId ?? undefined}
                 requiresBuyerSelection={
                   useExecutionPdp &&
                   !isRequestQuoteProduct(product) &&

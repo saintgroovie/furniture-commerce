@@ -256,6 +256,7 @@ function ids(products: Record<string, unknown>[]): string[] {
 {
   assert.equal(getCategoryFilterLabel("stupeni"), "Ступени")
   assert.equal(getCategoryFilterLabel("stoly"), "Столы")
+  assert.equal(getCategoryFilterLabel("toy-box"), "Ящики для игрушек")
 }
 
 console.log("catalog-filter.fidelity.test.ts: all assertions passed")

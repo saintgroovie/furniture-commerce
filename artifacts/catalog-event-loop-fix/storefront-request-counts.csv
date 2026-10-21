@@ -1,0 +1,7 @@
+page,server_before,client_before,total_before,server_after,client_after,total_after,how
+/,1,0,1,1,0,1,source on live SHA and candidate; browser not executed
+/catalog,1,1,2,1,0,1,source; candidate client fetch skipped when hydratedPool is passed; browser not executed
+/catalog_filtered,1,1,2,1,0,1,source; browser not executed
+/kids/catalog,1,1,2,1,0,1,source; browser not executed
+pdp_with_display_group,1,0,1,1,0,1,source; browser not executed
+pdp_without_display_group,0,0,0,0,0,0,source; browser not executed

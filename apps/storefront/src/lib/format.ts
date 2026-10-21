@@ -1,3 +1,5 @@
+import { openingVariant } from "./opening-variant"
+
 export function formatRub(amount: number): string {
   return amount.toLocaleString("ru-RU") + " ₽"
 }
@@ -19,8 +21,7 @@ export function getOrderDisplayNumber(order: Record<string, unknown>): string {
 
 /** Medusa v2 amounts are major currency units (rubles for RUB). */
 export function getPrice(product: Record<string, unknown>): number | null {
-  const variants = product.variants as Array<Record<string, unknown>> | undefined
-  const v = variants?.[0]
+  const v = openingVariant(product)
   if (!v) return null
   const cp = v.calculated_price as Record<string, unknown> | undefined
   if (cp?.calculated_amount != null) return Number(cp.calculated_amount)
@@ -29,4 +30,78 @@ export function getPrice(product: Record<string, unknown>): number | null {
     (v.price_set as { prices?: Array<Record<string, unknown>> } | undefined)?.prices
   if (prices?.length && prices[0].amount != null) return Number(prices[0].amount)
   return null
+}
+
+/**
+ * Base RUB of one variant, before the material-tier multiplier.
+ * Prefer the backend-resolved `calculated_amount` so an active price list
+ * is the amount this SKU actually sells for. A raw `prices[]` row that
+ * belongs to a price list is not a mattress or size base.
+ */
+export function priceOfVariant(
+  variant: Record<string, unknown> | null | undefined
+): number | null {
+  if (!variant) return null
+  const calculated = variant.calculated_price as Record<string, unknown> | undefined
+  if (calculated?.calculated_amount != null) return Number(calculated.calculated_amount)
+  const prices =
+    (variant.prices as Array<Record<string, unknown>> | undefined) ??
+    (variant.price_set as { prices?: Array<Record<string, unknown>> } | undefined)
+      ?.prices
+  const base = prices?.find((price) => price.price_list_id == null && price.amount != null)
+  if (base) return Number(base.amount)
+  if (prices?.length && prices[0].amount != null) return Number(prices[0].amount)
+  return null
+}
+
+/** PDP amount. A selected variant without its own price stays unpriced: never another SKU's price. */
+export function pdpVariantPrice(
+  product: Record<string, unknown>,
+  selectedVariant: Record<string, unknown> | null | undefined
+): number | null {
+  return selectedVariant ? priceOfVariant(selectedVariant) : getPrice(product)
+}
+
+/** Opening SKU and its configured amount, as resolved by the backend. */
+export function buyerDefaultConfiguration(product: Record<string, unknown>): {
+  variantId: string | null
+  minUnitPrice: number | null
+} {
+  const meta = product.metadata
+  const cfg =
+    meta && typeof meta === "object" && !Array.isArray(meta)
+      ? (meta as { buyer_default_configuration?: unknown }).buyer_default_configuration
+      : null
+  if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) {
+    return { variantId: null, minUnitPrice: null }
+  }
+  const rec = cfg as { variant_id?: unknown; min_unit_price?: unknown }
+  const variantId =
+    typeof rec.variant_id === "string" && rec.variant_id ? rec.variant_id : null
+  const min = rec.min_unit_price
+  const minUnitPrice =
+    typeof min === "number" && Number.isFinite(min) && min > 0 ? min : null
+  return { variantId, minUnitPrice }
+}
+
+/**
+ * Amount shown on the PDP.
+ * The opening SKU is `buyer_default_configuration.variant_id`, not `variants[0]`.
+ * A selected SKU with no price of its own stays unpriced.
+ */
+export function pdpDisplayedPrice(input: {
+  selectedVariantId: string | null
+  selectedOwnPrice: number | null
+  openingVariantId: string | null
+  openingConfiguredPrice: number | null
+  selectedTierPrice: number | null
+}): number | null {
+  if (input.selectedVariantId != null && input.selectedOwnPrice == null) return null
+  const isOpening =
+    input.selectedVariantId == null ||
+    (input.openingVariantId != null && input.selectedVariantId === input.openingVariantId)
+  if (isOpening) {
+    return input.openingConfiguredPrice ?? input.selectedTierPrice ?? input.selectedOwnPrice
+  }
+  return input.selectedTierPrice ?? input.selectedOwnPrice
 }

@@ -8,6 +8,7 @@ import { PartnerMark, hasPartnerMark } from "@/components/partners/partner-mark"
 import { getPublicPartnerBySlug } from "@/lib/api/partners"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import { partnersCopy, seo } from "@/lib/woodright-copy"
+import { pageTitle } from "@/lib/page-title"
 import "../partners-editorial.css"
 
 export const dynamic = "force-dynamic"
@@ -25,7 +26,7 @@ export async function generateMetadata({
     return { title: seo.partners.title }
   }
   return {
-    title: `${partner.name} - ${seo.partners.title}`,
+    title: pageTitle(`${partner.name} - ${seo.partners.title}`),
     description: partner.description || seo.partners.description,
     openGraph: {
       title: partner.name,

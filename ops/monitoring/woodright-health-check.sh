@@ -348,13 +348,17 @@ fi
 PDP_CODE=$(curl_code "${BUYER_HOST}/products" || true)
 # soft: catalog already covered
 
-# Buyer release identity: participate when the header is present.
-# Missing header is warning (not critical) so APIs/routes without the header
-# cannot fail-closed the whole monitor. Mismatch vs EXPECTED_RELEASE is warning;
-# cutover execute still requires fresh HTTPS identity via wait_buyer_edge.
+# Buyer application identity. x-woodright-release-sha is the shared release
+# baseline, not the storefront artifact. A governed storefront-only release
+# may leave this header on the older baseline while
+# x-woodright-storefront-source-sha is newer. That difference is expected.
+# Missing header is warning (not critical). Mismatch vs the application SHA
+# in EXPECTED_RELEASE is warning. Component skew is a separate check.
 BUYER_SHA="$(curl_hdr "$BUYER_HOST/" "x-woodright-release-sha" || true)"
 BUYER_SHA="$(printf '%s' "$BUYER_SHA" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
 EXPECTED_SHA=""
+EXPECTED_SF_SHA=""
+EXPECTED_BE_SHA=""
 if [[ -r "$EXPECTED_RELEASE" ]]; then
   EXPECTED_SHA="$(python3 -c 'import json,sys
 p=sys.argv[1]
@@ -362,9 +366,25 @@ try:
   d=json.load(open(p))
 except Exception:
   raise SystemExit(0)
-# Buyer header is the storefront revision. Prefer the explicit storefront
-# source SHA so an approved split predecessor is not compared to the backend SHA.
-print(str(d.get("storefront_source_sha") or d.get("release_sha") or d.get("application_sha") or d.get("sha") or "").strip().lower())
+def one(key):
+  return str(d.get(key) or "").strip().lower()
+print(one("release_sha") or one("application_sha") or one("application_source_sha") or one("sha"))
+' "$EXPECTED_RELEASE" 2>/dev/null || true)"
+  EXPECTED_SF_SHA="$(python3 -c 'import json,sys
+p=sys.argv[1]
+try:
+  d=json.load(open(p))
+except Exception:
+  raise SystemExit(0)
+print(str(d.get("storefront_source_sha") or "").strip().lower())
+' "$EXPECTED_RELEASE" 2>/dev/null || true)"
+  EXPECTED_BE_SHA="$(python3 -c 'import json,sys
+p=sys.argv[1]
+try:
+  d=json.load(open(p))
+except Exception:
+  raise SystemExit(0)
+print(str(d.get("backend_source_sha") or "").strip().lower())
 ' "$EXPECTED_RELEASE" 2>/dev/null || true)"
 fi
 if [[ -z "$BUYER_SHA" ]]; then
@@ -373,6 +393,28 @@ elif [[ -n "$EXPECTED_SHA" && "$BUYER_SHA" != "$EXPECTED_SHA" ]]; then
   add_check "buyer_release_sha" warning fail "mismatch have=${BUYER_SHA:0:12} want=${EXPECTED_SHA:0:12}"
 else
   add_check "buyer_release_sha" info pass "present"
+fi
+BUYER_SF_SHA="$(curl_hdr "$BUYER_HOST/" "x-woodright-storefront-source-sha" || true)"
+BUYER_SF_SHA="$(printf '%s' "$BUYER_SF_SHA" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+if [[ -z "$BUYER_SF_SHA" ]]; then
+  add_check "buyer_storefront_source_sha" info pass "absent_until_component_bake"
+elif [[ ! "$BUYER_SF_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+  add_check "buyer_storefront_source_sha" warning fail "malformed"
+elif [[ -n "$EXPECTED_SF_SHA" && "$BUYER_SF_SHA" != "$EXPECTED_SF_SHA" ]]; then
+  add_check "buyer_storefront_source_sha" warning fail "mismatch have=${BUYER_SF_SHA:0:12} want=${EXPECTED_SF_SHA:0:12}"
+else
+  add_check "buyer_storefront_source_sha" info pass "present"
+fi
+API_BE_SHA="$(curl_hdr "$API_HOST/health" "x-woodright-backend-source-sha" || true)"
+API_BE_SHA="$(printf '%s' "$API_BE_SHA" | tr -d '[:space:]' | tr '[:upper:]' '[:lower:]')"
+if [[ -z "$API_BE_SHA" ]]; then
+  add_check "api_backend_source_sha" info pass "absent_until_component_bake"
+elif [[ ! "$API_BE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+  add_check "api_backend_source_sha" warning fail "malformed"
+elif [[ -n "$EXPECTED_BE_SHA" && "$API_BE_SHA" != "$EXPECTED_BE_SHA" ]]; then
+  add_check "api_backend_source_sha" warning fail "mismatch have=${API_BE_SHA:0:12} want=${EXPECTED_BE_SHA:0:12}"
+else
+  add_check "api_backend_source_sha" info pass "present"
 fi
 
 # SEO / security headers on buyer /

@@ -8,6 +8,9 @@ import { buildImgSrcDirective } from "@/lib/analytics-config"
 import { buildConnectSrcDirective } from "@/lib/csp-policy"
 import { storefrontRuntimeIdentityHeaders } from "@/lib/runtime-identity-headers"
 import { legacyBuyerRedirectDestination } from "@/lib/legacy-buyer-redirects"
+import { retiredRedirectTarget } from "@/lib/retired-product-handles"
+import { getBaseUrl, medusaFetch } from "@/lib/api/base"
+import { isBuyerPublicProductStatus } from "@/lib/buyer-publication"
 import { stripLegacyQueryTokenFromOrderTrackSearch } from "@/lib/order-track-token-handoff"
 import { isProductionQaPathBlocked } from "@/lib/production-qa-exposure"
 
@@ -85,7 +88,26 @@ function redirectTo(request: NextRequest, destination: string, nonce: string, cs
   return applySecurityHeaders(request, redirect, nonce, csp)
 }
 
-export function proxy(request: NextRequest) {
+async function productIsStillPublic(key: string): Promise<boolean> {
+  try {
+    const base = getBaseUrl()
+    const byId = await medusaFetch(`${base}/store/products/${encodeURIComponent(key)}`)
+    if (byId.ok) {
+      const body = (await byId.json()) as { product?: { status?: unknown } }
+      return isBuyerPublicProductStatus(body.product?.status)
+    }
+    if (byId.status !== 404) return true
+    const search = new URLSearchParams({ handle: key, limit: "1" })
+    const listed = await medusaFetch(`${base}/store/products?${search}`)
+    if (!listed.ok) return true
+    const data = (await listed.json()) as { products?: Array<{ status?: unknown }> }
+    return isBuyerPublicProductStatus(data.products?.[0]?.status)
+  } catch {
+    return true
+  }
+}
+
+export async function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64")
 
   const csp = [
@@ -122,6 +144,31 @@ export function proxy(request: NextRequest) {
 
   const legacyDest = legacyBuyerRedirectDestination(request.nextUrl.pathname)
   if (legacyDest) return redirectTo(request, legacyDest, nonce, csp)
+
+  const productHandle = request.nextUrl.pathname.match(/^\/product\/([^/]+)$/)
+  if (productHandle) {
+    let key: string | null = null
+    try {
+      key = decodeURIComponent(productHandle[1])
+    } catch {
+      key = null
+    }
+    if (key == null) {
+      const missing = new NextResponse("Not Found", {
+        status: 404,
+        headers: { "content-type": "text/plain; charset=utf-8" },
+      })
+      return applySecurityHeaders(request, missing, nonce, csp)
+    }
+    const retired = retiredRedirectTarget(key, false)
+    if (retired && !(await productIsStillPublic(key))) {
+      const url = request.nextUrl.clone()
+      url.pathname = `/product/${retired.survivorHandle}`
+      url.searchParams.set("variant", retired.variantId)
+      const redirect = NextResponse.redirect(url, 308)
+      return applySecurityHeaders(request, redirect, nonce, csp)
+    }
+  }
 
   // Option A: never consume query tokens into cookies/session. Strip only so
   // SSR/Flight cannot serialize them. First hop of a legacy bookmark may still
