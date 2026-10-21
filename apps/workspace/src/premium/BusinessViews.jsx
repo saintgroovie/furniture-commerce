@@ -289,13 +289,14 @@ export function TodayView({ data, go, openPanel, mutate, notify, ...rest }) {
               icon={Paperclip}
               label={row?.kind === "product" ? "Фотографии" : "Файлы"}
               count={
-                data.files.filter((f) => f.objectId === item.id && !f.archived)
-                  .length
+                row?.kind === "product"
+                  ? data.files.filter(
+                      (f) => f.objectId === item.id && !f.archived,
+                    ).length
+                  : undefined
               }
               onClick={() =>
-                row?.kind === "product"
-                  ? go("products", item.id)
-                  : openPanel({ type: "files", objectId: item.id })
+                row?.kind === "product" ? go("products", item.id) : open(row)
               }
             />
             {row?.kind !== "product" && (
@@ -303,7 +304,9 @@ export function TodayView({ data, go, openPanel, mutate, notify, ...rest }) {
                 icon={Receipt}
                 label="Счета"
                 count={
-                  data.invoices.filter((i) => i.objectId === item.id).length
+                  data.capabilities.documents
+                    ? data.invoices.filter((i) => i.objectId === item.id).length
+                    : undefined
                 }
                 onClick={() =>
                   openPanel({ type: "invoices", objectId: item.id })
