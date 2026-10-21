@@ -24,8 +24,8 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { RouteVeilProvider } from "@/lib/route-veil"
 import { SiteSectionProvider } from "@/lib/use-site-section"
-import { getShowroomOrganizationContactLd } from "@/lib/showroom-contacts"
-import { buildMerchantPolicyJsonLd } from "@/lib/merchant-policy-json-ld"
+import { buildOrganizationJsonLd } from "@/lib/organization-json-ld"
+import { jsonLdHtml } from "@/lib/json-ld"
 import { CspNonceProvider } from "@/lib/csp-nonce"
 import { indexingRobotsMetadata } from "@/lib/indexing-policy"
 import {
@@ -80,14 +80,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 }
 
-const organizationJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Woodright",
-  url: getSiteUrl(),
-  ...getShowroomOrganizationContactLd(),
-  ...buildMerchantPolicyJsonLd(getSiteUrl()),
-}
+const organizationJsonLd = buildOrganizationJsonLd(getSiteUrl())
 
 /**
  * Root `loading.tsx` flushes a 200 shell before a nested page can call
@@ -142,7 +135,7 @@ export default async function RootLayout({
         <script
           type="application/ld+json"
           nonce={nonce}
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdHtml(organizationJsonLd) }}
         />
         <a href="#main-content" className="skip-link">
           {a11yCopy.skipToContent}

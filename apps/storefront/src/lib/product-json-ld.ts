@@ -5,6 +5,8 @@
  */
 
 import { isDirectCartPurchase, type StorefrontPurchaseDto } from "./woodright-order/purchase-contract"
+import { sellerOrganizationId } from "./organization-json-ld"
+export { jsonLdHtml } from "./json-ld"
 import { merchantPolicyIds } from "./merchant-policy-json-ld"
 import { verifiedWwPrice } from "./verified-september-catalog"
 
@@ -35,6 +37,7 @@ export function buildOfferJsonLd(input: {
   const ids = merchantPolicyIds(input.url)
   return {
     "@type": "Offer",
+    seller: { "@id": sellerOrganizationId(input.url) },
     priceCurrency: "RUB",
     price: input.priceRub,
     url: input.url,
@@ -98,11 +101,6 @@ export function readUniformRubAmounts(
     out.push(verifiedWwPrice(rec.id, rec.sku, n) ?? n)
   }
   return out
-}
-
-/** JSON-LD safe to embed in a script tag (`<` cannot close the tag). */
-export function jsonLdHtml(value: unknown): string {
-  return JSON.stringify(value).replace(/</g, "\\u003c")
 }
 
 /**
