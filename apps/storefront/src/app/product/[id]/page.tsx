@@ -571,10 +571,8 @@ export default async function ProductPage({
       ? [
           {
             id: product.id as string,
-            label:
-              displayGroupAxis === "execution"
-                ? displayGroupMemberLabel(product, displayGroupAxis)
-                : titleStr,
+            // Size labels come from the native title, independently of heading cleanup.
+            label: displayGroupMemberLabel(product, displayGroupAxis),
             basePrice: price,
             sort: (meta?.display_group_sort as number | undefined) ?? 99,
             isCurrent: true,
@@ -584,10 +582,7 @@ export default async function ProductPage({
             return {
               id: m.id as string,
               href: productCanonicalPath(m, String(m.id ?? "")),
-              label:
-                displayGroupAxis === "execution"
-                  ? displayGroupMemberLabel(m, displayGroupAxis)
-                  : getBuyerFacingProductTitle(m as Record<string, unknown>),
+              label: displayGroupMemberLabel(m, displayGroupAxis),
               basePrice: getPrice(m),
               sort: (mMeta?.display_group_sort as number | undefined) ?? 99,
               isCurrent: false,
