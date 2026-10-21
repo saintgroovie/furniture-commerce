@@ -10,6 +10,7 @@ const COUNT = showroomCarouselFrames.length
 export function ContactsShowroomCarousel() {
   const root = useRef<HTMLDivElement>(null)
   const touchStart = useRef<{ x: number; y: number } | null>(null)
+  const pointerToggle = useRef(false)
   const [active, setActive] = useState(0)
   const [paused, setPaused] = useState(false)
   const [hovered, setHovered] = useState(false)
@@ -131,7 +132,16 @@ export function ContactsShowroomCarousel() {
         <button type="button" className="contacts-carousel-arrow" aria-label="Следующее фото" onClick={() => select(active + 1)}>
           <img src="/images/footer/arrow-right.svg" alt="" width={18} height={18} />
         </button>
-        <button type="button" className="contacts-carousel-toggle" aria-label={paused ? "Включить автоматическое перелистывание" : "Остановить автоматическое перелистывание"} onClick={() => setPaused((value) => !value)}>
+        <button
+          type="button"
+          className="contacts-carousel-toggle"
+          aria-label={paused ? "Включить автоматическое перелистывание" : "Остановить автоматическое перелистывание"}
+          onPointerDown={() => { pointerToggle.current = !paused }}
+          onClick={(event) => {
+            // Focus pauses the carousel before a pointer click reaches this button.
+            setPaused(event.detail > 0 ? pointerToggle.current : !paused)
+          }}
+        >
           {paused ? "Продолжить" : "Пауза"}
         </button>
         <span className="contacts-carousel-count" aria-hidden="true">{String(active + 1).padStart(2, "0")} / {String(COUNT).padStart(2, "0")}</span>
