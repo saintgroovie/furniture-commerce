@@ -43,6 +43,10 @@ import {
 import { ProductCta } from "@/components/product-cta"
 import { PdpPriceBlock } from "@/components/pdp-price-block"
 import { selectedBuyerVariantId } from "@/lib/opening-variant"
+import {
+  buildOliverDeskJsonLd, oliverDeskAxis, oliverDeskMedia,
+  oliverDeskTextProduct, verifiedOliverDesk,
+} from "@/lib/oliver-desk-variants"
 import { resolveOriginalBasePriceOf } from "@/lib/sale-price"
 import { PdpMaterialTierSelect } from "@/components/pdp-material-tier-select"
 import { PdpSizeChips } from "@/components/pdp-size-chips"
@@ -259,7 +263,8 @@ export default async function ProductPage({
   }
 
   const sparseMap = sparseVariantMap(product)
-  const variantAxis = sparseMap ? null : buyerVariantAxis(product)
+  const oliverDesk = verifiedOliverDesk(product)
+  const variantAxis = sparseMap ? null : buyerVariantAxis(product) ?? (oliverDesk ? oliverDeskAxis(oliverDesk) : null)
   const requestedVariant = resolvedSearchParams?.variant
   const requestedVariantId = Array.isArray(requestedVariant)
     ? requestedVariant[0]
@@ -360,7 +365,7 @@ export default async function ProductPage({
   const price = pdpVariantPrice(product, selectedVariant)
   /* Material execution options from metadata.material_tiers (backend SoT). */
   const defaultMaterialTiers = buildMaterialTierOptions(viewProduct, price)
-  const addressableMaterialTiers = verifiedMaterialOptions(product, defaultMaterialTiers)
+  const addressableMaterialTiers = oliverDesk?.materials ?? verifiedMaterialOptions(product, defaultMaterialTiers)
   const materialTiers = addressableMaterialTiers
     ? materialOptionsForUrl(addressableMaterialTiers, resolvedSearchParams?.material)
     : defaultMaterialTiers
@@ -449,8 +454,10 @@ export default async function ProductPage({
     handle
   )
   // Normalize again so restored raw pool URLs get `/product-static/…` rewrite.
-  const { mainSrc: pdpMainSrc, extraSrcs: pdpResolvedExtras } =
-    resolvePdpMediaBundle(evidenced.mainSrc, evidenced.extraSrcs)
+  const resolvedMedia = resolvePdpMediaBundle(evidenced.mainSrc, evidenced.extraSrcs)
+  const { mainSrc: pdpMainSrc, extraSrcs: pdpResolvedExtras } = oliverDeskMedia(
+    oliverDesk, selectedVariantId, resolvedMedia.mainSrc, resolvedMedia.extraSrcs
+  )
 
   const titleLayout = getBuyerFacingProductTitleLayout(product)
   const titleStr = getBuyerFacingProductTitle(product)
@@ -461,8 +468,9 @@ export default async function ProductPage({
       ? selectedVariant.sku
       : getArticle(product)
   const dim = getDimensions(product, selectedVariant)
-  const subtitle = getPdpSubtitle(product)
-  const description = getBuyerDescription(product)
+  const textProduct = oliverDeskTextProduct(product, oliverDesk, selectedVariantId)
+  const subtitle = getPdpSubtitle(textProduct)
+  const description = getBuyerDescription(textProduct)
 
   /* Buyer-facing order is fixed: height → width → depth (cm hero + mm specs). */
   const dimensionLabelByAxis = {
@@ -629,7 +637,7 @@ export default async function ProductPage({
   })
   const scalarProductJsonLd = buildProductJsonLd({
     name: getProductSeoName(product) || "Товар",
-    description: getSeoDescriptionSource(product),
+    description: getSeoDescriptionSource(textProduct),
     url: canonicalUrl,
     images: [pdpMainSrc, ...pdpResolvedExtras],
     dimensions: dim ? pdpDimensionCells(dim) : [],
@@ -638,6 +646,7 @@ export default async function ProductPage({
     offerAvailability: offerAvailabilityFromPurchase(readProductPurchase(product)),
   })
   const productJsonLd =
+    buildOliverDeskJsonLd(product, oliverDesk, scalarProductJsonLd) ||
     (addressableMaterialTiers && buildMaterialVariantJsonLd({
       product, options: addressableMaterialTiers, jsonLd: scalarProductJsonLd,
       requestQuote: isRequestQuoteProduct(product),
@@ -865,6 +874,7 @@ export default async function ProductPage({
                   productKey={handle || (product.id as string)}
                   chips={sizeChips}
                   materialTiers={materialTiers}
+                  preserveMaterialInHref={oliverDesk != null}
                   requestQuote={isRequestQuoteProduct(product)}
                   selectorLabel={displayGroupSelector}
                 />
@@ -906,6 +916,7 @@ export default async function ProductPage({
               <ProductCta
                 product={product}
                 variantId={selectedVariantId ?? undefined}
+                variantImage={oliverDesk ? pdpMainSrc : undefined}
                 requiresBuyerSelection={
                   useExecutionPdp &&
                   !isRequestQuoteProduct(product) &&

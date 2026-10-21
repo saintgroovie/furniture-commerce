@@ -49,6 +49,8 @@ type Props = {
   materialTiers?: MaterialTierOption[] | null
   /** Sellable variant chosen on this PDP. Falls back to the first variant. */
   variantId?: string
+  /** Proven existing photograph for a selected legacy SKU without its own gallery metadata. */
+  variantImage?: string
 }
 
 function getProductType(product: Record<string, unknown>): string | undefined {
@@ -78,6 +80,7 @@ export function ProductCta({
   requiresBuyerSelection = false,
   materialTiers = null,
   variantId: variantIdProp,
+  variantImage,
 }: Props) {
   const [adding, setAdding] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -237,7 +240,7 @@ export function ProductCta({
         selection?.finishKey?.trim() ||
         selection?.gate.finishKey?.trim() ||
         null
-      const galleryImage = variantGalleryImage(variantForCart)
+      const galleryImage = variantGalleryImage(variantForCart) ?? variantImage
       const metadata: Record<string, unknown> = {
         ...(selection?.imageSrc
           ? { execution_image: selection.imageSrc }

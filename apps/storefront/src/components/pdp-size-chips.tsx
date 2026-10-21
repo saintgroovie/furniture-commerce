@@ -47,6 +47,8 @@ type Props = {
   requestQuote: boolean
   /** Heading for the chip row. Default: size. Fabric pairs use «Ткань». */
   selectorLabel?: string
+  /** Keep the material when navigating between the two verified desk SKUs. */
+  preserveMaterialInHref?: boolean
 }
 
 /**
@@ -59,6 +61,7 @@ export function PdpSizeChips({
   materialTiers,
   requestQuote,
   selectorLabel = pdpCopy.sizeSelectorLabel,
+  preserveMaterialInHref = false,
 }: Props) {
   const materialSelection = usePdpMaterialSelection()
   const gate = usePdpPurchaseGate()
@@ -92,6 +95,14 @@ export function PdpSizeChips({
   }
 
   const current = chips.find((c) => c.isCurrent)
+  const hrefFor = (chip: PdpSizeChip): string => {
+    const href = chip.href ?? `/product/${chip.id}`
+    if (!preserveMaterialInHref || !selectedCode || !materialTiers?.some((tier) => tier.code === selectedCode)) return href
+    const url = new URL(href, "https://relative.invalid")
+    if (!url.searchParams.has("variant")) return href
+    url.searchParams.set("material", selectedCode)
+    return `${url.pathname}${url.search}${url.hash}`
+  }
 
   return (
     <div className="pdp-size-selector" role="group" aria-label={selectorLabel}>
@@ -113,7 +124,7 @@ export function PdpSizeChips({
               )}
             </span>
           ) : (
-            <Link key={chip.id} href={chip.href ?? `/product/${chip.id}`} className="pdp-size-chip">
+            <Link key={chip.id} href={hrefFor(chip)} className="pdp-size-chip">
               <span className="pdp-size-chip-label">{chip.label}</span>
               {priceLabel != null && (
                 <span className="pdp-size-chip-price">{priceLabel}</span>
