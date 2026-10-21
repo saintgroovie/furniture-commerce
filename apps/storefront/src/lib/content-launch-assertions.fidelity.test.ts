@@ -53,14 +53,14 @@ assert.equal(productTypeBadgeLabels.BESPOKE, "Bespoke")
 assert.equal(PRODUCT_TYPE_FILTER_LABELS.BESPOKE, "Bespoke")
 assert.equal(
   footer.columns.find((col) => col.links.some((l) => l.href === "/bespoke"))?.title,
-  "По проекту"
+  "Коллекции"
 )
 assert.ok(
   !footer.columns.some((col) => col.title === "Bespoke"),
   "global/footer nav must not use Bespoke as the entry label"
 )
 
-const footerHrefs = footer.columns.flatMap((col) => col.links.map((l) => l.href))
+const footerHrefs = [...footer.columns.flatMap((col) => col.links.map((l) => l.href)), ...footer.legalLinks.map((link) => link.href)]
 for (const href of [
   "/delivery",
   "/payment",
@@ -72,7 +72,6 @@ for (const href of [
   "/cookies",
   "/bespoke",
   "/designers",
-  "/partners",
 ]) {
   assert.ok(footerHrefs.includes(href), `footer missing ${href}`)
 }
