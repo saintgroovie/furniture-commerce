@@ -287,3 +287,114 @@ export function verifiedPositionDimensions(product: Record<string, unknown>) {
   result.axis_states = [{ axis: entry.axis, values_mm: entry.values }]
   return result
 }
+
+const WW_PRICES: Record<string, { sku: string; native_base: number; price: number; row: number; column: string }> = {
+  "variant_01KV69A7H4QG73VV860W96G182": {
+    "sku": "av-05-1",
+    "native_base": 83820,
+    "price": 87780,
+    "row": 22,
+    "column": "G"
+  },
+  "variant_01KV69A7H410GASW313SSMWF4E": {
+    "sku": "ba-05-3",
+    "native_base": 113080,
+    "price": 124300,
+    "row": 20,
+    "column": "H"
+  },
+  "variant_01KV69A7H6QSCESM5YZW3FBVRT": {
+    "sku": "in-67-1",
+    "native_base": 85250,
+    "price": 85250,
+    "row": 45,
+    "column": "F"
+  },
+  "variant_01KV69A7H5G52SZGAW6YR5PK7T": {
+    "sku": "fa-06-1",
+    "native_base": 59730,
+    "price": 62700,
+    "row": 49,
+    "column": "G"
+  },
+  "variant_01KV69A7H6T0M8VR6SH10PKG79": {
+    "sku": "fk-05-1",
+    "native_base": 83820,
+    "price": 87780,
+    "row": 22,
+    "column": "G"
+  },
+  "variant_01KV69A7H8R6FSAA3JGFT02PMK": {
+    "sku": "rl-67-1",
+    "native_base": 85250,
+    "price": 85250,
+    "row": 45,
+    "column": "F"
+  },
+  "variant_01KV69A7H5CMMHYFNHKXQJWE5N": {
+    "sku": "fa-67-1",
+    "native_base": 85250,
+    "price": 85250,
+    "row": 45,
+    "column": "G"
+  },
+  "variant_01KV69A7H8D09CRXQG8HQ1DDN5": {
+    "sku": "rl-05-3",
+    "native_base": 113080,
+    "price": 113080,
+    "row": 20,
+    "column": "F"
+  },
+  "variant_01KV69A7H75NQCJC0A66PE0PR5": {
+    "sku": "mo-81-1",
+    "native_base": 22660,
+    "price": 22660,
+    "row": 48,
+    "column": "F"
+  },
+  "variant_01KV69A7H7GT4WF22X1ZWBH0SZ": {
+    "sku": "pa-05-1",
+    "native_base": 83820,
+    "price": 96360,
+    "row": 22,
+    "column": "H"
+  },
+  "variant_01KV69A7H48XE5C7YE56RBRDKP": {
+    "sku": "ba-62-1",
+    "native_base": 99390,
+    "price": 100320,
+    "row": 34,
+    "column": "H"
+  },
+  "variant_01KV69A7HAR5G3HAQ2M1CYR2VM": {
+    "sku": "te-05-3",
+    "native_base": 113080,
+    "price": 124300,
+    "row": 20,
+    "column": "H"
+  },
+  "variant_01KV69A7H9NA9PDPJBT2H5P929": {
+    "sku": "tb-67-1",
+    "native_base": 85250,
+    "price": 85250,
+    "row": 45,
+    "column": "F"
+  },
+  "variant_01KV69A7H8QXV0PCF7SHYJRQ1M": {
+    "sku": "sh-81-1",
+    "native_base": 22660,
+    "price": 22660,
+    "row": 48,
+    "column": "F"
+  }
+}
+
+/** Exact native identities with confirmed corpus and the workbook motif category. */
+export function wwPriceEvidence(variantId: unknown) {
+  return typeof variantId === "string" ? WW_PRICES[variantId] ?? null : null
+}
+
+export function verifiedWwPrice(variantId: unknown, sku: unknown, nativeBase: number | null | undefined): number | null {
+  const entry = wwPriceEvidence(variantId)
+  return entry && sku === entry.sku && nativeBase === entry.native_base ? entry.price : null
+}

@@ -1,4 +1,5 @@
 import { openingVariant } from "./opening-variant"
+import { verifiedWwPrice, wwPriceEvidence } from "./verified-september-catalog"
 
 export function formatRub(amount: number): string {
   return amount.toLocaleString("ru-RU") + " ₽"
@@ -24,11 +25,11 @@ export function getPrice(product: Record<string, unknown>): number | null {
   const v = openingVariant(product)
   if (!v) return null
   const cp = v.calculated_price as Record<string, unknown> | undefined
-  if (cp?.calculated_amount != null) return Number(cp.calculated_amount)
+  if (cp?.calculated_amount != null) return verifiedWwPrice(v.id, v.sku, Number(cp.calculated_amount)) ?? Number(cp.calculated_amount)
   const prices =
     (v.prices as Array<Record<string, unknown>> | undefined) ??
     (v.price_set as { prices?: Array<Record<string, unknown>> } | undefined)?.prices
-  if (prices?.length && prices[0].amount != null) return Number(prices[0].amount)
+  if (prices?.length && prices[0].amount != null) return verifiedWwPrice(v.id, v.sku, Number(prices[0].amount)) ?? Number(prices[0].amount)
   return null
 }
 
@@ -43,14 +44,14 @@ export function priceOfVariant(
 ): number | null {
   if (!variant) return null
   const calculated = variant.calculated_price as Record<string, unknown> | undefined
-  if (calculated?.calculated_amount != null) return Number(calculated.calculated_amount)
+  if (calculated?.calculated_amount != null) return verifiedWwPrice(variant.id, variant.sku, Number(calculated.calculated_amount)) ?? Number(calculated.calculated_amount)
   const prices =
     (variant.prices as Array<Record<string, unknown>> | undefined) ??
     (variant.price_set as { prices?: Array<Record<string, unknown>> } | undefined)
       ?.prices
   const base = prices?.find((price) => price.price_list_id == null && price.amount != null)
-  if (base) return Number(base.amount)
-  if (prices?.length && prices[0].amount != null) return Number(prices[0].amount)
+  if (base) return verifiedWwPrice(variant.id, variant.sku, Number(base.amount)) ?? Number(base.amount)
+  if (prices?.length && prices[0].amount != null) return verifiedWwPrice(variant.id, variant.sku, Number(prices[0].amount)) ?? Number(prices[0].amount)
   return null
 }
 
@@ -79,8 +80,13 @@ export function buyerDefaultConfiguration(product: Record<string, unknown>): {
   const variantId =
     typeof rec.variant_id === "string" && rec.variant_id ? rec.variant_id : null
   const min = rec.min_unit_price
-  const minUnitPrice =
+  let minUnitPrice =
     typeof min === "number" && Number.isFinite(min) && min > 0 ? min : null
+  const evidence = wwPriceEvidence(variantId)
+  if (evidence && (minUnitPrice === evidence.native_base || minUnitPrice === evidence.price)) {
+    const variant = (product.variants as Record<string, unknown>[] | undefined)?.find((v) => v.id === variantId)
+    if (variant && priceOfVariant(variant) === evidence.price) minUnitPrice = evidence.price
+  }
   return { variantId, minUnitPrice }
 }
 

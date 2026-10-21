@@ -6,6 +6,7 @@
 
 import { isDirectCartPurchase, type StorefrontPurchaseDto } from "./woodright-order/purchase-contract"
 import { merchantPolicyIds } from "./merchant-policy-json-ld"
+import { verifiedWwPrice } from "./verified-september-catalog"
 
 const HANDLE_RE = /^[a-z0-9][a-z0-9-]{0,120}$/i
 
@@ -83,7 +84,7 @@ export function readUniformRubAmounts(
     if (calculated && calculated.calculated_amount != null) {
       const n = rubAmount(calculated.calculated_amount, calculated.currency_code)
       if (n == null) return null
-      out.push(n)
+      out.push(verifiedWwPrice(rec.id, rec.sku, n) ?? n)
       continue
     }
     const prices =
@@ -94,7 +95,7 @@ export function readUniformRubAmounts(
     if (!first) return null
     const n = rubAmount(first.amount, first.currency_code)
     if (n == null) return null
-    out.push(n)
+    out.push(verifiedWwPrice(rec.id, rec.sku, n) ?? n)
   }
   return out
 }

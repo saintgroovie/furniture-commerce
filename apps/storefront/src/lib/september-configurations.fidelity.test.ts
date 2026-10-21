@@ -3,6 +3,9 @@ import { readFileSync } from "node:fs"
 import { provencePriceEvidence, verifiedProvencePrices } from "./verified-september-catalog"
 import { buildProvenceFinishJsonLd, verifiedProvenceFinishPrices } from "./provence-finish-json-ld"
 import { buildProductJsonLd } from "./product-json-ld"
+import { getPrice, priceOfVariant, buyerDefaultConfiguration } from "./format"
+import { resolveCatalogCardPrice } from "./catalog-card-price"
+import { readUniformRubAmounts } from "./product-json-ld"
 import { getDimensions, pdpDimensionCells } from "./product-metadata"
 
 assert.equal(readFileSync(new URL("./verified-september-catalog.ts", import.meta.url), "utf8"),
@@ -56,3 +59,14 @@ assert.equal(getDimensions({ ...product, handle: "pa-05-3" }), null, "ambiguous 
 assert.equal(getDimensions({ ...product, metadata: { ...product.metadata, dimensions: { height_mm: 123 } } })?.height_mm, 123)
 assert.equal(pdpDimensionCells(getDimensions(product)!).length, 3)
 console.log("september-configurations.fidelity.test.ts: ok")
+
+for (const [id, sku, base, expected] of [["variant_01KV69A7H4QG73VV860W96G182", "av-05-1", 83820, 87780], ["variant_01KV69A7H410GASW313SSMWF4E", "ba-05-3", 113080, 124300], ["variant_01KV69A7H6QSCESM5YZW3FBVRT", "in-67-1", 85250, 85250], ["variant_01KV69A7H5G52SZGAW6YR5PK7T", "fa-06-1", 59730, 62700], ["variant_01KV69A7H6T0M8VR6SH10PKG79", "fk-05-1", 83820, 87780], ["variant_01KV69A7H8R6FSAA3JGFT02PMK", "rl-67-1", 85250, 85250], ["variant_01KV69A7H5CMMHYFNHKXQJWE5N", "fa-67-1", 85250, 85250], ["variant_01KV69A7H8D09CRXQG8HQ1DDN5", "rl-05-3", 113080, 113080], ["variant_01KV69A7H75NQCJC0A66PE0PR5", "mo-81-1", 22660, 22660], ["variant_01KV69A7H7GT4WF22X1ZWBH0SZ", "pa-05-1", 83820, 96360], ["variant_01KV69A7H48XE5C7YE56RBRDKP", "ba-62-1", 99390, 100320], ["variant_01KV69A7HAR5G3HAQ2M1CYR2VM", "te-05-3", 113080, 124300], ["variant_01KV69A7H9NA9PDPJBT2H5P929", "tb-67-1", 85250, 85250], ["variant_01KV69A7H8QXV0PCF7SHYJRQ1M", "sh-81-1", 22660, 22660]] as const) {
+  const variant = { id, sku, calculated_price: { calculated_amount: base, currency_code: "rub" } }
+  const product = { variants: [variant], metadata: { buyer_default_configuration: { variant_id: id, min_unit_price: base } } }
+  assert.equal(priceOfVariant(variant), expected)
+  assert.equal(getPrice(product), expected)
+  assert.equal(buyerDefaultConfiguration(product).minUnitPrice, expected)
+  assert.equal(resolveCatalogCardPrice(product).amount, expected)
+  assert.deepEqual(readUniformRubAmounts(product), [expected])
+  assert.equal(priceOfVariant({ ...variant, id: "other" }), base)
+}

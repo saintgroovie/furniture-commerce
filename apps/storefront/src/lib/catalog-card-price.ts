@@ -1,5 +1,5 @@
 import type { DisplayGroup } from "@/lib/display-group"
-import { getPrice } from "@/lib/format"
+import { buyerDefaultConfiguration, getPrice } from "@/lib/format"
 import { buildMaterialTierOptions } from "@/lib/material-tiers"
 import {
   formatRequestQuotePriceLabel,
@@ -16,7 +16,7 @@ function readBackendDefaultMinPrice(
   const meta = product.metadata as Record<string, unknown> | undefined
   const cfg = meta?.buyer_default_configuration
   if (!cfg || typeof cfg !== "object" || Array.isArray(cfg)) return null
-  const min = (cfg as { min_unit_price?: unknown }).min_unit_price
+  const min = buyerDefaultConfiguration(product).minUnitPrice
   if (typeof min !== "number" || !isPositivePrice(min)) return null
   return min
 }
