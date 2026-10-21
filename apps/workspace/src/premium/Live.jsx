@@ -312,7 +312,14 @@ export function Integrations({ data, focus, compact = false }) {
         {cards.map((s) => (
           <section className="integration-card" key={s.key}>
             <s.icon size={27} weight="light" />
-            <Badge tone={s.key === "medusa" ? "positive" : "waiting"}>
+            <Badge
+              tone={
+                s.key === "medusa" ||
+                (s.key === "files" && data?.capabilities.attachmentRead)
+                  ? "positive"
+                  : "waiting"
+              }
+            >
               {s.key === "files" && data?.capabilities.attachmentRead
                 ? "Подключено"
                 : s.status}
@@ -339,7 +346,7 @@ export function Integrations({ data, focus, compact = false }) {
         <Section title="Рабочие функции">
           <div className="integration-scope">
             <p>
-              <b>Уже можно подключить без переноса базы</b>
+              <b>Данные рабочей системы</b>
               <span>
                 Каталог с исполнениями и готовностью, реальные обращения и
                 контакты, заказы с раздельными статусами оплаты, производства и
@@ -347,11 +354,12 @@ export function Integrations({ data, focus, compact = false }) {
               </span>
             </p>
             <p>
-              <b>Нужен следующий серверный этап</b>
+              <b>Сохранение и совместная работа</b>
               <span>
-                Сохранение обращений с защитой от конфликтов, напоминания и
-                приватные вложения подготовлены для серверного обновления.
-                Компании и назначения сотрудников подключаются следующим этапом.
+                {data?.capabilities.requestUpdate
+                  ? "Обращения сохраняются с защитой от конфликтов. Доступны напоминания, приватные вложения и история действий. "
+                  : "Сохранение обращений, напоминания и приватные вложения появятся после подключения серверных функций. "}
+                Компании и назначения сотрудников пока не подключены.
               </span>
             </p>
             <p>
