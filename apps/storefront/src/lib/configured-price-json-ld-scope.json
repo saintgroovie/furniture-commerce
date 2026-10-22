@@ -1,0 +1,102 @@
+{
+  "co-02-1": {
+    "id": "prod_01KNTBXADAKWN6BXHSYFRX0R2F",
+    "variantId": "variant_01KNTBXBM1QD7BHY4F4Q2DQER9",
+    "sku": "CO-02-1"
+  },
+  "co-05-1": {
+    "id": "prod_01KNTBXADA9TM4A89YEGTRVFDR",
+    "variantId": "variant_01KNTBXBM2HPD57RV9N3N0M8JQ",
+    "sku": "CO-05-1"
+  },
+  "co-08-1": {
+    "id": "prod_01KNTBXADAV2SBRCDYKZDNJJDB",
+    "variantId": "variant_01KNTBXBM2W7T60NJ23CF8G1CX",
+    "sku": "CO-08-1"
+  },
+  "co-14-2": {
+    "id": "prod_01KNTBXADASA751ZC9C33QCE9M",
+    "variantId": "variant_01KNTBXBM27TJJKBJMJBJX98FV",
+    "sku": "CO-14-2"
+  },
+  "co-15-2": {
+    "id": "prod_01KNTBXADAMWN4PD2KMWP2E4MH",
+    "variantId": "variant_01KNTBXBM3B5WB3BH9311NTWPT",
+    "sku": "CO-15-2"
+  },
+  "co-61-1": {
+    "id": "prod_01KNTBXADAPWAQGMQG48P00R3M",
+    "variantId": "variant_01KNTBXBM3DACK7TAXDFZQWVYE",
+    "sku": "CO-61-1"
+  },
+  "co-62-1": {
+    "id": "prod_01KNTBXADB4V43P4P0KDTHVDQR",
+    "variantId": "variant_01KNTBXBM48P9ZSXZRK0QD1ZF6",
+    "sku": "CO-62-1"
+  },
+  "co-62-2": {
+    "id": "prod_01KNTBXADB2M4E381QSZ5X850S",
+    "variantId": "variant_01KNTBXBM42648EXN9WWH69PPH",
+    "sku": "CO-62-2"
+  },
+  "co-65-1": {
+    "id": "prod_01KNTBXADB5BFDKMSAB35J8Z0V",
+    "variantId": "variant_01KNTBXBM5CSEXNSVAP31DAVPW",
+    "sku": "CO-65-1"
+  },
+  "co-65-2": {
+    "id": "prod_01KNTBXADBCCE0GHPB33PVQXS2",
+    "variantId": "variant_01KNTBXBM5JT70C71EY83C5K95",
+    "sku": "CO-65-2"
+  },
+  "co-66-1": {
+    "id": "prod_01KNTBXADCVEHH7HVB0ZGDS1KV",
+    "variantId": "variant_01KNTBXBM5ZCCAWCV9WQ1DPBJG",
+    "sku": "CO-66-1"
+  },
+  "co-69-1": {
+    "id": "prod_01KNTBXADCDTMNKGW1C9XPD1YT",
+    "variantId": "variant_01KNTBXBM6AH9D5CM1H7DST628",
+    "sku": "CO-69-1"
+  },
+  "greenwich-gr-02-1": {
+    "id": "prod_01KM1QHNHYQKVZHCN3SM9BY42Z",
+    "variantId": "variant_01KM1QHQ64656BGJV5H7Y5Y20W",
+    "sku": "GR-02-1"
+  },
+  "greenwich-gr-05-1": {
+    "id": "prod_01KM1QHNHNKSG173KZ6C2AZ5JR",
+    "variantId": "variant_01KM1QHQ4MA4A0WS98GQMSPP56",
+    "sku": "GR-05-1"
+  },
+  "greenwich-gr-08-1": {
+    "id": "prod_01KM1QHNHWH2M61Z8VR182RMJF",
+    "variantId": "variant_01KM1QHQ5GXJP7ETEKYEVKXDQ0",
+    "sku": "GR-08-1"
+  },
+  "greenwich-gr-08-2": {
+    "id": "prod_01KM1QHNHX9FDMX9RHBZAB7K1K",
+    "variantId": "variant_01KM1QHQ5YNMC8J2Y5KPD3JBBJ",
+    "sku": "GR-08-2"
+  },
+  "greenwich-gr-26-1": {
+    "id": "prod_01KM1QHNHY2EE4PEMPKZ8YM3QZ",
+    "variantId": "variant_01KM1QHQ627TXVC3XHV8SYXE5P",
+    "sku": "GR-26-1"
+  },
+  "greenwich-gr-42-1": {
+    "id": "prod_01KM1QHNHRHYFRQWV6H2B0YV2R",
+    "variantId": "variant_01KM1QHQ5A4N3WWCZKE192N0XY",
+    "sku": "GR-42-1"
+  },
+  "greenwich-gr-44-1": {
+    "id": "prod_01KM1QHNHNR5R4YZKQERDE8EZ6",
+    "variantId": "variant_01KM1QHQ4P4M9M0F7788346ZQ1",
+    "sku": "GR-44-1"
+  },
+  "greenwich-gr-67-1": {
+    "id": "prod_01KM1QHNHPTNKR0E7T538427YJ",
+    "variantId": "variant_01KM1QHQ53TRVT9Z2HQC4KR994",
+    "sku": "GR-67-1"
+  }
+}
