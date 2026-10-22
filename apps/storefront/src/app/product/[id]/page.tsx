@@ -66,6 +66,8 @@ import { CopyLines } from "@/components/copy-lines"
 import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
 import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
 import { ProductPdpExecutionMediaSwitcher } from "@/components/product-pdp-execution-media-switcher"
+import { PdpConfiguredPriceJsonLd } from "@/components/pdp-configured-price-json-ld"
+import { configuredPriceJsonLdContext } from "@/lib/configured-price-json-ld"
 import { OliverBedUpholsteryJsonLd } from "@/components/oliver-bed-upholstery-json-ld"
 import { oliverBedUpholsteryJsonLdOptions } from "@/lib/oliver-bed-upholstery-json-ld"
 import { ProductPdpMediaSwitcher } from "@/components/product-pdp-media-switcher"
@@ -713,6 +715,8 @@ export default async function ProductPage({
       })
     : null
 
+  const configuredPriceContext = configuredPriceJsonLdContext({ product, selectors: executionSelectors, basePrice: price, materialTiers })
+
   const cspNonce = (await headers()).get("x-nonce") ?? undefined
 
   return (
@@ -731,7 +735,12 @@ export default async function ProductPage({
           }}
         />
       ) : null}
-      {upholsteryJsonLdOptions ? <PdpUpholsteryJsonLd
+      {configuredPriceContext ? <PdpConfiguredPriceJsonLd
+        key={handle}
+        jsonLd={productJsonLd}
+        context={configuredPriceContext}
+        nonce={cspNonce}
+      /> : upholsteryJsonLdOptions ? <PdpUpholsteryJsonLd
         key={handle}
         productKey={handle}
         options={upholsteryJsonLdOptions}
