@@ -36,6 +36,8 @@ import {
   offerAvailabilityFromPurchase,
 } from "@/lib/product-json-ld"
 import { readProductPurchase } from "@/lib/woodright-order/purchase-contract"
+import { supportsUpholsteryJsonLd } from "@/lib/product-upholstery-json-ld"
+import { PdpUpholsteryJsonLd } from "@/components/pdp-upholstery-json-ld"
 import {
   formatRequestQuotePriceLabel,
   isRequestQuoteProduct,
@@ -416,9 +418,17 @@ export default async function ProductPage({
     }
   }
 
+  const selectedGallery = (selectedVariant?.metadata as Record<string, unknown> | undefined)?.gallery_urls
+  const variantOwnedGallery = Array.isArray(selectedGallery) && selectedGallery.length > 0 &&
+    selectedGallery.every((url): url is string => typeof url === "string" && url.trim().length > 0)
+    ? { mainSrc: selectedGallery[0], extraSrcs: selectedGallery.slice(1) }
+    : null
+
+  // A merged SKU owns its approved angles. Legacy role slots can mistake two
+  // different facades/handle sides for duplicate front views.
   const oliverBuyerGallery =
     isOliver && !useExecutionPdp && !bedMatrixMedia && !paintMatrixMedia
-      ? buildPdpBuyerFacingGallery(viewProduct)
+      ? variantOwnedGallery ?? buildPdpBuyerFacingGallery(viewProduct)
       : null
 
   const mainImage =
@@ -473,7 +483,7 @@ export default async function ProductPage({
       ? selectedVariant.sku
       : getArticle(product)
   const dim = getDimensions(product, selectedVariant)
-  const textProduct = oliverDeskTextProduct(product, oliverDesk, selectedVariantId)
+  const textProduct = oliverDeskTextProduct(viewProduct, oliverDesk, selectedVariantId)
   const subtitle = getPdpSubtitle(textProduct)
   const description = getBuyerDescription(textProduct)
 
@@ -694,6 +704,15 @@ export default async function ProductPage({
   ])
   const oliverUpholsteryOptions = oliverBedUpholsteryJsonLdOptions(product, executionSelectors)
 
+  const upholsteryJsonLdOptions = supportsUpholsteryJsonLd(product, executionSelectors)
+    ? executionSelectors.upholstery!.map((option) => {
+        // Same evidence-based gallery collapse as ProductCardMediaGalleryCore.
+        const media = resolveCardHeroAndNearDuplicateExtras(option.mainSrc, option.extraSrcs, handle)
+        const normalized = resolvePdpMediaBundle(media.mainSrc, media.extraSrcs)
+        return { label: option.label, images: [normalized.mainSrc, ...normalized.extraSrcs] }
+      })
+    : null
+
   const cspNonce = (await headers()).get("x-nonce") ?? undefined
 
   return (
@@ -712,7 +731,13 @@ export default async function ProductPage({
           }}
         />
       ) : null}
-      {oliverUpholsteryOptions ? <OliverBedUpholsteryJsonLd
+      {upholsteryJsonLdOptions ? <PdpUpholsteryJsonLd
+        key={handle}
+        productKey={handle}
+        options={upholsteryJsonLdOptions}
+        jsonLd={productJsonLd}
+        nonce={cspNonce}
+      /> : oliverUpholsteryOptions ? <OliverBedUpholsteryJsonLd
         jsonLd={productJsonLd}
         productKey={handle}
         options={oliverUpholsteryOptions}
@@ -915,7 +940,7 @@ export default async function ProductPage({
                   selectorLabel={displayGroupSelector}
                 />
               )}
-              {productHasHingeSideOption(product) && (
+              {productHasHingeSideOption(viewProduct) && (
                 <PdpHingeSideSelect
                   productKey={handle || (product.id as string)}
                 />
@@ -952,7 +977,7 @@ export default async function ProductPage({
               {/* 7. CTA */}
               <ProductCta
                 initialFinishKey={provencePrices ? initialProvenceFinish : undefined}
-                product={product}
+                product={viewProduct}
                 variantId={selectedVariantId ?? undefined}
                 variantImage={oliverDesk || provencePrices ? pdpMainSrc : undefined}
                 requiresBuyerSelection={

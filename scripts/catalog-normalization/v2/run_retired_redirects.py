@@ -13,22 +13,35 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from catalog_norm.export_inventory import connect, export_products
-
 MAP_FILE = Path(__file__).resolve().parents[3] / "apps/storefront/src/lib/retired-product-handles.ts"
-ENTRY = re.compile(r'"([^"]+)":\s*\{\s*survivorHandle:\s*"([^"]+)",\s*variantId:\s*"([^"]+)"\s*\}')
-
-
 def parse_map(source: str) -> dict[str, dict[str, dict[str, str]]]:
-    blocks = {}
-    for kind, const in (("handle", "RETIRED_PRODUCT_HANDLES"), ("id", "RETIRED_PRODUCT_IDS")):
-        body = source.split(f"export const {const}", 1)[1].split("\n}\n", 1)[0]
-        entries = {}
-        for key, survivor, variant in ENTRY.findall(body):
-            if key in entries:
-                raise SystemExit(f"duplicate {kind} key {key}")
-            entries[key] = {"survivor_handle": survivor, "variant_id": variant}
-        blocks[kind] = entries
+    """Read the closed, JSON-shaped approved map, never the old V2 scope."""
+    match = re.search(r"export const PREPARED_REDIRECTS\b[^=]*=\s*", source)
+    if not match:
+        raise SystemExit("PREPARED_REDIRECTS map not found")
+
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise SystemExit(f"duplicate redirect key {key}")
+            result[key] = value
+        return result
+
+    try:
+        entries, _ = json.JSONDecoder(object_pairs_hook=unique_object).raw_decode(source[match.end():])
+    except ValueError as error:
+        raise SystemExit(f"invalid PREPARED_REDIRECTS JSON: {error}") from error
+    if not isinstance(entries, dict) or not entries:
+        raise SystemExit("PREPARED_REDIRECTS must be a non-empty object")
+    blocks = {"handle": {}, "id": {}}
+    for key, entry in entries.items():
+        if (not key or key != key.strip().lower() or not isinstance(entry, dict)
+                or set(entry) != {"survivorHandle", "variantId"}
+                or not all(isinstance(value, str) and value.strip() for value in entry.values())):
+            raise SystemExit(f"invalid redirect entry {key}")
+        kind = "id" if key.startswith("prod_") else "handle"
+        blocks[kind][key] = {"survivor_handle": entry["survivorHandle"], "variant_id": entry["variantId"]}
     return blocks
 
 
@@ -139,6 +152,8 @@ def check(blocks: dict[str, dict[str, dict[str, str]]], products: list[dict[str,
 
 
 def main() -> None:
+    from catalog_norm.export_inventory import connect, export_products
+
     out = Path(sys.argv[1])
     inventory = export_products(connect())
     if (inventory.get("identity") or {}).get("db") != "medusa-store":

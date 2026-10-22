@@ -1,3 +1,4 @@
+import { explicitOpeningVariant } from "./explicit-opening-variant"
 import { orderedSparseVariants, sparseVariantMap } from "./sparse-variant-map"
 
 function variantRecords(product: Record<string, unknown>): Record<string, unknown>[] {
@@ -16,6 +17,8 @@ function variantRecords(product: Record<string, unknown>): Record<string, unknow
 export function openingVariant(
   product: Record<string, unknown>
 ): Record<string, unknown> | null {
+  const pinned = explicitOpeningVariant(product)
+  if (pinned !== undefined) return pinned
   const variants = variantRecords(product)
   if (variants.length === 0) return null
   const meta = product.metadata

@@ -1,3 +1,4 @@
+import { roomSetCtaVariants } from "../../../../lib/room-set-cta-variants"
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { isBuyerPublicProductStatus } from "../../../../lib/buyer-publication"
 import { exactlyOneProduct } from "../../../../lib/room-set-item-product"
@@ -91,7 +92,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         "products.handle",
         "products.thumbnail",
         "products.product_classification.product_type",
+        "products.metadata",
         "products.variants.id",
+        "products.variants.deleted_at",
       ],
       filters: { room_set_id: roomSet.id },
     })
@@ -110,17 +113,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       }
       const product = one.product
       if (!isBuyerPublicProductStatus(product.status)) continue
-      const variantsRaw = product.variants
-      const variants = Array.isArray(variantsRaw)
-        ? variantsRaw
-            .map((v) => {
-              if (!v || typeof v !== "object") return null
-              const id = (v as { id?: unknown }).id
-              return typeof id === "string" ? { id } : null
-            })
-            .filter((v): v is { id: string } => v != null)
-            .slice(0, 1)
-        : []
+      const variants = roomSetCtaVariants(product)
       const classification = product.product_classification as
         | { product_type?: unknown }
         | undefined
@@ -138,6 +131,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
             classification && typeof classification.product_type === "string"
               ? { product_type: classification.product_type }
               : undefined,
+          metadata: product.metadata && typeof product.metadata === "object"
+            ? { buyer_opening_variant_id: (product.metadata as Record<string, unknown>).buyer_opening_variant_id }
+            : undefined,
           variants,
         },
       })

@@ -7,6 +7,9 @@
  */
 
 export const VARIANT_CAPABILITY_KEYS = [
+  "shared_scene_media",
+  "bed_execution_matrix",
+  "greenwich_paint_execution_matrix",
   "finish_color_executions",
   "paint_finish_executions",
   "fabric_upholstery_executions",
@@ -182,6 +185,10 @@ export function withVariantCapabilities(
     }
   }
   const next: Record<string, unknown> = { ...product, metadata }
+  // Preserve the approved source copy of the selected SKU; never rewrite editorial text.
+  if (typeof variantMeta?.source_description === "string") next.description = variantMeta.source_description
+  if (Object.prototype.hasOwnProperty.call(variantMeta ?? {}, "source_subtitle")) next.subtitle = variantMeta?.source_subtitle
+  if (typeof variantMeta?.source_title === "string") metadata.legacy_title = variantMeta.source_title
   const sku = typeof variant.sku === "string" ? variant.sku.trim().toLowerCase() : ""
   if (sku.startsWith("pv-")) metadata.media_identity_handle = sku
   const gallery = variantMeta?.gallery_urls
