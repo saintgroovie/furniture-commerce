@@ -4,6 +4,7 @@ import { cookies, headers } from "next/headers"
 import { notFound } from "next/navigation"
 import { getProduct, NOT_FOUND } from "@/lib/api/products"
 import { StorefrontAnalytics } from "@/components/storefront-analytics"
+import { CatalogFreshness } from "@/components/catalog-freshness"
 import { getSiteUrl } from "@/lib/api/base"
 import {
   loadAnalyticsPublicConfig,
@@ -122,6 +123,7 @@ export default async function RootLayout({
     <html lang="ru" className={localSansClass}>
       <body>
         <CspNonceProvider nonce={nonce}>
+        <CatalogFreshness />
         <noscript>
           <style>{`.route-veil{display:none!important}`}</style>
         </noscript>
