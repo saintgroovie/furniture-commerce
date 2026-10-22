@@ -1,10 +1,9 @@
 /**
  * Curated homepage media, served same-origin via the `/product-static/…` →
- * Medusa `/static/…` rewrite (see next.config.js). All files exist in
- * `apps/backend/static/products` — no external or invented sources.
+ * Medusa `/static/…` rewrite (see next.config.js). The craft section uses
+ * local editorial images based on the owner's supplied catalog photography.
  *
  * Missing media (tracked for the content team, do not fake):
- * - kids room interior scene (section uses a product still-life instead)
  * - wood / hands / workshop macro photography (craft section uses tight
  *   product crops with visible material instead)
  * - hero loop video (hero uses a slow photographic slideshow instead)
@@ -44,11 +43,11 @@ export const homeMedia = {
   entryKids: `${P}/oliver/OL-95-1_gallery_02.jpg`,
   entryProject: `${P}/greenwich/GR-26-1_noliver_View19_afqd-bq.jpg`,
 
-  /* Craft section: tight material crops (wood / finishes / handpaint / series) */
-  craftWood: `${P}/greenwich/GR-67-1_noliver_View16.jpg`,
-  craftFinish: `${P}/greenwich/GR-05-1_greenwich_graphite05.jpg`,
-  craftHandpaint: `${P}/oliver/OL-81-1_gallery_02.jpg`,
-  craftSeries: `${P}/greenwich/GR-05-1_greenwich_white04.jpg`,
+  /* Craft section: distinct details and interiors, four collections. */
+  craftWood: "/editorial/home/craft/greenwich-wood-accent.webp",
+  craftFinish: "/editorial/home/craft/templers-painted-drawer-modern.webp",
+  craftKids: "/editorial/home/craft/ants-village-nursery-modern.webp",
+  craftSeries: "/editorial/home/craft/oliver-room-series-modern.webp",
 
   /**
    * Color/finish variants for the featured strip - same model, different

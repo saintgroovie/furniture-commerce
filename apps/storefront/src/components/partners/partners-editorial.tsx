@@ -8,7 +8,7 @@ import { isPartnerPdf } from "@/lib/partner-file"
 import { bindPinProgress } from "@/components/partners/pin-progress"
 import type { EditorialSlide, StorePartner, StorePartnerPresentation } from "@/lib/api/partners"
 import { formatRuInline } from "@/lib/format-ru-copy"
-import { designersLandingCopy, partnersCopy } from "@/lib/woodright-copy"
+import { partnersCopy } from "@/lib/woodright-copy"
 
 type OpenDeck = {
   partner: StorePartner
@@ -74,11 +74,6 @@ export function PartnersEditorial({ partners }: { partners: StorePartner[] }) {
   const theses = ["bolshoi", "mariinsky-palace", "mvd-academy", "ran-presidential"]
     .map((slug) => bySlug.get(slug))
     .filter((partner): partner is StorePartner => Boolean(partner?.description))
-  const closeImage =
-    findSlide(mariinsky, "benches.jpg") ??
-    findSlide(bolshoi, "chairs-velvet.jpg") ??
-    heroSlide
-
   const closeDeck = useCallback(() => setOpen(null), [])
 
   useEffect(() => {
@@ -226,33 +221,6 @@ export function PartnersEditorial({ partners }: { partners: StorePartner[] }) {
       ))}
 
       <Roster partners={partners} onOpen={openDeck} />
-
-      <section className="px-close">
-        {closeImage ? (
-          <figure className="px-mask" data-reveal>
-            <div className="px-mask-clip">
-              <img src={closeImage.src} alt={closeImage.alt} decoding="async" loading="lazy" />
-            </div>
-          </figure>
-        ) : null}
-        <div className="px-close-copy">
-          <h2>{designersLandingCopy.h1}</h2>
-          {designersLandingCopy.closing.map((line) => (
-            <p key={line}>{formatRuInline(line)}</p>
-          ))}
-          <p className="px-close-actions">
-            <Link href="/bespoke/request" className="px-cta">
-              {designersLandingCopy.ctaPrimary}
-              <span className="px-arrow" aria-hidden="true">
-                →
-              </span>
-            </Link>
-            <Link href="/designers" className="px-quiet">
-              {designersLandingCopy.eyebrow}
-            </Link>
-          </p>
-        </div>
-      </section>
 
       {open && slidesOf(open.partner).length > 0 ? (
         <DeckViewer
