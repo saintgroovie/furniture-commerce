@@ -103,6 +103,34 @@ export async function upstream(path, { session, method = "GET", body } = {}) {
       throw new LiveError(401, "Сессия Medusa закончилась. Войдите снова");
     if (
       !response.ok &&
+      path.startsWith("/admin/woodright/products") &&
+      [400, 409].includes(response.status)
+    ) {
+      let detail;
+      try {
+        detail = JSON.parse(raw);
+      } catch {}
+      if (
+        [
+          "duplicate_sku",
+          "invalid_body",
+          "unknown_key",
+          "missing_title",
+          "invalid_title",
+          "missing_sku",
+          "invalid_sku",
+          "invalid_classification",
+          "invalid_collection",
+          "create_failed",
+          "accidental_publish",
+        ].includes(detail?.code) &&
+        typeof detail.message === "string" &&
+        detail.message.length <= 500
+      )
+        throw new LiveError(response.status, detail.message);
+    }
+    if (
+      !response.ok &&
       path.startsWith("/admin/woodright/desk/") &&
       [400, 403, 409, 428, 429].includes(response.status)
     ) {

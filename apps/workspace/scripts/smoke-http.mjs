@@ -64,6 +64,7 @@ try {
     "/api/live/files",
     "/api/live/attachments?entityType=person&entityId=person_test",
     "/api/live/media?productId=prod_test&index=0",
+    "/api/live/catalog?id=prod_test",
   ]) {
     const r = await fetch(
       (path.startsWith(basePath + "/_next/") ? origin : appOrigin) + path,
@@ -78,6 +79,16 @@ try {
       body: "{}",
     });
   assert.equal((await send("/api/live/commands", origin)).status, 401);
+  assert.equal((await send("/api/live/catalog", origin)).status, 401);
+  assert.equal((await send("/api/live/catalog/upload", origin)).status, 401);
+  assert.equal(
+    (await send("/api/live/catalog", "https://other.example")).status,
+    403,
+  );
+  assert.equal(
+    (await send("/api/live/catalog/upload", "https://other.example")).status,
+    403,
+  );
   assert.equal(
     (await send("/api/live/commands", "https://other.example")).status,
     403,

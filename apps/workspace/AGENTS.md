@@ -10,3 +10,5 @@
 
 - Products with catalog photos show actual product thumbnails in lists and the work queue; use a neutral image placeholder only when no photo is available.
 - Keep one direct «Товары» navigation entry and a separate «Комнаты» link; avoid a redundant collapsible catalog level.
+- Product creation and editing use native Medusa Admin APIs and commerce workflows. New products are drafts; publication must pass the existing server readiness gate. Preserve execution media bindings and other currencies/quantity prices when changing the RUB base price.
+- Catalog editing follows the existing full-administrator (god) authorization. Do not silently expand seller, director, accountant or production permissions.

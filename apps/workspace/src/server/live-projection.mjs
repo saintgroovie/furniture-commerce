@@ -321,6 +321,10 @@ export function projectLive(
     identity,
     loadedAt: new Date().toISOString(),
     capabilities: {
+      catalogEdit:
+        features.access?.role === "god" &&
+        features.writesEnabled === true &&
+        sourceStates.products?.ok === true,
       requestUpdate:
         features.contract === "woodright-desk-v1" &&
         features.writesEnabled === true &&
