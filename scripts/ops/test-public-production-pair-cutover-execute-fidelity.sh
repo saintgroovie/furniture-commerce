@@ -489,12 +489,36 @@ else
 fi
 assert_public_demo_untouched "success"
 
+# Signal after the approval terminal write must not undo committed runtime.
+reset_harness
+python3 - "$SRV/meta/public_production/OWNER_APPROVED_RELEASE.json" <<'PY_SIGNAL'
+import json,sys
+p=sys.argv[1];d=json.load(open(p));d['reservation_state']='reserved';d['approval_generation']='apr1-'+'1'*32;json.dump(d,open(p,'w'))
+PY_SIGNAL
+EV="$TMP/ev-commit-signal"
+run_exec "$EV" "$TMP/out-commit-signal.txt" "WOODRIGHT_CUTOVER_FAULT=approval_commit_signal"
+[[ "$RC" == 143 ]] && pass "commit_signal: interrupted exit 143" || fail "commit_signal: rc=$RC"
+[[ "$(state_file "$EV")" == committed ]] && pass "commit_signal: commit decision already durable" || fail "commit_signal: state=$(state_file "$EV")"
+python3 - "$SRV/meta/public_production/OWNER_APPROVED_RELEASE.json" <<'PY_SIGNAL' && pass "commit_signal: approval remains committed" || fail "commit_signal: approval not committed"
+import json,sys
+assert json.load(open(sys.argv[1]))['reservation_state']=='committed'
+PY_SIGNAL
+[[ "$(digest_of woodright-public-production-backend)" == "$NEW_BE_DIG" && "$(digest_of woodright-public-production-storefront)" == "$NEW_SF_DIG" ]] && pass "commit_signal: accepted pair retained" || fail "commit_signal: pair changed"
+if grep -q 'ROLLBACK begin' "$TMP/out-commit-signal.txt";then fail "commit_signal: rollback after released approval";else pass "commit_signal: no rollback after approval release";fi
+lock_is_free "$LOCK" && pass "commit_signal: lock released" || fail "commit_signal: lock held"
+
 # ==========================================================================
 # 2) first pin write fails -> no recreate, original pins
 # ==========================================================================
 reset_harness
 EV="$TMP/ev-first-pin"
-run_exec "$EV" "$TMP/out-first-pin.txt" "WOODRIGHT_CUTOVER_FAULT=first_pin"
+printf preserve-foreign-cleanup-input > "$TMP/foreign-cleanup-input"
+run_exec "$EV" "$TMP/out-first-pin.txt" "WOODRIGHT_CUTOVER_FAULT=first_pin" \
+  "PROD_PIN_STAGE=$TMP/foreign-cleanup-input" \
+  "WR_COMPOSE_ENV_PUBLISHED_PATH=$TMP/foreign-cleanup-input" \
+  "PROD_ATOMIC_PUBLISH_STAGE=$TMP/foreign-cleanup-input" \
+  "PROD_PRIVATE_PUBLISH_PATHS=$TMP/foreign-cleanup-input"
+[[ -f "$TMP/foreign-cleanup-input" ]] && pass "first_pin: inherited cleanup paths cannot delete foreign files" || fail "first_pin: foreign cleanup path was used"
 [[ "$RC" -ne 0 ]] && pass "first_pin: non-zero exit ($RC)" || fail "first_pin: unexpected success"
 [[ "$(state_file "$EV")" == "failed_before_mutation" ]] && pass "first_pin: failed_before_mutation" || fail "first_pin: state=$(state_file "$EV")"
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "first_pin: backend pin untouched" || fail "first_pin: backend pin changed"
