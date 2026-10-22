@@ -436,3 +436,37 @@ test("SKU uniqueness is checked across the full catalogue, ignoring case and exc
     /уникальность/,
   );
 });
+
+test("publication associates an unassigned draft only with the store's explicit default channel", async () => {
+  const a = port();
+  const send = async (path, ...args) =>
+    path.startsWith("/admin/stores?")
+      ? { stores: [{ id: "store_a", default_sales_channel_id: "sc_default" }] }
+      : a.send(path, ...args);
+  await executeCatalog(
+    { type: "publish", id: a.p.id, version: catalogVersion(a.p) },
+    send,
+  );
+  assert.deepEqual(
+    a.writes.map((w) => ({ path: w.path, body: w.body })),
+    [
+      {
+        path: "/admin/products/prod_test",
+        body: { sales_channels: [{ id: "sc_default" }] },
+      },
+      { path: "/admin/woodright/products/prod_test/publish", body: {} },
+    ],
+  );
+  const b = port();
+  await assert.rejects(
+    executeCatalog(
+      { type: "publish", id: b.p.id, version: catalogVersion(b.p) },
+      async (path, ...args) =>
+        path.startsWith("/admin/stores?")
+          ? { stores: [] }
+          : b.send(path, ...args),
+    ),
+    /витрина/,
+  );
+  assert.equal(b.writes.length, 0);
+});

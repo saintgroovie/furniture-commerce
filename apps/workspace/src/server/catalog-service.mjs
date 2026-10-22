@@ -181,6 +181,27 @@ export async function executeCatalog(command, send) {
             .map((b) => b.message)
             .join(". ") || "Заполните обязательные данные товара",
         );
+      if (!(state.product.sales_channels || []).length) {
+        const { stores } = await send(
+          "/admin/stores?fields=id,default_sales_channel_id",
+        );
+        if (
+          !Array.isArray(stores) ||
+          stores.length !== 1 ||
+          !stores[0].default_sales_channel_id
+        )
+          throw new CatalogError(
+            409,
+            "В Medusa не выбрана основная витрина магазина. Назначьте её перед публикацией товара",
+          );
+        // Native draft creation doesn't associate a sales channel. Use the store's
+        // explicit default; never guess a channel from list position or another product.
+        await send(`/admin/products/${id}`, "POST", {
+          sales_channels: [
+            { id: catalogId(stores[0].default_sales_channel_id) },
+          ],
+        });
+      }
       await send(`/admin/woodright/products/${id}/publish`, "POST", {});
     }
     if (command.type === "hide")
