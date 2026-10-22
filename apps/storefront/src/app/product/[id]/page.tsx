@@ -1,3 +1,5 @@
+import { PdpGreenwichBedJsonLd } from "@/components/pdp-greenwich-bed-json-ld"
+import { greenwichBedJsonLdContext } from "@/lib/greenwich-bed-json-ld"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
@@ -66,6 +68,8 @@ import { CopyLines } from "@/components/copy-lines"
 import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
 import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
 import { ProductPdpExecutionMediaSwitcher } from "@/components/product-pdp-execution-media-switcher"
+import { PdpConfiguredPriceJsonLd } from "@/components/pdp-configured-price-json-ld"
+import { configuredPriceJsonLdContext } from "@/lib/configured-price-json-ld"
 import { OliverBedUpholsteryJsonLd } from "@/components/oliver-bed-upholstery-json-ld"
 import { oliverBedUpholsteryJsonLdOptions } from "@/lib/oliver-bed-upholstery-json-ld"
 import { ProductPdpMediaSwitcher } from "@/components/product-pdp-media-switcher"
@@ -713,6 +717,10 @@ export default async function ProductPage({
       })
     : null
 
+  const configuredPriceContext = configuredPriceJsonLdContext({ product, selectors: executionSelectors, basePrice: price, materialTiers })
+
+  const greenwichBedContext = greenwichBedJsonLdContext({ product: viewProduct, selectedVariant, selectors: executionSelectors, displayedPrice: openingPrice, materialTierCount: materialTiers?.length ?? 0, jsonLd: productJsonLd })
+
   const cspNonce = (await headers()).get("x-nonce") ?? undefined
 
   return (
@@ -731,7 +739,12 @@ export default async function ProductPage({
           }}
         />
       ) : null}
-      {upholsteryJsonLdOptions ? <PdpUpholsteryJsonLd
+      {greenwichBedContext ? <PdpGreenwichBedJsonLd key={selectedVariantId ?? handle} context={greenwichBedContext} nonce={cspNonce} /> : configuredPriceContext ? <PdpConfiguredPriceJsonLd
+        key={handle}
+        jsonLd={productJsonLd}
+        context={configuredPriceContext}
+        nonce={cspNonce}
+      /> : upholsteryJsonLdOptions ? <PdpUpholsteryJsonLd
         key={handle}
         productKey={handle}
         options={upholsteryJsonLdOptions}
