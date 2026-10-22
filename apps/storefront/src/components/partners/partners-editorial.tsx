@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties, type Mous
 import { DeckViewer } from "@/components/partners/deck-viewer"
 import { deckHistoryState, isPlainDeckActivation, readDeckHistory } from "@/lib/deck-activation"
 import { isPartnerPdf } from "@/lib/partner-file"
-import { hasPartnerMark, PartnerMark } from "@/components/partners/partner-mark"
 import { bindPinProgress } from "@/components/partners/pin-progress"
 import type { EditorialSlide, StorePartner, StorePartnerPresentation } from "@/lib/api/partners"
 import { formatRuInline } from "@/lib/format-ru-copy"
@@ -524,48 +523,87 @@ function Roster({
   partners: StorePartner[]
   onOpen: (event: MouseEvent<HTMLElement>, partner: StorePartner, index?: number) => void
 }) {
+  const projects = [
+    ["bolshoi", "hall.jpg"],
+    ["kunstkamera", "expeditions.jpg"],
+    ["mvd-academy", "reading-room.jpg"],
+    ["mariinsky-palace", "wardrobe.jpg"],
+  ].flatMap(([slug, file]) => {
+    const partner = partners.find((item) => item.slug === slug)
+    if (!partner) return []
+    const slide = findSlide(partner, file) ?? slidesOf(partner)[0]
+    const src = slide?.src ?? partner.images[0]
+    return src ? [{ partner, src, alt: slide?.alt ?? partner.name }] : []
+  })
+  const featured = new Set(projects.map(({ partner }) => partner.slug))
+  const remaining = partners.filter((partner) => !featured.has(partner.slug))
+  // This verified museum asset also covers remote records without a logo yet.
+  const logoOf = (partner: StorePartner) =>
+    partner.slug === "kunstkamera"
+      ? "/editorial/partners/kunstkamera/logo-official.png"
+      : partner.logo_url
+
   return (
     <section className="px-roster-wrap" data-reveal aria-labelledby="px-roster-title">
-      <h2 id="px-roster-title">{partnersCopy.backToIndex}</h2>
-      <ol className="px-roster">
-        {partners.map((partner) => {
-          const deck = deckOf(partner)
-          const showMark = partner.images.length === 0 && (partner.logo_url || hasPartnerMark(partner.slug))
+      <h2 id="px-roster-title">{partnersCopy.h1}</h2>
+      <div className="px-partner-projects">
+        {projects.map(({ partner, src, alt }) => {
+          const hasPresentation = slidesOf(partner).length > 0
+          const href = hasPresentation ? presentationHref(partner) : `/partners/${partner.slug}`
+          const logo = logoOf(partner)
           return (
-            <li key={partner.id}>
+            <article
+              key={partner.id}
+              className="px-partner-project"
+              data-partner={partner.slug}
+              aria-labelledby={`partner-${partner.slug}`}
+            >
               <Link
-                href={`/partners/${partner.slug}`}
-                className={showMark ? "px-roster-main has-mark" : "px-roster-main"}
+                href={href}
+                className="px-partner-photo"
+                aria-label={`${partnersCopy.viewProject}: ${partner.name}`}
+                onClick={hasPresentation ? (event) => onOpen(event, partner, 0) : undefined}
               >
-                {showMark ? (
-                  <span className="px-roster-mark">
-                    {partner.logo_url ? (
-                      <img src={partner.logo_url} alt="" />
-                    ) : (
-                      <PartnerMark slug={partner.slug} name={partner.name} />
-                    )}
-                  </span>
-                ) : null}
-                <span className="px-roster-name">{formatRuInline(partner.name)}</span>
-                {partner.description ? (
-                  <span className="px-roster-desc">{formatRuInline(partner.description)}</span>
-                ) : (
-                  <span className="px-roster-desc" />
-                )}
+                <img src={src} alt={alt} width={800} height={600} loading="lazy" decoding="async" />
               </Link>
-              {deck && slidesOf(partner).length > 0 ? (
+              <div className="px-partner-caption">
+                <span className="px-partner-logo" aria-hidden="true">
+                  {logo ? <img src={logo} alt="" loading="lazy" decoding="async" /> : null}
+                </span>
+                <div>
+                  <h3 id={`partner-${partner.slug}`}>
+                    <Link href={`/partners/${partner.slug}`}>{formatRuInline(partner.name)}</Link>
+                  </h3>
+                  {partner.description ? <p>{formatRuInline(partner.description)}</p> : null}
+                </div>
                 <Link
-                  href={presentationHref(partner)}
-                  className="px-watch px-watch--row"
-                  onClick={(event) => onOpen(event, partner, 0)}
+                  href={href}
+                  className="px-watch"
+                  aria-label={`${partnersCopy.viewProject}: ${partner.name}`}
+                  onClick={hasPresentation ? (event) => onOpen(event, partner, 0) : undefined}
                 >
-                  {partnersCopy.viewPresentation}
+                  {partnersCopy.viewProject}
+                  <span className="px-arrow" aria-hidden="true">→</span>
                 </Link>
-              ) : null}
-            </li>
+              </div>
+            </article>
           )
         })}
-      </ol>
+      </div>
+      {remaining.length > 0 ? (
+        <ul className="px-partner-strip">
+          {remaining.map((partner) => (
+            <li key={partner.id}>
+              <Link href={`/partners/${partner.slug}`}>
+                {logoOf(partner) ? (
+                  <img src={logoOf(partner)!} alt="" width={80} height={64} loading="lazy" decoding="async" />
+                ) : null}
+                <span>{formatRuInline(partner.name)}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </section>
   )
 }

@@ -6,9 +6,17 @@
 import type { StorePartner } from "./api/partners"
 
 const E = "/editorial/partners"
+const RETOUCHED_PHOTOS = new Set([
+  "bolshoi/hall.jpg",
+  "kunstkamera/expeditions.jpg",
+  "mvd-academy/reading-room.jpg",
+  "mariinsky-palace/wardrobe.jpg",
+  "ran-presidential/hall.jpg",
+])
 
 function photo(slug: string, file: string): string {
-  return `${E}/${slug}/${file}`
+  const key = `${slug}/${file}`
+  return `${E}/${RETOUCHED_PHOTOS.has(key) ? "retouched/" : ""}${key}`
 }
 
 function slides(
@@ -249,7 +257,7 @@ export const LEGACY_PARTNERS: StorePartner[] = [
     slug: "kunstkamera",
     name: "Кунсткамера РАН",
     description: "Музейное оборудование экспозиции",
-    logo_url: null,
+    logo_url: photo("kunstkamera", "logo-official.png"),
     website_url: null,
     featured: false,
     sort_order: 80,
