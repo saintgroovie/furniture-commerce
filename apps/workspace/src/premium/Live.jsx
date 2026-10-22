@@ -16,6 +16,7 @@ import {
   Eye,
   EyeSlash,
   Phone,
+  PencilSimple,
 } from "@phosphor-icons/react";
 import {
   Button,
@@ -36,6 +37,7 @@ import { History } from "./History.jsx";
 import { ContactEditor } from "./ContactEditor.jsx";
 import { Assignment, CompanyCreate } from "./Team.jsx";
 import { PasswordChange } from "./PasswordChange.jsx";
+import { ProductCreate, ProductEditor } from "./ProductEditor.jsx";
 const types = {
   STANDARD: "Готовое изделие",
   CONFIGURABLE: "Выбор исполнения",
@@ -419,6 +421,28 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
       : panel.type === "files"
         ? "files"
         : undefined;
+  if (data.capabilities.catalogEdit && panel.type === "productEditor")
+    return (
+      <ProductEditor
+        id={panel.id}
+        onClose={onClose}
+        refresh={refresh}
+        notify={notify}
+      />
+    );
+  if (
+    data.capabilities.catalogEdit &&
+    panel.type === "create" &&
+    panel.kind === "product"
+  )
+    return (
+      <ProductCreate
+        onClose={onClose}
+        refresh={refresh}
+        go={go}
+        notify={notify}
+      />
+    );
   if (
     (panel.type === "companyCreate" ||
       (panel.type === "create" && panel.kind === "company")) &&
@@ -562,8 +586,15 @@ export function LiveObjectDetail({
           onClick: () => go(kind),
         }}
         action={
-          ["orders", "requests"].includes(kind) &&
-          (!data.access || data.access.pages.includes("invoices")) ? (
+          kind === "products" && data.capabilities.catalogEdit ? (
+            <Button
+              icon={PencilSimple}
+              onClick={() => openPanel({ type: "productEditor", id })}
+            >
+              Редактировать товар
+            </Button>
+          ) : ["orders", "requests"].includes(kind) &&
+            (!data.access || data.access.pages.includes("invoices")) ? (
             <Button
               icon={Receipt}
               onClick={() => openPanel({ type: "invoices", objectId: id })}

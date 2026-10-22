@@ -454,13 +454,17 @@ export function ObjectList({ kind, data, go, openPanel }) {
         action={
           <Button
             disabled={
-              !data.capabilities.crmCreate ||
-              !["request", "person"].includes(c.kind)
+              c.kind === "product"
+                ? !data.capabilities.catalogEdit
+                : !data.capabilities.crmCreate ||
+                  !["request", "person"].includes(c.kind)
             }
             title={
-              !data.capabilities.crmCreate
-                ? "Создание будет доступно после подключения записи"
-                : undefined
+              c.kind === "product" && !data.capabilities.catalogEdit
+                ? "Добавление товаров доступно полному администратору"
+                : !data.capabilities.crmCreate
+                  ? "Создание будет доступно после подключения записи"
+                  : undefined
             }
             icon={Plus}
             onClick={() => openPanel({ type: "create", kind: c.kind })}
