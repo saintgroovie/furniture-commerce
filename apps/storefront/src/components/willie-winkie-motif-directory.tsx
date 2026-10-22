@@ -1,3 +1,4 @@
+import { editorialMotifCover } from "@/lib/motif-editorial-covers"
 import Link from "next/link"
 import type { MotifTheme } from "@/lib/api/motif-themes"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
@@ -5,10 +6,13 @@ import { willieWinkieMotifsCopy } from "@/lib/woodright-copy"
 
 /** Prefer motif cover; fall back to first preview thumbnail so tiles are never empty shells. */
 export function resolveMotifCoverSrc(theme: {
+  motif_slug?: string
   motif_cover: string | null
   preview_products?: Array<{ thumbnail: string | null }>
   products?: Array<{ thumbnail: string | null }>
 }): string | null {
+  const editorial = theme.motif_slug ? editorialMotifCover(theme.motif_slug) : null
+  if (editorial) return editorial
   if (theme.motif_cover) return theme.motif_cover
   const fromPreview = theme.preview_products?.find((p) => p.thumbnail)?.thumbnail
   if (fromPreview) return fromPreview

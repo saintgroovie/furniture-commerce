@@ -1,3 +1,5 @@
+import { EditorialPageJsonLd } from "@/components/editorial-page-json-ld"
+import { roomPageJsonLd } from "@/lib/editorial-page-json-ld"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { cache } from "react"
@@ -121,6 +123,7 @@ export default async function RoomSetPage({
 
   return (
     <div className="room-set-detail" data-state="success">
+      <EditorialPageJsonLd payload={roomPageJsonLd(getSiteUrl(), roomSet)} />
       {hero ? (
         <img
           src={hero}

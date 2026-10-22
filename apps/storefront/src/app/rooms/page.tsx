@@ -7,6 +7,9 @@ import { actions, roomsCopy, seo } from "@/lib/woodright-copy"
 import { pageTitle } from "@/lib/page-title"
 import { CopyLines } from "@/components/copy-lines"
 import { canonicalAlternates } from "@/lib/page-canonical"
+import { getSiteUrl } from "@/lib/api/base"
+import { EditorialPageJsonLd } from "@/components/editorial-page-json-ld"
+import { roomDirectoryJsonLd } from "@/lib/editorial-page-json-ld"
 
 export const metadata: Metadata = {
   title: pageTitle(seo.rooms.title),
@@ -84,6 +87,7 @@ export default async function RoomsPage() {
 
   return (
     <div data-state="success">
+      <EditorialPageJsonLd payload={roomDirectoryJsonLd(getSiteUrl(), list, false, roomsCopy.h1)} />
       <h1>{roomsCopy.h1}</h1>
       <CopyLines className="info-text" style={{ marginTop: "0.5rem" }} lines={roomsCopy.lead} />
       <p className="page-caption">{roomsCopy.supporting}</p>
