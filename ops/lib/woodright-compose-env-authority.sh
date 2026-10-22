@@ -627,6 +627,7 @@ wr_compose_env_atomic_install() {
     meta_m="644"
   fi
   published="$(dirname -- "$dest")/.wr-compose-env-publish-$$-$RANDOM"
+  WR_COMPOSE_ENV_PUBLISHED_PATH="$published"
   # Ensure published path cannot be a pre-planted symlink.
   rm -f "$published" 2>/dev/null || wr_compose_env_rm "$published"
   if [[ -L "$published" ]]; then
@@ -634,10 +635,11 @@ wr_compose_env_atomic_install() {
     return 1
   fi
   if [[ -r "$src" ]]; then
-    cp "$src" "$published" || return 1
+    cp "$src" "$published" || { wr_compose_env_rm "$published"; return 1; }
   elif command -v sudo >/dev/null 2>&1 && sudo -n cp -p "$src" "$published"; then
     :
   else
+    wr_compose_env_rm "$published"
     wr_compose_env_die "cannot copy unreadable compose env source"
     return 1
   fi
@@ -648,7 +650,7 @@ wr_compose_env_atomic_install() {
       if command -v sudo >/dev/null 2>&1 && sudo -n chown "${meta_u}:${meta_g}" "$published" 2>/dev/null; then
         :
       else
-        rm -f "$published"
+        wr_compose_env_rm "$published"
         wr_compose_env_die "chown staged compose env failed"
         return 1
       fi
@@ -658,7 +660,7 @@ wr_compose_env_atomic_install() {
     if command -v sudo >/dev/null 2>&1 && sudo -n chmod "$meta_m" "$published" 2>/dev/null; then
       :
     else
-      rm -f "$published"
+      wr_compose_env_rm "$published"
       wr_compose_env_die "chmod staged compose env failed"
       return 1
     fi
@@ -667,11 +669,12 @@ wr_compose_env_atomic_install() {
     if command -v sudo >/dev/null 2>&1 && sudo -n mv -f "$published" "$dest"; then
       :
     else
-      rm -f "$published" 2>/dev/null || true
+      wr_compose_env_rm "$published"
       wr_compose_env_die "cannot atomically install compose env"
       return 1
     fi
   fi
+  WR_COMPOSE_ENV_PUBLISHED_PATH=""
   got_u="$(python3 -c 'import os,sys; print(os.stat(sys.argv[1]).st_uid)' "$dest")"
   got_g="$(python3 -c 'import os,sys; print(os.stat(sys.argv[1]).st_gid)' "$dest")"
   got_m="$(python3 -c 'import os,stat,sys; print(format(stat.S_IMODE(os.stat(sys.argv[1]).st_mode), "o"))' "$dest")"

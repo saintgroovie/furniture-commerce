@@ -1621,7 +1621,7 @@ prod_atomic_install() {
   [[ -f "$src" ]] || return 1
   dir="$(dirname "$dest")"
   published="${dest}.wr-prod-new-$$"
-  if [[ -d "$dir" && -w "$dir" ]]; then
+  if [[ -r "$src" && -d "$dir" && -w "$dir" ]]; then
     cp -p "$src" "$published" || return 1
     mv -f "$published" "$dest" || { rm -f "$published"; return 1; }
     return 0
@@ -1986,12 +1986,28 @@ run_rollback() {
   return "$ROLLBACK_RC"
 }
 
+# These paths are assigned only by this transaction, under its runtime lock.
+# Never sweep unrelated stages belonging to another operation.
+prod_cleanup_pin_stages() {
+  local path failed=0
+  for path in "${PROD_PIN_STAGE:-}" "${WR_COMPOSE_ENV_PUBLISHED_PATH:-}"; do
+    [[ -n "$path" ]] || continue
+    wr_compose_env_rm "$path"
+    if [[ -e "$path" || -L "$path" ]]; then
+      log "ERROR: protected pin stage cleanup incomplete: $path"
+      failed=1
+    fi
+  done
+  [[ "$failed" == 0 ]]
+}
+
 prod_on_exit() {
   local rc=$?
   # Disarm every trap first: rollback must never re-enter itself, and a
   # successful commit must never be undone by a late signal.
   trap - EXIT INT TERM HUP
   if [[ "$COMMITTED" == "1" || "$ROLLBACK_DONE" == "1" ]]; then
+    prod_cleanup_pin_stages || rc=13
     release_lock
     exit "$rc"
   fi
@@ -2004,6 +2020,7 @@ prod_on_exit() {
   else
     record_state failed_before_mutation
   fi
+  prod_cleanup_pin_stages || rc=13
   release_lock
   exit "$rc"
 }
@@ -2328,6 +2345,7 @@ write_required_pins_atomic() {
   fi
 
   tmp="$(create_sealed_pin_stage "$compose_parent")" || return 1
+  PROD_PIN_STAGE="$tmp"
   wr_compose_env_is_regular_file "$tmp" || return 1
   wr_compose_env_assert_path_under "$tmp" "$allowed_root" || { wr_compose_env_rm "$tmp"; return 1; }
 
@@ -2377,6 +2395,7 @@ write_required_pins_atomic() {
     return 1
   fi
   wr_compose_env_rm "$tmp"
+  PROD_PIN_STAGE=""
   need_be && PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_BACKEND_IMAGE" \
     && printf '%s WOODRIGHT_BACKEND_IMAGE=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$BE_REF" >>"$EVIDENCE_DIR/json/pins-written.txt"
   need_sf && PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_STOREFRONT_IMAGE" \

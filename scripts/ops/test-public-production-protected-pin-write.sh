@@ -80,14 +80,14 @@ chmod 000 "$COMPOSE_ENV_FILE"
 [[ ! -r "$COMPOSE_ENV_FILE" && ! -w "$FIXTURE" ]]
 [[ -z "$(find "$FIXTURE" -name '.wr-prod-pin-*' -o -name '.wr-compose-env-publish-*' -o -name '.env.wr-prod-new-*')" ]]
 echo 'PASS protected pair: stage, validate, atomic install, exact rollback, denied direct IO and no staging leftovers'
-# A privileged staging failure must not write the live pin or arm mutation.
+# A privileged reader failure must not write the live pin or arm mutation.
 rm "$TMP/states"
 export FAIL_PRIVILEGED_PYTHON=1
 if write_required_pins_atomic >>"$TMP/out" 2>>"$TMP/err"; then echo 'FAIL privileged failure accepted'; exit 1; fi
 unset FAIL_PRIVILEGED_PYTHON
 [[ ! -e "$TMP/states" ]]
 chmod u+r "$COMPOSE_ENV_FILE";cmp "$COMPOSE_ENV_FILE" "$TMP/original";chmod 000 "$COMPOSE_ENV_FILE"
-echo 'PASS privileged staging failure: unchanged pins, no mutation state'
+echo 'PASS privileged reader failure: unchanged pins, no mutation state'
 # An injected stop immediately before publish must clean the sealed temp.
 FAULT=first_pin
 if write_required_pins_atomic >>"$TMP/out" 2>>"$TMP/err"; then echo 'FAIL injected fault accepted'; exit 1; fi
