@@ -1,6 +1,6 @@
 import { cache } from "react"
 import { isBuyerPublicProductStatus } from "../buyer-publication"
-import { getBaseUrl, medusaCatalogFetch, medusaFetch } from "./base"
+import { getBaseUrl, medusaFetch } from "./base"
 
 export async function getProducts(params?: {
   category_id?: string
@@ -36,13 +36,14 @@ export async function getProducts(params?: {
  * Catalog listing fetch — opt-in `/store/catalog-products` projection (PERF-02).
  * Dedicated path: Medusa core rejects unknown query keys (e.g. `view`) on `/store/products`.
  *
- * Uses `medusaCatalogFetch` (short revalidate), not cart `no-store`.
+ * Prices and photos must reflect completed admin edits on the next read.
+ * Do not use the stale-while-revalidate cache used by room membership.
  * No React `cache()` wrapper: React 18.3.1 does not export `cache`, and catalog
  * pages call this once per RSC request (kids membership uses passed products).
  */
 export async function getCatalogProducts() {
   const base = getBaseUrl()
-  const res = await medusaCatalogFetch(`${base}/store/catalog-products`)
+  const res = await medusaFetch(`${base}/store/catalog-products`)
   if (!res.ok) {
     const text = await res.text()
     let message = "Не удалось загрузить каталог."

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState, useTransition, type ReactNode } from "react"
 import { ProductCard } from "@/components/product-card"
 import { PromotionCard } from "@/components/promotion-card"
@@ -87,6 +88,7 @@ export function CatalogBrowseClient({
   emptySecondaryLabel,
   promotionSlot = null,
 }: Props) {
+  const router = useRouter()
   const hasHydratedPool = Array.isArray(hydratedPool)
   const [state, setState] = useState<CatalogFilterState>(initialState)
   const [fetchedPool, setFetchedPool] = useState<Array<Record<string, unknown>> | null>(
@@ -137,10 +139,15 @@ export function CatalogBrowseClient({
   const onClientNavigate = useCallback(
     (next: CatalogFilterState) => {
       const href = buildCatalogHref(basePath, next)
-      window.history.pushState(null, "", href)
+      if (href !== `${window.location.pathname}${window.location.search}`) {
+        window.history.pushState(null, "", href)
+      }
       setState(next)
+      // Local filtering stays responsive; refresh the server pool as well so
+      // a later search does not keep the prices/photos from the first visit.
+      startTransition(() => router.refresh())
     },
-    [basePath]
+    [basePath, router]
   )
 
   const filtered = useMemo(
