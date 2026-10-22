@@ -36,6 +36,7 @@ import {
   offerAvailabilityFromPurchase,
 } from "@/lib/product-json-ld"
 import { readProductPurchase } from "@/lib/woodright-order/purchase-contract"
+import { buildNativeVariantJsonLd } from "@/lib/native-variant-json-ld"
 import {
   formatRequestQuotePriceLabel,
   isRequestQuoteProduct,
@@ -98,6 +99,7 @@ import {
   mergeUniqueExtraUrls,
   resolveCardHeroAndNearDuplicateExtras,
   resolvePdpMediaBundle,
+  resolvePdpMediaSrc,
 } from "@/lib/product-images"
 import { collectProductImageUrls } from "@/lib/oliver-buyer-gallery"
 import { restoreEvidenceProtectedAngles } from "@/lib/media-near-dup-collapse"
@@ -416,20 +418,27 @@ export default async function ProductPage({
     }
   }
 
+  const selectedGallery = (selectedVariant?.metadata as Record<string, unknown> | undefined)?.gallery_urls
+  const nativeVariantGallery = !useExecutionPdp && Array.isArray(selectedGallery) && selectedGallery.length > 0 &&
+    selectedGallery.every((url): url is string => typeof url === "string" && url.trim().length > 0)
+    ? { mainSrc: selectedGallery[0], extraSrcs: selectedGallery.slice(1) } : null
+
   const oliverBuyerGallery =
     isOliver && !useExecutionPdp && !bedMatrixMedia && !paintMatrixMedia
       ? buildPdpBuyerFacingGallery(viewProduct)
       : null
 
   const mainImage =
-    (oliverBuyerGallery?.mainSrc ??
+    (nativeVariantGallery?.mainSrc ?? oliverBuyerGallery?.mainSrc ??
       executionPdpMedia?.mainSrc ??
       bedMatrixMedia?.mainSrc ??
       paintMatrixMedia?.mainSrc) ||
     pdpHeroThumbnail(viewProduct)
   const mainNorm = mainImage ?? ""
   const heroObjectPosition = getPdpHeroObjectPosition(product)
-  const pdpExtraSrcs = oliverBuyerGallery
+  const pdpExtraSrcs = nativeVariantGallery
+    ? nativeVariantGallery.extraSrcs
+    : oliverBuyerGallery
     ? oliverBuyerGallery.extraSrcs
     : executionPdpMedia
       ? executionPdpMedia.extraSrcs
@@ -674,7 +683,15 @@ export default async function ProductPage({
       product, options: addressableMaterialTiers, jsonLd: scalarProductJsonLd,
       requestQuote: isRequestQuoteProduct(product),
     })) ||
-    sizeVariantJsonLd || scalarProductJsonLd
+    sizeVariantJsonLd ||
+    (!sparseMap && !useExecutionPdp && !materialTiers?.length && !displayGroupMembers.length &&
+      buildNativeVariantJsonLd({
+        product, jsonLd: scalarProductJsonLd, selectedVariantId, displayedPriceRub: openingPrice,
+        axis: variantAxis,
+        commonImages: (nativeVariantGallery
+          ? collectProductImageUrls(product).map(resolvePdpMediaSrc)
+          : [pdpMainSrc, ...pdpResolvedExtras]).filter(Boolean),
+      })) || scalarProductJsonLd
   const sizeFamily = sizeVariantJsonLd?.isVariantOf as
     | { productGroupID?: string; description?: string }
     | undefined

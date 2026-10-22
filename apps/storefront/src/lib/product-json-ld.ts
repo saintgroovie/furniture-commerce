@@ -8,7 +8,7 @@ import { isDirectCartPurchase, type StorefrontPurchaseDto } from "./woodright-or
 import { sellerOrganizationId } from "./organization-json-ld"
 export { jsonLdHtml } from "./json-ld"
 import { merchantPolicyIds } from "./merchant-policy-json-ld"
-import { verifiedWwPrice } from "./verified-september-catalog"
+import { variantRubPrice } from "./variant-rub-price"
 
 const HANDLE_RE = /^[a-z0-9][a-z0-9-]{0,120}$/i
 
@@ -60,16 +60,6 @@ export function productCanonicalPath(
   return `/product/${key}`
 }
 
-function rubAmount(
-  amount: unknown,
-  currency: unknown
-): number | null {
-  if (String(currency ?? "").trim().toLowerCase() !== "rub") return null
-  const n = Number(amount)
-  if (!Number.isFinite(n) || n <= 0) return null
-  return n
-}
-
 /**
  * Every variant must have one positive RUB amount.
  * A missing price, a non-RUB currency, or an empty variant list fails closed.
@@ -82,23 +72,9 @@ export function readUniformRubAmounts(
   const out: number[] = []
   for (const variant of variants) {
     if (!variant || typeof variant !== "object") return null
-    const rec = variant as Record<string, unknown>
-    const calculated = rec.calculated_price as Record<string, unknown> | undefined
-    if (calculated && calculated.calculated_amount != null) {
-      const n = rubAmount(calculated.calculated_amount, calculated.currency_code)
-      if (n == null) return null
-      out.push(verifiedWwPrice(rec.id, rec.sku, n) ?? n)
-      continue
-    }
-    const prices =
-      (rec.prices as Array<Record<string, unknown>> | undefined) ??
-      (rec.price_set as { prices?: Array<Record<string, unknown>> } | undefined)
-        ?.prices
-    const first = prices?.[0]
-    if (!first) return null
-    const n = rubAmount(first.amount, first.currency_code)
+    const n = variantRubPrice(variant as Record<string, unknown>)
     if (n == null) return null
-    out.push(verifiedWwPrice(rec.id, rec.sku, n) ?? n)
+    out.push(n)
   }
   return out
 }

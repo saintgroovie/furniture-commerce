@@ -1,5 +1,6 @@
 import { openingVariant } from "./opening-variant"
-import { verifiedWwPrice, wwPriceEvidence } from "./verified-september-catalog"
+import { wwPriceEvidence } from "./verified-september-catalog"
+import { variantRubPrice } from "./variant-rub-price"
 
 export function formatRub(amount: number): string {
   return amount.toLocaleString("ru-RU") + " ₽"
@@ -22,15 +23,7 @@ export function getOrderDisplayNumber(order: Record<string, unknown>): string {
 
 /** Medusa v2 amounts are major currency units (rubles for RUB). */
 export function getPrice(product: Record<string, unknown>): number | null {
-  const v = openingVariant(product)
-  if (!v) return null
-  const cp = v.calculated_price as Record<string, unknown> | undefined
-  if (cp?.calculated_amount != null) return verifiedWwPrice(v.id, v.sku, Number(cp.calculated_amount)) ?? Number(cp.calculated_amount)
-  const prices =
-    (v.prices as Array<Record<string, unknown>> | undefined) ??
-    (v.price_set as { prices?: Array<Record<string, unknown>> } | undefined)?.prices
-  if (prices?.length && prices[0].amount != null) return verifiedWwPrice(v.id, v.sku, Number(prices[0].amount)) ?? Number(prices[0].amount)
-  return null
+  return variantRubPrice(openingVariant(product), true)
 }
 
 /**
@@ -42,17 +35,7 @@ export function getPrice(product: Record<string, unknown>): number | null {
 export function priceOfVariant(
   variant: Record<string, unknown> | null | undefined
 ): number | null {
-  if (!variant) return null
-  const calculated = variant.calculated_price as Record<string, unknown> | undefined
-  if (calculated?.calculated_amount != null) return verifiedWwPrice(variant.id, variant.sku, Number(calculated.calculated_amount)) ?? Number(calculated.calculated_amount)
-  const prices =
-    (variant.prices as Array<Record<string, unknown>> | undefined) ??
-    (variant.price_set as { prices?: Array<Record<string, unknown>> } | undefined)
-      ?.prices
-  const base = prices?.find((price) => price.price_list_id == null && price.amount != null)
-  if (base) return verifiedWwPrice(variant.id, variant.sku, Number(base.amount)) ?? Number(base.amount)
-  if (prices?.length && prices[0].amount != null) return verifiedWwPrice(variant.id, variant.sku, Number(prices[0].amount)) ?? Number(prices[0].amount)
-  return null
+  return variantRubPrice(variant, true)
 }
 
 /** PDP amount. A selected variant without its own price stays unpriced: never another SKU's price. */
