@@ -13,7 +13,6 @@ import {
   UserCircle,
   Buildings,
   Cube,
-  Armchair,
   House,
   CheckCircle,
   WarningCircle,
@@ -41,6 +40,7 @@ import {
   FormError,
   Drawer,
 } from "./ui.jsx";
+import { ProductThumbnail } from "./ProductThumbnail.jsx";
 import {
   TODAY,
   STATUS,
@@ -161,17 +161,23 @@ export function TodayView({ data, go, openPanel, mutate, notify, ...rest }) {
                     }}
                     onDoubleClick={() => open(r)}
                   >
-                    <span className="queue-icon">
-                      {r.kind === "order" || r.kind === "product" ? (
-                        <Cube size={25} weight="light" />
-                      ) : r.kind === "reminder" ? (
-                        <Clock size={25} weight="light" />
-                      ) : r.waiting ? (
-                        <UserCircle size={25} weight="light" />
-                      ) : (
-                        <FileText size={25} weight="light" />
-                      )}
-                    </span>
+                    {r.kind === "product" ? (
+                      <ProductThumbnail
+                        product={data.products.find((p) => p.id === r.id)}
+                      />
+                    ) : (
+                      <span className="queue-icon">
+                        {r.kind === "order" ? (
+                          <Cube size={25} weight="light" />
+                        ) : r.kind === "reminder" ? (
+                          <Clock size={25} weight="light" />
+                        ) : r.waiting ? (
+                          <UserCircle size={25} weight="light" />
+                        ) : (
+                          <FileText size={25} weight="light" />
+                        )}
+                      </span>
+                    )}
                     <span className="queue-copy">
                       <b>{r.title}</b>
                       <small>{r.sub}</small>
@@ -448,13 +454,17 @@ export function ObjectList({ kind, data, go, openPanel }) {
         action={
           <Button
             disabled={
-              !data.capabilities.crmCreate ||
-              !["request", "person"].includes(c.kind)
+              c.kind === "product"
+                ? !data.capabilities.catalogEdit
+                : !data.capabilities.crmCreate ||
+                  !["request", "person"].includes(c.kind)
             }
             title={
-              !data.capabilities.crmCreate
-                ? "Создание будет доступно после подключения записи"
-                : undefined
+              c.kind === "product" && !data.capabilities.catalogEdit
+                ? "Добавление товаров доступно полному администратору"
+                : !data.capabilities.crmCreate
+                  ? "Создание будет доступно после подключения записи"
+                  : undefined
             }
             icon={Plus}
             onClick={() => openPanel({ type: "create", kind: c.kind })}
@@ -632,21 +642,23 @@ export function ObjectList({ kind, data, go, openPanel }) {
                 key={r.id}
                 onClick={() => go(kind, r.id)}
               >
-                <span
-                  className={`object-icon ${kind === "people" ? "avatar" : ""}`}
-                >
-                  {kind === "people" ? (
-                    r.initials || r.name.slice(0, 2)
-                  ) : kind === "companies" ? (
-                    <Buildings size={24} weight="light" />
-                  ) : kind === "products" ? (
-                    <Armchair size={24} weight="light" />
-                  ) : kind === "rooms" ? (
-                    <House size={24} weight="light" />
-                  ) : (
-                    <FileText size={24} weight="light" />
-                  )}
-                </span>
+                {kind === "products" ? (
+                  <ProductThumbnail product={r} />
+                ) : (
+                  <span
+                    className={`object-icon ${kind === "people" ? "avatar" : ""}`}
+                  >
+                    {kind === "people" ? (
+                      r.initials || r.name.slice(0, 2)
+                    ) : kind === "companies" ? (
+                      <Buildings size={24} weight="light" />
+                    ) : kind === "rooms" ? (
+                      <House size={24} weight="light" />
+                    ) : (
+                      <FileText size={24} weight="light" />
+                    )}
+                  </span>
+                )}
                 <span className="object-list-copy">
                   <b>{r.title || r.name}</b>
                   <small>

@@ -7,7 +7,6 @@ import {
   User,
   Buildings,
   Cube,
-  BookOpen,
   Armchair,
   House,
   Storefront,
@@ -95,7 +94,6 @@ export function App() {
     [refreshing, setRefreshing] = useState(false),
     [expanded, setExpanded] = useState({
       sales: true,
-      catalog: true,
       documents: true,
     });
   const current = useRef(null),
@@ -250,6 +248,7 @@ export function App() {
         className={`nav-item ${child ? "child" : ""} ${route.page === page ? "active" : ""}`}
         href={`#/${page}`}
         aria-label={label}
+        title={label}
         aria-current={route.page === page ? "page" : undefined}
       >
         <Icon size={child ? 19 : 21} weight="light" />
@@ -365,32 +364,8 @@ export function App() {
             )}
           </div>
           <div className="nav-divider" />
-          {["products", "rooms"].some(canPage) && (
-            <div className="nav-group">
-              <button
-                className="nav-parent"
-                aria-label="Каталог"
-                onClick={() =>
-                  setExpanded((x) => ({ ...x, catalog: !x.catalog }))
-                }
-                aria-expanded={expanded.catalog}
-              >
-                <BookOpen size={21} weight="light" />
-                <span>Каталог</span>
-                {expanded.catalog ? (
-                  <CaretUp size={14} />
-                ) : (
-                  <CaretDown size={14} />
-                )}
-              </button>
-              {expanded.catalog && (
-                <div>
-                  {nav("products", "Товары", Armchair, true)}
-                  {nav("rooms", "Комнаты", House, true)}
-                </div>
-              )}
-            </div>
-          )}
+          {nav("products", "Товары", Armchair)}
+          {nav("rooms", "Комнаты", House)}
           <div className="nav-divider" />
           {nav("storefront", "Витрина", Storefront)}
           {nav("integrations", "Интеграции", SlidersHorizontal)}

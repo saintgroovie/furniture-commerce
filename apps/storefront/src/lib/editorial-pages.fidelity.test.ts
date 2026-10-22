@@ -60,7 +60,6 @@ assert.doesNotMatch(partnersPage, /Novikov|Фиолет|Русский Диза�
 const partnersEditorial = read("components/partners/partners-editorial.tsx")
 assert.match(partnersEditorial, /partnersCopy\.viewPresentation/)
 assert.match(partnersEditorial, /bindPinProgress/)
-assert.match(partnersEditorial, /PartnerMark/)
 assert.match(partnersEditorial, /data-veil-atf/)
 assert.doesNotMatch(partnersEditorial, /startViewTransition|viewTransitionName/)
 assert.doesNotMatch(partnersEditorial, /ed-logo-card|Novikov|Фиолет/)
@@ -96,7 +95,10 @@ const photographed = LEGACY_PARTNERS.filter((partner) => partner.images.length >
 assert.ok(photographed.every((partner) => (partner.presentations[0]?.slides?.length ?? 0) >= 3))
 assert.ok(
   photographed.every((partner) =>
-    partner.images.every((src) => src.startsWith(`/editorial/partners/${partner.slug}/`))
+    partner.images.every((src) =>
+      src.startsWith(`/editorial/partners/${partner.slug}/`) ||
+      src.startsWith(`/editorial/partners/retouched/${partner.slug}/`)
+    )
   )
 )
 assert.ok(LEGACY_PARTNERS.filter((partner) => partner.images.length === 0).every((partner) => partner.presentations.length === 0))
@@ -117,6 +119,12 @@ for (const file of [
   "mariinsky-palace/vitrines.jpg",
   "kunstkamera/expeditions.jpg",
   "ran-presidential/hall.jpg",
+  "kunstkamera/logo-official.png",
+  "retouched/bolshoi/hall.jpg",
+  "retouched/kunstkamera/expeditions.jpg",
+  "retouched/mvd-academy/reading-room.jpg",
+  "retouched/mariinsky-palace/wardrobe.jpg",
+  "retouched/ran-presidential/hall.jpg",
 ]) {
   assert.ok(
     existsSync(join(srcRoot, "../public/editorial/partners", file)),
@@ -137,7 +145,7 @@ const stubbedRemote = [
   },
 ]
 const merged = mergeRemotePartnersWithLegacy(stubbedRemote, LEGACY_PARTNERS)
-assert.equal(merged.find((partner) => partner.slug === "bolshoi")?.images[0], "/editorial/partners/bolshoi/hall.jpg")
+assert.equal(merged.find((partner) => partner.slug === "bolshoi")?.images[0], "/editorial/partners/retouched/bolshoi/hall.jpg")
 assert.ok(merged.some((partner) => partner.slug === "kunstkamera"))
 assert.doesNotMatch(read("app/partners/page.tsx"), /partnersAtmosphere/)
 

@@ -1261,6 +1261,7 @@ export const partnersCopy = {
   materialsTitle: "Материалы",
   presentationsTitle: "Презентации",
   viewPresentation: "Смотреть презентацию",
+  viewProject: "Смотреть проект",
   openCase: "Смотреть работу",
   openFile: "Открыть файл",
   downloadFile: "Скачать",

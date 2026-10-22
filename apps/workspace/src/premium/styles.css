@@ -968,6 +968,28 @@ ul {
   color: var(--ink);
   font-size: 11px;
 }
+.product-thumbnail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  overflow: hidden;
+  border: 1px solid var(--stroke);
+  border-radius: 6px;
+  background: #fff;
+}
+.product-thumbnail img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.product-thumbnail-empty {
+  display: flex;
+  color: var(--text-3);
+}
 .object-list-copy {
   flex: 1;
   min-width: 0;
