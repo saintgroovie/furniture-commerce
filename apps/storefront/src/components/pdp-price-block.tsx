@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import {
   usePdpPurchaseGate,
   gateMatchesProduct,
@@ -83,6 +84,9 @@ export function PdpPriceBlock({
     gateOk
       ? resolveFinishColorMultiplier(gate.finishKey, gate.standardFinishKey)
       : 1
+  // Plain native SKUs keep kopecks. Only actual material/finish pricing uses
+  // the catalog's whole-ruble configured-price formula.
+  const configuredPricing = Boolean(materialTiers?.length) || colorMultiplier !== 1
 
   if (basePrice != null && Number.isFinite(basePrice) && basePrice > 0) {
     let materialMultiplier = 1
@@ -95,7 +99,7 @@ export function PdpPriceBlock({
     const selectedFinish = gateOk ? gate.finishKey : initialFinishKey
     const amount = catalogPrices
       ? (selectedFinish === "wood" ? catalogPrices.wood : catalogPrices.cream)
-      : resolveConfiguredUnitPrice(
+      : !configuredPricing ? basePrice : resolveConfiguredUnitPrice(
       basePrice,
       materialMultiplier,
       colorMultiplier
@@ -106,7 +110,7 @@ export function PdpPriceBlock({
       Number.isFinite(originalBasePrice) &&
       originalBasePrice > basePrice
     ) {
-      const originalAmount = resolveConfiguredUnitPrice(
+      const originalAmount = !configuredPricing ? originalBasePrice : resolveConfiguredUnitPrice(
         originalBasePrice,
         materialMultiplier,
         colorMultiplier
