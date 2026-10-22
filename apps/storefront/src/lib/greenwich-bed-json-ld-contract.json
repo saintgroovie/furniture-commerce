@@ -1,0 +1,211 @@
+{
+  "identities": [
+    {
+      "id": "prod_01KM1QHNHZXXSRPFEKAZRSFPDE",
+      "handle": "greenwich-gr-09-1-bed-90",
+      "variant_id": "variant_01KM1QHQ65TXYKJN8PQJ5KM5JP",
+      "sku": "GR-09-1"
+    },
+    {
+      "id": "prod_01KM1QHNHZ1A4J48K4CV10F4FM",
+      "handle": "greenwich-gr-12-1",
+      "variant_id": "variant_01KM1QHQ6698TKR9XYZX09SFH6",
+      "sku": "GR-12-1"
+    },
+    {
+      "id": "prod_01KM1QHNJ0F34R2A8FQ1CN4V1Y",
+      "handle": "greenwich-gr-14-1",
+      "variant_id": "variant_01KM1QHQ6791A8ZTF6SA4W47C6",
+      "sku": "GR-14-1"
+    },
+    {
+      "id": "prod_01KM1QHNJ1E92BMJQ8CE2RX7TK",
+      "handle": "greenwich-gr-16-1",
+      "variant_id": "variant_01KM1QHQ67950W0Q81TF7F51EM",
+      "sku": "GR-16-1"
+    },
+    {
+      "id": "prod_01KM1QHNJ1YTE9EW5NJZ8YRF62",
+      "handle": "greenwich-gr-18-1",
+      "variant_id": "variant_01KM1QHQ68EX7W37GWB0RQPQF9",
+      "sku": "GR-18-1"
+    }
+  ],
+  "matrix": [
+    {
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_frame_natural_beige.jpg"
+      ],
+      "label": "Светлое дерево · Светло-серая",
+      "combo_key": "natural_beige",
+      "frame_material": "natural",
+      "headboard_model": "frame",
+      "fabric_upholstery": "beige"
+    },
+    {
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_frame_dark_beige.jpg"
+      ],
+      "label": "Тёмное дерево · Светло-серая",
+      "combo_key": "dark_beige",
+      "frame_material": "dark",
+      "headboard_model": "frame",
+      "fabric_upholstery": "beige"
+    },
+    {
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_fame_natural_darkblue.jpg"
+      ],
+      "label": "Светлое дерево · Сине-зелёная",
+      "combo_key": "natural_darkblue",
+      "frame_material": "natural",
+      "headboard_model": "frame",
+      "fabric_upholstery": "darkblue"
+    },
+    {
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_fame_dark_darkblue.jpg"
+      ],
+      "label": "Тёмное дерево · Сине-зелёная",
+      "combo_key": "dark_darkblue",
+      "frame_material": "dark",
+      "headboard_model": "frame",
+      "fabric_upholstery": "darkblue"
+    },
+    {
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_greenwich_cloud_natural_beige.jpg"
+      ],
+      "label": "Светлое дерево · Светло-серая",
+      "combo_key": "natural_beige",
+      "frame_material": "natural",
+      "headboard_model": "cloud",
+      "fabric_upholstery": "beige"
+    },
+    {
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_greenwich_cloud_dark_beige.jpg"
+      ],
+      "label": "Тёмное дерево · Светло-серая",
+      "combo_key": "dark_beige",
+      "frame_material": "dark",
+      "headboard_model": "cloud",
+      "fabric_upholstery": "beige"
+    },
+    {
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_greenwich_cloud_dark_darkblue.jpg"
+      ],
+      "label": "Тёмное дерево · Сине-зелёная",
+      "combo_key": "dark_darkblue",
+      "frame_material": "dark",
+      "headboard_model": "cloud",
+      "fabric_upholstery": "darkblue"
+    },
+    {
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_natural_beige.jpg"
+      ],
+      "label": "Светлое дерево · Светло-серая",
+      "combo_key": "natural_beige",
+      "frame_material": "natural",
+      "headboard_model": "plane",
+      "fabric_upholstery": "beige"
+    },
+    {
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_dark_beige.jpg"
+      ],
+      "label": "Тёмное дерево · Светло-серая",
+      "combo_key": "dark_beige",
+      "frame_material": "dark",
+      "headboard_model": "plane",
+      "fabric_upholstery": "beige"
+    },
+    {
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_natural_darkblue.jpg"
+      ],
+      "label": "Светлое дерево · Сине-зелёная",
+      "combo_key": "natural_darkblue",
+      "frame_material": "natural",
+      "headboard_model": "plane",
+      "fabric_upholstery": "darkblue"
+    },
+    {
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_dark_darkblue.jpg"
+      ],
+      "label": "Тёмное дерево · Сине-зелёная",
+      "combo_key": "dark_darkblue",
+      "frame_material": "dark",
+      "headboard_model": "plane",
+      "fabric_upholstery": "darkblue"
+    }
+  ],
+  "shared_scene_media": [
+    {
+      "key": "interior",
+      "urls": [
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_bedroom2_int_View01.jpg",
+        "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_bedroom2_int_View04.jpg"
+      ],
+      "label": "Интерьер",
+      "scene_type": "interior"
+    }
+  ],
+  "axes": {
+    "frame_material_executions": [
+      {
+        "key": "natural",
+        "urls": [],
+        "label": "Светлое дерево",
+        "swatch_hex": "#d6cfc2"
+      },
+      {
+        "key": "dark",
+        "urls": [],
+        "label": "Тёмное дерево",
+        "swatch_hex": "#3a4038"
+      }
+    ],
+    "headboard_model_executions": [
+      {
+        "key": "frame",
+        "urls": [
+          "/static/products/greenwich/beds-shared/GR-BED-POOL_frame_greenwich_frame_natural_beige.jpg"
+        ],
+        "label": "Frame"
+      },
+      {
+        "key": "cloud",
+        "urls": [
+          "/static/products/greenwich/beds-shared/GR-BED-POOL_cloud_greenwich_cloud_natural_beige.jpg"
+        ],
+        "label": "Cloud"
+      },
+      {
+        "key": "plane",
+        "urls": [
+          "/static/products/greenwich/beds-shared/GR-BED-POOL_plane_greenwich_plane_natural_beige.jpg"
+        ],
+        "label": "Plane"
+      }
+    ],
+    "fabric_upholstery_executions": [
+      {
+        "key": "beige",
+        "urls": [],
+        "label": "Светло-серая",
+        "swatch_hex": "#d6cfc2"
+      },
+      {
+        "key": "darkblue",
+        "urls": [],
+        "label": "Сине-зелёная",
+        "swatch_hex": "#4d6b72"
+      }
+    ],
+    "execution_dimension_contract": "headboard_model|frame_material|fabric_upholstery|bed_execution_matrix|shared_scene"
+  }
+}
