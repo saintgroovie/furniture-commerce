@@ -6,6 +6,7 @@ import type { MaterialTierOption } from "./material-tiers"
 import { resolveConfiguredUnitPrice, resolveFinishColorMultiplier } from "./finish-color-premium"
 import { readUniformRubAmounts } from "./product-json-ld"
 import { defaultGreenwichPaintSelection } from "./greenwich-paint-media"
+import { selectedExecutionImageJsonLd } from "./execution-image-json-ld"
 
 type JsonLd = Record<string, unknown>
 export type ConfiguredPriceJsonLdContext = {
@@ -88,6 +89,10 @@ export function selectedConfiguredPriceJsonLd(input: {
   const offer = product.offers
   if (product["@type"] !== "Product" || !offer || typeof offer !== "object" || Array.isArray(offer) ||
       (offer as JsonLd)["@type"] !== "Offer" || (offer as JsonLd).priceCurrency !== "RUB") return null
-  // Copy all content, images, availability, policies and identities unchanged.
-  return { ...product, offers: { ...offer, price: amount } }
+  // Keep content, availability, policies and identities; follow the same
+  // confirmed gallery hero as the buyer's currently selected execution.
+  return selectedExecutionImageJsonLd({
+    jsonLd: { ...product, offers: { ...offer, price: amount } },
+    productKey: context.productKey, selection,
+  })
 }
