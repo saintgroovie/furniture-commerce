@@ -8,6 +8,7 @@ import {
   LiveError,
 } from "@/server/live.mjs";
 import { safeMediaUrl, mediaFetchUrl } from "@/server/media-policy.mjs";
+import { readMediaProduct } from "@/server/media-product.mjs";
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
@@ -23,10 +24,10 @@ export async function GET(request: Request) {
     )
       throw new LiveError(400, "Некорректное изображение");
     await verifiedBackend();
-    const { product } = await upstream(
-      `/admin/woodright/products/${encodeURIComponent(id)}`,
-      { session },
+    const product = await readMediaProduct(id, (path: string) =>
+      upstream(path, { session }),
     );
+    if (!product) throw new LiveError(404, "Товар не найден");
     const urls = [
       ...new Set(
         [product?.thumbnail, ...(product?.image_urls || [])].filter(Boolean),
