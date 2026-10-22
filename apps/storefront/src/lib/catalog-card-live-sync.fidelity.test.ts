@@ -9,9 +9,9 @@ import { groupProductsForDisplay } from "./display-group"
 import { applyCatalogFilters } from "./catalog-filters"
 import { ProductCard } from "../components/product-card"
 import { PdpRelatedInMotif } from "../components/pdp-related-in-motif"
-import { basicBody, imagesBody, variantBody } from "../../../workspace/src/server/catalog-policy.mjs"
 
-// A real editor command contract, not a production write.
+// Store DTO snapshots before and after an admin edit; no production write.
+// Native editor persistence has its own workspace contract and server drill.
 const native: Record<string, any> = {
   id:"prod_card_contract", handle:"card-contract", status:"published", title:"Комод",
   metadata:{}, product_classification:{product_type:"STANDARD"},
@@ -60,12 +60,9 @@ async function renderSurfaces(expectedPrice:number, expectedPhoto:string) {
 async function main() {
 try {
  await renderSurfaces(10000,"/product-static/old.jpg")
- Object.assign(native,basicBody({title:"Комод",subtitle:"",description:"Описание после сохранения"}))
- Object.assign(native,imagesBody({images:["/static/new.jpg"],thumbnail:"/static/new.jpg"},native,{execution_media_guard:false},["/static/new.jpg"]))
- const updated=variantBody({variantId:"v_contract",title:"Базовый",sku:"CARD-CONTRACT",price:"12500,75",options:{}},native)
- Object.assign(native.variants[0],updated)
- // Production browse contract supplies calculated RUB prices from the native service.
- current={...structuredClone(native),variants:[{...native.variants[0],calculated_price:{calculated_amount:12500.75,original_amount:12500.75,currency_code:"rub"}}]}
+ // A fresh native browse response after saving a new photo and exact RUB price.
+ current={...structuredClone(native),description:"Описание после сохранения",thumbnail:"/static/new.jpg",images:[{url:"/static/new.jpg"}],
+   variants:[{...native.variants[0],prices:[{currency_code:"rub",amount:12500.75}],calculated_price:{calculated_amount:12500.75,original_amount:12500.75,currency_code:"rub"}}]}
  await renderSurfaces(12500.75,"/product-static/new.jpg")
  const sale={...current,variants:[{...current.variants[0],calculated_price:{calculated_amount:11000.25,original_amount:12500.75,currency_code:"rub",is_calculated_price_price_list:true}}]}
  assert.equal(refreshMotifCards([oldCard],motifCatalogIndex([sale]))[0]!.price_amount,11000.25)
