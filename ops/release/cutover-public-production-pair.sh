@@ -94,6 +94,11 @@ ROLLBACK_RC=0
 PINS_WRITTEN=""
 COMPONENTS_RECREATED=""
 METADATA_WRITTEN=0
+# Private cleanup paths are transaction state, never inherited caller input.
+PROD_PIN_STAGE=""
+WR_COMPOSE_ENV_PUBLISHED_PATH=""
+PROD_ATOMIC_PUBLISH_STAGE=""
+PROD_PRIVATE_PUBLISH_PATHS=()
 TS_RUN="$(date -u +%Y%m%dT%H%M%SZ)"
 
 # Rollback anchors: the exact immutable refs the containers ran on before the

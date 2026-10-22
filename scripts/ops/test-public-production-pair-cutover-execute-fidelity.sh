@@ -494,7 +494,13 @@ assert_public_demo_untouched "success"
 # ==========================================================================
 reset_harness
 EV="$TMP/ev-first-pin"
-run_exec "$EV" "$TMP/out-first-pin.txt" "WOODRIGHT_CUTOVER_FAULT=first_pin"
+printf preserve-foreign-cleanup-input > "$TMP/foreign-cleanup-input"
+run_exec "$EV" "$TMP/out-first-pin.txt" "WOODRIGHT_CUTOVER_FAULT=first_pin" \
+  "PROD_PIN_STAGE=$TMP/foreign-cleanup-input" \
+  "WR_COMPOSE_ENV_PUBLISHED_PATH=$TMP/foreign-cleanup-input" \
+  "PROD_ATOMIC_PUBLISH_STAGE=$TMP/foreign-cleanup-input" \
+  "PROD_PRIVATE_PUBLISH_PATHS=$TMP/foreign-cleanup-input"
+[[ -f "$TMP/foreign-cleanup-input" ]] && pass "first_pin: inherited cleanup paths cannot delete foreign files" || fail "first_pin: foreign cleanup path was used"
 [[ "$RC" -ne 0 ]] && pass "first_pin: non-zero exit ($RC)" || fail "first_pin: unexpected success"
 [[ "$(state_file "$EV")" == "failed_before_mutation" ]] && pass "first_pin: failed_before_mutation" || fail "first_pin: state=$(state_file "$EV")"
 [[ "$(pin_of WOODRIGHT_BACKEND_IMAGE)" == "$OLD_BE_REF" ]] && pass "first_pin: backend pin untouched" || fail "first_pin: backend pin changed"
