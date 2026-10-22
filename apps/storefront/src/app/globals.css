@@ -10160,7 +10160,7 @@ button.pdp-size-chip:hover {
   display: block;
   border-radius: 12px;
   overflow: hidden;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 1 / 1;
   background: #1b1511;
 }
 
@@ -10169,15 +10169,15 @@ button.pdp-size-chip:hover {
   height: 100%;
   object-fit: cover;
   display: block;
-  transform: scale(var(--craft-zoom, 1.6));
+  transform: scale(1);
   transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Continuous slow breathing on the material crops. */
+/* Subtle hover motion keeps the room scenes legible. */
 @media (prefers-reduced-motion: no-preference) {
   .hp-craft-item:hover .hp-craft-media img,
   .hp-craft-item:focus-within .hp-craft-media img {
-    transform: scale(calc(var(--craft-zoom, 1.6) + 0.08));
+    transform: scale(1.02);
   }
 }
 

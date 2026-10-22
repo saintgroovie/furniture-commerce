@@ -6,15 +6,15 @@ import { HomeImg } from "./home-img"
 /**
  * Dark production section. Heading is the existing hero note («Собственное
  * производство: от массива до ручной отделки»), captions are the existing
- * wood block bullets — each paired with a tight material crop.
+ * wood block bullets — paired with distinct catalog details and room scenes.
  */
-type CraftMedia = { src: string; pos: string; zoom?: number; alt: string }
+type CraftMedia = { src: string; pos: string; alt: string }
 
 const CRAFT_MEDIA: CraftMedia[] = [
-  { src: homeMedia.craftWood, pos: "50% 12%", alt: "Столешница рабочего стола из массива, тёмный орех" },
-  { src: homeMedia.craftFinish, pos: "44% 40%", zoom: 1.9, alt: "Комод Greenwich в отделке графит, рифлёные фасады" },
-  { src: homeMedia.craftHandpaint, pos: "38% 26%", zoom: 1.9, alt: "Ручная роспись на столешнице детского стола Oliver" },
-  { src: homeMedia.craftSeries, pos: "50% 50%", alt: "Комод Greenwich в белой отделке" },
+  { src: homeMedia.craftWood, pos: "42% 28%", alt: "Деревянное обрамление и ножка консоли Greenwich с видимой фактурой" },
+  { src: homeMedia.craftFinish, pos: "48% 63%", alt: "Расписной фасад и открытый ящик комода Templers" },
+  { src: homeMedia.craftKids, pos: "52% 68%", alt: "Детская Муравьиная деревня: кроватка и комод с росписью" },
+  { src: homeMedia.craftSeries, pos: "10% 58%", alt: "Комплект Oliver: шкаф, кровать, тумба и комод в одном интерьере" },
 ]
 
 export function HomeCraft() {
@@ -40,12 +40,7 @@ export function HomeCraft() {
                       surface="LIFESTYLE_BLOCK"
                       src={media.src}
                       alt={media.alt}
-                      style={
-                        {
-                          objectPosition: media.pos,
-                          ...(media.zoom ? { "--craft-zoom": media.zoom } : {}),
-                        } as React.CSSProperties
-                      }
+                      style={{ objectPosition: media.pos }}
                       loading="lazy"
                       decoding="async"
                       draggable={false}
