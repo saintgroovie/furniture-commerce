@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import {
   materialCodeForProduct,
@@ -86,10 +87,12 @@ export function PdpSizeChips({
     }
     /* A finish on this SKU must not inflate a sibling chip. Navigation
        resets the finish, and the sibling may not offer it. */
-    const amount = resolveConfiguredUnitPrice(
+    const appliedColorMultiplier = isCurrent ? colorMultiplier : 1
+    const amount = !tiers?.length && appliedColorMultiplier === 1
+      ? basePrice : resolveConfiguredUnitPrice(
       basePrice,
       materialMultiplier,
-      isCurrent ? colorMultiplier : 1
+      appliedColorMultiplier
     )
     return requestQuote ? `от ${formatRub(amount)}` : formatRub(amount)
   }
