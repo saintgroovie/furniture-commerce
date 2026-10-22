@@ -37,11 +37,13 @@ function liveVariants(product: Record<string, unknown>): Record<string, unknown>
 function optionAxis(product: Record<string, unknown>): BuyerVariantAxis | null {
   const options = product.options
   if (!Array.isArray(options)) return null
-  const real = options.filter((item) => {
+  const named = options.filter((item) => {
     const option = asRecord(item)
     const title = typeof option?.title === "string" ? option.title.trim() : ""
-    return Boolean(option && title && title.toLowerCase() !== "default")
+    return Boolean(option && title)
   })
+  const explicit = named.filter((item) => String(asRecord(item)?.title).trim().toLowerCase() !== "default")
+  const real = explicit.length ? explicit : named.length === 1 ? named : []
   if (real.length !== 1) return null
   const option = asRecord(real[0])
   if (!option || typeof option.title !== "string" || typeof option.id !== "string") return null
@@ -49,6 +51,7 @@ function optionAxis(product: Record<string, unknown>): BuyerVariantAxis | null {
   const variants = liveVariants(product)
   if (variants.length < 2) return null
   const choices: BuyerVariantChoice[] = []
+  const rawValues = new Set<string>()
   for (const variant of variants) {
     const values = variant.options
     if (!Array.isArray(values) || typeof variant.sku !== "string" || !variant.sku) return null
@@ -64,17 +67,26 @@ function optionAxis(product: Record<string, unknown>): BuyerVariantAxis | null {
       )
     if (!match || typeof match.value !== "string") return null
     const rank = Number(variant.variant_rank)
+    const value = match.value.trim()
+    if (rawValues.has(value)) return null
+    rawValues.add(value)
+    // Native draft creation starts with Default. Once staff add a second
+    // distinct value this is a real execution axis, not a placeholder.
+    const label = title.toLowerCase() === "default" && value.toLowerCase() === "default"
+      ? (typeof variant.title === "string" && variant.title.trim() && variant.title.trim().toLowerCase() !== "default"
+          ? variant.title.trim() : "Базовое исполнение")
+      : value
     choices.push({
       id: variant.id as string,
       sku: variant.sku,
-      label: match.value.trim(),
+      label,
       sort: Number.isFinite(rank) ? rank : choices.length,
     })
   }
   const labels = new Set(choices.map((choice) => choice.label))
   if (labels.size !== choices.length) return null
   return {
-    label: title,
+    label: title.toLowerCase() === "default" ? "Исполнение" : title,
     choices: choices.sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label, "ru")),
   }
 }
