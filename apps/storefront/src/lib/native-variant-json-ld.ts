@@ -57,6 +57,8 @@ export function buildNativeVariantJsonLd(input: {
     "@context": "https://schema.org", "@type": "ProductGroup", "@id": groupId,
     name: jsonLd.name, description: jsonLd.description, brand: jsonLd.brand,
     url: jsonLd.url, productGroupID: String(product.id),
-    variesBy: [property ? `https://schema.org/${property}` : axis.label], hasVariant: members,
+    // Google supports only specific schema.org variation properties. A custom
+    // execution remains its truthful additionalProperty, never an invented size/color.
+    ...(property ? { variesBy: [`https://schema.org/${property}`] } : {}), hasVariant: members,
   }
 }
