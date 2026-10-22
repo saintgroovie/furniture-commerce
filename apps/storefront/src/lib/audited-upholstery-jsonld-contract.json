@@ -1,0 +1,1090 @@
+{
+  "ol-55-1": {
+    "id": "prod_01KNTBXADSNY1JKR33SC2FRJX5",
+    "variant_id": "variant_01KNTBXBMHZTDD70T6KVSW2KWV",
+    "sku": "OL-55-1",
+    "executions": [
+      {
+        "key": "leona-01",
+        "label": "Leona · зелёная с узором",
+        "urls": [
+          "/static/products/oliver/OL-55-1_color_leona_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-55-1_color_lorna_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-02",
+        "label": "Lorna · голубая полоска",
+        "urls": [
+          "/static/products/oliver/OL-55-1_color_lorna_02.jpg"
+        ]
+      },
+      {
+        "key": "torno-01",
+        "label": "Торно · серо-голубая",
+        "urls": [
+          "/static/products/oliver/OL-55-1_color_torno_01.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-82-1": {
+    "id": "prod_01KNTBXADX8CT1VKVV4SNQM2D7",
+    "variant_id": "variant_01KNTBXBMQWCCCBFT602TH6ZWK",
+    "sku": "OL-82-1",
+    "executions": [
+      {
+        "key": "linda-01",
+        "label": "Linda · медная тонкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-82-1_color_linda_01.jpg"
+        ]
+      },
+      {
+        "key": "linda-02",
+        "label": "Linda · бежевая тонкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-82-1_color_linda_02.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая широкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-82-1_color_lorna_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-02",
+        "label": "Lorna · терракотовая широкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-82-1_color_lorna_02.jpg"
+        ]
+      },
+      {
+        "key": "torno-01",
+        "label": "Торно · молочная",
+        "urls": [
+          "/static/products/oliver/OL-82-1_color_torno_01.jpg"
+        ]
+      },
+      {
+        "key": "torno-02",
+        "label": "Торно · пудровая",
+        "urls": [
+          "/static/products/oliver/OL-82-1_color_torno_02.jpg"
+        ]
+      },
+      {
+        "key": "torno-03",
+        "label": "Торно · оливковая",
+        "urls": [
+          "/static/products/oliver/OL-82-1_color_torno_03.jpg"
+        ]
+      },
+      {
+        "key": "torno-04",
+        "label": "Торно · серо-голубая",
+        "urls": [
+          "/static/products/oliver/OL-82-1_color_torno_04.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-23-1": {
+    "id": "prod_01KNTBXADJHD78QK7PQ1FM260H",
+    "variant_id": "variant_01KNTBXBMEVBNYP1DHEDZN2HDB",
+    "sku": "OL-23-1",
+    "executions": [
+      {
+        "key": "leona-01",
+        "label": "Leona · молочная с узором",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_leona_01.jpg"
+        ]
+      },
+      {
+        "key": "leona-02",
+        "label": "Leona · зелёная с узором",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_leona_02.jpg"
+        ]
+      },
+      {
+        "key": "leona-03",
+        "label": "Leona · голубая с узором",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_leona_03.jpg"
+        ]
+      },
+      {
+        "key": "lillian-01",
+        "label": "Lilian · молочная",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lillian_01.jpg"
+        ]
+      },
+      {
+        "key": "lillian-02",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lillian_02.jpg"
+        ]
+      },
+      {
+        "key": "lillian-03",
+        "label": "Lilian · охристая",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lillian_03.jpg"
+        ]
+      },
+      {
+        "key": "lillian-04",
+        "label": "Lilian · бордовая",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lillian_04.jpg"
+        ]
+      },
+      {
+        "key": "lillian-05",
+        "label": "Lilian · серо-голубая",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lillian_05.jpg"
+        ]
+      },
+      {
+        "key": "lillian-06",
+        "label": "Lilian · серо-бежевая",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lillian_06.jpg"
+        ]
+      },
+      {
+        "key": "linda-01",
+        "label": "Linda · молочная тонкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_linda_01.jpg"
+        ]
+      },
+      {
+        "key": "linda-02",
+        "label": "Linda · терракотовая тонкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_linda_02.jpg"
+        ]
+      },
+      {
+        "key": "linda-03",
+        "label": "Linda · коричневая тонкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_linda_03.jpg"
+        ]
+      },
+      {
+        "key": "linda-04",
+        "label": "Linda · серая тонкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_linda_04.jpg"
+        ]
+      },
+      {
+        "key": "linda-05",
+        "label": "Linda · бежевая тонкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_linda_05.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая широкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lorna_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-02",
+        "label": "Lorna · зелёная широкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lorna_02.jpg"
+        ]
+      },
+      {
+        "key": "lorna-03",
+        "label": "Lorna · терракотовая широкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lorna_03.jpg"
+        ]
+      },
+      {
+        "key": "lorna-04",
+        "label": "Lorna · бежевая широкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lorna_04.jpg"
+        ]
+      },
+      {
+        "key": "lorna-05",
+        "label": "Lorna · голубая широкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lorna_05.jpg"
+        ]
+      },
+      {
+        "key": "lorna-06",
+        "label": "Lorna · коричневая широкая полоска",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_lorna_06.jpg"
+        ]
+      },
+      {
+        "key": "torno-01",
+        "label": "Торно · светло-серая",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_torno_01.jpg"
+        ]
+      },
+      {
+        "key": "torno-02",
+        "label": "Торно · пудровая",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_torno_02.jpg"
+        ]
+      },
+      {
+        "key": "torno-03",
+        "label": "Торно · жёлто-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_torno_03.jpg"
+        ]
+      },
+      {
+        "key": "torno-04",
+        "label": "Торно · оливковая",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_torno_04.jpg"
+        ]
+      },
+      {
+        "key": "torno-05",
+        "label": "Торно · песочная",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_torno_05.jpg"
+        ]
+      },
+      {
+        "key": "torno-06",
+        "label": "Торно · голубая",
+        "urls": [
+          "/static/products/oliver/OL-23-1_color_torno_06.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-55-2": {
+    "id": "prod_01KNTBXADSBJMRQ63HAENWJ880",
+    "variant_id": "variant_01KNTBXBMHY23KPCJ1K5QP88HN",
+    "sku": "OL-55-2",
+    "executions": [
+      {
+        "key": "lorna-light-stripe",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-55-2_color_lorna_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-brown-stripe",
+        "label": "Lorna · коричневая полоска",
+        "urls": [
+          "/static/products/oliver/OL-55-2_color_lorna_02.jpg"
+        ]
+      }
+    ]
+  },
+  "mnm-55-1": {
+    "id": "prod_01M3VREHB4V261GDWSYMVBYEP1",
+    "variant_id": "variant_01M3VREHB7SGWWW6SATSPE6F1H",
+    "sku": "MNM-55-1",
+    "executions": [
+      {
+        "key": "photo-1",
+        "label": "Голубая полоска",
+        "urls": [
+          "/static/imports/catalog-recovery-20261001/9b051657770a08a0395b8036dbfe4eee9c2cbba91525619f00ed4b20083353bb.jpg"
+        ]
+      },
+      {
+        "key": "photo-2",
+        "label": "Светлая с фактурой",
+        "urls": [
+          "/static/imports/catalog-recovery-20261001/4431287a1ef43b1d6063b82f4b37026b9b0f92f90a87161749a27c9cdbdfd1aa.jpg"
+        ]
+      },
+      {
+        "key": "photo-3",
+        "label": "Золотистая",
+        "urls": [
+          "/static/imports/catalog-recovery-20261001/56e7199ed1ce188e7a8203d726d492cfd1fc34f9fc6e3caa924a83e238867a51.jpg"
+        ]
+      },
+      {
+        "key": "photo-4",
+        "label": "Молочная гладкая",
+        "urls": [
+          "/static/imports/catalog-recovery-20261001/cc6a5e120307627270f7aeffa5c9c7bda6b64982b2609fb2cc2647fcc09a80d1.jpg"
+        ]
+      },
+      {
+        "key": "photo-5",
+        "label": "Пудровая",
+        "urls": [
+          "/static/imports/catalog-recovery-20261001/2432df385a47a38eb894e7c8c1fa80acb94b525f129c097359ab3e02339fa664.jpg"
+        ]
+      }
+    ]
+  },
+  "mnm-23-1": {
+    "id": "prod_01M3VREHC86DYRZ67HBKJM5VRR",
+    "variant_id": "variant_01M3VREHCBS8WC1MA3K6SFT0RG",
+    "sku": "MNM-23-1",
+    "executions": [
+      {
+        "key": "photo-1",
+        "label": "Молочная",
+        "urls": [
+          "/static/imports/catalog-recovery-20261001/16bbdc68f5110b985799e1a5df2a6609cffca0f7e1e4fa6b7aa35712f7f810f0.jpg"
+        ]
+      },
+      {
+        "key": "photo-2",
+        "label": "Охристая",
+        "urls": [
+          "/static/imports/catalog-recovery-20261001/1ec65e678d9479fc7c83f362f460b493253446f000f61b494a982792944238c9.jpg"
+        ]
+      },
+      {
+        "key": "photo-3",
+        "label": "Коричневая полоска",
+        "urls": [
+          "/static/imports/catalog-recovery-20261001/b36ae1d62369bad6c15b11805504954f741853bbfe61701492feb53289929e7c.jpg"
+        ]
+      },
+      {
+        "key": "photo-4",
+        "label": "Серо-голубая",
+        "urls": [
+          "/static/imports/catalog-recovery-20261001/a59958280b65ada4581058709ecbe106056471c8f7130dc0f6f7a0bfa285a81c.jpg"
+        ]
+      }
+    ]
+  },
+  "pv-23-1": {
+    "id": "prod_01KNTBXAE0GEC1WW45XKYYC264",
+    "variant_id": "variant_01KNTBXBN0HMRNQXP4BAHBAH3F",
+    "sku": "PV-23-1",
+    "executions": [
+      {
+        "key": "green-plain",
+        "label": "Зелёная однотонная",
+        "urls": [
+          "/static/products/provence/pv-23-1-i2.jpg"
+        ]
+      },
+      {
+        "key": "beige-stripe",
+        "label": "Бежевая полоска",
+        "urls": [
+          "/static/products/provence/pv-23-1-i1.jpg"
+        ]
+      },
+      {
+        "key": "green-pattern",
+        "label": "Зелёная с узором",
+        "urls": [
+          "/static/products/provence/pv-23-1-i3.jpg"
+        ]
+      },
+      {
+        "key": "grey-stripe",
+        "label": "Серая полоска",
+        "urls": [
+          "/static/products/provence/pv-23-1-i4.jpg"
+        ]
+      }
+    ]
+  },
+  "pv-55-1": {
+    "id": "prod_01KNTBXAE00AE9RHVB0G00DFGM",
+    "variant_id": "variant_01KNTBXBN102GKH7JKY9XETTWX",
+    "sku": "PV-55-1",
+    "executions": [
+      {
+        "key": "striped-milk-frame",
+        "label": "Серая полоска · молочный каркас",
+        "urls": [
+          "/static/products/provence/pv-55-1-i1.jpg"
+        ]
+      },
+      {
+        "key": "beige-milk-frame",
+        "label": "Бежевая · молочный каркас",
+        "urls": [
+          "/static/products/provence/pv-55-1-i2.jpg"
+        ]
+      },
+      {
+        "key": "light-dark-frame",
+        "label": "Светлая · тёмный каркас",
+        "urls": [
+          "/static/products/provence/pv-55-1-i3.jpg",
+          "/static/products/provence/pv-55-1-i4.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-57-2": {
+    "id": "prod_01KNTBXADVKWH122FJREKPT5GD",
+    "variant_id": "variant_01KNTBXBMJC0FFV0F9HYGKYW3T",
+    "sku": "OL-57-2",
+    "executions": [
+      {
+        "key": "lillian-sage",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-57-2_color_lillian_01.jpg",
+          "/static/products/oliver/OL-57-2_gallery_01.jpg"
+        ]
+      },
+      {
+        "key": "striped",
+        "label": "Серо-бежевая полоска",
+        "urls": [
+          "/static/imports/WR-PFW-20260721T020528Z/2817522197fea9f55aa4c8e5684d29db9098130736547f21452e9e0387663174.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-07-1": {
+    "id": "prod_01KNTBXADDKNMB17WD6NVSNRCY",
+    "variant_id": "variant_01KNTBXBM9D0KFTWNJ3FKBXR9W",
+    "sku": "OL-07-1",
+    "executions": [
+      {
+        "key": "leona-01",
+        "label": "Leona · светлая с узором",
+        "urls": [
+          "/static/products/oliver/OL-07-1_color_leona_01.jpg"
+        ]
+      },
+      {
+        "key": "leona-02",
+        "label": "Leona · зелёная с узором",
+        "urls": [
+          "/static/products/oliver/OL-07-1_color_leona_02.jpg"
+        ]
+      },
+      {
+        "key": "lillian-01",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-07-1_color_lillian_01.jpg"
+        ]
+      },
+      {
+        "key": "linda-01",
+        "label": "Linda · молочная",
+        "urls": [
+          "/static/products/oliver/OL-07-1_color_linda_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-07-1_color_lorna_01.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-14-1": {
+    "id": "prod_01KNTBXADFFPGAVHK024D20MEQ",
+    "variant_id": "variant_01KNTBXBMB9XHDDS7MFKP5TYRE",
+    "sku": "OL-14-1",
+    "executions": [
+      {
+        "key": "lillian-01",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-14-1_color_lillian_01.jpg"
+        ]
+      },
+      {
+        "key": "lillian-02",
+        "label": "Lilian · охристая",
+        "urls": [
+          "/static/products/oliver/OL-14-1_color_lillian_02.jpg"
+        ]
+      },
+      {
+        "key": "lillian-03",
+        "label": "Lilian · бордовая",
+        "urls": [
+          "/static/products/oliver/OL-14-1_color_lillian_03.jpg"
+        ]
+      },
+      {
+        "key": "lillian-04",
+        "label": "Lilian · серо-голубая",
+        "urls": [
+          "/static/products/oliver/OL-14-1_color_lillian_04.jpg"
+        ]
+      },
+      {
+        "key": "lillian-05",
+        "label": "Lilian · серо-бежевая",
+        "urls": [
+          "/static/products/oliver/OL-14-1_color_lillian_05.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-14-1_gallery_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-02",
+        "label": "Lorna · терракотовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-14-1_gallery_02.jpg"
+        ]
+      },
+      {
+        "key": "lorna-03",
+        "label": "Lorna · коричневая полоска",
+        "urls": [
+          "/static/products/oliver/OL-14-1_gallery_03.jpg"
+        ]
+      },
+      {
+        "key": "lorna-04",
+        "label": "Lorna · бежево-розовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-14-1_gallery_04.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-14-2": {
+    "id": "prod_01KNTBXADFNYAQGPEQKCM4NPZE",
+    "variant_id": "variant_01KNTBXBMBTGQAE0VQC94SFJY6",
+    "sku": "OL-14-2",
+    "executions": [
+      {
+        "key": "lillian-01",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-14-2_color_lillian_01.jpg"
+        ]
+      },
+      {
+        "key": "lillian-02",
+        "label": "Lilian · охристая",
+        "urls": [
+          "/static/products/oliver/OL-14-2_color_lillian_02.jpg"
+        ]
+      },
+      {
+        "key": "lillian-03",
+        "label": "Lilian · бордовая",
+        "urls": [
+          "/static/products/oliver/OL-14-2_color_lillian_03.jpg"
+        ]
+      },
+      {
+        "key": "lillian-04",
+        "label": "Lilian · серо-голубая",
+        "urls": [
+          "/static/products/oliver/OL-14-2_color_lillian_04.jpg"
+        ]
+      },
+      {
+        "key": "lillian-05",
+        "label": "Lilian · серо-бежевая",
+        "urls": [
+          "/static/products/oliver/OL-14-2_color_lillian_05.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-14-2_color_lorna_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-02",
+        "label": "Lorna · терракотовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-14-2_color_lorna_02.jpg"
+        ]
+      },
+      {
+        "key": "lorna-03",
+        "label": "Lorna · коричневая полоска",
+        "urls": [
+          "/static/products/oliver/OL-14-2_color_lorna_03.jpg"
+        ]
+      },
+      {
+        "key": "lorna-04",
+        "label": "Lorna · бежево-розовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-14-2_color_lorna_04.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-16-1": {
+    "id": "prod_01KNTBXADGPHKZEWKKT477WNR7",
+    "variant_id": "variant_01KNTBXBMCHRJHHCED77MVCF82",
+    "sku": "OL-16-1",
+    "executions": [
+      {
+        "key": "lillian-01",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-16-1_color_lillian_01.jpg"
+        ]
+      },
+      {
+        "key": "lillian-02",
+        "label": "Lilian · охристая",
+        "urls": [
+          "/static/products/oliver/OL-16-1_color_lillian_02.jpg"
+        ]
+      },
+      {
+        "key": "lillian-03",
+        "label": "Lilian · бордовая",
+        "urls": [
+          "/static/products/oliver/OL-16-1_color_lillian_03.jpg"
+        ]
+      },
+      {
+        "key": "lillian-04",
+        "label": "Lilian · серо-голубая",
+        "urls": [
+          "/static/products/oliver/OL-16-1_color_lillian_04.jpg"
+        ]
+      },
+      {
+        "key": "lillian-05",
+        "label": "Lilian · серо-бежевая",
+        "urls": [
+          "/static/products/oliver/OL-16-1_color_lillian_05.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-16-1_color_lorna_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-02",
+        "label": "Lorna · терракотовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-16-1_color_lorna_02.jpg"
+        ]
+      },
+      {
+        "key": "lorna-03",
+        "label": "Lorna · коричневая полоска",
+        "urls": [
+          "/static/products/oliver/OL-16-1_color_lorna_03.jpg"
+        ]
+      },
+      {
+        "key": "lorna-04",
+        "label": "Lorna · бежево-розовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-16-1_color_lorna_04.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-16-2": {
+    "id": "prod_01KNTBXADGH3EK5BM3RAZ2Z7KT",
+    "variant_id": "variant_01KNTBXBMCT620T47GNE8ZKGH8",
+    "sku": "OL-16-2",
+    "executions": [
+      {
+        "key": "lillian-01",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-16-2_color_lillian_01.jpg"
+        ]
+      },
+      {
+        "key": "lillian-02",
+        "label": "Lilian · охристая",
+        "urls": [
+          "/static/products/oliver/OL-16-2_color_lillian_02.jpg"
+        ]
+      },
+      {
+        "key": "lillian-03",
+        "label": "Lilian · бордовая",
+        "urls": [
+          "/static/products/oliver/OL-16-2_color_lillian_03.jpg"
+        ]
+      },
+      {
+        "key": "lillian-04",
+        "label": "Lilian · серо-голубая",
+        "urls": [
+          "/static/products/oliver/OL-16-2_color_lillian_04.jpg"
+        ]
+      },
+      {
+        "key": "lillian-05",
+        "label": "Lilian · серо-бежевая",
+        "urls": [
+          "/static/products/oliver/OL-16-2_color_lillian_05.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-16-2_color_lorna_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-02",
+        "label": "Lorna · терракотовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-16-2_color_lorna_02.jpg"
+        ]
+      },
+      {
+        "key": "lorna-03",
+        "label": "Lorna · коричневая полоска",
+        "urls": [
+          "/static/products/oliver/OL-16-2_color_lorna_03.jpg"
+        ]
+      },
+      {
+        "key": "lorna-04",
+        "label": "Lorna · бежево-розовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-16-2_color_lorna_04.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-17-1": {
+    "id": "prod_01KNTBXADHWB8K6BN1ZBM7WEWG",
+    "variant_id": "variant_01KNTBXBMCDTGJ1G7N27Z6SMWD",
+    "sku": "OL-17-1",
+    "executions": [
+      {
+        "key": "lillian-01",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-17-1_color_lillian_01.jpg"
+        ]
+      },
+      {
+        "key": "lillian-02",
+        "label": "Lilian · охристая",
+        "urls": [
+          "/static/products/oliver/OL-17-1_color_lillian_02.jpg"
+        ]
+      },
+      {
+        "key": "lillian-03",
+        "label": "Lilian · бордовая",
+        "urls": [
+          "/static/products/oliver/OL-17-1_color_lillian_03.jpg"
+        ]
+      },
+      {
+        "key": "lillian-04",
+        "label": "Lilian · серо-голубая",
+        "urls": [
+          "/static/products/oliver/OL-17-1_color_lillian_04.jpg"
+        ]
+      },
+      {
+        "key": "lillian-05",
+        "label": "Lilian · серо-бежевая",
+        "urls": [
+          "/static/products/oliver/OL-17-1_color_lillian_05.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-17-1_color_lorna_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-02",
+        "label": "Lorna · терракотовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-17-1_color_lorna_02.jpg"
+        ]
+      },
+      {
+        "key": "lorna-03",
+        "label": "Lorna · коричневая полоска",
+        "urls": [
+          "/static/products/oliver/OL-17-1_color_lorna_03.jpg"
+        ]
+      },
+      {
+        "key": "lorna-04",
+        "label": "Lorna · бежево-розовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-17-1_color_lorna_04.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-17-2": {
+    "id": "prod_01KNTBXADHZ2MG5CDS4EAVG1RJ",
+    "variant_id": "variant_01KNTBXBMDKGQBDKVPG0T71PS3",
+    "sku": "OL-17-2",
+    "executions": [
+      {
+        "key": "lillian-01",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-17-2_color_lillian_01.jpg"
+        ]
+      },
+      {
+        "key": "lillian-02",
+        "label": "Lilian · охристая",
+        "urls": [
+          "/static/products/oliver/OL-17-2_color_lillian_02.jpg"
+        ]
+      },
+      {
+        "key": "lillian-03",
+        "label": "Lilian · бордовая",
+        "urls": [
+          "/static/products/oliver/OL-17-2_color_lillian_03.jpg"
+        ]
+      },
+      {
+        "key": "lillian-04",
+        "label": "Lilian · серо-голубая",
+        "urls": [
+          "/static/products/oliver/OL-17-2_color_lillian_04.jpg"
+        ]
+      },
+      {
+        "key": "lillian-05",
+        "label": "Lilian · серо-бежевая",
+        "urls": [
+          "/static/products/oliver/OL-17-2_color_lillian_05.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-17-2_color_lorna_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-02",
+        "label": "Lorna · терракотовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-17-2_color_lorna_02.jpg"
+        ]
+      },
+      {
+        "key": "lorna-03",
+        "label": "Lorna · коричневая полоска",
+        "urls": [
+          "/static/products/oliver/OL-17-2_color_lorna_03.jpg"
+        ]
+      },
+      {
+        "key": "lorna-04",
+        "label": "Lorna · бежево-розовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-17-2_color_lorna_04.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-18-1": {
+    "id": "prod_01KNTBXADHE1YFJS2VEPCRJJBN",
+    "variant_id": "variant_01KNTBXBMDNYZ72376HJJXGAQ6",
+    "sku": "OL-18-1",
+    "executions": [
+      {
+        "key": "lillian-01",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-18-1_color_lillian_01.jpg"
+        ]
+      },
+      {
+        "key": "lillian-02",
+        "label": "Lilian · охристая",
+        "urls": [
+          "/static/products/oliver/OL-18-1_color_lillian_02.jpg"
+        ]
+      },
+      {
+        "key": "lillian-03",
+        "label": "Lilian · бордовая",
+        "urls": [
+          "/static/products/oliver/OL-18-1_color_lillian_03.jpg"
+        ]
+      },
+      {
+        "key": "lillian-04",
+        "label": "Lilian · серо-голубая",
+        "urls": [
+          "/static/products/oliver/OL-18-1_color_lillian_04.jpg"
+        ]
+      },
+      {
+        "key": "lillian-05",
+        "label": "Lilian · серо-бежевая",
+        "urls": [
+          "/static/products/oliver/OL-18-1_color_lillian_05.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-18-1_color_lorna_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-02",
+        "label": "Lorna · терракотовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-18-1_color_lorna_02.jpg"
+        ]
+      },
+      {
+        "key": "lorna-03",
+        "label": "Lorna · коричневая полоска",
+        "urls": [
+          "/static/products/oliver/OL-18-1_color_lorna_03.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-18-2": {
+    "id": "prod_01KNTBXADJ9A2N7GQFHZ4JTGD8",
+    "variant_id": "variant_01KNTBXBMD9G2WYEDTYHYHGMG5",
+    "sku": "OL-18-2",
+    "executions": [
+      {
+        "key": "lillian-01",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-18-2_color_lillian_01.jpg"
+        ]
+      },
+      {
+        "key": "lillian-02",
+        "label": "Lilian · охристая",
+        "urls": [
+          "/static/products/oliver/OL-18-2_color_lillian_02.jpg"
+        ]
+      },
+      {
+        "key": "lillian-03",
+        "label": "Lilian · бордовая",
+        "urls": [
+          "/static/products/oliver/OL-18-2_color_lillian_03.jpg"
+        ]
+      },
+      {
+        "key": "lillian-04",
+        "label": "Lilian · серо-голубая",
+        "urls": [
+          "/static/products/oliver/OL-18-2_color_lillian_04.jpg"
+        ]
+      },
+      {
+        "key": "lillian-05",
+        "label": "Lilian · серо-бежевая",
+        "urls": [
+          "/static/products/oliver/OL-18-2_color_lillian_05.jpg"
+        ]
+      },
+      {
+        "key": "lorna-01",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-18-2_color_lorna_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-02",
+        "label": "Lorna · терракотовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-18-2_color_lorna_02.jpg"
+        ]
+      },
+      {
+        "key": "lorna-03",
+        "label": "Lorna · коричневая полоска",
+        "urls": [
+          "/static/products/oliver/OL-18-2_color_lorna_03.jpg"
+        ]
+      },
+      {
+        "key": "lorna-04",
+        "label": "Lorna · бежево-розовая полоска",
+        "urls": [
+          "/static/products/oliver/OL-18-2_color_lorna_04.jpg"
+        ]
+      }
+    ]
+  },
+  "ol-17-3": {
+    "id": "prod_01KNTBXADH2J4J6TDA5AHYNVV7",
+    "variant_id": "variant_01KNTBXBMD2EGBJM0R1221ZV3V",
+    "sku": "OL-17-3",
+    "executions": [
+      {
+        "key": "lillian-sage",
+        "label": "Lilian · серо-зелёная",
+        "urls": [
+          "/static/products/oliver/OL-17-3_color_lillian_02.jpg",
+          "/static/products/oliver/OL-17-3_color_lillian_01.jpg"
+        ]
+      },
+      {
+        "key": "lorna-light-stripe",
+        "label": "Lorna · светлая полоска",
+        "urls": [
+          "/static/products/oliver/OL-17-3_color_lorna_01.jpg"
+        ]
+      }
+    ]
+  }
+}

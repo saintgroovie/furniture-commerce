@@ -1214,7 +1214,16 @@ export function buildIntraProductExecutionSelectors(
   if (provencePaintWood) return provencePaintWood
 
   const handleEarly = provenceEvidenceHandle(normalizedProduct)
-  if (handleEarly.startsWith("pv-")) {
+  // The paint/wood guard rejects unsupported finish splits, not explicitly
+  // mapped upholstery colors (e.g. the four fabrics on the same PV-23-1 frame).
+  const metadataFabric = fabricUpholsteryExecutionsFromMetadata(normalizedProduct)
+  const hasOtherFinishMetadata = metadataExecutionsRaw(
+    normalizedProduct,
+    "paint_finish_executions",
+    "finish_color_executions",
+    "frame_material_executions"
+  ) !== undefined
+  if (handleEarly.startsWith("pv-") && (!metadataFabric || hasOtherFinishMetadata)) {
     const urls = collectProvenceExecutionEvidenceUrls(normalizedProduct)
     if (!hasProvencePaintWoodDualFinishEvidence(urls, handleEarly)) {
       return { confidence: "metadata_blocked" }
@@ -1222,7 +1231,6 @@ export function buildIntraProductExecutionSelectors(
   }
 
   const metadataHeadboard = headboardExecutionsFromMetadata(normalizedProduct)
-  const metadataFabric = fabricUpholsteryExecutionsFromMetadata(normalizedProduct)
   const metadataPaint = finishExecutionsFromMetadata(normalizedProduct)
   const metadataFrame = frameMaterialExecutionsFromMetadata(normalizedProduct)
   const metadataConstruction =

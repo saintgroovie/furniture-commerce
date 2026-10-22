@@ -5,6 +5,9 @@
  */
 
 export const VARIANT_CAPABILITY_KEYS = [
+  "shared_scene_media",
+  "bed_execution_matrix",
+  "greenwich_paint_execution_matrix",
   "finish_color_executions",
   "paint_finish_executions",
   "fabric_upholstery_executions",
