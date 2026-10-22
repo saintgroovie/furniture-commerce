@@ -685,6 +685,15 @@ export default async function ProductPage({
       requestQuote: isRequestQuoteProduct(product),
     })) ||
     sizeVariantJsonLd || scalarProductJsonLd
+  const sizeFamily = sizeVariantJsonLd?.isVariantOf as
+    | { productGroupID?: string; description?: string }
+    | undefined
+  const visibleFamilyDescription =
+    typeof sizeFamily?.description === "string" &&
+    (sizeFamily.productGroupID === "ol-bed-15-16" ||
+      sizeFamily.productGroupID === "ol-bed-15-16-open")
+      ? sizeFamily.description
+      : null
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(base, [
     ...(isKidsProduct ? [{ name: "Детская", path: "/kids" }] : []),
     { name: "Каталог", path: catalogHref },
@@ -1007,6 +1016,13 @@ export default async function ProductPage({
           {description && (
             <div className="pdp-description-block">
               <h2>{pdpCopy.descriptionHeading}</h2>
+              {visibleFamilyDescription && (
+                <div className="pdp-description-group">
+                  <p className="pdp-description" data-family-description={sizeFamily?.productGroupID}>
+                    {visibleFamilyDescription}
+                  </p>
+                </div>
+              )}
               {layoutPdpDescription(description).map((blocks, pi) => {
                 const collectionOnly = blocks.every((lines) =>
                   lines.every(isPdpCollectionContextSentence)
