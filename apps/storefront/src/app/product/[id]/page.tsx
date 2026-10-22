@@ -1,3 +1,5 @@
+import { PdpGreenwichBedJsonLd } from "@/components/pdp-greenwich-bed-json-ld"
+import { greenwichBedJsonLdContext } from "@/lib/greenwich-bed-json-ld"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
@@ -731,6 +733,8 @@ export default async function ProductPage({
 
   const configuredPriceContext = configuredPriceJsonLdContext({ product, selectors: executionSelectors, basePrice: price, materialTiers })
 
+  const greenwichBedContext = greenwichBedJsonLdContext({ product: viewProduct, selectedVariant, selectors: executionSelectors, displayedPrice: openingPrice, materialTierCount: materialTiers?.length ?? 0, jsonLd: productJsonLd })
+
   const cspNonce = (await headers()).get("x-nonce") ?? undefined
 
   return (
@@ -749,7 +753,7 @@ export default async function ProductPage({
           }}
         />
       ) : null}
-      {configuredPriceContext ? <PdpConfiguredPriceJsonLd
+      {greenwichBedContext ? <PdpGreenwichBedJsonLd key={selectedVariantId ?? handle} context={greenwichBedContext} nonce={cspNonce} /> : configuredPriceContext ? <PdpConfiguredPriceJsonLd
         key={handle}
         jsonLd={productJsonLd}
         context={configuredPriceContext}
