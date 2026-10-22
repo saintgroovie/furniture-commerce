@@ -1854,8 +1854,14 @@ verify_rollback_release_sha() {
     log "ROLLBACK_VERIFY RELEASE_SHA backup missing"
     return 1
   }
-  want="$(awk -F= '$1=="WOODRIGHT_RELEASE_SHA" {sub(/^[^=]*=/, ""); print; exit}' "$backup" 2>/dev/null || true)"
-  got="$(pin_value_of WOODRIGHT_RELEASE_SHA)"
+  local want_rc=0 got_rc=0
+  wr_compose_env_is_regular_file "$backup" || return 1
+  want="$(wr_compose_env_query_governed_value "$backup" WOODRIGHT_RELEASE_SHA)" || want_rc=$?
+  got="$(wr_compose_env_query_governed_value "$COMPOSE_ENV_FILE" WOODRIGHT_RELEASE_SHA)" || got_rc=$?
+  case "$want_rc:$got_rc" in
+    0:0|0:2|2:0|2:2) ;;
+    *) log "ROLLBACK_VERIFY RELEASE_SHA read failed backup_rc=$want_rc live_rc=$got_rc"; return 1 ;;
+  esac
   if [[ -z "$want" ]]; then
     # Pre-cutover env had no marker - restored env must also lack it (or be empty).
     if [[ -z "$got" ]]; then

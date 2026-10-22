@@ -10,7 +10,7 @@ TMP="$(mktemp -d /tmp/wr-real-public-pin-XXXXXX)"
 cleanup() { local rc=$?; if [[ "$rc" != 0 ]]; then tail -15 "$TMP/log" >&2 || true; fi; command sudo -n rm -rf -- "$TMP"; }
 trap cleanup EXIT
 source "$ROOT/ops/lib/woodright-compose-env-authority.sh"
-for fn in create_sealed_pin_stage write_required_pins_atomic prod_atomic_install restore_pins prod_cleanup_pin_stages prod_on_exit prod_on_signal; do
+for fn in create_sealed_pin_stage write_required_pins_atomic prod_atomic_install restore_pins prod_cleanup_pin_stages prod_on_exit prod_on_signal verify_rollback_release_sha run_rollback; do
  sed -n "/^${fn}() {/,/^}/p" "$ROOT/ops/release/cutover-public-production-pair.sh" >> "$TMP/functions.sh"
 done
 source "$TMP/functions.sh"
@@ -22,6 +22,7 @@ pin_value_of() { wr_compose_env_query_governed_value "$COMPOSE_ENV_FILE" "$1"; }
 # Intercept ONLY a specified failure; otherwise use real sudo, real root-owned
 # files and real permissions. Never chmod/open protected fixtures for the caller.
 sudo() {
+ if [[ "${INJECT:-}" == backupread && "${2:-}" == python3 && "${4:-}" == "$EVIDENCE_DIR/pin-backup/dokploy-compose.env" ]];then return 42;fi
  if [[ "${INJECT:-}" == cleanup && "${2:-}" == rm && "${*: -1}" == */.wr-prod-pin-* ]]; then return 42; fi
  if [[ "${INJECT:-}" == rollback_copy && "${2:-}" == cp && "${*: -1}" == */.env.wr-prod-new-* ]]; then command sudo "$@";return 42;fi
  if [[ "${INJECT:-}" == stage && "${2:-}" == python3 && "${4:-}" == "$COMPOSE_ENV_FILE" && "${5:-}" == "$(dirname "$COMPOSE_ENV_FILE")" ]]; then return 42; fi
@@ -46,6 +47,7 @@ sed -e 's/old-backend/new-backend/' -e 's/old-storefront/new-storefront/' -e 's/
 BE_REF=new-backend;SF_REF=new-storefront;SOURCE_SHA=new-source
 assert_restored() {
  command sudo -n cmp "$COMPOSE_ENV_FILE" "$TMP/original"
+ verify_rollback_release_sha >> "$TMP/log" 2>&1
  [[ "$(stat -c '%u:%g:%a' "$COMPOSE_ENV_FILE")" == 0:0:600 ]]
  [[ ! -r "$COMPOSE_ENV_FILE" ]]
  [[ -z "$(find "$(dirname "$COMPOSE_ENV_FILE")" -name '.wr-prod-pin-*' -o -name '.wr-compose-env-publish-*' -o -name '.env.wr-prod-new-*')" ]]
@@ -104,6 +106,23 @@ for layout in writable protected; do
  restore_pins >> "$TMP/log" 2>&1
  assert_restored
  echo "PASS real $layout partial rollback copy: tracked sibling cleaned, exact restore recovered"
+ # Exercise actual rollback control flow with real protected-file IO. Runtime
+ # gates are stubs here; real Docker lifecycle is covered by the full fidelity.
+ component_in_scope() { return 1; }
+ verify_runtime_matches_pins() { return 0; };verify_rollback_exposure() { return 0; };verify_rollback_http() { return 0; }
+ COMPONENT=pair;COMPONENTS_RECREATED='';METADATA_WRITTEN=0;WR_OA_RESERVATION_STATE=legacy
+ PRE_BE_REF=old-backend;PRE_SF_REF=old-storefront;PRE_RELEASE_SHA=old-source;PHASE=pins_written
+ for INJECT in none backupread; do
+  PINS_WRITTEN='';PROD_PIN_STAGE='';WR_COMPOSE_ENV_PUBLISHED_PATH='';PROD_ATOMIC_PUBLISH_STAGE=''
+  write_required_pins_atomic >> "$TMP/log" 2>&1
+  ROLLBACK_DONE=0;ROLLBACK_RC=0
+  if run_rollback >> "$TMP/log" 2>&1;then rc=0;else rc=$?;fi
+  if [[ "$INJECT" == none ]];then [[ "$rc" == 10 && "$(tail -1 "$TMP/states")" == rolled_back ]];else [[ "$rc" == 13 && "$(tail -1 "$TMP/states")" == rollback_incomplete ]];fi
+  unset INJECT
+  assert_restored
+ done
+ unset COMPONENT
+ echo "PASS real $layout rollback control: protected marker verified; denied backup read is incomplete"
 done
 if grep -q 'NEVER_PRINT_REAL_PIN_SECRET' "$TMP/log"; then echo 'FAIL pin contents leaked';exit 1;fi
 echo 'PASS real ownership, permission matrix, failure cleanup and signal cleanup'
