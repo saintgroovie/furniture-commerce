@@ -7,3 +7,6 @@
 - The owner selected **1С:Бухгалтерия**, described as «8.0». Verify the actual platform/configuration and exchange capability before choosing a transport; do not assume a modern stock REST endpoint.
 - The live app must never silently fall back to prototype records or local browser writes. Preserve Medusa as commerce source of truth and show unavailable integrations honestly.
 - Keep production access private and use repository release/runtime governance for any hosted cutover. A local private connected candidate is not a server production rollout.
+
+- Products with catalog photos show actual product thumbnails in lists and the work queue; use a neutral image placeholder only when no photo is available.
+- Keep one direct «Товары» navigation entry and a separate «Комнаты» link; avoid a redundant collapsible catalog level.
