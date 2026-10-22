@@ -37,11 +37,12 @@ describe("catalog-fetch-cache fidelity", () => {
     assert.match(fn, /if \(init\?\.signal\)/)
   })
 
-  it("routes getCatalogProducts through medusaCatalogFetch without React.cache", () => {
+  it("reads fresh product prices/media while room membership retains its own cache", () => {
     assert.doesNotMatch(productsApi, /function requestCache/)
     assert.doesNotMatch(productsApi, /React\.cache|requestCache\(/)
     assert.match(productsApi, /export async function getCatalogProducts/)
-    assert.match(productsApi, /medusaCatalogFetch/)
+    assert.doesNotMatch(productsApi, /medusaCatalogFetch/)
+    assert.match(productsApi, /medusaFetch\(`\$\{base\}\/store\/catalog-products`\)/)
     assert.match(productsApi, /getProduct[\s\S]*medusaFetch/)
   })
 

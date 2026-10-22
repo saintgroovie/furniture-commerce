@@ -49,9 +49,9 @@ export function WillieWinkieMotifProductCard({
                 : "ww-product-card-price ww-product-card-price--soft"
             }
           >
-            {product.price_amount != null
-              ? formatRub(product.price_amount)
-              : willieWinkieMotifsCopy.priceUnavailable}
+            {product.price_label ?? (product.price_amount != null
+              ? `${product.price_prefix ?? ""}${formatRub(product.price_amount)}`
+              : willieWinkieMotifsCopy.priceUnavailable)}
           </span>
         </span>
       </Link>
