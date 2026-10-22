@@ -2788,16 +2788,20 @@ if ! assert_backend_notouch; then
   die "backend identity moved before commit"
 fi
 log "owner_approval_gate_c_ok live_be=$LIVE_BE_DIGEST_FINAL live_sf=$LIVE_SF_DIGEST_FINAL checksum=$WR_OA_CHECKSUM"
+# Runtime acceptance has passed. Final cleanup must precede the commit decision;
+# once committed, a signal must never roll back an already released approval.
+prod_cleanup_pin_stages || die "private pin cleanup incomplete before commit"
+COMMITTED=1
+record_state committed
 if [[ "${WR_OA_RESERVATION_STATE:-legacy}" == "reserved" ]]; then
   export WR_OA_TRANSITION_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   if ! wr_owner_approved_mark_terminal public_production committed "$EVIDENCE_DIR" "cutover committed"; then
     log "WARN approval reservation remains reserved after commit result=${WR_OWNER_APPROVAL_RESULT:-unknown}; explicit cancel is required before another candidate"
   else
     log "approval_reservation_committed previous=$GATE_A_CHECKSUM checksum=${WR_OA_CHECKSUM:-}"
+    if wr_fault approval_commit_signal; then kill -TERM $$; fi
   fi
 fi
-COMMITTED=1
-record_state committed
 {
   echo "# Isolated public_production pair cutover (not apex / DNS / CS-Cart)"
   echo "- component: $COMPONENT"

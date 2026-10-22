@@ -489,6 +489,24 @@ else
 fi
 assert_public_demo_untouched "success"
 
+# Signal after the approval terminal write must not undo committed runtime.
+reset_harness
+python3 - "$SRV/meta/public_production/OWNER_APPROVED_RELEASE.json" <<'PY_SIGNAL'
+import json,sys
+p=sys.argv[1];d=json.load(open(p));d['reservation_state']='reserved';d['approval_generation']='apr1-'+'1'*32;json.dump(d,open(p,'w'))
+PY_SIGNAL
+EV="$TMP/ev-commit-signal"
+run_exec "$EV" "$TMP/out-commit-signal.txt" "WOODRIGHT_CUTOVER_FAULT=approval_commit_signal"
+[[ "$RC" == 143 ]] && pass "commit_signal: interrupted exit 143" || fail "commit_signal: rc=$RC"
+[[ "$(state_file "$EV")" == committed ]] && pass "commit_signal: commit decision already durable" || fail "commit_signal: state=$(state_file "$EV")"
+python3 - "$SRV/meta/public_production/OWNER_APPROVED_RELEASE.json" <<'PY_SIGNAL' && pass "commit_signal: approval remains committed" || fail "commit_signal: approval not committed"
+import json,sys
+assert json.load(open(sys.argv[1]))['reservation_state']=='committed'
+PY_SIGNAL
+[[ "$(digest_of woodright-public-production-backend)" == "$NEW_BE_DIG" && "$(digest_of woodright-public-production-storefront)" == "$NEW_SF_DIG" ]] && pass "commit_signal: accepted pair retained" || fail "commit_signal: pair changed"
+if grep -q 'ROLLBACK begin' "$TMP/out-commit-signal.txt";then fail "commit_signal: rollback after released approval";else pass "commit_signal: no rollback after approval release";fi
+lock_is_free "$LOCK" && pass "commit_signal: lock released" || fail "commit_signal: lock held"
+
 # ==========================================================================
 # 2) first pin write fails -> no recreate, original pins
 # ==========================================================================
