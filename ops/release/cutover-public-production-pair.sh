@@ -2279,6 +2279,36 @@ PY
 # BEFORE the single install, then install once.
 # This closes the mixed-pin window where a signal could land after the
 # first key replace but before record_state.
+# Create a sealed, empty staging file beside the protected pin. Only this
+# narrow filesystem operation is privileged; the cutover controller stays the
+# operator and keeps the same approval, lock, image and rollback gates.
+create_sealed_pin_stage() {
+  local parent="${1:?}"
+  local -a stage_python=(python3)
+  if [[ ! -r "$COMPOSE_ENV_FILE" || ! -w "$parent" ]]; then
+    command -v sudo >/dev/null 2>&1 || return 1
+    stage_python=(sudo -n python3)
+  fi
+  "${stage_python[@]}" - "$COMPOSE_ENV_FILE" "$parent" <<'PY_STAGE'
+import os, pathlib, stat, sys, tempfile
+src, parent = map(pathlib.Path, sys.argv[1:])
+if src.is_symlink() or not stat.S_ISREG(src.stat().st_mode):
+    raise SystemExit("unsafe compose pin source")
+if src.parent.resolve() != parent.resolve() or parent.resolve() != parent:
+    raise SystemExit("pin stage must remain beside the canonical pin")
+fd, path = tempfile.mkstemp(prefix=".wr-prod-pin-", dir=parent)
+try:
+    os.fchmod(fd, 0o600)
+    os.fsync(fd)
+except BaseException:
+    os.unlink(path)
+    raise
+finally:
+    os.close(fd)
+print(path)
+PY_STAGE
+}
+
 write_required_pins_atomic() {
   local tmp be_want sf_want write_release=0
   local -a render_args=() validate_args=()
@@ -2297,26 +2327,21 @@ write_required_pins_atomic() {
     write_release=1
   fi
 
-  tmp="$(mktemp "${compose_parent}/.wr-prod-pin-XXXXXX" 2>/dev/null || true)"
-  if [[ -z "$tmp" ]]; then
-    log "NOTE pin tmp falls back to the evidence dir (compose dir not writable by this user)"
-    tmp="$(mktemp "$EVIDENCE_DIR/pin-backup/.wr-prod-pin-XXXXXX")"
-  fi
-  [[ ! -L "$tmp" ]] || { rm -f "$tmp"; return 1; }
-  cp -p "$COMPOSE_ENV_FILE" "$tmp" || { rm -f "$tmp"; return 1; }
+  tmp="$(create_sealed_pin_stage "$compose_parent")" || return 1
+  wr_compose_env_is_regular_file "$tmp" || return 1
+  wr_compose_env_assert_path_under "$tmp" "$allowed_root" || { wr_compose_env_rm "$tmp"; return 1; }
 
   need_be && render_args+=(WOODRIGHT_BACKEND_IMAGE "$BE_REF")
   need_sf && render_args+=(WOODRIGHT_STOREFRONT_IMAGE "$SF_REF")
   if [[ "$write_release" -eq 1 ]]; then
     render_args+=(WOODRIGHT_RELEASE_SHA "$SOURCE_SHA")
   fi
-  [[ "${#render_args[@]}" -gt 0 ]] || { rm -f "$tmp"; return 1; }
+  [[ "${#render_args[@]}" -gt 0 ]] || { wr_compose_env_rm "$tmp"; return 1; }
 
-  if ! wr_compose_env_render_keys "$tmp" "${tmp}.next" "${render_args[@]}"; then
-    rm -f "$tmp" "${tmp}.next"
+  if ! wr_compose_env_render_keys "$COMPOSE_ENV_FILE" "$tmp" "${render_args[@]}"; then
+    wr_compose_env_rm "$tmp"
     return 1
   fi
-  mv -f "${tmp}.next" "$tmp" || { rm -f "$tmp" "${tmp}.next"; return 1; }
 
   need_be && validate_args+=(WOODRIGHT_BACKEND_IMAGE "$BE_REF")
   need_sf && validate_args+=(WOODRIGHT_STOREFRONT_IMAGE "$SF_REF")
@@ -2332,26 +2357,26 @@ write_required_pins_atomic() {
   fi
 
   if ! wr_compose_env_validate_keys "$tmp" "${validate_args[@]}" >&2; then
-    rm -f "$tmp"
+    wr_compose_env_rm "$tmp"
     return 1
   fi
-  wr_compose_env_assert_no_duplicate_governed_keys "$tmp" || { rm -f "$tmp"; return 1; }
+  wr_compose_env_assert_no_duplicate_governed_keys "$tmp" || { wr_compose_env_rm "$tmp"; return 1; }
 
   # Fault injection: first_pin = fail before any install (no writes).
   # second_pin kept for harness compatibility = also fail before install
   # now that the pair is a single atomic install (no mixed state possible).
   if wr_fault first_pin || wr_fault second_pin; then
-    rm -f "$tmp"
+    wr_compose_env_rm "$tmp"
     return 1
   fi
 
-  # Same-filesystem atomic publish via prod_atomic_install (sibling + mv).
+  # Same-filesystem publish preserving the protected destination owner/mode.
   record_state pins_written
-  if ! prod_atomic_install "$tmp" "$COMPOSE_ENV_FILE"; then
-    rm -f "$tmp"
+  if ! wr_compose_env_atomic_install "$tmp" "$COMPOSE_ENV_FILE" "$allowed_root"; then
+    wr_compose_env_rm "$tmp"
     return 1
   fi
-  rm -f "$tmp"
+  wr_compose_env_rm "$tmp"
   need_be && PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_BACKEND_IMAGE" \
     && printf '%s WOODRIGHT_BACKEND_IMAGE=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$BE_REF" >>"$EVIDENCE_DIR/json/pins-written.txt"
   need_sf && PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_STOREFRONT_IMAGE" \

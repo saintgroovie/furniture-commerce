@@ -40,6 +40,7 @@ The compose pin file may stay `root:root` mode `600`. The operator does not need
 - The helper hashes that file through `sudo -n sha256sum -- <realpath>` when the operator cannot read it.
 - A readable pin is hashed without sudo.
 - The same helper writes the pin through the existing privileged copy (`sudo -n cp` / `sudo -n mv`). It does not `sudo cat` the file and it is not run as root.
+- For a protected pin, the operator creates a sealed `0600` staging file beside it through the existing privileged Python reader, renders and validates only the approved pin updates there, then atomically installs it while preserving the destination owner/group/mode. No readable secret copy is placed in operator evidence. A staging failure leaves the live pin and containers unchanged.
 - Checksum identity is still required before the lock and again under the lock. A changed digest blocks the release. `mtime` is not a substitute.
 - `public_demo` (`woodright-stack-3dsdhd`) and the private candidate (`woodright-production`) use the same environment-scoped fingerprint. A helper for one environment cannot hash another environment's pin.
 
