@@ -94,6 +94,11 @@ ROLLBACK_RC=0
 PINS_WRITTEN=""
 COMPONENTS_RECREATED=""
 METADATA_WRITTEN=0
+# Private cleanup paths are transaction state, never inherited caller input.
+PROD_PIN_STAGE=""
+WR_COMPOSE_ENV_PUBLISHED_PATH=""
+PROD_ATOMIC_PUBLISH_STAGE=""
+PROD_PRIVATE_PUBLISH_PATHS=()
 TS_RUN="$(date -u +%Y%m%dT%H%M%SZ)"
 
 # Rollback anchors: the exact immutable refs the containers ran on before the
@@ -1621,14 +1626,18 @@ prod_atomic_install() {
   [[ -f "$src" ]] || return 1
   dir="$(dirname "$dest")"
   published="${dest}.wr-prod-new-$$"
-  if [[ -d "$dir" && -w "$dir" ]]; then
-    cp -p "$src" "$published" || return 1
-    mv -f "$published" "$dest" || { rm -f "$published"; return 1; }
+  PROD_ATOMIC_PUBLISH_STAGE="$published"
+  PROD_PRIVATE_PUBLISH_PATHS+=("$published")
+  if [[ -r "$src" && -d "$dir" && -w "$dir" ]]; then
+    cp -p "$src" "$published" || { wr_compose_env_rm "$published"; return 1; }
+    mv -f "$published" "$dest" || { wr_compose_env_rm "$published"; return 1; }
+    PROD_ATOMIC_PUBLISH_STAGE=""
     return 0
   fi
   if command -v sudo >/dev/null 2>&1; then
-    sudo -n cp -p "$src" "$published" || return 1
-    sudo -n mv -f "$published" "$dest" || { sudo -n rm -f "$published" 2>/dev/null || true; return 1; }
+    sudo -n cp -p "$src" "$published" || { wr_compose_env_rm "$published"; return 1; }
+    sudo -n mv -f "$published" "$dest" || { wr_compose_env_rm "$published"; return 1; }
+    PROD_ATOMIC_PUBLISH_STAGE=""
     return 0
   fi
   log "cannot atomically install $src -> $dest (dir not writable and no sudo -n)"
@@ -1850,8 +1859,14 @@ verify_rollback_release_sha() {
     log "ROLLBACK_VERIFY RELEASE_SHA backup missing"
     return 1
   }
-  want="$(awk -F= '$1=="WOODRIGHT_RELEASE_SHA" {sub(/^[^=]*=/, ""); print; exit}' "$backup" 2>/dev/null || true)"
-  got="$(pin_value_of WOODRIGHT_RELEASE_SHA)"
+  local want_rc=0 got_rc=0
+  wr_compose_env_is_regular_file "$backup" || return 1
+  want="$(wr_compose_env_query_governed_value "$backup" WOODRIGHT_RELEASE_SHA)" || want_rc=$?
+  got="$(wr_compose_env_query_governed_value "$COMPOSE_ENV_FILE" WOODRIGHT_RELEASE_SHA)" || got_rc=$?
+  case "$want_rc:$got_rc" in
+    0:0|0:2|2:0|2:2) ;;
+    *) log "ROLLBACK_VERIFY RELEASE_SHA read failed backup_rc=$want_rc live_rc=$got_rc"; return 1 ;;
+  esac
   if [[ -z "$want" ]]; then
     # Pre-cutover env had no marker - restored env must also lack it (or be empty).
     if [[ -z "$got" ]]; then
@@ -1897,7 +1912,7 @@ run_rollback() {
   fi
   ROLLBACK_DONE=1
   log "ROLLBACK begin phase=$PHASE recreated=[${COMPONENTS_RECREATED# }] method=restore_pins_then_compose_recreate (no keepers)"
-  local pin_ok=1 runtime_ok=1 verify_ok=1 release_ok=1 exposure_ok=1 http_ok=1 meta_ok=1 backend_ok=1
+  local pin_ok=1 runtime_ok=1 verify_ok=1 release_ok=1 exposure_ok=1 http_ok=1 meta_ok=1 backend_ok=1 cleanup_ok=1
   local kind name want deadline
 
   restore_pins || pin_ok=0
@@ -1948,15 +1963,19 @@ run_rollback() {
     backend_ok=0
   fi
 
+  # Do not release the reservation or record terminal rollback success while
+  # a protected transaction-owned copy still needs cleanup.
+  prod_cleanup_pin_stages || cleanup_ok=0
+
   if [[ -n "$EVIDENCE_DIR" && -d "$EVIDENCE_DIR/json" ]]; then
-    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"release_sha":%s,"exposure":%s,"http":%s,"metadata":%s,"backend_notouch":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s","pre_release_sha":"%s"}\n' \
-      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$release_ok" "$exposure_ok" "$http_ok" "$meta_ok" "$backend_ok" \
+    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"release_sha":%s,"exposure":%s,"http":%s,"metadata":%s,"backend_notouch":%s,"private_stage_cleanup":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s","pre_release_sha":"%s"}\n' \
+      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$release_ok" "$exposure_ok" "$http_ok" "$meta_ok" "$backend_ok" "$cleanup_ok" \
       "$PRE_BE_REF" "$PRE_SF_REF" "${PRE_RELEASE_SHA}" >"$EVIDENCE_DIR/json/rollback-result.json" 2>/dev/null || true
   fi
 
   if [[ "$pin_ok" == "1" && "$runtime_ok" == "1" && "$verify_ok" == "1" \
      && "$release_ok" == "1" && "$exposure_ok" == "1" && "$http_ok" == "1" \
-     && "$meta_ok" == "1" && "$backend_ok" == "1" ]]; then
+     && "$meta_ok" == "1" && "$backend_ok" == "1" && "$cleanup_ok" == "1" ]]; then
     ROLLBACK_RC=10
     record_state rolled_back
     # Reservation ends only after a proven rollback. Incomplete rollback stays
@@ -1982,8 +2001,23 @@ run_rollback() {
 
   ROLLBACK_RC=13
   record_state rollback_incomplete
-  log "ROLLBACK_INCOMPLETE pins=$pin_ok runtime_recreate=$runtime_ok pins_equal_runtime=$verify_ok release_sha=$release_ok exposure=$exposure_ok http=$http_ok metadata=$meta_ok backend_notouch=$backend_ok - NOT reporting ROLLBACK_OK"
+  log "ROLLBACK_INCOMPLETE pins=$pin_ok runtime_recreate=$runtime_ok pins_equal_runtime=$verify_ok release_sha=$release_ok exposure=$exposure_ok http=$http_ok metadata=$meta_ok backend_notouch=$backend_ok private_stage_cleanup=$cleanup_ok - NOT reporting ROLLBACK_OK"
   return "$ROLLBACK_RC"
+}
+
+# These paths are assigned only by this transaction, under its runtime lock.
+# Never sweep unrelated stages belonging to another operation.
+prod_cleanup_pin_stages() {
+  local path failed=0
+  for path in "${PROD_PIN_STAGE:-}" "${WR_COMPOSE_ENV_PUBLISHED_PATH:-}" "${PROD_ATOMIC_PUBLISH_STAGE:-}" "${PROD_PRIVATE_PUBLISH_PATHS[@]:-}"; do
+    [[ -n "$path" ]] || continue
+    wr_compose_env_rm "$path"
+    if [[ -e "$path" || -L "$path" ]]; then
+      log "ERROR: protected pin stage cleanup incomplete: $path"
+      failed=1
+    fi
+  done
+  [[ "$failed" == 0 ]]
 }
 
 prod_on_exit() {
@@ -1992,6 +2026,7 @@ prod_on_exit() {
   # successful commit must never be undone by a late signal.
   trap - EXIT INT TERM HUP
   if [[ "$COMMITTED" == "1" || "$ROLLBACK_DONE" == "1" ]]; then
+    prod_cleanup_pin_stages || rc=13
     release_lock
     exit "$rc"
   fi
@@ -2004,6 +2039,7 @@ prod_on_exit() {
   else
     record_state failed_before_mutation
   fi
+  prod_cleanup_pin_stages || rc=13
   release_lock
   exit "$rc"
 }
@@ -2279,6 +2315,36 @@ PY
 # BEFORE the single install, then install once.
 # This closes the mixed-pin window where a signal could land after the
 # first key replace but before record_state.
+# Create a sealed, empty staging file beside the protected pin. Only this
+# narrow filesystem operation is privileged; the cutover controller stays the
+# operator and keeps the same approval, lock, image and rollback gates.
+create_sealed_pin_stage() {
+  local parent="${1:?}"
+  local -a stage_python=(python3)
+  if [[ ! -r "$COMPOSE_ENV_FILE" || ! -w "$parent" ]]; then
+    command -v sudo >/dev/null 2>&1 || return 1
+    stage_python=(sudo -n python3)
+  fi
+  "${stage_python[@]}" - "$COMPOSE_ENV_FILE" "$parent" <<'PY_STAGE'
+import os, pathlib, stat, sys, tempfile
+src, parent = map(pathlib.Path, sys.argv[1:])
+if src.is_symlink() or not stat.S_ISREG(src.stat().st_mode):
+    raise SystemExit("unsafe compose pin source")
+if src.parent.resolve() != parent.resolve() or parent.resolve() != parent:
+    raise SystemExit("pin stage must remain beside the canonical pin")
+fd, path = tempfile.mkstemp(prefix=".wr-prod-pin-", dir=parent)
+try:
+    os.fchmod(fd, 0o600)
+    os.fsync(fd)
+except BaseException:
+    os.unlink(path)
+    raise
+finally:
+    os.close(fd)
+print(path)
+PY_STAGE
+}
+
 write_required_pins_atomic() {
   local tmp be_want sf_want write_release=0
   local -a render_args=() validate_args=()
@@ -2297,26 +2363,22 @@ write_required_pins_atomic() {
     write_release=1
   fi
 
-  tmp="$(mktemp "${compose_parent}/.wr-prod-pin-XXXXXX" 2>/dev/null || true)"
-  if [[ -z "$tmp" ]]; then
-    log "NOTE pin tmp falls back to the evidence dir (compose dir not writable by this user)"
-    tmp="$(mktemp "$EVIDENCE_DIR/pin-backup/.wr-prod-pin-XXXXXX")"
-  fi
-  [[ ! -L "$tmp" ]] || { rm -f "$tmp"; return 1; }
-  cp -p "$COMPOSE_ENV_FILE" "$tmp" || { rm -f "$tmp"; return 1; }
+  tmp="$(create_sealed_pin_stage "$compose_parent")" || return 1
+  PROD_PIN_STAGE="$tmp"
+  wr_compose_env_is_regular_file "$tmp" || return 1
+  wr_compose_env_assert_path_under "$tmp" "$allowed_root" || { wr_compose_env_rm "$tmp"; return 1; }
 
   need_be && render_args+=(WOODRIGHT_BACKEND_IMAGE "$BE_REF")
   need_sf && render_args+=(WOODRIGHT_STOREFRONT_IMAGE "$SF_REF")
   if [[ "$write_release" -eq 1 ]]; then
     render_args+=(WOODRIGHT_RELEASE_SHA "$SOURCE_SHA")
   fi
-  [[ "${#render_args[@]}" -gt 0 ]] || { rm -f "$tmp"; return 1; }
+  [[ "${#render_args[@]}" -gt 0 ]] || { wr_compose_env_rm "$tmp"; return 1; }
 
-  if ! wr_compose_env_render_keys "$tmp" "${tmp}.next" "${render_args[@]}"; then
-    rm -f "$tmp" "${tmp}.next"
+  if ! wr_compose_env_render_keys "$COMPOSE_ENV_FILE" "$tmp" "${render_args[@]}"; then
+    wr_compose_env_rm "$tmp"
     return 1
   fi
-  mv -f "${tmp}.next" "$tmp" || { rm -f "$tmp" "${tmp}.next"; return 1; }
 
   need_be && validate_args+=(WOODRIGHT_BACKEND_IMAGE "$BE_REF")
   need_sf && validate_args+=(WOODRIGHT_STOREFRONT_IMAGE "$SF_REF")
@@ -2332,26 +2394,31 @@ write_required_pins_atomic() {
   fi
 
   if ! wr_compose_env_validate_keys "$tmp" "${validate_args[@]}" >&2; then
-    rm -f "$tmp"
+    wr_compose_env_rm "$tmp"
     return 1
   fi
-  wr_compose_env_assert_no_duplicate_governed_keys "$tmp" || { rm -f "$tmp"; return 1; }
+  wr_compose_env_assert_no_duplicate_governed_keys "$tmp" || { wr_compose_env_rm "$tmp"; return 1; }
 
   # Fault injection: first_pin = fail before any install (no writes).
   # second_pin kept for harness compatibility = also fail before install
   # now that the pair is a single atomic install (no mixed state possible).
   if wr_fault first_pin || wr_fault second_pin; then
-    rm -f "$tmp"
+    wr_compose_env_rm "$tmp"
     return 1
   fi
 
-  # Same-filesystem atomic publish via prod_atomic_install (sibling + mv).
+  # Same-filesystem publish preserving the protected destination owner/mode.
   record_state pins_written
-  if ! prod_atomic_install "$tmp" "$COMPOSE_ENV_FILE"; then
-    rm -f "$tmp"
+  if ! wr_compose_env_atomic_install "$tmp" "$COMPOSE_ENV_FILE" "$allowed_root"; then
+    wr_compose_env_rm "$tmp"
     return 1
   fi
-  rm -f "$tmp"
+  wr_compose_env_rm "$tmp"
+  if [[ -e "$tmp" || -L "$tmp" ]]; then
+    log "ERROR: rendered pin stage removal failed; exit cleanup retains the path"
+    return 1
+  fi
+  PROD_PIN_STAGE=""
   need_be && PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_BACKEND_IMAGE" \
     && printf '%s WOODRIGHT_BACKEND_IMAGE=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$BE_REF" >>"$EVIDENCE_DIR/json/pins-written.txt"
   need_sf && PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_STOREFRONT_IMAGE" \
@@ -2721,16 +2788,20 @@ if ! assert_backend_notouch; then
   die "backend identity moved before commit"
 fi
 log "owner_approval_gate_c_ok live_be=$LIVE_BE_DIGEST_FINAL live_sf=$LIVE_SF_DIGEST_FINAL checksum=$WR_OA_CHECKSUM"
+# Runtime acceptance has passed. Final cleanup must precede the commit decision;
+# once committed, a signal must never roll back an already released approval.
+prod_cleanup_pin_stages || die "private pin cleanup incomplete before commit"
+COMMITTED=1
+record_state committed
 if [[ "${WR_OA_RESERVATION_STATE:-legacy}" == "reserved" ]]; then
   export WR_OA_TRANSITION_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   if ! wr_owner_approved_mark_terminal public_production committed "$EVIDENCE_DIR" "cutover committed"; then
     log "WARN approval reservation remains reserved after commit result=${WR_OWNER_APPROVAL_RESULT:-unknown}; explicit cancel is required before another candidate"
   else
     log "approval_reservation_committed previous=$GATE_A_CHECKSUM checksum=${WR_OA_CHECKSUM:-}"
+    if wr_fault approval_commit_signal; then kill -TERM $$; fi
   fi
 fi
-COMMITTED=1
-record_state committed
 {
   echo "# Isolated public_production pair cutover (not apex / DNS / CS-Cart)"
   echo "- component: $COMPONENT"
