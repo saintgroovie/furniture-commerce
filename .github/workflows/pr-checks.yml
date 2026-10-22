@@ -152,6 +152,9 @@ jobs:
       - name: Fidelity tests
         run: yarn test:fidelity
 
+      - name: Streamed schema audit regression tests
+        run: python3 scripts/test_catalog_schema_stream.py
+
   backend-fidelity:
     name: Backend fidelity tests
     runs-on: ubuntu-latest
