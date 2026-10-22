@@ -123,6 +123,21 @@ for layout in writable protected; do
  done
  unset COMPONENT
  echo "PASS real $layout rollback control: protected marker verified; denied backup read is incomplete"
+ # The actual exit hook must retain a reserved approval if cleanup is denied.
+ wr_owner_approved_mark_terminal() { printf '%s\n' "$2" > "$TMP/approval-terminal"; }
+ PINS_WRITTEN='';PROD_PIN_STAGE='';WR_COMPOSE_ENV_PUBLISHED_PATH='';PROD_ATOMIC_PUBLISH_STAGE=''
+ INJECT=cleanup
+ if write_required_pins_atomic >> "$TMP/log" 2>&1;then echo 'FAIL cleanup injection accepted';exit 1;fi
+ set +e
+ ( COMMITTED=0;ROLLBACK_DONE=0;ROLLBACK_RC=0;PHASE=pins_written;METADATA_WRITTEN=0;COMPONENTS_RECREATED='';COMPONENT=pair;WR_OA_RESERVATION_STATE=reserved;rollback_armed() { return 0; };trap prod_on_exit EXIT;exit 1 ) >> "$TMP/log" 2>&1
+ rc=$?
+ set -e
+ [[ "$rc" == 13 && "$(tail -1 "$TMP/states")" == rollback_incomplete && ! -e "$TMP/approval-terminal" ]]
+ [[ -f "$PROD_PIN_STAGE" ]]
+ unset INJECT
+ prod_cleanup_pin_stages >> "$TMP/log" 2>&1
+ assert_restored
+ echo "PASS real $layout reserved exit: cleanup failure retains reservation and records rollback_incomplete"
 done
 if grep -q 'NEVER_PRINT_REAL_PIN_SECRET' "$TMP/log"; then echo 'FAIL pin contents leaked';exit 1;fi
 echo 'PASS real ownership, permission matrix, failure cleanup and signal cleanup'

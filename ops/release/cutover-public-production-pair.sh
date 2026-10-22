@@ -1912,7 +1912,7 @@ run_rollback() {
   fi
   ROLLBACK_DONE=1
   log "ROLLBACK begin phase=$PHASE recreated=[${COMPONENTS_RECREATED# }] method=restore_pins_then_compose_recreate (no keepers)"
-  local pin_ok=1 runtime_ok=1 verify_ok=1 release_ok=1 exposure_ok=1 http_ok=1 meta_ok=1 backend_ok=1
+  local pin_ok=1 runtime_ok=1 verify_ok=1 release_ok=1 exposure_ok=1 http_ok=1 meta_ok=1 backend_ok=1 cleanup_ok=1
   local kind name want deadline
 
   restore_pins || pin_ok=0
@@ -1963,15 +1963,19 @@ run_rollback() {
     backend_ok=0
   fi
 
+  # Do not release the reservation or record terminal rollback success while
+  # a protected transaction-owned copy still needs cleanup.
+  prod_cleanup_pin_stages || cleanup_ok=0
+
   if [[ -n "$EVIDENCE_DIR" && -d "$EVIDENCE_DIR/json" ]]; then
-    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"release_sha":%s,"exposure":%s,"http":%s,"metadata":%s,"backend_notouch":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s","pre_release_sha":"%s"}\n' \
-      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$release_ok" "$exposure_ok" "$http_ok" "$meta_ok" "$backend_ok" \
+    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"release_sha":%s,"exposure":%s,"http":%s,"metadata":%s,"backend_notouch":%s,"private_stage_cleanup":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s","pre_release_sha":"%s"}\n' \
+      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$release_ok" "$exposure_ok" "$http_ok" "$meta_ok" "$backend_ok" "$cleanup_ok" \
       "$PRE_BE_REF" "$PRE_SF_REF" "${PRE_RELEASE_SHA}" >"$EVIDENCE_DIR/json/rollback-result.json" 2>/dev/null || true
   fi
 
   if [[ "$pin_ok" == "1" && "$runtime_ok" == "1" && "$verify_ok" == "1" \
      && "$release_ok" == "1" && "$exposure_ok" == "1" && "$http_ok" == "1" \
-     && "$meta_ok" == "1" && "$backend_ok" == "1" ]]; then
+     && "$meta_ok" == "1" && "$backend_ok" == "1" && "$cleanup_ok" == "1" ]]; then
     ROLLBACK_RC=10
     record_state rolled_back
     # Reservation ends only after a proven rollback. Incomplete rollback stays
@@ -1997,7 +2001,7 @@ run_rollback() {
 
   ROLLBACK_RC=13
   record_state rollback_incomplete
-  log "ROLLBACK_INCOMPLETE pins=$pin_ok runtime_recreate=$runtime_ok pins_equal_runtime=$verify_ok release_sha=$release_ok exposure=$exposure_ok http=$http_ok metadata=$meta_ok backend_notouch=$backend_ok - NOT reporting ROLLBACK_OK"
+  log "ROLLBACK_INCOMPLETE pins=$pin_ok runtime_recreate=$runtime_ok pins_equal_runtime=$verify_ok release_sha=$release_ok exposure=$exposure_ok http=$http_ok metadata=$meta_ok backend_notouch=$backend_ok private_stage_cleanup=$cleanup_ok - NOT reporting ROLLBACK_OK"
   return "$ROLLBACK_RC"
 }
 
