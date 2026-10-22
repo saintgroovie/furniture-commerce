@@ -68,6 +68,7 @@ import { OliverPdpMediaSwitcher } from "@/components/oliver-pdp-media-switcher"
 import { GreenwichBedPdpMediaSwitcher } from "@/components/greenwich-bed-pdp-media-switcher"
 import { ProductPdpExecutionMediaSwitcher } from "@/components/product-pdp-execution-media-switcher"
 import { PdpConfiguredPriceJsonLd } from "@/components/pdp-configured-price-json-ld"
+import { PdpExecutionImageJsonLd } from "@/components/pdp-execution-image-json-ld"
 import { configuredPriceJsonLdContext } from "@/lib/configured-price-json-ld"
 import { OliverBedUpholsteryJsonLd } from "@/components/oliver-bed-upholstery-json-ld"
 import { oliverBedUpholsteryJsonLdOptions } from "@/lib/oliver-bed-upholstery-json-ld"
@@ -763,6 +764,10 @@ export default async function ProductPage({
         jsonLd={productJsonLd}
         productKey={handle}
         options={oliverUpholsteryOptions}
+        nonce={cspNonce}
+      /> : useExecutionPdp && productJsonLd["@type"] === "Product" ? <PdpExecutionImageJsonLd
+        jsonLd={productJsonLd}
+        productKey={handle}
         nonce={cspNonce}
       /> : <script
         type="application/ld+json"

@@ -13,6 +13,7 @@ const selectors = { finish: paints.map((paint) => ({ ...paint, mainSrc: "/preser
 const context = configuredPriceJsonLdContext({ product, selectors, basePrice: 4300, materialTiers: null })!
 assert.ok(context)
 const markup = { "@context": "https://schema.org", "@type": "Product", name: "Полка Кантри", sku: identity.sku,
+  url: "https://woodright.ru/product/co-69-1",
   image: ["https://woodright.ru/product-static/preserved-new-photo.jpg"],
   offers: { "@type": "Offer", price: 4300, priceCurrency: "RUB", availability: "https://schema.org/BackOrder", url: "https://woodright.ru/product/co-69-1", seller: { "@id": "#organization" } } }
 function pick(finishKey = "blue", productKey = "co-69-1"): PdpExecutionSelection {
@@ -33,6 +34,9 @@ for (const key of ["cream", "blue", "cream", "blue"]) {
   assert.equal(ld.name, markup.name); assert.equal(ld.sku, markup.sku)
 }
 assert.equal(JSON.stringify(markup), before)
+const withPhoto = project({ ...pick(), imageSrc: "/static/products/country-london-paris/CO-69-1_color_blue_01.jpg" })!
+assert.deepEqual(withPhoto.image, ["https://woodright.ru/product-static/products/country-london-paris/CO-69-1_color_blue_01.jpg"])
+assert.equal((withPhoto.offers as Record<string, unknown>).price,4515)
 assert.equal((project(pick())!.offers as Record<string, unknown>).price, 4515)
 assert.equal(project({ ...pick(), gate: { ...pick().gate, complete: false } }), null)
 assert.equal(project({ ...pick(), gate: { ...pick().gate, combinationAvailable: false } }), null)
