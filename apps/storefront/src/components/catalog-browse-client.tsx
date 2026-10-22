@@ -139,7 +139,9 @@ export function CatalogBrowseClient({
   const onClientNavigate = useCallback(
     (next: CatalogFilterState) => {
       const href = buildCatalogHref(basePath, next)
-      window.history.pushState(null, "", href)
+      if (href !== `${window.location.pathname}${window.location.search}`) {
+        window.history.pushState(null, "", href)
+      }
       setState(next)
       // Local filtering stays responsive; refresh the server pool as well so
       // a later search does not keep the prices/photos from the first visit.
