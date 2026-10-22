@@ -21,6 +21,7 @@ const native: Record<string, any> = {
 const oldCard: MotifProductCard = {handle:"card-contract",title:"Комод",thumbnail:"/static/obsolete.jpg",price_amount:95,motif_key:"ballet",motif_slug:"ballet",motif_title:"Балет",family_title:"Комод"}
 let current = structuredClone(native)
 const calls: RequestInit[] = []
+const requested: string[] = []
 const originalFetch = globalThis.fetch
 const oldBackend = process.env.MEDUSA_BACKEND_INTERNAL_URL
 process.env.MEDUSA_BACKEND_INTERNAL_URL="http://catalog-contract.invalid"
@@ -30,7 +31,10 @@ const oldReact=globals.React; globals.React=React
 globalThis.fetch = async (input, init) => {
   calls.push(init ?? {})
   const url=String(input)
-  if(url.endsWith("/store/catalog-products")) return Response.json({products:[current]})
+  requested.push(url)
+  const parsed = new URL(url)
+  if(parsed.pathname === "/store/catalog-products") return Response.json({products:
+    !parsed.searchParams.has("handle") || parsed.searchParams.get("handle") === current.handle ? [current] : []})
   if(url.includes("/store/motif-context?")) return Response.json({motif_context:{
     handle:"origin",motif_status:"matched",selected_motif:{motif_key:"ballet",motif_slug:"ballet",motif_title:"Балет"},redirect_handle:null,
     motif_options:[{motif_key:"ballet",motif_slug:"ballet",motif_title:"Балет",motif_cover:"/static/obsolete.jpg",product_handle:"card-contract",title:"Комод",price_amount:95,selected:true}],
@@ -48,7 +52,11 @@ async function renderSurfaces(expectedPrice:number, expectedPhoto:string) {
   const card=renderToStaticMarkup(React.createElement(ProductCard,{product:entry.product as never,displayGroup:entry.displayGroup}))
   assert.ok(card.includes(expectedPhoto),"actual catalog/search card renders the updated photo")
   assert.ok(card.includes(expectedPrice.toLocaleString("ru-RU")),"actual catalog/search card renders exact price")
+  const from = requested.length
   const context=(await getMotifContext({handle:"origin"}))!
+  const cardReads = requested.slice(from).filter(url => new URL(url).pathname === "/store/catalog-products")
+  assert.equal(cardReads.length,1,"related and motif options share one exact handle read")
+  assert.equal(new URL(cardReads[0]!).searchParams.get("handle"),"card-contract","PDP never loads the full catalog")
   assert.equal(context.related_products_in_motif[0]!.price_amount,expectedPrice,"related ignores stale motif scalar")
   assert.equal(context.motif_options[0]!.price_amount,expectedPrice)
   const related=renderToStaticMarkup(React.createElement(PdpRelatedInMotif,{products:context.related_products_in_motif,motifSlug:"ballet",motifPagePath:context.motif_page_path}))

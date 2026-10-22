@@ -1,5 +1,5 @@
 import { getBaseUrl, medusaFetch } from "./base"
-import { getCatalogProducts } from "./products"
+import { getCatalogProductsForHandles } from "./products"
 import { motifCatalogIndex, refreshMotifCards, refreshMotifOptions } from "../motif-card-catalog"
 
 export type MotifCtaKind = "view_product" | "view_furniture" | "view_collection"
@@ -87,8 +87,10 @@ export async function getMotifThemes(): Promise<{ motif_themes: MotifTheme[] }> 
     throw new Error(await readError(res, "Не удалось загрузить росписи"))
   }
   const data = await res.json() as { motif_themes: MotifTheme[] }
-  const raw = (await getCatalogProducts()).products
-  const index = motifCatalogIndex(Array.isArray(raw) ? raw : [])
+  const { products } = await getCatalogProductsForHandles(
+    data.motif_themes.flatMap((theme) => theme.preview_products.map((product) => product.handle))
+  )
+  const index = motifCatalogIndex(products)
   return { ...data, motif_themes: data.motif_themes.map((theme) => ({
     ...theme,
     preview_products: refreshMotifCards(theme.preview_products, index),
@@ -107,8 +109,10 @@ export async function getMotifTheme(
     throw new Error(await readError(res, "Не удалось загрузить роспись"))
   }
   const data = await res.json() as { motif_theme: MotifThemeDetail }
-  const raw = (await getCatalogProducts()).products
-  const index = motifCatalogIndex(Array.isArray(raw) ? raw : [])
+  const { products } = await getCatalogProductsForHandles(
+    [...data.motif_theme.preview_products, ...data.motif_theme.products].map((product) => product.handle)
+  )
+  const index = motifCatalogIndex(products)
   return { motif_theme: {
     ...data.motif_theme,
     preview_products: refreshMotifCards(data.motif_theme.preview_products, index),
@@ -132,8 +136,11 @@ export async function getMotifContext(args: {
   if (!data.motif_context) return null
   const context = data.motif_context
   if (!context.related_products_in_motif.length && !context.motif_options.length) return context
-  const raw = (await getCatalogProducts()).products
-  const index = motifCatalogIndex(Array.isArray(raw) ? raw : [])
+  const { products } = await getCatalogProductsForHandles([
+    ...context.related_products_in_motif.map((product) => product.handle),
+    ...context.motif_options.map((option) => option.product_handle),
+  ])
+  const index = motifCatalogIndex(products)
   return {
     ...context,
     related_products_in_motif: refreshMotifCards(context.related_products_in_motif, index),
