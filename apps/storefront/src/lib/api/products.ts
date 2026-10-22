@@ -38,12 +38,16 @@ export async function getProducts(params?: {
  *
  * Prices and photos must reflect completed admin edits on the next read.
  * Do not use the stale-while-revalidate cache used by room membership.
- * No React `cache()` wrapper: React 18.3.1 does not export `cache`, and catalog
- * pages call this once per RSC request (kids membership uses passed products).
+ * Catalog pages call this once per render; related cards use exact handle reads.
  */
 export async function getCatalogProducts() {
+  return readCatalogProducts()
+}
+
+async function readCatalogProducts(handle?: string) {
   const base = getBaseUrl()
-  const res = await medusaFetch(`${base}/store/catalog-products`)
+  const query = handle == null ? "" : `?${new URLSearchParams({ handle })}`
+  const res = await medusaFetch(`${base}/store/catalog-products${query}`)
   if (!res.ok) {
     const text = await res.text()
     let message = "Не удалось загрузить каталог."
@@ -69,6 +73,27 @@ export async function getCatalogProducts() {
     )
   }
   return data
+}
+
+/** A related block must not materialize the entire catalog on every PDP. */
+export async function getCatalogProductsForHandles(handles: string[]): Promise<{
+  products: Array<Record<string, unknown>>
+}> {
+  const unique = [...new Set(handles.filter((handle) => typeof handle === "string" && handle.length > 0))]
+  const products: Array<Record<string, unknown>> = []
+  // Bound both response memory and native graph concurrency.
+  for (let i = 0; i < unique.length; i += 3) {
+    const batch = unique.slice(i, i + 3)
+    const responses = await Promise.all(batch.map((handle) => readCatalogProducts(handle)))
+    responses.forEach((data, index) => {
+      if (!Array.isArray(data.products)) return
+      products.push(...data.products.filter(
+        (product): product is Record<string, unknown> =>
+          !!product && typeof product === "object" && product.handle === batch[index]
+      ))
+    })
+  }
+  return { products }
 }
 
 export const NOT_FOUND = "NOT_FOUND"

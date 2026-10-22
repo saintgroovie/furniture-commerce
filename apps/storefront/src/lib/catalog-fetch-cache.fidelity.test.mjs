@@ -42,7 +42,7 @@ describe("catalog-fetch-cache fidelity", () => {
     assert.doesNotMatch(productsApi, /React\.cache|requestCache\(/)
     assert.match(productsApi, /export async function getCatalogProducts/)
     assert.doesNotMatch(productsApi, /medusaCatalogFetch/)
-    assert.match(productsApi, /medusaFetch\(`\$\{base\}\/store\/catalog-products`\)/)
+    assert.match(productsApi, /medusaFetch\(`\$\{base\}\/store\/catalog-products\$\{query\}`\)/)
     assert.match(productsApi, /getProduct[\s\S]*medusaFetch/)
   })
 
