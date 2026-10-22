@@ -1621,14 +1621,18 @@ prod_atomic_install() {
   [[ -f "$src" ]] || return 1
   dir="$(dirname "$dest")"
   published="${dest}.wr-prod-new-$$"
+  PROD_ATOMIC_PUBLISH_STAGE="$published"
+  PROD_PRIVATE_PUBLISH_PATHS+=("$published")
   if [[ -r "$src" && -d "$dir" && -w "$dir" ]]; then
-    cp -p "$src" "$published" || return 1
-    mv -f "$published" "$dest" || { rm -f "$published"; return 1; }
+    cp -p "$src" "$published" || { wr_compose_env_rm "$published"; return 1; }
+    mv -f "$published" "$dest" || { wr_compose_env_rm "$published"; return 1; }
+    PROD_ATOMIC_PUBLISH_STAGE=""
     return 0
   fi
   if command -v sudo >/dev/null 2>&1; then
-    sudo -n cp -p "$src" "$published" || return 1
-    sudo -n mv -f "$published" "$dest" || { sudo -n rm -f "$published" 2>/dev/null || true; return 1; }
+    sudo -n cp -p "$src" "$published" || { wr_compose_env_rm "$published"; return 1; }
+    sudo -n mv -f "$published" "$dest" || { wr_compose_env_rm "$published"; return 1; }
+    PROD_ATOMIC_PUBLISH_STAGE=""
     return 0
   fi
   log "cannot atomically install $src -> $dest (dir not writable and no sudo -n)"
@@ -1990,7 +1994,7 @@ run_rollback() {
 # Never sweep unrelated stages belonging to another operation.
 prod_cleanup_pin_stages() {
   local path failed=0
-  for path in "${PROD_PIN_STAGE:-}" "${WR_COMPOSE_ENV_PUBLISHED_PATH:-}"; do
+  for path in "${PROD_PIN_STAGE:-}" "${WR_COMPOSE_ENV_PUBLISHED_PATH:-}" "${PROD_ATOMIC_PUBLISH_STAGE:-}" "${PROD_PRIVATE_PUBLISH_PATHS[@]:-}"; do
     [[ -n "$path" ]] || continue
     wr_compose_env_rm "$path"
     if [[ -e "$path" || -L "$path" ]]; then
@@ -2395,6 +2399,10 @@ write_required_pins_atomic() {
     return 1
   fi
   wr_compose_env_rm "$tmp"
+  if [[ -e "$tmp" || -L "$tmp" ]]; then
+    log "ERROR: rendered pin stage removal failed; exit cleanup retains the path"
+    return 1
+  fi
   PROD_PIN_STAGE=""
   need_be && PINS_WRITTEN="${PINS_WRITTEN} WOODRIGHT_BACKEND_IMAGE" \
     && printf '%s WOODRIGHT_BACKEND_IMAGE=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$BE_REF" >>"$EVIDENCE_DIR/json/pins-written.txt"

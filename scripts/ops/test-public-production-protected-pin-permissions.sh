@@ -10,7 +10,7 @@ TMP="$(mktemp -d /tmp/wr-real-public-pin-XXXXXX)"
 cleanup() { local rc=$?; if [[ "$rc" != 0 ]]; then tail -15 "$TMP/log" >&2 || true; fi; command sudo -n rm -rf -- "$TMP"; }
 trap cleanup EXIT
 source "$ROOT/ops/lib/woodright-compose-env-authority.sh"
-for fn in create_sealed_pin_stage write_required_pins_atomic prod_atomic_install restore_pins prod_cleanup_pin_stages; do
+for fn in create_sealed_pin_stage write_required_pins_atomic prod_atomic_install restore_pins prod_cleanup_pin_stages prod_on_exit prod_on_signal; do
  sed -n "/^${fn}() {/,/^}/p" "$ROOT/ops/release/cutover-public-production-pair.sh" >> "$TMP/functions.sh"
 done
 source "$TMP/functions.sh"
@@ -22,6 +22,8 @@ pin_value_of() { wr_compose_env_query_governed_value "$COMPOSE_ENV_FILE" "$1"; }
 # Intercept ONLY a specified failure; otherwise use real sudo, real root-owned
 # files and real permissions. Never chmod/open protected fixtures for the caller.
 sudo() {
+ if [[ "${INJECT:-}" == cleanup && "${2:-}" == rm && "${*: -1}" == */.wr-prod-pin-* ]]; then return 42; fi
+ if [[ "${INJECT:-}" == rollback_copy && "${2:-}" == cp && "${*: -1}" == */.env.wr-prod-new-* ]]; then command sudo "$@";return 42;fi
  if [[ "${INJECT:-}" == stage && "${2:-}" == python3 && "${4:-}" == "$COMPOSE_ENV_FILE" && "${5:-}" == "$(dirname "$COMPOSE_ENV_FILE")" ]]; then return 42; fi
  if [[ "${INJECT:-}" == render && "${2:-}" == python3 && "${4:-}" == "$COMPOSE_ENV_FILE" && "${5:-}" == */.wr-prod-pin-* ]]; then return 42; fi
  if [[ "${INJECT:-}" == copy && "${2:-}" == cp ]]; then command sudo "$@";return 42; fi
@@ -30,6 +32,8 @@ sudo() {
  command sudo "$@"
  if [[ "${SIGNAL_AFTER_RENDER:-0}" == 1 && "${2:-}" == python3 && "${4:-}" == "$COMPOSE_ENV_FILE" && "${5:-}" == */.wr-prod-pin-* ]]; then kill -TERM "$BASHPID"; fi
 }
+rm() { [[ "${INJECT:-}" != cleanup || "${*: -1}" != */.wr-prod-pin-* ]] || return 42; command rm "$@"; }
+rollback_armed() { return 1; };release_lock() { :; }
 mv() { [[ "${INJECT:-}" != move ]] || return 42; command mv "$@"; }
 cat > "$TMP/original" <<'ENV'
 WOODRIGHT_BACKEND_IMAGE=old-backend
@@ -72,12 +76,34 @@ for layout in writable protected; do
  unset INJECT
  PINS_WRITTEN='';PROD_PIN_STAGE='';WR_COMPOSE_ENV_PUBLISHED_PATH=''
  set +e
- ( trap 'prod_cleanup_pin_stages; exit 143' TERM; SIGNAL_AFTER_RENDER=1;write_required_pins_atomic ) >> "$TMP/log" 2>&1
+ ( COMMITTED=0;ROLLBACK_DONE=0;PHASE=prepared;trap prod_on_exit EXIT;trap 'prod_on_signal TERM 143' TERM;SIGNAL_AFTER_RENDER=1;write_required_pins_atomic ) >> "$TMP/log" 2>&1
  rc=$?
  set -e
  [[ "$rc" == 143 ]]
  assert_restored
- echo "PASS real $layout signal after render: live pin unchanged and sealed stage removed"
+ echo "PASS real $layout signal after render: actual exit hook cleans the sealed stage"
+ # A failed stage removal must remain tracked and be reported, then recover.
+ PINS_WRITTEN='';PROD_PIN_STAGE='';WR_COMPOSE_ENV_PUBLISHED_PATH='';PROD_ATOMIC_PUBLISH_STAGE=''
+ INJECT=cleanup
+ if write_required_pins_atomic >> "$TMP/log" 2>&1; then echo 'FAIL cleanup failure hidden';exit 1;fi
+ [[ -n "$PROD_PIN_STAGE" && -f "$PROD_PIN_STAGE" ]]
+ if prod_cleanup_pin_stages >> "$TMP/log" 2>&1; then echo 'FAIL exit cleanup failure hidden';exit 1;fi
+ unset INJECT
+ prod_cleanup_pin_stages >> "$TMP/log" 2>&1
+ restore_pins >> "$TMP/log" 2>&1
+ assert_restored
+ echo "PASS real $layout cleanup failure: retained tracking and explicit failure, then recovered"
+ # A partial backup copy on rollback must never leave an untracked sibling.
+ PINS_WRITTEN='';PROD_PIN_STAGE='';WR_COMPOSE_ENV_PUBLISHED_PATH='';PROD_ATOMIC_PUBLISH_STAGE=''
+ write_required_pins_atomic >> "$TMP/log" 2>&1
+ INJECT=rollback_copy
+ if restore_pins >> "$TMP/log" 2>&1;then echo 'FAIL partial rollback copy accepted';exit 1;fi
+ prod_cleanup_pin_stages >> "$TMP/log" 2>&1
+ [[ -z "$(find "$(dirname "$COMPOSE_ENV_FILE")" -name '.env.wr-prod-new-*')" ]]
+ unset INJECT
+ restore_pins >> "$TMP/log" 2>&1
+ assert_restored
+ echo "PASS real $layout partial rollback copy: tracked sibling cleaned, exact restore recovered"
 done
 if grep -q 'NEVER_PRINT_REAL_PIN_SECRET' "$TMP/log"; then echo 'FAIL pin contents leaked';exit 1;fi
 echo 'PASS real ownership, permission matrix, failure cleanup and signal cleanup'
