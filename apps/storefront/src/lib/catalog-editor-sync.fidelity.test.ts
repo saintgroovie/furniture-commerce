@@ -48,6 +48,7 @@ function markup(p=product,id="v1",price=pdpVariantPrice(product,product.variants
 }
 const ld=markup()!
 assert.equal(ld["@type"],"ProductGroup")
+assert.equal("variesBy" in ld,false)
 assert.equal(ld.description,getBuyerDescription(product))
 const variants=ld.hasVariant as Record<string,any>[]
 for (const [i,v] of variants.entries()) {
