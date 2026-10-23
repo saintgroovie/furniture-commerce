@@ -55,7 +55,8 @@ export async function verifyEmployeeFlow(config) {
     cleanup: {},
     state: "running",
   };
-  let owner, companyId, personId, requestId;
+  let owner, companyId, personId, requestId, invoiceId;
+  const protectedFiles = new Set();
   const attachments = [];
   async function api(path, { body, cookie, status = 200 } = {}) {
     const response = await fetch(base + path, {
@@ -262,6 +263,7 @@ export async function verifyEmployeeFlow(config) {
       entityType: "request",
       entityId: requestId,
       filename: "Контрольная спецификация.txt",
+      visibility: "assigned",
       content: content.toString("base64"),
     });
     attachments.push(fileId);
@@ -363,6 +365,186 @@ export async function verifyEmployeeFlow(config) {
     pass(
       "director assigns production; stale assignment is refused; production sees its work and file, updates notes, and cannot confirm payment or reassign work",
     );
+    const requestBefore = find(
+      await snapshot(seller.cookie),
+      "requests",
+      requestId,
+    );
+    await command(seller.cookie, {
+      type: "request.update",
+      id: requestId,
+      status: requestBefore.status,
+      notes: requestBefore.internalNotes,
+      expectedUpdatedAt: requestBefore.updatedAt,
+      details: {
+        comment: `КОНТРОЛЬНОЕ ОБРАЩЕНИЕ · ${run}\nУточнено после замера`,
+        dimensions: "125 × 85 см",
+        materials: "Дуб · уточнённая спецификация",
+        budget: "Уточняется",
+      },
+    });
+    assert.equal(
+      find(await snapshot(director.cookie), "requests", requestId).dimensions,
+      "125 × 85 см",
+    );
+    await command(
+      worker.cookie,
+      {
+        type: "request.update",
+        id: requestId,
+        status: "in_production",
+        notes: "Запрещённая спецификация",
+        expectedUpdatedAt: requestBefore.updatedAt,
+        details: { comment: "подмена", budget: "0" },
+      },
+      403,
+    );
+    invoiceId = `invoice_${run}`;
+    report.records.invoiceId = invoiceId;
+    const invoiceFields = {
+      sourceType: "request",
+      sourceId: requestId,
+      companyId,
+      payer: { type: "person", name: "КОНТРОЛЬНЫЙ ПЛАТЕЛЬЩИК · QA" },
+      lines: [
+        {
+          name: "Контрольная позиция · QA",
+          quantity: "2.5",
+          unitPriceMinor: 1999,
+        },
+      ],
+      notes: "Проверка общей базы; не выставленный счёт",
+    };
+    const draftCommand = {
+      type: "invoice.create",
+      id: invoiceId,
+      invoice: invoiceFields,
+      key: randomUUID(),
+    };
+    await command(seller.cookie, draftCommand);
+    await command(seller.cookie, draftCommand);
+    for (const account of [seller, accountant, director, god]) {
+      const invoice = find(
+        await snapshot(await login(account.email, account.password)),
+        "invoices",
+        invoiceId,
+      );
+      assert.equal(invoice.totalMinor, 4998);
+      assert.equal(invoice.version, 1);
+    }
+    assert.equal((await snapshot(worker.cookie)).invoices.length, 0);
+    await command(
+      worker.cookie,
+      {
+        type: "invoice.create",
+        id: `invoice_forbidden_${run}`,
+        invoice: invoiceFields,
+      },
+      403,
+    );
+    const changedInvoice = await command(accountant.cookie, {
+      type: "invoice.update",
+      id: invoiceId,
+      expectedVersion: 1,
+      invoice: { ...invoiceFields, notes: "Уточнение бухгалтерии · QA" },
+    });
+    assert.equal(changedInvoice.result.invoice.version, 2);
+    await command(
+      seller.cookie,
+      {
+        type: "invoice.update",
+        id: invoiceId,
+        expectedVersion: 1,
+        invoice: invoiceFields,
+      },
+      409,
+    );
+    const pdfId = `desk_${randomUUID()}`,
+      pdf = Buffer.from(
+        "%PDF-1.7\nCONTROL QA ONLY - not an accounting document\n%%EOF",
+      );
+    await command(accountant.cookie, {
+      type: "attachment.upload",
+      id: pdfId,
+      entityType: "invoice",
+      entityId: invoiceId,
+      filename: "Контрольный документ QA.pdf",
+      content: pdf.toString("base64"),
+    });
+    attachments.push(pdfId);
+    await bytes(seller.cookie, pdfId, pdf);
+    await bytes(director.cookie, pdfId, pdf);
+    await bytes(worker.cookie, pdfId, null, 403);
+    const privateId = `desk_${randomUUID()}`;
+    await command(seller.cookie, {
+      type: "attachment.upload",
+      id: privateId,
+      entityType: "request",
+      entityId: requestId,
+      filename: "Закрытое вложение QA.txt",
+      visibility: "business",
+      content: "YWJj",
+    });
+    attachments.push(privateId);
+    await bytes(worker.cookie, privateId, null, 403);
+    const scopedFiles = (
+      await api("/api/live/files", { cookie: worker.cookie })
+    ).value.attachments;
+    assert.ok(!scopedFiles.some((f) => [pdfId, privateId].includes(f.id)));
+    await command(
+      seller.cookie,
+      { type: "invoice.register", id: invoiceId },
+      403,
+    );
+    // Synthetic accounting facts are accepted ONLY inside the disposable test database.
+    if (isolated) {
+      const registration = {
+        type: "invoice.register",
+        id: invoiceId,
+        expectedVersion: 2,
+        number: `QA-${run}`,
+        documentDate: "2026-10-23",
+        confirmedFrom1C: true,
+        documentTotalMinor: 4998,
+        attachmentId: pdfId,
+      };
+      await command(
+        accountant.cookie,
+        { ...registration, documentTotalMinor: 5000 },
+        409,
+      );
+      await command(accountant.cookie, registration);
+      protectedFiles.add(pdfId);
+      assert.equal(
+        find(await snapshot(director.cookie), "invoices", invoiceId).status,
+        "registered",
+      );
+      await command(
+        accountant.cookie,
+        { type: "attachment.remove", id: pdfId },
+        409,
+      );
+      await command(
+        accountant.cookie,
+        {
+          type: "invoice.update",
+          id: invoiceId,
+          expectedVersion: 3,
+          invoice: invoiceFields,
+        },
+        409,
+      );
+    }
+    await command(seller.cookie, { type: "attachment.remove", id: privateId });
+    await command(seller.cookie, { type: "attachment.restore", id: privateId });
+    await bytes(director.cookie, privateId, Buffer.from("abc"));
+    pass(
+      "shared invoice drafts persist across independent sign-ins; stale writes fail; accounting PDF stays private; production cannot view finance; archived work files restore with exact bytes",
+    );
+    if (isolated)
+      pass(
+        "disposable-only manual 1C registration verifies total and PDF, protects registered document and refuses edits",
+      );
     const oldCompany = find(
       await snapshot(accountant.cookie),
       "companies",
@@ -547,7 +729,19 @@ export async function verifyEmployeeFlow(config) {
               expectedUpdatedAt: row.updatedAt,
             });
         }
-        for (const id of attachments)
+        if (invoiceId) {
+          const row = (await snapshot(owner)).invoices.find(
+            (i) => i.id === invoiceId,
+          );
+          if (row)
+            await command(owner, {
+              type: "invoice.archive",
+              id: invoiceId,
+              expectedVersion: row.version,
+              archived: true,
+            });
+        }
+        for (const id of attachments.filter((id) => !protectedFiles.has(id)))
           await command(owner, { type: "attachment.remove", id });
         if (companyId) {
           const row = (await snapshot(owner)).companies.find(
@@ -604,7 +798,10 @@ export async function verifyEmployeeFlow(config) {
           existingSessionsRefused: true,
           companyArchived: true,
           requestCompleted: true,
-          attachmentsRemoved: true,
+          attachmentsRemoved: protectedFiles.size === 0,
+          registeredPdfRetainedInDisposableDatabase:
+            isolated && protectedFiles.size > 0,
+          invoiceArchived: Boolean(invoiceId),
         };
       } catch (error) {
         report.cleanup = { failed: String(error.message) };

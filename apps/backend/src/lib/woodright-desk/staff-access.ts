@@ -32,6 +32,7 @@ const business = [
   "people",
   "companies",
   "orders",
+  "invoices",
   "files",
   "products",
   "rooms",
@@ -43,7 +44,7 @@ export function accessPages(role: StaffRole) {
   if (role === "accountant")
     return ["today", "companies", "orders", "invoices", "files", "profile"];
   if (role === "seller") return business;
-  return [...business, "invoices", "storefront", "integrations", "team"];
+  return [...business, "storefront", "integrations", "team"];
 }
 export function parseStaffAccess(user: any): StaffAccess {
   const value = user?.metadata?.woodright_access;
@@ -94,6 +95,9 @@ export function roleCapabilities(role: StaffRole) {
     attachments: true,
     reminders: true,
     history: true,
+    invoiceRead: role !== "production",
+    invoiceDraft: role !== "production",
+    invoiceRegister: role === "accountant" || role === "god",
     access: {
       role,
       label: ROLE_NAMES[role],
@@ -125,6 +129,8 @@ export function routeAllowed(role: StaffRole, method: string, path: string) {
   )
     return true;
   if (path === "/admin/woodright/desk/companies" && method === "GET")
+    return role !== "production";
+  if (path === "/admin/woodright/desk/invoices" && method === "GET")
     return role !== "production";
   if (
     [
@@ -201,28 +207,58 @@ export async function authorizeDeskCommand(
 ) {
   const type = command?.type;
   const caps = roleCapabilities(access.role);
-  const allowed = type?.startsWith("company.")
-    ? caps.companies
-    : type === "record.update"
-      ? caps.assignments
-      : type?.startsWith("person.")
-        ? caps.personUpdate
-        : type === "request.create"
-          ? caps.crmCreate
-          : type === "request.update"
-            ? caps.requestUpdate
-            : [
-                "attachment.upload",
-                "attachment.remove",
-                "reminder.create",
-                "reminder.update",
-              ].includes(type);
+  const allowed =
+    type === "invoice.register"
+      ? caps.invoiceRegister
+      : type?.startsWith("invoice.")
+        ? caps.invoiceDraft
+        : type?.startsWith("company.")
+          ? caps.companies
+          : type === "record.update"
+            ? caps.assignments
+            : type?.startsWith("person.")
+              ? caps.personUpdate
+              : type === "request.create"
+                ? caps.crmCreate
+                : type === "request.update"
+                  ? caps.requestUpdate
+                  : [
+                      "attachment.upload",
+                      "attachment.remove",
+                      "attachment.restore",
+                      "reminder.create",
+                      "reminder.update",
+                    ].includes(type);
   if (!allowed)
     throw new DeskError(
       403,
       "ROLE_FORBIDDEN",
       "Это действие недоступно вашей рабочей роли",
     );
+  if (
+    type === "request.update" &&
+    command.details !== undefined &&
+    !caps.crmCreate
+  )
+    throw new DeskError(
+      403,
+      "ROLE_FORBIDDEN",
+      "Спецификацию обращения редактируют продажи и руководство",
+    );
+  if (type === "invoice.archive" && access.role === "seller") {
+    const invoice = (
+      await sql.raw(
+        "select accounting_number from woodright_invoice where id=? for update",
+        [identifier(command.id)],
+      )
+    ).rows[0];
+    if (invoice?.accounting_number)
+      throw new DeskError(
+        403,
+        "ROLE_FORBIDDEN",
+        "Архив зарегистрированных счетов ведёт бухгалтер или директор",
+      );
+  }
   if (
     !caps.assignments &&
     type?.startsWith("reminder.") &&
@@ -240,14 +276,17 @@ export async function authorizeDeskCommand(
     entityType = "request";
     entityId = command.id;
   }
-  if (["attachment.remove", "reminder.update"].includes(type)) {
-    const table =
-      type === "attachment.remove"
-        ? "woodright_private_attachment"
-        : "woodright_follow_up";
+  if (
+    ["attachment.remove", "attachment.restore", "reminder.update"].includes(
+      type,
+    )
+  ) {
+    const table = type.startsWith("attachment.")
+      ? "woodright_private_attachment"
+      : "woodright_follow_up";
     const row = (
       await sql.raw(
-        `select * from ${table} where id = ? and deleted_at is null`,
+        `select * from ${table} where id = ? ${type === "attachment.restore" ? "" : "and deleted_at is null"}`,
         [identifier(command.id)],
       )
     ).rows[0];
@@ -261,7 +300,7 @@ export async function authorizeDeskCommand(
     )
       throw new DeskError(403, "ROLE_FORBIDDEN", "Измените своё напоминание");
     if (
-      type === "attachment.remove" &&
+      type.startsWith("attachment.") &&
       !["god", "director"].includes(access.role) &&
       row.uploaded_by !== access.actorId
     )
@@ -270,8 +309,36 @@ export async function authorizeDeskCommand(
         "FILE_OWNER_REQUIRED",
         "Удалить чужой файл может директор или администратор",
       );
+    if (
+      type.startsWith("attachment.") &&
+      access.role === "production" &&
+      row.visibility !== "assigned"
+    )
+      throw new DeskError(
+        403,
+        "FILE_VISIBILITY_REQUIRED",
+        "Этот документ недоступен производству",
+      );
   }
+  if (
+    type === "attachment.upload" &&
+    command.entityType === "invoice" &&
+    command.visibility &&
+    command.visibility !== "business"
+  )
+    throw new DeskError(
+      400,
+      "INVALID_FILE_VISIBILITY",
+      "Счета доступны только продажам и бухгалтерии",
+    );
   if (access.role === "production") {
+    await assertEntityAccess(sql, access, entityType, entityId);
+    if (type === "attachment.upload" && command.visibility !== "assigned")
+      throw new DeskError(
+        403,
+        "FILE_VISIBILITY_REQUIRED",
+        "Рабочие файлы производства сохраняются в назначенной работе",
+      );
     if (
       type === "request.update" &&
       !["in_production", "completed"].includes(command.status)
@@ -291,6 +358,5 @@ export async function authorizeDeskCommand(
         "ROLE_FORBIDDEN",
         "Можно назначить напоминание только себе",
       );
-    await assertEntityAccess(sql, access, entityType, entityId);
   }
 }

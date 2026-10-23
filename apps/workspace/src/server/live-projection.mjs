@@ -296,7 +296,29 @@ export function projectLive(
     rooms,
     companies,
     staff,
-    invoices: [],
+    invoices: array(sources.invoices?.invoices).map((i) => ({
+      id: text(i.id),
+      sourceType: text(i.source_type),
+      sourceId: text(i.source_id),
+      companyId: text(i.company_id),
+      payer: i.payer,
+      lines: array(i.lines),
+      totalMinor: Number(i.total_minor),
+      currency: text(i.currency),
+      notes: text(i.notes),
+      status: text(i.status),
+      number: text(i.accounting_number),
+      documentDate: text(i.accounting_date).slice(0, 10),
+      accountingRef: text(i.accounting_ref),
+      attachmentId: text(i.pdf_attachment_id),
+      registrationSource: text(i.registration_source),
+      registeredBy: text(i.registered_by),
+      registeredAt: text(i.registered_at),
+      createdBy: text(i.created_by),
+      version: i.version,
+      createdAt: text(i.created_at),
+      updatedAt: text(i.updated_at),
+    })),
     files,
     reminders: array(sources.reminders?.reminders).map((r) => ({
       id: text(r.id),
@@ -330,7 +352,20 @@ export function projectLive(
         features.writesEnabled === true &&
         features.requestUpdate === true,
       manufacturingTransition: false,
-      documents: false,
+      documents:
+        features.contract === "woodright-desk-v1" &&
+        features.invoiceRead === true,
+      invoiceDraft:
+        features.contract === "woodright-desk-v1" &&
+        features.writesEnabled === true &&
+        features.invoiceDraft === true &&
+        sourceStates.invoices?.ok === true,
+      invoiceRegister:
+        features.contract === "woodright-desk-v1" &&
+        features.writesEnabled === true &&
+        features.invoiceRegister === true &&
+        sourceStates.invoices?.ok === true,
+      fileVisibility: features.fileVisibility === true,
       attachments:
         features.contract === "woodright-desk-v1" &&
         features.writesEnabled === true &&

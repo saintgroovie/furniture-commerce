@@ -32,29 +32,39 @@ export async function POST(request: Request) {
         "reminder.update",
         "attachment.upload",
         "attachment.remove",
+        "attachment.restore",
         "company.create",
         "company.update",
         "record.update",
+        "invoice.create",
+        "invoice.update",
+        "invoice.register",
+        "invoice.archive",
       ].includes(command.type)
     ) {
       const capabilities = await upstream(
         "/admin/woodright/desk/capabilities",
         { session },
       );
-      const required = command.type.startsWith("company.")
-        ? "companies"
-        : command.type === "record.update"
-          ? "assignments"
-          : command.type === "person.update"
-            ? "personUpdate"
-            : command.type.endsWith(".create") &&
-                ["request.create", "person.create"].includes(command.type)
-              ? "crmCreate"
-              : command.type.startsWith("reminder.")
-                ? "reminders"
-                : command.type.startsWith("attachment.")
-                  ? "attachments"
-                  : "requestUpdate";
+      const required =
+        command.type === "invoice.register"
+          ? "invoiceRegister"
+          : command.type.startsWith("invoice.")
+            ? "invoiceDraft"
+            : command.type.startsWith("company.")
+              ? "companies"
+              : command.type === "record.update"
+                ? "assignments"
+                : command.type === "person.update"
+                  ? "personUpdate"
+                  : command.type.endsWith(".create") &&
+                      ["request.create", "person.create"].includes(command.type)
+                    ? "crmCreate"
+                    : command.type.startsWith("reminder.")
+                      ? "reminders"
+                      : command.type.startsWith("attachment.")
+                        ? "attachments"
+                        : "requestUpdate";
       if (
         capabilities.contract !== "woodright-desk-v1" ||
         capabilities[required] !== true

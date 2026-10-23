@@ -1,0 +1,115 @@
+.invoice-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.invoice-lines {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.invoice-line {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) 120px 160px auto;
+  gap: 12px;
+  align-items: end;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border, #e3e0d9);
+}
+.invoice-line .button {
+  margin-bottom: 2px;
+}
+.invoice-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 20px;
+  margin-top: 25px;
+}
+.invoice-detail-top,
+.invoice-list-link,
+.action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.action-row {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.invoice-amount {
+  font-size: 25px;
+}
+.invoice-list-link {
+  width: 100%;
+  padding: 8px 0;
+  text-align: left;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.invoice-list-link > span {
+  display: grid;
+  gap: 7px;
+}
+.invoice-list-link > span:last-child {
+  text-align: right;
+}
+.invoice-list-link small {
+  color: var(--muted, #716c64);
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.table-scroll th,
+.table-scroll td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--border, #e3e0d9);
+}
+.preserve-lines {
+  white-space: pre-wrap;
+}
+.checkbox-label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.checkbox-label input {
+  margin-top: 5px;
+  width: auto;
+}
+@media (max-width: 800px) {
+  .invoice-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .invoice-line {
+    grid-template-columns: 1fr 1fr;
+  }
+  .invoice-line > .field:first-child {
+    grid-column: 1/-1;
+  }
+  .invoice-list-link {
+    align-items: flex-start;
+  }
+  .invoice-list-link > span:last-child {
+    min-width: 100px;
+  }
+  .invoice-list-link small {
+    overflow-wrap: anywhere;
+  }
+}
+@media print {
+  .sidebar,
+  .topbar,
+  .mobile-bottom-nav,
+  .action-row {
+    display: none !important;
+  }
+}

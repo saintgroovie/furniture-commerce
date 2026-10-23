@@ -22,7 +22,14 @@ export function StaffOptions({
   disabled,
   label = "Ответственный",
   optional = true,
+  entityType,
 }) {
+  const allowedRoles = {
+    person: ["seller", "director", "god"],
+    company: ["seller", "accountant", "director", "god"],
+    request: ["seller", "production", "director", "god"],
+    invoice: ["seller", "accountant", "director", "god"],
+  }[entityType];
   return (
     <Field label={label}>
       <select
@@ -38,6 +45,7 @@ export function StaffOptions({
           .filter(
             (s) =>
               (s.access?.enabled !== false &&
+                (!allowedRoles || allowedRoles.includes(s.access?.role)) &&
                 !accessExpired(s) &&
                 (!data.access || ROLE_LABELS[s.access?.role])) ||
               s.id === value,
@@ -58,6 +66,7 @@ export function OwnershipFields({
   onChange,
   disabled,
   company = true,
+  entityType,
 }) {
   return (
     <>
@@ -81,6 +90,7 @@ export function OwnershipFields({
         </Field>
       )}
       <StaffOptions
+        entityType={entityType}
         data={data}
         value={value.assigneeId || ""}
         disabled={disabled}
@@ -145,6 +155,14 @@ export function Assignment({ kind, item, data, refresh, notify }) {
     >
       <form className="form-stack" onSubmit={save}>
         <OwnershipFields
+          entityType={
+            {
+              people: "person",
+              requests: "request",
+              orders: "order",
+              companies: "company",
+            }[kind]
+          }
           data={data}
           value={form}
           onChange={setForm}
@@ -403,7 +421,7 @@ export function Companies({ data, go, openPanel, refresh, notify, id }) {
               refresh={refresh}
               notify={notify}
             />
-            {["people", "requests", "orders"]
+            {["people", "requests", "orders", "invoices"]
               .filter(
                 (kind) => !data.access || data.access.pages.includes(kind),
               )
@@ -415,6 +433,7 @@ export function Companies({ data, go, openPanel, refresh, notify, id }) {
                       people: "Контакты компании",
                       requests: "Обращения компании",
                       orders: "Заказы компании",
+                      invoices: "Счета компании",
                     }[kind]
                   }
                 >
@@ -426,8 +445,19 @@ export function Companies({ data, go, openPanel, refresh, notify, id }) {
                         className="live-related"
                         onClick={() => go(kind, r.id)}
                       >
-                        <b>{r.name || r.title}</b>
-                        <span>{r.assignee}</span>
+                        <b>
+                          {r.name ||
+                            r.title ||
+                            `Счёт ${r.number || "· черновик"}`}
+                        </b>
+                        <span>
+                          {r.assignee ||
+                            (r.status === "registered"
+                              ? "Из 1С"
+                              : r.status === "archived"
+                                ? "Архив"
+                                : "Черновик")}
+                        </span>
                       </button>
                     ))}
                   {!data[kind].some((r) => r.companyId === id) && (

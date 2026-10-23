@@ -57,6 +57,8 @@ import { Companies, Team } from "./Team.jsx";
 import { Join } from "./Join.jsx";
 import { PasswordChange } from "./PasswordChange.jsx";
 import { RoleHome } from "./RoleHome.jsx";
+import { Invoices } from "./Invoices.jsx";
+import "./invoices.css";
 const NAV_NAMES = {
   today: "Рабочая очередь",
   requests: "Обращения",
@@ -260,27 +262,40 @@ export function App() {
     );
   }
   const searchResults = search.trim()
-    ? ["requests", "people", "companies", "orders", "products", "rooms"]
+    ? [
+        "requests",
+        "people",
+        "companies",
+        "orders",
+        "invoices",
+        "products",
+        "rooms",
+      ]
         .flatMap((kind) =>
           data[kind]
             .filter(
               (x) =>
                 !x.archived &&
-                `${x.id} ${x.title || x.name || x.number} ${x.payer || ""} ${x.sku || ""}`
+                `${x.id} ${x.title || x.name || x.number} ${x.payer?.name || ""} ${x.sku || ""}`
                   .toLowerCase()
                   .includes(search.toLowerCase()),
             )
             .map((x) => ({
               ...x,
-              title: kind === "invoices" ? `Счёт ${x.number}` : x.title,
+              title:
+                kind === "invoices"
+                  ? `${x.number ? `Счёт ${x.number}` : "Черновик счёта"} · ${x.payer?.name || ""}`
+                  : x.title || x.name,
               kind,
             })),
         )
         .slice(0, 20)
     : [];
   function activateSearch(r) {
-    if (r.kind === "invoices") openInvoice(r.id);
-    else if (r.kind === "files")
+    if (r.kind === "invoices") {
+      setPanel(null);
+      go("invoices", r.id);
+    } else if (r.kind === "files")
       openPanel({ type: "files", objectId: r.objectId, fileId: r.id });
     else {
       setPanel(null);
@@ -507,7 +522,7 @@ export function App() {
               ) : route.page === "files" ? (
                 <Files data={data} go={go} />
               ) : route.page === "invoices" ? (
-                <Integrations data={data} focus="accounting" />
+                <Invoices id={route.id} refresh={refresh} {...common} />
               ) : route.page === "storefront" ? (
                 <ObjectList kind="products" {...common} />
               ) : route.id ? (

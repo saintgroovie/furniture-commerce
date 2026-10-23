@@ -22,6 +22,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       )
     ).rows[0];
     if (!row) throw new DeskError(404, "NOT_FOUND", "Вложение не найдено");
+    if (access.role === "production" && row.visibility !== "assigned")
+      throw new DeskError(
+        403,
+        "FILE_VISIBILITY_REQUIRED",
+        "Этот документ недоступен производству",
+      );
     await assertEntityAccess(sql, access, row.entity_type, row.entity_id);
     await sql.transaction(async (trx) => {
       await requireEntity(trx, entity(row.entity_type), row.entity_id);

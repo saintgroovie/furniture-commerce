@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { executeTeamCommand, requireStaff, saveRecord } from "./team";
+import { executeInvoiceCommand } from "./invoices";
 
 export type Sql = {
   raw: (
@@ -22,6 +23,7 @@ export const ENTITY_TABLES = {
   request: "bespoke_request",
   order: "order",
   company: "woodright_company",
+  invoice: "woodright_invoice",
 } as const;
 export type EntityType = keyof typeof ENTITY_TABLES;
 export function entity(value: unknown): EntityType {
@@ -186,6 +188,8 @@ export async function executeDeskCommand(
     throw new DeskError(400, "INVALID_BODY", "Проверьте форму");
   const c = raw as Record<string, any>;
   const id = identifier(c.id);
+  if (typeof c.type === "string" && c.type.startsWith("invoice."))
+    return executeInvoiceCommand(sql, actor, c);
   if (["company.create", "company.update", "record.update"].includes(c.type))
     return executeTeamCommand(sql, actor, c);
   if (c.type === "person.create") {
@@ -328,6 +332,35 @@ export async function executeDeskCommand(
     if (!allowed.includes(status) && status !== "paid")
       throw new DeskError(400, "INVALID_STATUS", "Неизвестный статус");
     const notes = boundedText(c.notes, 20000);
+    let details:
+      | {
+          comment: string;
+          dimensions: string;
+          materials: string;
+          budget: string;
+        }
+      | undefined;
+    if (c.details !== undefined) {
+      if (
+        !c.details ||
+        typeof c.details !== "object" ||
+        Array.isArray(c.details) ||
+        Object.keys(c.details).some(
+          (k) => !["comment", "dimensions", "materials", "budget"].includes(k),
+        )
+      )
+        throw new DeskError(
+          400,
+          "INVALID_REQUEST_DETAILS",
+          "Проверьте описание обращения",
+        );
+      details = {
+        comment: boundedText(c.details.comment, 10201, true).trim(),
+        dimensions: boundedText(c.details.dimensions ?? "", 500).trim(),
+        materials: boundedText(c.details.materials ?? "", 2000).trim(),
+        budget: boundedText(c.details.budget ?? "", 500).trim(),
+      };
+    }
     if (
       typeof c.expectedUpdatedAt !== "string" ||
       !Number.isFinite(Date.parse(c.expectedUpdatedAt))
@@ -341,7 +374,14 @@ export async function executeDeskCommand(
       sql,
       actor,
       c.key,
-      { type: c.type, id, status, notes, expected: c.expectedUpdatedAt },
+      {
+        type: c.type,
+        id,
+        status,
+        notes,
+        ...(details ? { details } : {}),
+        expected: c.expectedUpdatedAt,
+      },
       async (trx) => {
         const current = (
           await trx.raw(
@@ -369,16 +409,34 @@ export async function executeDeskCommand(
         const updated = (
           await trx.raw(
             `update bespoke_request set status = ?, internal_notes = ?,
+        comment=case when ? then ? else comment end,
+        dimensions=case when ? then ? else dimensions end,
+        materials=case when ? then ? else materials end,
+        budget=case when ? then ? else budget end,
         quoted_at = case when ? = 'quote_sent' and status <> 'quote_sent' then now() else quoted_at end,
         updated_at = greatest(date_trunc('milliseconds', clock_timestamp()), date_trunc('milliseconds', updated_at) + interval '1 millisecond')
         where id = ? returning *`,
-            [status, notes, status, id],
+            [
+              status,
+              notes,
+              Boolean(details),
+              details?.comment ?? null,
+              Boolean(details),
+              details?.dimensions ?? null,
+              Boolean(details),
+              details?.materials ?? null,
+              Boolean(details),
+              details?.budget ?? null,
+              status,
+              id,
+            ],
           )
         ).rows[0];
         await audit(trx, actor, "request", id, "request.updated", {
           from: current.status,
           to: status,
           notes_changed: current.internal_notes !== notes,
+          ...(details ? { specification_changed: true } : {}),
         });
         return { bespoke_request: updated };
       },
@@ -406,7 +464,7 @@ export async function executeDeskCommand(
         await requireEntity(trx, type, target);
         const assignee =
           c.assigneeId !== undefined
-            ? await requireStaff(trx, c.assigneeId)
+            ? await requireStaff(trx, c.assigneeId, type)
             : actor;
         const reminder = (
           await trx.raw(
@@ -455,9 +513,21 @@ export async function executeDeskCommand(
         ...(c.assigneeId !== undefined ? { assigneeId: c.assigneeId } : {}),
       },
       async (trx) => {
+        const existing = (
+          await trx.raw(
+            "select entity_type from woodright_follow_up where id=? and deleted_at is null for update",
+            [id],
+          )
+        ).rows[0];
+        if (!existing)
+          throw new DeskError(404, "NOT_FOUND", "Напоминание не найдено");
         const assignee =
           c.assigneeId !== undefined
-            ? await requireStaff(trx, c.assigneeId)
+            ? await requireStaff(
+                trx,
+                c.assigneeId,
+                entity(existing.entity_type),
+              )
             : null;
         const row = (
           await trx.raw(

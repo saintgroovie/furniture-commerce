@@ -78,6 +78,7 @@ function Reminders({ type, id, data, refresh, notify }) {
               </div>
               {data.capabilities.assignments && (
                 <StaffOptions
+                  entityType={type}
                   data={data}
                   value={r.assigneeId}
                   onChange={(assigneeId) =>
@@ -172,6 +173,7 @@ function Reminders({ type, id, data, refresh, notify }) {
           </Field>
           {data.capabilities.assignments && (
             <StaffOptions
+              entityType={type}
               data={data}
               value={assigneeId}
               onChange={setAssigneeId}
@@ -193,7 +195,15 @@ function Reminders({ type, id, data, refresh, notify }) {
     </Section>
   );
 }
-function Attachments({ type, id, data, notify, refresh }) {
+export function Attachments({
+  type,
+  id,
+  data,
+  notify,
+  refresh,
+  onLoaded,
+  protectedIds = [],
+}) {
   const [rows, setRows] = useState([]),
     [total, setTotal] = useState(0),
     [loading, setLoading] = useState(true);
@@ -201,12 +211,17 @@ function Attachments({ type, id, data, notify, refresh }) {
     [busy, setBusy] = useState(false),
     [file, setFile] = useState(null);
   const [confirm, setConfirm] = useState("");
+  const [visibility, setVisibility] = useState(
+    data.access?.role === "production" ? "assigned" : "business",
+  );
+  const [archived, setArchived] = useState(false);
   const input = useRef(null),
     send = useDeskCommand();
-  const url = `/api/live/attachments?entityType=${type}&entityId=${encodeURIComponent(id)}`;
+  const url = `/api/live/attachments?entityType=${type}&entityId=${encodeURIComponent(id)}&archived=${archived ? "1" : "0"}`;
   async function reload() {
     const result = await liveFetch(url);
     setRows(result.attachments);
+    onLoaded?.(archived ? [] : result.attachments);
     setTotal(result.count);
   }
   useEffect(() => {
@@ -220,6 +235,7 @@ function Attachments({ type, id, data, notify, refresh }) {
     liveFetch(url, { signal: controller.signal })
       .then((result) => {
         setRows(result.attachments);
+        onLoaded?.(archived ? [] : result.attachments);
         setTotal(result.count);
       })
       .catch((e) => {
@@ -229,7 +245,7 @@ function Attachments({ type, id, data, notify, refresh }) {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [url, data.capabilities.attachmentRead]);
+  }, [url, data.capabilities.attachmentRead, onLoaded, archived]);
   async function upload(e) {
     e.preventDefault();
     if (!file) return;
@@ -252,6 +268,7 @@ function Attachments({ type, id, data, notify, refresh }) {
         entityId: id,
         filename: file.name,
         content,
+        ...(data.capabilities.fileVisibility ? { visibility } : {}),
       });
       setFile(null);
       if (input.current) input.current.value = "";
@@ -279,8 +296,48 @@ function Attachments({ type, id, data, notify, refresh }) {
       setBusy(false);
     }
   }
+  async function restore(fileId) {
+    setBusy(true);
+    setError("");
+    try {
+      await send({ type: "attachment.restore", id: fileId });
+      await reload();
+      await refresh();
+      notify("Вложение восстановлено");
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <Section title="Файлы и документы" action={<Badge>{rows.length}</Badge>}>
+      {data.capabilities.fileVisibility && (
+        <div className="action-row">
+          <Button
+            type="button"
+            variant={archived ? "secondary" : "primary"}
+            disabled={busy}
+            onClick={() => {
+              setArchived(false);
+              setConfirm("");
+            }}
+          >
+            Вложения
+          </Button>
+          <Button
+            type="button"
+            variant={archived ? "primary" : "secondary"}
+            disabled={busy}
+            onClick={() => {
+              setArchived(true);
+              setConfirm("");
+            }}
+          >
+            Архив файлов
+          </Button>
+        </div>
+      )}
       {!data.capabilities.attachmentRead ? (
         <Notice>
           Для договоров и чертежей нужно установить приватное хранилище.
@@ -293,27 +350,45 @@ function Attachments({ type, id, data, notify, refresh }) {
           {rows.map((f) => (
             <li key={f.id}>
               <div>
-                <a
-                  className="inline-link"
-                  href={workspacePath(
-                    `/api/live/attachments/${encodeURIComponent(f.id)}`,
-                  )}
-                  download
-                >
-                  {f.filename}
-                </a>
+                {archived ? (
+                  <strong>{f.filename}</strong>
+                ) : (
+                  <a
+                    className="inline-link"
+                    href={workspacePath(
+                      `/api/live/attachments/${encodeURIComponent(f.id)}`,
+                    )}
+                    download
+                  >
+                    {f.filename}
+                  </a>
+                )}
                 <small>
                   {new Intl.NumberFormat("ru-RU", {
                     maximumFractionDigits: 1,
                   }).format(f.size / 1024)}{" "}
                   КБ · {date(f.created_at)}
+                  {protectedIds.includes(f.id) &&
+                    " · PDF зарегистрированного счёта сохранён"}
+                  {data.capabilities.fileVisibility &&
+                    ` · ${f.visibility === "assigned" ? "Доступно назначенному производству" : "Продажи и бухгалтерия"}`}
                 </small>
               </div>
               {data.capabilities.attachments &&
+                !protectedIds.includes(f.id) &&
                 (!data.access ||
                   ["god", "director"].includes(data.access.role) ||
                   f.uploaded_by === data.session.id) &&
-                (confirm === f.id ? (
+                (archived ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => restore(f.id)}
+                  >
+                    Восстановить
+                  </Button>
+                ) : confirm === f.id ? (
                   <div className="desk-row-actions">
                     <span>Убрать из карточки?</span>
                     <Button
@@ -352,11 +427,11 @@ function Attachments({ type, id, data, notify, refresh }) {
           постраничной загрузки.
         </Notice>
       )}
-      {data.capabilities.attachments && (
+      {data.capabilities.attachments && !archived && (
         <form className="form-stack" onSubmit={upload}>
           <Field
             label="Прикрепить файл"
-            hint="До 8 МБ. Документ доступен только сотрудникам после входа."
+            hint="До 8 МБ. Доступ проверяется при каждом скачивании."
           >
             <input
               ref={input}
@@ -368,6 +443,22 @@ function Attachments({ type, id, data, notify, refresh }) {
               }}
             />
           </Field>
+          {data.capabilities.fileVisibility &&
+            ["request", "order"].includes(type) &&
+            data.access?.role !== "production" && (
+              <Field label="Кому доступен файл">
+                <select
+                  value={visibility}
+                  onChange={(e) => setVisibility(e.target.value)}
+                  disabled={busy}
+                >
+                  <option value="business">Продажи и бухгалтерия</option>
+                  <option value="assigned">
+                    Также назначенному сотруднику производства
+                  </option>
+                </select>
+              </Field>
+            )}
           <Button type="submit" disabled={busy || !file}>
             {busy ? "Загружаем…" : "Прикрепить"}
           </Button>

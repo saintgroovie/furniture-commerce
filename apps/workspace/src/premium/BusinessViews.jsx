@@ -41,6 +41,7 @@ import {
   Drawer,
 } from "./ui.jsx";
 import { ProductThumbnail } from "./ProductThumbnail.jsx";
+import {linkedInvoices} from "./invoice-input.mjs";
 import {
   TODAY,
   STATUS,
@@ -315,7 +316,7 @@ export function TodayView({ data, go, openPanel, mutate, notify, ...rest }) {
                 label="Счета"
                 count={
                   data.capabilities.documents
-                    ? data.invoices.filter((i) => i.objectId === item.id).length
+                    ? linkedInvoices(data,item.id).length
                     : undefined
                 }
                 onClick={() =>

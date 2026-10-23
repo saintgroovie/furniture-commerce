@@ -7,6 +7,7 @@ import {
 import {
   attachFile,
   removeAttachment,
+  restoreAttachment,
   PrivateFileStore,
 } from "../../../../../lib/woodright-desk/private-files";
 import {
@@ -24,7 +25,14 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           [actorId],
         )
       ).rows[0];
-      await authorizeDeskCommand(trx, parseStaffAccess(user), command);
+      const currentAccess = parseStaffAccess(user);
+      if (
+        command.type === "attachment.upload" &&
+        command.visibility === undefined
+      )
+        command.visibility =
+          currentAccess.role === "production" ? "assigned" : "business";
+      await authorizeDeskCommand(trx, currentAccess, command);
       return command.type === "attachment.upload"
         ? await attachFile(
             trx,
@@ -36,7 +44,16 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           )
         : command.type === "attachment.remove"
           ? await removeAttachment(trx, actorId, command)
-          : await executeDeskCommand(trx, actorId, command);
+          : command.type === "attachment.restore"
+            ? await restoreAttachment(
+                trx,
+                actorId,
+                command,
+                new PrivateFileStore(
+                  process.env.WOODRIGHT_PRIVATE_FILES_ROOT || "",
+                ),
+              )
+            : await executeDeskCommand(trx, actorId, command);
     });
     res.setHeader("Cache-Control", "private, no-store");
     res.json({ ok: true, result });
