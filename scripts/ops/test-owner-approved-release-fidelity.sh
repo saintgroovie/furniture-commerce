@@ -455,6 +455,160 @@ else
 fi
 unset WOODRIGHT_OWNER_APPROVAL_COMPONENT
 
+BE_APP="1111111111111111111111111111111111111111"
+BE_NEW="sha256:$(printf 'a%.0s' {1..64})"
+SF_KEEP="sha256:$(printf 'd%.0s' {1..64})"
+BE_CUR="sha256:$(printf 'c%.0s' {1..64})"
+SF_REV="0000000000000000000000000000000000000000"
+export WOODRIGHT_META_ROOT="$TMP/meta-be"
+mkdir -p "$WOODRIGHT_META_ROOT/public_production"
+APPROVAL="$WOODRIGHT_META_ROOT/public_production/OWNER_APPROVED_RELEASE.json"
+python3 - "$APPROVAL" "$BE_APP" "$BE_NEW" "$SF_KEEP" "$SF_REV" "$BE_CUR" <<'PY'
+import json, sys
+path, sha, be, sf, retained, cur = sys.argv[1:7]
+json.dump({
+  "schema_version": 1,
+  "environment": "public_production",
+  "component": "backend",
+  "application_sha": sha,
+  "backend_digest": be,
+  "storefront_digest": sf,
+  "retained_storefront_revision": retained,
+  "expected_current_storefront_digest": sf,
+  "expected_current_backend_digest": cur,
+  "owner_decision": "approved",
+  "owner_authorization_id": "OWNER-PASS-test-backend-component",
+  "issued_at": "2026-10-23T00:00:00Z",
+  "evidence_reference": "fixture",
+  "tooling_schema_version": "owner-approved-release-v1",
+  "reservation_state": "reserved",
+}, open(path, "w"), indent=2)
+open(path, "a").write("\n")
+PY
+chmod 0644 "$APPROVAL"
+export WOODRIGHT_OWNER_APPROVAL_COMPONENT=backend
+if wr_require_owner_approved_release public_production "$BE_APP" "$BE_NEW" "$SF_KEEP" "$TMP/ev-be" gate_a; then
+  [[ "$WR_OA_RETAINED_STOREFRONT_REVISION" == "$SF_REV" ]] && pass "backend retained storefront revision loaded" || fail "backend retained revision"
+  [[ "$WR_OA_COMPONENT" == "backend" ]] && pass "backend component loaded" || fail "backend component"
+else
+  fail "backend approval denied result=$WR_OWNER_APPROVAL_RESULT"
+fi
+export WOODRIGHT_OWNER_APPROVAL_COMPONENT=pair
+if wr_require_owner_approved_release public_production "$BE_APP" "$BE_NEW" "$SF_KEEP" "$TMP/ev-be" gate_a; then
+  fail "backend approval authorized a pair request"
+else
+  pass "backend approval rejected for pair request result=$WR_OWNER_APPROVAL_RESULT"
+fi
+unset WOODRIGHT_OWNER_APPROVAL_COMPONENT
+mkdir -p "$WOODRIGHT_META_ROOT/public_demo"
+python3 - "$APPROVAL" "$WOODRIGHT_META_ROOT/public_demo/OWNER_APPROVED_RELEASE.json" <<'PY'
+import json, sys
+src, dest = sys.argv[1:3]
+d = json.load(open(src))
+d["environment"] = "public_demo"
+json.dump(d, open(dest, "w"))
+PY
+export WOODRIGHT_OWNER_APPROVAL_COMPONENT=backend
+if wr_require_owner_approved_release public_demo "$BE_APP" "$BE_NEW" "$SF_KEEP" "$TMP/ev-be" gate_a; then
+  fail "public_demo backend approval accepted"
+else
+  pass "public_demo backend approval rejected result=$WR_OWNER_APPROVAL_RESULT"
+fi
+python3 - "$APPROVAL" "$BE_APP" "$BE_NEW" "$SF_KEEP" "$BE_CUR" <<'PY'
+import json, sys
+path, sha, be, sf, cur = sys.argv[1:6]
+d = json.load(open(path))
+d["environment"] = "public_production"
+d.pop("retained_storefront_revision", None)
+json.dump(d, open(path, "w"))
+PY
+if wr_require_owner_approved_release public_production "$BE_APP" "$BE_NEW" "$SF_KEEP" "$TMP/ev-be" gate_a; then
+  fail "backend approval missing retained revision accepted"
+else
+  [[ "$WR_OWNER_APPROVAL_RESULT" == "OWNER_APPROVAL_MALFORMED" ]] \
+    && pass "backend approval missing retained revision rejected" \
+    || fail "missing retained result=$WR_OWNER_APPROVAL_RESULT"
+fi
+unset WOODRIGHT_OWNER_APPROVAL_COMPONENT
+
+if bash "$WRITE_SF" --environment public_demo --component backend \
+  --application-sha "$BE_APP" --backend-digest "$BE_NEW" --storefront-digest "$SF_KEEP" \
+  --retained-storefront-revision "$SF_REV" \
+  --expected-current-storefront-digest "$SF_KEEP" \
+  --expected-current-backend-digest "$BE_CUR" \
+  --owner-authorization-id OWNER-PASS-test-backend-component \
+  --evidence-reference "$TMP" --evidence-dir "$TMP/ev-be-demo" >"$TMP/ev-be-demo.out" 2>&1; then
+  fail "writer accepted backend approval for public_demo"
+else
+  grep -q 'exact public_production' "$TMP/ev-be-demo.out" \
+    && pass "writer refuses backend approval outside public_production" \
+    || fail "writer public_demo error text"
+fi
+
+if bash "$WRITE_SF" --environment public_production --component backend \
+  --application-sha "$BE_APP" --backend-digest "$BE_NEW" --storefront-digest "$SF_KEEP" \
+  --retained-storefront-revision "$SF_REV" \
+  --expected-current-storefront-digest "$SF_KEEP" \
+  --expected-current-backend-digest "$BE_CUR" \
+  --owner-authorization-id OWNER-PASS-test-backend-component \
+  --evidence-reference "$TMP" --evidence-dir "$TMP/ev-be-dry" >"$TMP/ev-be-dry.out" 2>&1; then
+  python3 - "$TMP/ev-be-dry/json/OWNER_APPROVED_RELEASE.staged.json" <<'PY' || fail "staged backend approval shape"
+import json, sys
+d = json.load(open(sys.argv[1]))
+assert d["component"] == "backend", d
+assert d["retained_storefront_revision"]
+assert "retained_backend_revision" not in d, d
+assert d["expected_current_storefront_digest"] == d["storefront_digest"]
+assert d["expected_current_backend_digest"] != d["backend_digest"]
+assert d["reservation_state"] == "reserved", d
+PY
+  pass "staged backend approval has retained storefront fields"
+else
+  fail "backend approval dry-run failed"
+  sed -n '1,40p' "$TMP/ev-be-dry.out"
+fi
+
+python3 - "$APPROVAL" "$BE_APP" "$BE_NEW" "$SF_KEEP" "$SF_REV" "$BE_CUR" <<'PY'
+import json, sys
+path, sha, be, sf, retained, cur = sys.argv[1:7]
+json.dump({
+  "schema_version": 1,
+  "environment": "public_production",
+  "component": "backend",
+  "application_sha": sha,
+  "backend_digest": be,
+  "storefront_digest": sf,
+  "retained_storefront_revision": retained,
+  "expected_current_storefront_digest": sf,
+  "expected_current_backend_digest": cur,
+  "owner_decision": "approved",
+  "owner_authorization_id": "OWNER-PASS-test-backend-component",
+  "issued_at": "2026-10-23T00:00:00Z",
+  "evidence_reference": "fixture",
+  "tooling_schema_version": "owner-approved-release-v1",
+  "reservation_state": "reserved",
+  "approval_generation": "apr1-0123456789abcdef0123456789abcdef",
+}, open(path, "w"), indent=2, sort_keys=True)
+open(path, "a").write("\n")
+PY
+BE_CS="$(shasum -a 256 "$APPROVAL" | awk '{print $1}')"
+if bash "$WRITE_SF" --environment public_production --component backend \
+  --application-sha "$BE_APP" --backend-digest "$BE_NEW" --storefront-digest "$SF_KEEP" \
+  --retained-storefront-revision "$SF_REV" \
+  --expected-current-storefront-digest "$SF_KEEP" \
+  --expected-current-backend-digest "$BE_CUR" \
+  --owner-authorization-id OWNER-PASS-test-backend-component \
+  --evidence-reference "$TMP" --evidence-dir "$TMP/ev-be-same" \
+  --expected-previous-approval-checksum "$BE_CS" \
+  >"$TMP/ev-be-same.out" 2>&1; then
+  grep -q 'OWNER_APPROVAL_UNCHANGED' "$TMP/ev-be-same.out" \
+    && pass "reserved backend dry-run recognizes the same candidate" \
+    || fail "reserved backend dry-run did not report unchanged"
+else
+  fail "reserved backend dry-run refused the same candidate"
+  sed -n '1,40p' "$TMP/ev-be-same.out"
+fi
+
 if [[ "$FAILED" -eq 0 ]]; then
   echo "ALL OWNER-APPROVED RELEASE FIDELITY TESTS PASSED"
   exit 0
