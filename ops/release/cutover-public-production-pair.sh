@@ -1066,12 +1066,24 @@ poll_note() {
 wait_component_ready() {
   local kind="$1" name="$2" deadline="$3" label="${4:-forward}"
   local url started now attempt=0 blob status health restarts fields=() line
-  local docker_ready=0 healthcheck_present=1
+  local docker_ready=0 healthcheck_present=1 retained_peer=0
+  # A frozen peer keeps its lifetime restart counter. Every new restart or
+  # identity change still fails the full no-touch contract, including HTTP wait.
+  if [[ "$label" == "forward" ]] && {
+    [[ "$COMPONENT" == "backend" && "$kind" == "storefront" ]] ||
+    [[ "$COMPONENT" == "storefront" && "$kind" == "backend" ]];
+  }; then
+    retained_peer=1
+  fi
   url="$(readiness_url_for "$kind")"
   started="$(date +%s)"
   poll_note "$kind" "begin label=$label container=$name deadline=${deadline}s url=$url"
   while :; do
     attempt=$((attempt + 1))
+    if [[ "$retained_peer" == "1" ]] && ! assert_untouched_peer; then
+      log "readiness: $kind retained peer changed - terminal"
+      return 1
+    fi
     if ! prod_docker inspect "$name" >/dev/null 2>&1; then
       poll_note "$kind" "attempt=$attempt container=absent"
       log "readiness: $kind container '$name' is absent - terminal"
@@ -1093,7 +1105,11 @@ wait_component_ready() {
         return 1
         ;;
     esac
-    if [[ "$restarts" =~ ^[0-9]+$ ]] && [[ "$restarts" -ge "$READY_RESTART_LOOP_THRESHOLD" ]]; then
+    if [[ "$retained_peer" == "1" && "$status" == "restarting" ]]; then
+      log "readiness: $kind retained peer is restarting - terminal"
+      return 1
+    fi
+    if [[ "$retained_peer" == "0" ]] && [[ "$restarts" =~ ^[0-9]+$ ]] && [[ "$restarts" -ge "$READY_RESTART_LOOP_THRESHOLD" ]]; then
       log "readiness: $kind restart loop detected (RestartCount=$restarts >= $READY_RESTART_LOOP_THRESHOLD) - terminal"
       return 1
     fi
@@ -1129,6 +1145,10 @@ wait_component_ready() {
   while :; do
     attempt=$((attempt + 1))
     code="$(http_status "$url")"
+    if [[ "$retained_peer" == "1" ]] && ! assert_untouched_peer; then
+      log "readiness: $kind retained peer changed during HTTP readiness - terminal"
+      return 1
+    fi
     poll_note "$kind" "attempt=$attempt http=$url code=$code"
     if [[ "$code" == "200" ]]; then
       log "readiness: $kind HTTP $url code=200"
