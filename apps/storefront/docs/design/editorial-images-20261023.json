@@ -70,5 +70,12 @@
       "generated": "/Users/leonidmbp/.codex/generated_images/01a15bb9-2268-7af2-b8d4-acb180bd3b5c/exec-2d035c85-79a2-460f-b74c-7e72d17b66ba.png",
       "workspace_asset": "/Users/leonidmbp/Documents/ChatGPT/Woodright/partners-project-cta/apps/storefront/public/images/footer/projects-workshop-soft.webp"
     }
-  ]
+  ],
+  "smooth_wall_revision": {
+    "tool": "built-in image_gen",
+    "prompt": "Precise background surface correction ONLY. Edit this photograph. Replace the visibly mottled, noisy plaster wall with a perfectly smooth professionally painted wall in one uniform pale milk-gray/off-white color, approximately #e9e7e2. The wall is flat matte paint, not decorative plaster, not limewash, not stucco. Absolutely NO mottling, cloudy patches, swirls, speckle, faux brush marks, surface bumps, granular texture or AI noise on the wall. Allow only a very broad subtle real illumination gradient and the physically necessary soft furniture shadow; the paint itself must be completely uniform. Preserve the Greenwich console exactly: same dark muted blue-green fluted drawer, same light natural wood frame, grain and tapered legs, identical edges and proportions. Keep the oak floor, white skirting, camera crop and neutral daylight unchanged. Do not smooth or recolor the furniture. No added objects, text, watermark or borders. Output the corrected square photograph.",
+    "edit_target": "greenwich-wood-accent.webp",
+    "generated": "/Users/leonidmbp/.codex/generated_images/01a15bb9-2268-7af2-b8d4-acb180bd3b5c/exec-c17c85ab-1920-4bb5-ae1c-5bc1ac5a6213.png",
+    "workspace_asset": "/Users/leonidmbp/Documents/ChatGPT/Woodright/editorial-publish-20261023/apps/storefront/public/editorial/home/craft/greenwich-wood-accent.webp"
+  }
 }
