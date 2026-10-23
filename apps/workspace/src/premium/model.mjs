@@ -337,3 +337,11 @@ export function todayGroups(data) {
     },
   ].filter((g) => g.items.length);
 }
+
+// A work item can be assigned independently from its customer contact.
+export function queueAssignee(kind, item, person) {
+  if (kind === "request" || kind === "order") {
+    return item?.assignee || "Не назначен";
+  }
+  return person?.assignee || "Не назначен";
+}
