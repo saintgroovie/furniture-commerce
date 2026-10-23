@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState, useTransition, type ReactNode } from "react"
 import { ProductCard } from "@/components/product-card"
 import { PromotionCard } from "@/components/promotion-card"
@@ -61,15 +61,6 @@ type Props = {
   promotionSlot?: PromotionSlotPayload | null
 }
 
-function stateFromLocation(): CatalogFilterState {
-  if (typeof window === "undefined") {
-    return { category: [], collection: [] }
-  }
-  return parseCatalogFilterState(
-    Object.fromEntries(new URLSearchParams(window.location.search))
-  )
-}
-
 /**
  * SSR loads the catalog once and passes the scoped pool in.
  * Filter clicks recompute locally. A second full-catalog fetch runs only
@@ -89,8 +80,14 @@ export function CatalogBrowseClient({
   promotionSlot = null,
 }: Props) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const hasHydratedPool = Array.isArray(hydratedPool)
-  const [state, setState] = useState<CatalogFilterState>(initialState)
+  // Next synchronizes this hook for both Link navigation and native history
+  // changes. A retained catalog component must follow the current URL too.
+  const state = useMemo(
+    () => searchParams ? parseCatalogFilterState(Object.fromEntries(searchParams)) : initialState,
+    [searchParams, initialState]
+  )
   const [fetchedPool, setFetchedPool] = useState<Array<Record<string, unknown>> | null>(
     null
   )
@@ -104,14 +101,6 @@ export function CatalogBrowseClient({
   const products = pool ?? atfProducts
   const poolReady = poolStatus === "full"
   const kidsKey = kidsProductIds.join(",")
-
-  useEffect(() => {
-    const onPopState = () => {
-      startTransition(() => setState(stateFromLocation()))
-    }
-    window.addEventListener("popstate", onPopState)
-    return () => window.removeEventListener("popstate", onPopState)
-  }, [])
 
   useEffect(() => {
     if (hasHydratedPool) return
@@ -142,7 +131,6 @@ export function CatalogBrowseClient({
       if (href !== `${window.location.pathname}${window.location.search}`) {
         window.history.pushState(null, "", href)
       }
-      setState(next)
       // Local filtering stays responsive; refresh the server pool as well so
       // a later search does not keep the prices/photos from the first visit.
       startTransition(() => router.refresh())
