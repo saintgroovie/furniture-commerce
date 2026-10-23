@@ -1,4 +1,4 @@
-import { parseStaffAccess } from "./staff-access";
+import { parseStaffAccess, accessPages } from "./staff-access";
 import {
   audit,
   DeskError,
@@ -67,7 +67,7 @@ export async function teamInstalled(sql: Sql) {
   ).rows[0];
   return Boolean(row?.company && row?.record);
 }
-export async function requireStaff(sql: Sql, id: unknown) {
+export async function requireStaff(sql: Sql, id: unknown, type?: EntityType) {
   const value = identifier(id);
   const row = (
     await sql.raw(
@@ -76,8 +76,9 @@ export async function requireStaff(sql: Sql, id: unknown) {
     )
   ).rows[0];
   let available = false;
+  let access: ReturnType<typeof parseStaffAccess> | undefined;
   try {
-    parseStaffAccess(row);
+    access = parseStaffAccess(row);
     available = true;
   } catch {}
   if (!available)
@@ -85,6 +86,21 @@ export async function requireStaff(sql: Sql, id: unknown) {
       400,
       "INVALID_ASSIGNEE",
       "Сотрудник больше не доступен. Обновите список.",
+    );
+  const targetPage =
+    type &&
+    {
+      person: "people",
+      request: "requests",
+      company: "companies",
+      order: "orders",
+      invoice: "invoices",
+    }[type];
+  if (targetPage && access && !accessPages(access.role).includes(targetPage))
+    throw new DeskError(
+      400,
+      "ASSIGNEE_ROLE_REQUIRED",
+      "Выберите сотрудника, чья роль позволяет работать с этой карточкой",
     );
   return value;
 }
@@ -96,6 +112,12 @@ export async function saveRecord(
   input: any,
   expected: number,
 ) {
+  if (type === "invoice")
+    throw new DeskError(
+      400,
+      "INVALID_ASSIGNMENT",
+      "Связь счёта с компанией задаётся в самом счёте",
+    );
   if (!Number.isSafeInteger(expected) || expected < 0)
     throw new DeskError(
       428,
@@ -111,7 +133,7 @@ export async function saveRecord(
   const assigneeId =
     input.assigneeId === null || input.assigneeId === ""
       ? null
-      : await requireStaff(trx, input.assigneeId);
+      : await requireStaff(trx, input.assigneeId, type);
   await requireEntity(trx, type, id);
   await trx.raw("select pg_advisory_xact_lock(hashtext(?))", [
     `desk-record:${type}:${id}`,

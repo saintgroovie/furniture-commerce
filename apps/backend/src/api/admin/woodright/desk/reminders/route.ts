@@ -11,7 +11,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     // One snapshot supplies rows and count so a concurrent insert cannot silently truncate the list.
     const scoped =
       access.role === "production"
-        ? "and exists (select 1 from woodright_desk_record a where a.entity_type=woodright_follow_up.entity_type and a.entity_id=woodright_follow_up.entity_id and a.assignee_id=?)"
+        ? "and entity_type in ('request','order') and exists (select 1 from woodright_desk_record a where a.entity_type=woodright_follow_up.entity_type and a.entity_id=woodright_follow_up.entity_id and a.assignee_id=?)"
         : "";
     const bindings =
       access.role === "production"

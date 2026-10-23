@@ -7,6 +7,8 @@ import path from "node:path";
 import knex from "knex";
 import { DESK_SCHEMA } from "./schema";
 import { TEAM_SCHEMA } from "./team-schema";
+import { INVOICE_SCHEMA } from "./invoice-schema";
+import { GET as listInvoices } from "../../api/admin/woodright/desk/invoices/route";
 import { GET as listStaff } from "../../api/admin/woodright/desk/staff/route";
 import { MANGO_SCHEMA } from "./mango-schema";
 import { mangoSignature, receiveMangoCall } from "./mango";
@@ -17,6 +19,7 @@ import {
   MAX_ATTACHMENT_BYTES,
   PrivateFileStore,
   removeAttachment,
+  restoreAttachment,
 } from "./private-files";
 import { deskContext } from "./http";
 import { GET as download } from "../../api/admin/woodright/desk/attachments/[id]/content/route";
@@ -24,6 +27,7 @@ import { GET as listReminders } from "../../api/admin/woodright/desk/reminders/r
 import { GET as listAttachments } from "../../api/admin/woodright/desk/attachments/route";
 import { GET as listFiles } from "../../api/admin/woodright/desk/files/route";
 import { GET as listHistory } from "../../api/admin/woodright/desk/history/route";
+import { authorizeDeskCommand } from "./staff-access";
 
 const databaseUrl = process.env.WOODRIGHT_DESK_TEST_DATABASE_URL;
 if (!databaseUrl)
@@ -61,6 +65,7 @@ function request(
   query: Record<string, unknown> = {},
   params = {},
   actorType = "user",
+  role = "god",
 ) {
   return {
     query,
@@ -74,7 +79,7 @@ function request(
               id: "staff_1",
               email: "staff@example.test",
               metadata: {
-                woodright_access: { role: "god", enabled: true, version: 1 },
+                woodright_access: { role, enabled: true, version: 1 },
               },
             }),
           };
@@ -107,8 +112,11 @@ function response() {
 }
 before(async () => {
   await db.raw(DESK_SCHEMA);
-  await db.raw("drop table if exists woodright_desk_record, woodright_company");
+  await db.raw(
+    "drop table if exists woodright_invoice, woodright_desk_record, woodright_company",
+  );
   await db.raw(TEAM_SCHEMA);
+  await db.raw(INVOICE_SCHEMA);
   await db.raw(`create table if not exists "user" (id text primary key,email text,first_name text,last_name text,deleted_at timestamptz, metadata jsonb);
     alter table "user" add column if not exists metadata jsonb;
     insert into "user"(id,email,first_name) values ('staff_1','staff@example.test','Первый'),('staff_2','second@example.test','Второй') on conflict(id) do nothing;
@@ -122,7 +130,7 @@ before(async () => {
     quoted_at timestamptz null, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), deleted_at timestamptz null);
     create table if not exists lead (id text primary key, source text, name text, email text, phone text, comment text, payload jsonb, status text, created_at timestamptz not null default now(), updated_at timestamptz not null default now(), deleted_at timestamptz null);
     create table if not exists "order" (id text primary key, deleted_at timestamptz null);`);
-  await db.raw(`truncate woodright_follow_up, woodright_private_attachment, woodright_desk_event, woodright_desk_operation, bespoke_request, lead, "order";
+  await db.raw(`truncate woodright_invoice, woodright_follow_up, woodright_private_attachment, woodright_desk_event, woodright_desk_operation, bespoke_request, lead, "order";
     insert into bespoke_request (id, status, updated_at) values ('request_1', 'new', '2026-10-19T10:00:00Z');
     insert into lead (id) values ('person_1'); insert into "order" (id) values ('order_1');`);
   directory = await mkdtemp(
@@ -835,4 +843,280 @@ test("new records and their assignments are atomic; reminders can be assigned wi
     store,
   );
   assert.equal(file.attachment.entity_type, "company");
+});
+
+const invoiceInput = {
+  sourceType: "request",
+  sourceId: "request_1",
+  companyId: "company_1",
+  payer: { type: "person", name: "Контрольный плательщик" },
+  lines: [
+    { name: "Контрольное изделие", quantity: "2.5", unitPriceMinor: 1999 },
+  ],
+  notes: "Проверка сохранения",
+};
+test("invoices persist shared drafts, replay exactly once and reject concurrent overwrites", async () => {
+  const c = {
+    type: "invoice.create",
+    id: "invoice_1",
+    invoice: invoiceInput,
+    key: key(),
+  };
+  const first = await executeDeskCommand(sql, "staff_1", c);
+  assert.equal(first.invoice.total_minor, "4998");
+  assert.equal((await executeDeskCommand(sql, "staff_1", c)).replay, true);
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", { ...c, key: key() }),
+    { code: "INVOICE_EXISTS" },
+  );
+  const results = await Promise.allSettled(
+    ["Первый", "Второй"].map((notes) =>
+      executeDeskCommand(sql, "staff_2", {
+        type: "invoice.update",
+        id: c.id,
+        expectedVersion: 1,
+        invoice: { ...invoiceInput, notes },
+        key: key(),
+      }),
+    ),
+  );
+  assert.equal(results.filter((r) => r.status === "fulfilled").length, 1);
+  assert.equal(
+    (results.find((r) => r.status === "rejected") as PromiseRejectedResult)
+      .reason.code,
+    "STALE_VERSION",
+  );
+  const res = response();
+  await listInvoices(request(), res);
+  assert.equal(res.body.invoices[0].version, 2);
+  assert.equal(res.headers["cache-control"], "private, no-store");
+  const denied = response();
+  await listInvoices(request({}, {}, "user", "production"), denied);
+  assert.equal(denied.statusCode, 403);
+});
+test("manual 1C registration requires matching total and real PDF bytes, then protects the document", async () => {
+  const upload = {
+    id: "invoice_pdf",
+    entityType: "invoice",
+    entityId: "invoice_1",
+    filename: "Контрольный.pdf",
+    content: Buffer.from("%PDF-1.7\nQA accounting document\n%%EOF").toString(
+      "base64",
+    ),
+    key: key(),
+  };
+  await attachFile(sql, "staff_1", upload, store);
+  const c = {
+    type: "invoice.register",
+    id: "invoice_1",
+    expectedVersion: 2,
+    number: "QA-001",
+    documentDate: "2026-10-23",
+    confirmedFrom1C: true,
+    documentTotalMinor: 4998,
+    attachmentId: upload.id,
+    key: key(),
+  };
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", { ...c, documentTotalMinor: 5000 }),
+    { code: "ACCOUNTING_TOTAL_MISMATCH" },
+  );
+  await attachFile(
+    sql,
+    "staff_1",
+    {
+      ...upload,
+      id: "false_pdf",
+      content: Buffer.from("not a PDF").toString("base64"),
+      key: key(),
+    },
+    store,
+  );
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", { ...c, attachmentId: "false_pdf" }),
+    { code: "INVOICE_PDF_REQUIRED" },
+  );
+  const result = await executeDeskCommand(sql, "staff_1", c);
+  assert.equal(result.invoice.status, "registered");
+  assert.equal(result.invoice.registration_source, "manual_1c");
+  assert.equal(result.invoice.version, 3);
+  assert.equal((await executeDeskCommand(sql, "staff_1", c)).replay, true);
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", {
+      type: "invoice.update",
+      id: c.id,
+      expectedVersion: 3,
+      invoice: invoiceInput,
+      key: key(),
+    }),
+    { code: "INVOICE_IMMUTABLE" },
+  );
+  await assert.rejects(
+    removeAttachment(sql, "staff_1", { id: upload.id, key: key() }),
+    { code: "REGISTERED_DOCUMENT_REQUIRED" },
+  );
+  await executeDeskCommand(sql, "staff_1", {
+    type: "invoice.create",
+    id: "invoice_2",
+    invoice: invoiceInput,
+    key: key(),
+  });
+  await attachFile(
+    sql,
+    "staff_1",
+    { ...upload, id: "invoice_pdf_2", entityId: "invoice_2", key: key() },
+    store,
+  );
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", {
+      ...c,
+      id: "invoice_2",
+      attachmentId: "invoice_pdf_2",
+      expectedVersion: 1,
+      key: key(),
+    }),
+    { code: "ACCOUNTING_DOCUMENT_EXISTS" },
+  );
+  await executeDeskCommand(sql, "staff_1", {
+    type: "invoice.archive",
+    id: c.id,
+    expectedVersion: 3,
+    archived: true,
+    key: key(),
+  });
+  const restored = await executeDeskCommand(sql, "staff_1", {
+    type: "invoice.archive",
+    id: c.id,
+    expectedVersion: 4,
+    archived: false,
+    key: key(),
+  });
+  assert.equal(restored.invoice.status, "registered");
+  assert.equal(restored.invoice.accounting_number, "QA-001");
+});
+test("production sees only explicitly shared work files and never financial files; removed files restore with verified bytes", async () => {
+  await db("woodright_desk_record")
+    .where({ entity_type: "request", entity_id: "request_1" })
+    .update({ assignee_id: "staff_1" });
+  const upload = {
+    id: "work_file",
+    entityType: "request",
+    entityId: "request_1",
+    filename: "Спецификация.txt",
+    visibility: "assigned",
+    content: "YWJj",
+    key: key(),
+  };
+  await attachFile(sql, "staff_1", upload, store);
+  await attachFile(
+    sql,
+    "staff_1",
+    { ...upload, id: "finance_file", visibility: "business", key: key() },
+    store,
+  );
+  const work = response();
+  await download(request({}, { id: "work_file" }, "user", "production"), work);
+  assert.equal(work.statusCode, 200);
+  for (const id of ["finance_file", "invoice_pdf"]) {
+    const denied = response();
+    await download(request({}, { id }, "user", "production"), denied);
+    assert.equal(denied.statusCode, 403);
+  }
+  const index = response();
+  await listFiles(request({}, {}, "user", "production"), index);
+  assert.ok(index.body.attachments.some((f: any) => f.id === "work_file"));
+  assert.ok(
+    !index.body.attachments.some((f: any) =>
+      ["finance_file", "invoice_pdf", "company_file"].includes(f.id),
+    ),
+  );
+  const history = response();
+  await listHistory(
+    request(
+      { entity_type: "request", entity_id: "request_1" },
+      {},
+      "user",
+      "production",
+    ),
+    history,
+  );
+  assert.ok(!JSON.stringify(history.body).includes("finance_file"));
+  assert.ok(JSON.stringify(history.body).includes("work_file"));
+  await removeAttachment(sql, "staff_1", { id: upload.id, key: key() });
+  const archived = response();
+  await listAttachments(
+    request({ entity_type: "request", entity_id: "request_1", archived: "1" }),
+    archived,
+  );
+  assert.ok(archived.body.attachments.some((f: any) => f.id === upload.id));
+  const restore = { id: upload.id, key: key() };
+  await restoreAttachment(sql, "staff_1", restore, store);
+  assert.equal(
+    (await restoreAttachment(sql, "staff_1", restore, store)).replay,
+    true,
+  );
+  const restored = response();
+  await download(request({}, { id: upload.id }), restored);
+  assert.deepEqual(restored.body, Buffer.from("abc"));
+});
+test("assignment rejects staff whose role cannot open the target card", async () => {
+  await db("user").insert({
+    id: "accountant_1",
+    email: "accountant@example.test",
+    metadata: {
+      woodright_access: { role: "accountant", enabled: true, version: 1 },
+    },
+  });
+  const current = await db("woodright_desk_record")
+    .where({ entity_type: "request", entity_id: "request_1" })
+    .first();
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_1", {
+      type: "record.update",
+      id: "request_1",
+      entityType: "request",
+      ownership: { companyId: "company_1", assigneeId: "accountant_1" },
+      expectedVersion: current.version,
+      key: key(),
+    }),
+    { code: "ASSIGNEE_ROLE_REQUIRED" },
+  );
+  await assert.rejects(
+    authorizeDeskCommand(
+      sql,
+      { actorId: "staff_1", role: "seller", enabled: true, version: 1 },
+      { type: "invoice.archive", id: "invoice_1" },
+    ),
+    { code: "ROLE_FORBIDDEN" },
+  );
+});
+
+test("request specification edits persist with notes and refuse stale changes or production financial edits", async () => {
+  const current = await db("bespoke_request")
+    .where({ id: "request_1" })
+    .first();
+  const c = command({
+    expectedUpdatedAt: current.updated_at.toISOString(),
+    details: {
+      comment: "Шкаф после замера",
+      dimensions: "180 × 240",
+      materials: "Дуб",
+      budget: "Согласуется",
+    },
+  });
+  const result = await executeDeskCommand(sql, "staff_1", c);
+  assert.equal(result.bespoke_request.dimensions, "180 × 240");
+  assert.equal(result.bespoke_request.comment, "Шкаф после замера");
+  await assert.rejects(
+    executeDeskCommand(sql, "staff_2", { ...c, key: key() }),
+    { code: "STALE_VERSION" },
+  );
+  await assert.rejects(
+    authorizeDeskCommand(
+      sql,
+      { actorId: "staff_1", role: "production", enabled: true, version: 1 },
+      c,
+    ),
+    { code: "ROLE_FORBIDDEN" },
+  );
 });

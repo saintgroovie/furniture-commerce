@@ -2,6 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Button, FormError, Section } from "./ui.jsx";
 import { liveFetch } from "./storage.js";
 const labels = {
+  "invoice.created": "Черновик счёта создан",
+  "invoice.updated": "Черновик счёта обновлён",
+  "invoice.registered": "Счёт из 1С зарегистрирован вручную",
+  "invoice.archived": "Счёт перенесён в архив OS",
+  "invoice.restored": "Счёт возвращён из архива",
   "company.created": "Компания добавлена",
   "company.updated": "Компания обновлена",
   "record.assigned": "Компания или ответственный изменены",

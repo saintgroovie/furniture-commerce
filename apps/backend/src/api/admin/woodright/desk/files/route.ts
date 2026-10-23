@@ -10,7 +10,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       { limit, offset } = page(req.query);
     const scoped =
       access.role === "production"
-        ? "and exists (select 1 from woodright_desk_record a where a.entity_type=woodright_private_attachment.entity_type and a.entity_id=woodright_private_attachment.entity_id and a.assignee_id=?)"
+        ? "and visibility='assigned' and entity_type in ('request','order') and exists (select 1 from woodright_desk_record a where a.entity_type=woodright_private_attachment.entity_type and a.entity_id=woodright_private_attachment.entity_id and a.assignee_id=?)"
         : "";
     const bindings =
       access.role === "production"
@@ -21,7 +21,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         `select
       (select count(*)::int from woodright_private_attachment where deleted_at is null ${scoped}) as count,
       coalesce((select jsonb_agg(r order by r.created_at desc, r.id) from
-        (select id, entity_type, entity_id, filename, mime_type, size, created_at from woodright_private_attachment
+        (select id, entity_type, entity_id, filename, mime_type, size, created_at, uploaded_by, visibility from woodright_private_attachment
         where deleted_at is null ${scoped} order by created_at desc, id limit ? offset ?) r), '[]'::jsonb) as attachments`,
         bindings,
       )

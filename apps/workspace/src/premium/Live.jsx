@@ -38,6 +38,8 @@ import { ContactEditor } from "./ContactEditor.jsx";
 import { Assignment, CompanyCreate } from "./Team.jsx";
 import { PasswordChange } from "./PasswordChange.jsx";
 import { ProductCreate, ProductEditor } from "./ProductEditor.jsx";
+import { InvoiceEditor } from "./Invoices.jsx";
+import { linkedInvoices } from "./invoice-input.mjs";
 const types = {
   STANDARD: "Готовое изделие",
   CONFIGURABLE: "Выбор исполнения",
@@ -183,6 +185,7 @@ export const sourceNames = {
   companies: "Компании",
   records: "Назначения",
   staff: "Сотрудники",
+  invoices: "Счета",
 };
 export function LiveNotice({ data, refresh, busy }) {
   const failed = Object.entries(data.sourceStates).filter(([, v]) => !v.ok);
@@ -228,6 +231,7 @@ export function SourceGate({ page, data, children }) {
       rooms: "rooms",
       companies: "companies",
       team: "staff",
+      invoices: "invoices",
     }[page],
     source = data.sourceStates[key];
   if (source && !source.ok)
@@ -267,7 +271,7 @@ const serviceCards = [
     title: "1С:Бухгалтерия 8",
     subtitle: "Счета и подтверждение оплат",
     status: "Уточняем у бухгалтера",
-    text: "Счёт готовится в OS и регистрируется в 1С. Номер, печатная форма и поступления возвращаются из 1С. До настройки обмена выпуск счетов недоступен.",
+    text: "В OS можно подготовить черновик и вручную зарегистрировать уже выставленный в 1С счёт с его PDF. Автоматический выпуск, обмен и подтверждение оплат появятся после подключения 1С.",
   },
   {
     key: "files",
@@ -421,6 +425,68 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
       : panel.type === "files"
         ? "files"
         : undefined;
+  if (data.capabilities.invoiceDraft && panel.type === "invoiceEditor")
+    return (
+      <Drawer title="Новый черновик счёта" onClose={onClose} wide>
+        <InvoiceEditor
+          data={data}
+          initialSource={panel.objectId}
+          go={go}
+          refresh={refresh}
+          notify={notify}
+          onClose={onClose}
+        />
+      </Drawer>
+    );
+  if (data.capabilities.documents && panel.type === "invoiceDetail")
+    return (
+      <Drawer title="Счёт" onClose={onClose}>
+        <Button
+          onClick={() => {
+            onClose();
+            go("invoices", panel.id);
+          }}
+        >
+          Открыть счёт
+        </Button>
+      </Drawer>
+    );
+  if (data.capabilities.documents && panel.type === "invoices") {
+    const rows = linkedInvoices(data, panel.objectId);
+    return (
+      <Drawer title="Связанные счета" onClose={onClose}>
+        <div className="form-stack">
+          {rows.length ? (
+            rows.map((i) => (
+              <Button
+                key={i.id}
+                variant="secondary"
+                onClick={() => {
+                  onClose();
+                  go("invoices", i.id);
+                }}
+              >
+                {i.number ? `Счёт №${i.number}` : "Черновик счёта"} ·{" "}
+                {i.payer.name}
+              </Button>
+            ))
+          ) : (
+            <p className="muted">Связанных счетов пока нет.</p>
+          )}
+          {data.capabilities.invoiceDraft && (
+            <Button
+              onClick={() => {
+                onClose();
+                go("invoices", "new");
+              }}
+            >
+              Новый черновик
+            </Button>
+          )}
+        </div>
+      </Drawer>
+    );
+  }
   if (data.capabilities.catalogEdit && panel.type === "productEditor")
     return (
       <ProductEditor
@@ -541,6 +607,12 @@ export function LiveObjectDetail({
     [error, setError] = useState(""),
     [status, setStatus] = useState(item?.status || ""),
     [notes, setNotes] = useState(item?.internalNotes || ""),
+    [details, setDetails] = useState(() => ({
+      comment: item?.note || "",
+      dimensions: item?.dimensions || "",
+      materials: item?.materials || "",
+      budget: item?.budget || "",
+    })),
     [expectedUpdatedAt, setExpectedUpdatedAt] = useState(item?.updatedAt || "");
   const sendCommand = useDeskCommand();
   const attachmentsRef = useRef(null);
@@ -565,6 +637,7 @@ export function LiveObjectDetail({
         status,
         notes,
         expectedUpdatedAt,
+        ...(data.capabilities.crmCreate ? { details } : {}),
       });
       const latest = await refresh();
       const updated = latest?.requests?.find((r) => r.id === id);
@@ -835,6 +908,55 @@ export function LiveObjectDetail({
               </Section>
               <Section title="Внутренняя работа">
                 <form className="form-stack" onSubmit={saveRequest}>
+                  {data.capabilities.crmCreate && (
+                    <>
+                      <Field label="Запрос и описание">
+                        <textarea
+                          rows={5}
+                          maxLength={10201}
+                          required
+                          value={details.comment}
+                          onChange={(e) =>
+                            setDetails({ ...details, comment: e.target.value })
+                          }
+                        />
+                      </Field>
+                      <Field label="Размеры">
+                        <input
+                          maxLength={500}
+                          value={details.dimensions}
+                          onChange={(e) =>
+                            setDetails({
+                              ...details,
+                              dimensions: e.target.value,
+                            })
+                          }
+                        />
+                      </Field>
+                      <Field label="Материалы">
+                        <textarea
+                          rows={3}
+                          maxLength={2000}
+                          value={details.materials}
+                          onChange={(e) =>
+                            setDetails({
+                              ...details,
+                              materials: e.target.value,
+                            })
+                          }
+                        />
+                      </Field>
+                      <Field label="Бюджет">
+                        <input
+                          maxLength={500}
+                          value={details.budget}
+                          onChange={(e) =>
+                            setDetails({ ...details, budget: e.target.value })
+                          }
+                        />
+                      </Field>
+                    </>
+                  )}
                   <Field label="Статус обращения">
                     <select
                       value={status}
@@ -882,6 +1004,17 @@ export function LiveObjectDetail({
                         <p className="preserve-lines">
                           Заметки в базе: {item.internalNotes || "не добавлены"}
                         </p>
+                        {data.capabilities.crmCreate && (
+                          <p className="preserve-lines">
+                            Запрос в базе: {item.note}
+                            <br />
+                            Размеры: {item.dimensions || "не указаны"}
+                            <br />
+                            Материалы: {item.materials || "не указаны"}
+                            <br />
+                            Бюджет: {item.budget || "не указан"}
+                          </p>
+                        )}
                         <div className="desk-row-actions">
                           <Button
                             type="button"
@@ -889,6 +1022,12 @@ export function LiveObjectDetail({
                             onClick={() => {
                               setNotes(item.internalNotes);
                               setStatus(item.status);
+                              setDetails({
+                                comment: item.note,
+                                dimensions: item.dimensions,
+                                materials: item.materials,
+                                budget: item.budget,
+                              });
                               setExpectedUpdatedAt(item.updatedAt);
                               setError("");
                             }}
@@ -1003,6 +1142,33 @@ export function LiveObjectDetail({
           notify={notify}
         />
       )}
+      {data.capabilities.documents &&
+        ["people", "requests", "orders"].includes(kind) && (
+          <Section title="Счета">
+            <div className="form-stack">
+              {linkedInvoices(data, id).map((i) => (
+                <button
+                  className="inline-link"
+                  key={i.id}
+                  onClick={() => go("invoices", i.id)}
+                >
+                  {i.number ? `Счёт №${i.number}` : "Черновик счёта"} ·{" "}
+                  {i.payer.name}
+                </button>
+              ))}
+              {data.capabilities.invoiceDraft && (
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    openPanel({ type: "invoiceEditor", objectId: id })
+                  }
+                >
+                  Подготовить счёт
+                </Button>
+              )}
+            </div>
+          </Section>
+        )}
       <DeskTools
         attachmentsRef={attachmentsRef}
         kind={kind}

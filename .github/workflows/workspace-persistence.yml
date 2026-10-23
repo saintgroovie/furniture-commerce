@@ -60,7 +60,7 @@ jobs:
       - name: Real PostgreSQL concurrency and private file checks
         env:
           WOODRIGHT_DESK_TEST_DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk
-        run: node node_modules/tsx/dist/cli.mjs --test src/lib/woodright-desk/desk.integration.test.ts src/lib/woodright-desk/mango.fidelity.test.ts src/lib/woodright-desk/staff-access.test.ts
+        run: node --import tsx --test src/lib/woodright-desk/desk.integration.test.ts src/lib/woodright-desk/mango.fidelity.test.ts src/lib/woodright-desk/staff-access.test.ts src/lib/woodright-desk/invoices.test.ts
       - name: Targeted production migration rehearsal on disposable PostgreSQL
         env:
           DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk
@@ -72,6 +72,7 @@ jobs:
           node node_modules/@medusajs/cli/cli.js build
           node --test scripts/desk-migration.test.cjs
           node --test scripts/team-migration.test.cjs
+          node --test scripts/invoice-migration.test.cjs
       - name: Private document restore integrity
         working-directory: .
         run: |

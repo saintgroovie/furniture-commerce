@@ -37,6 +37,16 @@ export function decodeAttachment(raw: unknown) {
       "Файл должен быть не больше 8 МБ",
     );
   const bytes = Buffer.from(c.content, "base64");
+  const visibility = c.visibility ?? "business";
+  if (
+    !["business", "assigned"].includes(visibility) ||
+    (visibility === "assigned" && !["request", "order"].includes(type))
+  )
+    throw new DeskError(
+      400,
+      "INVALID_FILE_VISIBILITY",
+      "Выберите доступ к файлу",
+    );
   if (
     !bytes.length ||
     bytes.length > MAX_ATTACHMENT_BYTES ||
@@ -57,6 +67,7 @@ export function decodeAttachment(raw: unknown) {
     sha256: createHash("sha256").update(bytes).digest("hex"),
     mime: "application/octet-stream",
     key: c.key,
+    visibility,
   };
 }
 export class PrivateFileStore {
@@ -150,6 +161,7 @@ export async function attachFile(
       entityId: f.entityId,
       filename: f.filename,
       sha256: f.sha256,
+      visibility: f.visibility,
     },
     async (trx) => {
       await requireEntity(trx, f.type, f.entityId);
@@ -157,8 +169,8 @@ export async function attachFile(
       const row = (
         await trx.raw(
           `insert into woodright_private_attachment
-      (id, entity_type, entity_id, filename, mime_type, size, sha256, storage_key, uploaded_by)
-      values (?, ?, ?, ?, ?, ?, ?, ?, ?) returning id, entity_type, entity_id, filename, mime_type, size, created_at`,
+      (id, entity_type, entity_id, filename, mime_type, size, sha256, storage_key, uploaded_by, visibility)
+      values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id, entity_type, entity_id, filename, mime_type, size, created_at, uploaded_by, visibility`,
           [
             f.id,
             f.type,
@@ -169,6 +181,7 @@ export async function attachFile(
             f.sha256,
             storageKey,
             actor,
+            f.visibility,
           ],
         )
       ).rows[0];
@@ -176,6 +189,7 @@ export async function attachFile(
         attachment_id: f.id,
         size: f.bytes.length,
         sha256: f.sha256,
+        visibility: f.visibility,
       });
       return { attachment: row };
     },
@@ -193,6 +207,31 @@ export async function removeAttachment(
     raw.key,
     { type: "attachment.remove", id },
     async (trx) => {
+      const current = (
+        await trx.raw(
+          "select id from woodright_private_attachment where id=? and deleted_at is null for update",
+          [id],
+        )
+      ).rows[0];
+      if (!current)
+        throw new DeskError(404, "NOT_FOUND", "Вложение не найдено");
+      const invoices = (
+        await trx.raw("select to_regclass('woodright_invoice') as invoice")
+      ).rows[0];
+      if (
+        invoices?.invoice &&
+        (
+          await trx.raw(
+            "select id from woodright_invoice where pdf_attachment_id=? for share",
+            [id],
+          )
+        ).rows.length
+      )
+        throw new DeskError(
+          409,
+          "REGISTERED_DOCUMENT_REQUIRED",
+          "PDF зарегистрированного счёта сохраняется вместе с документом",
+        );
       const row = (
         await trx.raw(
           `update woodright_private_attachment set deleted_at = now(), updated_at = now()
@@ -210,6 +249,53 @@ export async function removeAttachment(
         { attachment_id: id },
       );
       return { id, removed: true };
+    },
+  );
+}
+export async function restoreAttachment(
+  sql: Sql,
+  actor: string,
+  raw: Record<string, any>,
+  store: PrivateFileStore,
+) {
+  const id = identifier(raw.id);
+  return operation(
+    sql,
+    actor,
+    raw.key,
+    { type: "attachment.restore", id },
+    async (trx) => {
+      const row = (
+        await trx.raw(
+          "select * from woodright_private_attachment where id=? for update",
+          [id],
+        )
+      ).rows[0];
+      if (!row) throw new DeskError(404, "NOT_FOUND", "Вложение не найдено");
+      await requireEntity(trx, entity(row.entity_type), row.entity_id);
+      const bytes = await store.get(row.storage_key);
+      if (
+        bytes.length !== row.size ||
+        createHash("sha256").update(bytes).digest("hex") !== row.sha256
+      )
+        throw new DeskError(
+          503,
+          "FILE_INTEGRITY",
+          "Не удалось подтвердить целостность файла",
+        );
+      await trx.raw(
+        "update woodright_private_attachment set deleted_at=null,updated_at=now() where id=?",
+        [id],
+      );
+      await audit(
+        trx,
+        actor,
+        row.entity_type,
+        row.entity_id,
+        "attachment.restored",
+        { attachment_id: id },
+      );
+      return { id, restored: true };
     },
   );
 }

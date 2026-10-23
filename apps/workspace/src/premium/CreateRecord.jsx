@@ -200,6 +200,7 @@ export function CreateRecord({ kind, data, onClose, refresh, go, notify }) {
           <FormError>{error}</FormError>
           {data.capabilities.assignments && (
             <OwnershipFields
+              entityType={kind === "person" ? "person" : "request"}
               data={data}
               value={ownership}
               onChange={setOwnership}

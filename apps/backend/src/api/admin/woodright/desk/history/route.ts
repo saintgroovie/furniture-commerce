@@ -20,13 +20,17 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     await sql.transaction(async (trx) => {
       await requireEntity(trx, type, id);
     });
+    const scoped =
+      access.role === "production"
+        ? "and (action not like 'attachment.%' or exists (select 1 from woodright_private_attachment f where f.id=woodright_desk_event.details->>'attachment_id' and f.visibility='assigned' and f.entity_type=woodright_desk_event.entity_type and f.entity_id=woodright_desk_event.entity_id))"
+        : "";
     const data = (
       await sql.raw(
         `select
-      (select count(*)::int from woodright_desk_event where entity_type = ? and entity_id = ?) as count,
+      (select count(*)::int from woodright_desk_event where entity_type = ? and entity_id = ? ${scoped}) as count,
       coalesce((select jsonb_agg(r order by r.created_at desc, r.id) from
         (select id, action, actor_id, details, created_at from woodright_desk_event
-        where entity_type = ? and entity_id = ? order by created_at desc, id limit ? offset ?) r), '[]'::jsonb) as events`,
+        where entity_type = ? and entity_id = ? ${scoped} order by created_at desc, id limit ? offset ?) r), '[]'::jsonb) as events`,
         [type, id, type, id, limit, offset],
       )
     ).rows[0];

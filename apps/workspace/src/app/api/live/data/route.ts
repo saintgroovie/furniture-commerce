@@ -160,6 +160,26 @@ export async function GET() {
         }
       });
     }
+    if (desk.invoiceRead === true) {
+      try {
+        const invoices = await readPaged(
+          "/admin/woodright/desk/invoices",
+          "invoices",
+          session,
+        );
+        sources.invoices = invoices;
+        states.invoices = {
+          ok: true,
+          count: invoices.invoices.length,
+          total: invoices.count,
+          truncated: invoices.truncated,
+          completeness: "paginated",
+        };
+      } catch (e) {
+        if (e instanceof LiveError && e.status === 401) throw e;
+        states.invoices = { ok: false, message: "Не удалось загрузить счета" };
+      }
+    }
     const data = projectLive(
       sources,
       session,

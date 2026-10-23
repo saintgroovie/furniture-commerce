@@ -8,6 +8,7 @@ const kinds = {
   request: "requests",
   order: "orders",
   company: "companies",
+  invoice: "invoices",
 };
 export function Files({ data, go }) {
   const [result, setResult] = useState(null),
@@ -29,7 +30,7 @@ export function Files({ data, go }) {
     data[kinds[f.entity_type]]?.find((r) => r.id === f.entity_id);
   const rows =
     result?.attachments.filter((f) =>
-      `${f.filename} ${related(f)?.name || related(f)?.title || f.entity_id}`
+      `${f.filename} ${related(f)?.name || related(f)?.title || related(f)?.payer?.name || ""} ${related(f)?.number || f.entity_id}`
         .toLowerCase()
         .includes(query.toLowerCase()),
     ) || [];
@@ -57,8 +58,9 @@ export function Files({ data, go }) {
             />
           </Field>
           <p className="muted small">
-            Чтобы прикрепить документ, откройте карточку клиента, обращения или
-            заказа.
+            Чтобы прикрепить документ, откройте карточку клиента, компании,
+            обращения, заказа или счёта. В архиве файлов внутри карточки можно
+            восстановить убранное вложение.
           </p>
           <FormError>{error}</FormError>
           {!result && !error ? (
@@ -90,6 +92,9 @@ export function Files({ data, go }) {
                   >
                     {related(f)?.name ||
                       related(f)?.title ||
+                      (f.entity_type === "invoice"
+                        ? `Счёт ${related(f)?.number || "· черновик"}`
+                        : "") ||
                       "Открыть карточку"}
                   </button>
                 </li>
