@@ -195,7 +195,15 @@ function Reminders({ type, id, data, refresh, notify }) {
     </Section>
   );
 }
-export function Attachments({ type, id, data, notify, refresh, onLoaded }) {
+export function Attachments({
+  type,
+  id,
+  data,
+  notify,
+  refresh,
+  onLoaded,
+  protectedIds = [],
+}) {
   const [rows, setRows] = useState([]),
     [total, setTotal] = useState(0),
     [loading, setLoading] = useState(true);
@@ -360,11 +368,14 @@ export function Attachments({ type, id, data, notify, refresh, onLoaded }) {
                     maximumFractionDigits: 1,
                   }).format(f.size / 1024)}{" "}
                   КБ · {date(f.created_at)}
+                  {protectedIds.includes(f.id) &&
+                    " · PDF зарегистрированного счёта сохранён"}
                   {data.capabilities.fileVisibility &&
                     ` · ${f.visibility === "assigned" ? "Доступно назначенному производству" : "Продажи и бухгалтерия"}`}
                 </small>
               </div>
               {data.capabilities.attachments &&
+                !protectedIds.includes(f.id) &&
                 (!data.access ||
                   ["god", "director"].includes(data.access.role) ||
                   f.uploaded_by === data.session.id) &&

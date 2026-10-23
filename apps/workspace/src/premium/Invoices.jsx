@@ -694,6 +694,7 @@ function InvoiceDetail({ invoice, data, go, refresh, notify }) {
         refresh={refresh}
         notify={notify}
         onLoaded={setFiles}
+        protectedIds={invoice.attachmentId ? [invoice.attachmentId] : []}
       />
       <History
         type="invoice"
