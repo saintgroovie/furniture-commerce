@@ -24,6 +24,7 @@ import { checkoutCopy as copy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { flatCopy } from "@/lib/format-ru-copy"
 import { mintOrderAccess } from "@/lib/woodright-order/api"
+import { emitLeadSubmitted } from "@/lib/analytics-goals"
 
 type CheckoutState =
   | "empty_cart"
@@ -175,6 +176,7 @@ export function CheckoutForm() {
         setCartIdOverride(null)
         emitCartUpdated({ count: 0 })
         setState("success")
+        if (orderId) emitLeadSubmitted({ source: "checkout", successKey: orderId })
       } else {
         setState("server_error")
         setErrorMessage(result.error ?? flatCopy(copy.serverError))

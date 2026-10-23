@@ -6,6 +6,7 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { createLead } from "@/lib/api/leads"
 import { createBespokeRequest } from "@/lib/api/bespoke-requests"
+import { emitLeadSubmitted } from "@/lib/analytics-goals"
 import { bespokeForm as copy, bespokeRequestCopy, designersLandingCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { flatCopy } from "@/lib/format-ru-copy"
@@ -239,6 +240,7 @@ export function BespokeForm() {
         comment: comment || null,
       })
       setStatus("success")
+      emitLeadSubmitted({ source: "bespoke", successKey: leadId })
     } catch {
       setStatus("error_server")
       setErrorMessage(flatCopy(copy.serverError))

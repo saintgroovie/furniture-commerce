@@ -7,6 +7,7 @@ import { CopyLines } from "@/components/copy-lines"
 import { writeYmConsentToDocument } from "@/lib/analytics-consent"
 import type { YmConsent } from "@/lib/analytics-config"
 import { teardownYandexMetrika } from "@/lib/analytics-metrika"
+import { bindMetrikaGoals } from "@/lib/analytics-goals"
 import { analyticsConsentCopy } from "@/lib/woodright-copy"
 
 type Props = {
@@ -86,6 +87,11 @@ export function StorefrontAnalytics({
     if (consent !== "1") return
     enable()
   }, [consent, enable])
+
+  useEffect(() => {
+    if (consent !== "1") return
+    return bindMetrikaGoals(window, counterId)
+  }, [consent, counterId])
 
   useEffect(() => {
     if (consent !== "1") return
