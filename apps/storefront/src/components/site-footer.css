@@ -66,6 +66,17 @@
 .wr-footer-secondary { display: inline-flex; min-height: 44px; align-items: center; border-bottom: 1px solid var(--wr-footer-link-rule); font-size: 16px; line-height: 1.5; color: var(--wr-footer-heading); }
 .wr-footer-secondary:hover { color: var(--wr-footer-ink); border-color: currentColor; }
 
+.wr-footer-invitation--projects { background: #241c17; }
+.wr-footer-invitation--projects .wr-footer-eyebrow { color: #c9b5a4; }
+.wr-footer-invitation--projects h2 { color: #faf8f5; }
+.wr-footer-invitation--projects .wr-footer-invitation-text { color: #d4c9bf; }
+.wr-footer-invitation--projects .wr-footer-primary { background: #faf8f5; border-color: #faf8f5; color: #241c17; }
+.wr-footer-invitation--projects .wr-footer-primary:hover { background: #e8ded3; border-color: #e8ded3; }
+.wr-footer-invitation--projects .wr-footer-secondary { color: #eee4da; border-color: #8e7968; }
+.wr-footer-invitation--projects .wr-footer-secondary:hover { color: #fff; border-color: currentColor; }
+.wr-footer-invitation--projects .wr-footer-secondary img { filter: brightness(0) invert(1); }
+.wr-footer-invitation--projects .wr-footer-photo img { object-fit: cover; object-position: 50% 55%; }
+
 /* A continuous edge wash across the navigation, as in the approved mock. */
 .wr-footer-navigation { background: linear-gradient(90deg, var(--wr-footer-edge), var(--wr-footer-paper) 25%, var(--wr-footer-paper) 75%, var(--wr-footer-edge)); border-top: 1px solid var(--wr-footer-top-rule); }
 .wr-footer-grid { display: grid; grid-template-columns: 31% minmax(0, 1fr); gap: 4%; padding: 37px var(--wr-footer-gutter); margin-inline: auto; max-width: 1920px; }

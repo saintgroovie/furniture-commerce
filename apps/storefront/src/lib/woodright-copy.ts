@@ -121,6 +121,14 @@ export const footer = {
     primary: "Обсудить проект",
     secondary: "Узнать о производстве",
   },
+  projectInvitation: {
+    eyebrow: "Woodright · Проекты",
+    title: ["Woodright для", "ваших проектов"],
+    body: "Мебель и столярные решения для частных и общественных интерьеров.",
+    primary: "Обсудить задачу",
+    designers: "Дизайнерам",
+    secondary: "Узнать о производстве",
+  },
   columns: [
     {
       title: "Коллекции",

@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { BespokeBadge } from "@/components/bespoke-badge"
 import { WoodrightWordmark } from "@/components/woodright-wordmark"
 import { bespokeMedia } from "@/components/home/bespoke-media"
@@ -10,32 +11,36 @@ import { footer } from "@/lib/woodright-copy"
 import { useChromeVisual, useSiteSection } from "@/lib/use-site-section"
 
 const sectionImages = {
-  main: "/images/footer/bedroom.webp",
+  main: "/images/footer/bedroom-cloud-daylight.webp",
   kids: kidsMedia.heroSlides[0].src,
   bespoke: bespokeMedia.directions.furniture.src,
 } as const
 
 /** Shared buyer footer. Section identity follows the header's transition. */
 export function SiteFooter({ year }: { year: number }) {
+  const pathname = usePathname()
+  const isProjects = pathname === "/partners" || pathname.startsWith("/partners/")
   const section = useSiteSection()
   const { section: visual, kids: visualKids, snap } = useChromeVisual()
   const homeHref = section === "kids" ? "/kids" : section === "bespoke" ? "/bespoke" : "/"
+  const invitation = isProjects ? footer.projectInvitation : footer.invitation
 
   return (
     <footer className={`wr-footer${snap ? " is-kids-snap" : ""}`} data-section={visual} id="site-footer">
-      <section className="wr-footer-invitation" aria-labelledby="footer-invitation-title">
+      <section className={`wr-footer-invitation${isProjects ? " wr-footer-invitation--projects" : ""}`} aria-labelledby="footer-invitation-title">
         <div className="wr-footer-photo" data-section={section}>
-          <Image src={sectionImages[section]} alt="" fill sizes="(max-width: 759px) 100vw, 55vw" loading="lazy" unoptimized={section === "kids"} />
+          <Image src={isProjects ? "/images/footer/projects-workshop-soft.webp" : sectionImages[section]} alt={isProjects ? "Столярная работа и белые чертежи на коричневой бумаге" : ""} fill sizes="(max-width: 759px) 100vw, 55vw" loading="lazy" unoptimized={section === "kids"} />
         </div>
         <div className="wr-footer-invitation-copy">
-          <p className="wr-footer-eyebrow">{footer.invitation.eyebrow}</p>
+          <p className="wr-footer-eyebrow">{invitation.eyebrow}</p>
           <h2 id="footer-invitation-title">
-            {footer.invitation.title.map((line) => <span key={line}>{line}</span>)}
+            {invitation.title.map((line) => <span key={line}>{line}</span>)}
           </h2>
-          <p className="wr-footer-invitation-text">{footer.invitation.body}</p>
+          <p className="wr-footer-invitation-text">{invitation.body}</p>
           <div className="wr-footer-actions">
-            <Link href="/bespoke/request" className="wr-footer-primary">{footer.invitation.primary}</Link>
-            <Link href="/about/production" className="wr-footer-secondary">{footer.invitation.secondary}<Image src="/images/footer/arrow-right.svg" alt="" width={24} height={24} /></Link>
+            <Link href="/bespoke/request" className="wr-footer-primary">{invitation.primary}</Link>
+            {isProjects ? <Link href="/designers" className="wr-footer-secondary">{footer.projectInvitation.designers}</Link> : null}
+            <Link href="/about/production" className="wr-footer-secondary">{invitation.secondary}<Image src="/images/footer/arrow-right.svg" alt="" width={24} height={24} /></Link>
           </div>
         </div>
       </section>
