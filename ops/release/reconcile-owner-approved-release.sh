@@ -44,6 +44,7 @@ ISSUED_AT=""
 ALLOW_PREDEPLOY=0
 COMPONENT="pair"
 RETAINED_REV=""
+RETAINED_SF_REV=""
 EXPECT_CURRENT_SF=""
 EXPECT_CURRENT_BE=""
 EXPECT_CS=""
@@ -90,6 +91,8 @@ while [[ $# -gt 0 ]]; do
     --component=*) COMPONENT="${1#--component=}"; shift ;;
     --retained-backend-revision) RETAINED_REV="${2:?}"; shift 2 ;;
     --retained-backend-revision=*) RETAINED_REV="${1#--retained-backend-revision=}"; shift ;;
+    --retained-storefront-revision) RETAINED_SF_REV="${2:?}"; shift 2 ;;
+    --retained-storefront-revision=*) RETAINED_SF_REV="${1#--retained-storefront-revision=}"; shift ;;
     --expected-current-storefront-digest) EXPECT_CURRENT_SF="${2:?}"; shift 2 ;;
     --expected-current-storefront-digest=*) EXPECT_CURRENT_SF="${1#--expected-current-storefront-digest=}"; shift ;;
     --expected-current-backend-digest) EXPECT_CURRENT_BE="${2:?}"; shift 2 ;;
@@ -141,10 +144,11 @@ else
 [[ "$BE_DIGEST" != "$SF_DIGEST" ]] || die "backend and storefront digests must differ"
 case "$COMPONENT" in
   pair)
-    [[ -z "$RETAINED_REV" && -z "$EXPECT_CURRENT_SF" && -z "$EXPECT_CURRENT_BE" ]] \
+    [[ -z "$RETAINED_REV" && -z "$RETAINED_SF_REV" && -z "$EXPECT_CURRENT_SF" && -z "$EXPECT_CURRENT_BE" ]] \
       || die "pair approval does not take retained-backend or expected-current fields"
     ;;
   storefront)
+    [[ -z "$RETAINED_SF_REV" ]] || die "storefront approval cannot retain a storefront"
     [[ "$RETAINED_REV" =~ ^[0-9a-f]{40}$ ]] || die "retained-backend-revision must be full 40-hex"
     [[ "$EXPECT_CURRENT_SF" =~ ^sha256:[0-9a-f]{64}$ ]] || die "expected-current-storefront-digest invalid"
     [[ "$EXPECT_CURRENT_BE" =~ ^sha256:[0-9a-f]{64}$ ]] || die "expected-current-backend-digest invalid"
@@ -152,7 +156,17 @@ case "$COMPONENT" in
     [[ "$EXPECT_CURRENT_SF" != "$SF_DIGEST" ]] || die "expected current storefront must differ from the candidate storefront digest"
     [[ "$RETAINED_REV" != "$APP_SHA" ]] || die "retained backend revision must differ from the new storefront source sha (use --component pair)"
     ;;
-  *) die "component must be pair or storefront (got $COMPONENT)" ;;
+  backend)
+    [[ "$WOODRIGHT_ENVIRONMENT" == "public_production" ]] || die "backend approval requires exact public_production"
+    [[ -z "$RETAINED_REV" ]] || die "backend approval cannot retain a backend"
+    [[ "$RETAINED_SF_REV" =~ ^[0-9a-f]{40}$ ]] || die "retained-storefront-revision must be full 40-hex"
+    [[ "$EXPECT_CURRENT_SF" =~ ^sha256:[0-9a-f]{64}$ ]] || die "expected-current-storefront-digest invalid"
+    [[ "$EXPECT_CURRENT_BE" =~ ^sha256:[0-9a-f]{64}$ ]] || die "expected-current-backend-digest invalid"
+    [[ "$EXPECT_CURRENT_SF" == "$SF_DIGEST" ]] || die "expected-current-storefront-digest must equal the retained storefront digest"
+    [[ "$EXPECT_CURRENT_BE" != "$BE_DIGEST" ]] || die "candidate backend must differ from the current backend digest"
+    [[ "$RETAINED_SF_REV" != "$APP_SHA" ]] || die "retained storefront revision must differ from the new backend source sha"
+    ;;
+  *) die "component must be pair, storefront or backend (got $COMPONENT)" ;;
 esac
 export WOODRIGHT_OWNER_APPROVAL_COMPONENT="$COMPONENT"
 [[ "$OWNER_AUTH_ID" =~ ^OWNER-PASS-[A-Za-z0-9._:-]{8,128}$ ]] \
@@ -264,11 +278,11 @@ umask 027
 python3 - "$STAGED" "$WOODRIGHT_ENVIRONMENT" "$APP_SHA" "$BE_DIGEST" "$SF_DIGEST" \
   "$OWNER_AUTH_ID" "$ISSUED_AT" "$PREV_SHA" "$EVIDENCE_REF" \
   "$COMPONENT" "$RETAINED_REV" "$EXPECT_CURRENT_SF" "$EXPECT_CURRENT_BE" \
-  "$EXPECT_CS" "$OPERATION" "$CANCEL_REASON" <<'PY'
+  "$EXPECT_CS" "$OPERATION" "$CANCEL_REASON" "$RETAINED_SF_REV" <<'PY'
 import hashlib, json, os, sys
 (path, env, sha, be, sf, auth, issued, prev, evid,
  component, retained_rev, expect_sf, expect_be,
- previous_cs, operation, reason) = sys.argv[1:17]
+ previous_cs, operation, reason, retained_sf_rev) = sys.argv[1:18]
 material = "|".join([env, component, sha, be, sf, issued, previous_cs, operation])
 doc = {
   "schema_version": 1,
@@ -292,6 +306,11 @@ if operation == "supersede":
 if component == "storefront":
   doc["component"] = "storefront"
   doc["retained_backend_revision"] = retained_rev
+  doc["expected_current_storefront_digest"] = expect_sf
+  doc["expected_current_backend_digest"] = expect_be
+elif component == "backend":
+  doc["component"] = "backend"
+  doc["retained_storefront_revision"] = retained_sf_rev
   doc["expected_current_storefront_digest"] = expect_sf
   doc["expected_current_backend_digest"] = expect_be
 elif component != "pair":
@@ -362,7 +381,18 @@ wr_staging_mutation_lock_acquire \
 # Storefront-only cannot require both release-sha labels to equal the new SHA:
 # the retained backend keeps its older revision. CAS the retained backend and
 # the current storefront instead. The candidate storefront is not live yet.
-if [[ "$REQUIRE_LIVE_MATCH" == "1" && "$COMPONENT" == "storefront" ]]; then
+if [[ "$COMPONENT" == "backend" ]]; then
+  # Backend-only never permits predeploy approval to bypass the retained peer CAS.
+  command -v docker >/dev/null 2>&1 || die "docker required for backend live CAS"
+  wr_assert_environment_provisioned || exit 1
+  live_be_img="$(docker inspect "${WOODRIGHT_BE_CONTAINER_DEFAULT}" --format '{{.Config.Image}}' 2>/dev/null || true)"
+  live_sf_img="$(docker inspect "${WOODRIGHT_SF_CONTAINER_DEFAULT}" --format '{{.Config.Image}}' 2>/dev/null || true)"
+  live_sf_rev="$(docker inspect "${WOODRIGHT_SF_CONTAINER_DEFAULT}" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' 2>/dev/null || true)"
+  [[ "$live_be_img" == *"@$EXPECT_CURRENT_BE" ]] || die "live current backend digest mismatch"
+  [[ "$live_sf_img" == *"@$SF_DIGEST" ]] || die "live retained storefront digest mismatch"
+  [[ "$live_sf_rev" == "$RETAINED_SF_REV" ]] || die "live retained storefront revision mismatch"
+  log "backend_live_cas_ok retained_storefront=$SF_DIGEST current_backend=$EXPECT_CURRENT_BE"
+elif [[ "$REQUIRE_LIVE_MATCH" == "1" && "$COMPONENT" == "storefront" ]]; then
   command -v docker >/dev/null 2>&1 || die "docker required for live-match approval write"
   wr_assert_environment_provisioned || exit 1
   local_be="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
@@ -397,7 +427,7 @@ if ! wr_owner_approved_cas_precheck "$WOODRIGHT_ENVIRONMENT" "$EXPECT_CS"; then
 fi
 if [[ "${WR_OA_RESERVATION_STATE:-}" == "reserved" && "$OPERATION" != "supersede" ]]; then
   if wr_owner_approved_same_candidate "$APP_SHA" "$BE_DIGEST" "$SF_DIGEST" "$COMPONENT" \
-       "$RETAINED_REV" "$EXPECT_CURRENT_SF" "$EXPECT_CURRENT_BE"; then
+       "$RETAINED_REV" "$EXPECT_CURRENT_SF" "$EXPECT_CURRENT_BE" "$RETAINED_SF_REV"; then
     log "OWNER_APPROVAL_UNCHANGED checksum=$WR_OA_CHECKSUM"
     exit 0
   fi

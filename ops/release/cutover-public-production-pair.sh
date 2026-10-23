@@ -135,11 +135,11 @@ die() { log "ERROR: $*"; exit 2; }
 
 usage() {
   cat <<'EOF'
-Usage: cutover-public-production-pair.sh --environment public_production --component pair|storefront --source-sha <40hex> [options]
+Usage: cutover-public-production-pair.sh --environment public_production --component pair|storefront|backend --source-sha <40hex> [options]
 
 Required:
   --environment public_production (only public_production; demo/candidate/staging refused)
-  --component pair|storefront
+  --component pair|storefront|backend
   --source-sha <40hex>            (pair: OCI revision of BOTH images; storefront: OCI revision of the NEW storefront only)
   --storefront-ref ghcr.io/...@sha256:<64hex>
   --backend-ref ghcr.io/...@sha256:<64hex>
@@ -307,11 +307,11 @@ wr_require_environment_from_args "${FULL_ARGV[@]}" || exit 1
 if [[ "${WOODRIGHT_ENVIRONMENT}" != "public_production" ]]; then
   die "refused --environment '${WOODRIGHT_ENVIRONMENT}' (only 'public_production' accepted here - isolated new-stack pair, never public_demo/staging/production-candidate; use cutover-public-demo-pair.sh or cutover-production-candidate.sh)"
 fi
-wr_require_component_from_args "${FULL_ARGV[@]}" || die "missing required --component pair|storefront"
+wr_require_component_from_args "${FULL_ARGV[@]}" || die "missing required --component pair|storefront|backend"
 COMPONENT="${WOODRIGHT_COMPONENT_SCOPE}"
 case "$COMPONENT" in
-  pair|storefront) ;;
-  *) die "public_production cutover accepts pair or storefront (refused --component $COMPONENT)" ;;
+  pair|storefront|backend) ;;
+  *) die "public_production cutover accepts pair, storefront or backend (refused --component $COMPONENT)" ;;
 esac
 # Historical approvals omit component and load as pair. A pair approval must
 # not authorize a storefront cutover, and a storefront approval must not
@@ -798,8 +798,8 @@ if os.path.exists(props):
     os.remove(props)
 PY
   fi
-  if ! assert_backend_notouch; then
-    die "storefront-only release changed the backend container before metadata commit"
+  if ! assert_untouched_peer; then
+  die "single-component release changed its retained peer before metadata commit"
   fi
   if ! need_be; then
     name="${WOODRIGHT_BE_CONTAINER_DEFAULT}"
@@ -1158,7 +1158,13 @@ assert_loopback_host "storefront probe" "$SF_PROBE"
 [[ "$BE_PORT" == "9300" ]] || die "backend loopback port must be 9300 (got $BE_PORT)"
 [[ "$SF_PORT" == "3300" ]] || die "storefront loopback port must be 3300 (got $SF_PORT)"
 
-if need_sf; then inspect_image_candidate SF "$SF_REF" "$SOURCE_SHA"; else WR_SF_PRESENT=n_a; WR_SF_REVISION=""; WR_SF_BUILD_PROFILE=""; WR_SF_REF=""; fi
+if [[ "$COMPONENT" == "backend" ]]; then
+  inspect_image_candidate SF "$SF_REF" "${WR_OA_RETAINED_STOREFRONT_REVISION:-}"
+elif need_sf; then
+  inspect_image_candidate SF "$SF_REF" "$SOURCE_SHA"
+else
+  WR_SF_PRESENT=n_a; WR_SF_REVISION=""; WR_SF_BUILD_PROFILE=""; WR_SF_REF=""
+fi
 if [[ "$COMPONENT" == "storefront" ]]; then
   # Retained backend is inspected against the approval revision, not SOURCE_SHA.
   inspect_image_candidate BE "$BE_REF" "${WR_OA_RETAINED_BACKEND_REVISION:-}"
@@ -1215,8 +1221,41 @@ assert_storefront_component_cas() {
   log "storefront-only plan: recreate storefront only; backend container is not in the mutation set"
 }
 
+assert_backend_component_cas() {
+  [[ "$COMPONENT" == "backend" ]] || return 0
+  if [[ "${WR_OA_COMPONENT:-}" != "backend" ]]; then
+    log "MISMATCH backend cutover requires component=backend approval"
+    MISMATCH=1; return 0
+  fi
+  if [[ "${WR_BE_CONTAINER_PRESENT:-false}" != "true" || "${WR_SF_CONTAINER_PRESENT:-false}" != "true" ]]; then
+    log "MISMATCH backend-only requires both live containers"
+    MISMATCH=1; return 0
+  fi
+  local live_be_dig live_sf_dig live_sf_rev
+  live_be_dig="$(container_digest "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
+  live_sf_dig="$(container_digest "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
+  live_sf_rev="$(live_oci_revision "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
+  if [[ "$live_sf_dig" != "$WR_OA_STOREFRONT_DIGEST" || "$live_sf_dig" != "${WR_OA_EXPECTED_CURRENT_SF_DIGEST:-}" ]]; then
+    log "MISMATCH retained storefront digest changed"; MISMATCH=1
+  fi
+  if [[ "$live_be_dig" != "${WR_OA_EXPECTED_CURRENT_BE_DIGEST:-}" ]]; then
+    log "MISMATCH current backend digest changed"; MISMATCH=1
+  fi
+  if [[ "$live_sf_rev" != "${WR_OA_RETAINED_STOREFRONT_REVISION:-}" ]]; then
+    log "MISMATCH retained storefront revision changed"; MISMATCH=1
+  fi
+  if [[ "$OA_BE_DIGEST" != "$WR_OA_BACKEND_DIGEST" || "$OA_SF_DIGEST" != "$WR_OA_STOREFRONT_DIGEST" ]]; then
+    log "MISMATCH cli refs do not match backend approval"; MISMATCH=1
+  fi
+  if [[ "$live_be_dig" == "$OA_BE_DIGEST" ]]; then
+    log "MISMATCH candidate backend is already live"; MISMATCH=1
+  fi
+  log "backend-only plan: recreate backend only; storefront is frozen"
+}
+
 detect_existing_skew
 assert_storefront_component_cas
+assert_backend_component_cas
 
 # Would a rollback have images to recreate on? Reported in the dry-run packet so
 # the operator learns about a missing anchor image before execute refuses.
@@ -1958,7 +1997,7 @@ run_rollback() {
   verify_rollback_http || http_ok=0
   # Storefront rollback must not recreate the backend. If its container
   # identity moved, this is not a successful rollback.
-  if [[ "$COMPONENT" == "storefront" ]] && ! assert_backend_notouch; then
+  if [[ "$COMPONENT" != "pair" ]] && ! assert_untouched_peer; then
     log "ROLLBACK_VERIFY backend identity moved - NOT reporting ROLLBACK_OK"
     backend_ok=0
   fi
@@ -2060,7 +2099,7 @@ if need_be || [[ "$COMPONENT" == "storefront" ]]; then
   [[ "$WR_BE_PRESENT" == "true" ]] || die "backend image not present locally (execute never pulls): $BE_REF"
   [[ "$WR_BE_CONTAINER_PRESENT" == "true" ]] || die "backend container missing: ${WOODRIGHT_BE_CONTAINER_DEFAULT}"
 fi
-if need_sf; then
+if need_sf || [[ "$COMPONENT" == "backend" ]]; then
   [[ "$WR_SF_PRESENT" == "true" ]] || die "storefront candidate image not present locally (execute never pulls): $SF_REF"
   [[ "$WR_SF_CONTAINER_PRESENT" == "true" ]] || die "storefront container missing: ${WOODRIGHT_SF_CONTAINER_DEFAULT}"
 fi
@@ -2159,12 +2198,13 @@ log "owner_approval_gate_b_ok checksum=$WR_OA_CHECKSUM"
 # Re-bind the storefront approval to the live containers after the lock.
 # The pre-lock CAS is not sufficient: a swap that lands before PRELOCK_*
 # would otherwise be frozen in as the new baseline.
-if [[ "$COMPONENT" == "storefront" ]]; then
+if [[ "$COMPONENT" == "storefront" || "$COMPONENT" == "backend" ]]; then
   inspect_container BE "${WOODRIGHT_BE_CONTAINER_DEFAULT}"
   inspect_container SF "${WOODRIGHT_SF_CONTAINER_DEFAULT}"
   cas_before="$MISMATCH"
   assert_storefront_component_cas
-  [[ "$MISMATCH" -eq "$cas_before" ]] || die "storefront approval CAS failed under lock"
+  assert_backend_component_cas
+  [[ "$MISMATCH" -eq "$cas_before" ]] || die "single-component approval CAS failed under lock"
 fi
 mkdir -p "$EVIDENCE_DIR/pin-backup"
 printf '%s\n' "$SOURCE_SHA" >"$EVIDENCE_DIR/json/application-source-sha.txt"
@@ -2467,8 +2507,48 @@ assert_backend_notouch() {
   log "backend no-touch ok id=$id revision=$rev restarts=$restarts"
 }
 
-if ! capture_backend_notouch_snapshot; then
-  die "backend no-touch snapshot failed before pin write"
+capture_storefront_notouch_snapshot() {
+  [[ "$COMPONENT" == "backend" ]] || return 0
+  local name="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
+  SF_KEEP_ID="$(prod_docker inspect "$name" --format '{{.Id}}' 2>/dev/null || true)"
+  SF_KEEP_IMAGE="$(prod_docker inspect "$name" --format '{{.Config.Image}}' 2>/dev/null || true)"
+  SF_KEEP_STARTED="$(prod_docker inspect "$name" --format '{{.State.StartedAt}}' 2>/dev/null || true)"
+  SF_KEEP_CREATED="$(prod_docker inspect "$name" --format '{{.Created}}' 2>/dev/null || true)"
+  SF_KEEP_RESTARTS="$(prod_docker inspect "$name" --format '{{.RestartCount}}' 2>/dev/null || true)"
+  SF_KEEP_REV="$(live_oci_revision "$name")"
+  [[ -n "$SF_KEEP_ID" && "$SF_KEEP_ID" != "<no value>" ]] || return 1
+  [[ -n "$SF_KEEP_IMAGE" && "$SF_KEEP_IMAGE" != "<no value>" ]] || return 1
+  [[ -n "$SF_KEEP_STARTED" && "$SF_KEEP_STARTED" != "<no value>" ]] || return 1
+  [[ "$SF_KEEP_RESTARTS" =~ ^[0-9]+$ ]] || return 1
+  [[ "$SF_KEEP_REV" =~ ^[0-9a-f]{40}$ ]] || return 1
+  log "storefront no-touch snapshot id=$SF_KEEP_ID image=$SF_KEEP_IMAGE started=$SF_KEEP_STARTED restarts=$SF_KEEP_RESTARTS revision=$SF_KEEP_REV created=${SF_KEEP_CREATED:-<unset>}"
+}
+
+assert_storefront_notouch() {
+  [[ "$COMPONENT" == "backend" ]] || return 0
+  local name="${WOODRIGHT_SF_CONTAINER_DEFAULT}"
+  local id image started created restarts rev
+  id="$(prod_docker inspect "$name" --format '{{.Id}}' 2>/dev/null || true)"
+  image="$(prod_docker inspect "$name" --format '{{.Config.Image}}' 2>/dev/null || true)"
+  started="$(prod_docker inspect "$name" --format '{{.State.StartedAt}}' 2>/dev/null || true)"
+  created="$(prod_docker inspect "$name" --format '{{.Created}}' 2>/dev/null || true)"
+  restarts="$(prod_docker inspect "$name" --format '{{.RestartCount}}' 2>/dev/null || true)"
+  rev="$(live_oci_revision "$name")"
+  [[ "$id" == "$SF_KEEP_ID" ]] || { log "storefront container id changed have=$id want=$SF_KEEP_ID"; return 1; }
+  [[ "$image" == "$SF_KEEP_IMAGE" ]] || { log "storefront image changed have=$image want=$SF_KEEP_IMAGE"; return 1; }
+  [[ "$started" == "$SF_KEEP_STARTED" ]] || { log "storefront StartedAt changed have=$started want=$SF_KEEP_STARTED"; return 1; }
+  [[ "$created" == "$SF_KEEP_CREATED" ]] || { log "storefront Created changed have=$created want=$SF_KEEP_CREATED"; return 1; }
+  [[ "$restarts" == "$SF_KEEP_RESTARTS" ]] || { log "storefront RestartCount changed have=$restarts want=$SF_KEEP_RESTARTS"; return 1; }
+  [[ "$rev" == "$SF_KEEP_REV" ]] || { log "storefront OCI revision changed have=$rev want=$SF_KEEP_REV"; return 1; }
+  log "storefront no-touch ok id=$id revision=$rev restarts=$restarts"
+}
+
+assert_untouched_peer() {
+  assert_backend_notouch && assert_storefront_notouch
+}
+
+if ! capture_backend_notouch_snapshot || ! capture_storefront_notouch_snapshot; then
+  die "retained peer no-touch snapshot failed before pin write"
 fi
 
 if ! write_required_pins_atomic; then
@@ -2539,8 +2619,8 @@ if need_sf; then
     die "storefront recreate failed"
   fi
 fi
-if ! assert_backend_notouch; then
-  die "storefront-only release changed the backend container"
+if ! assert_untouched_peer; then
+  die "single-component release changed its retained peer"
 fi
 record_state containers_recreated
 
@@ -2598,7 +2678,7 @@ assert_media_volume >&2 || die "acceptance failed: media volume gate"
 if need_be; then
   http_gate backend "${BE_PROBE%/}/health" || die "acceptance failed: backend HTTP gate"
 fi
-if need_sf; then
+if need_sf || [[ "$COMPONENT" == "backend" ]]; then
   http_gate storefront "${SF_PROBE%/}/" || die "acceptance failed: storefront HTTP gate"
   for sf_route in /contacts /catalog /privacy; do
     http_gate "storefront${sf_route}" "${SF_PROBE%/}${sf_route}" \
@@ -2776,6 +2856,15 @@ if [[ "$COMPONENT" == "storefront" ]]; then
     || die "authority postcondition failed: duplicate governed compose keys"
 fi
 
+if [[ "$COMPONENT" == "backend" ]]; then
+  [[ "$(pin_value_of WOODRIGHT_RELEASE_SHA)" == "$PRE_RELEASE_SHA" ]] \
+    || die "backend-only must not rewrite shared WOODRIGHT_RELEASE_SHA"
+  [[ "$(pin_value_of WOODRIGHT_STOREFRONT_IMAGE)" == "${PRE_SF_REF}" ]] \
+    || die "backend-only must not rewrite WOODRIGHT_STOREFRONT_IMAGE"
+  wr_compose_env_assert_no_duplicate_governed_keys "$COMPOSE_ENV_FILE" \
+    || die "authority postcondition failed: duplicate governed compose keys"
+fi
+
 # --- commit -----------------------------------------------------------------
 LIVE_BE_DIGEST_FINAL="$(container_digest "${WOODRIGHT_BE_CONTAINER_DEFAULT}")"
 LIVE_SF_DIGEST_FINAL="$(container_digest "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
@@ -2784,7 +2873,7 @@ if ! wr_require_owner_approved_matches_live public_production "$SOURCE_SHA" "$LI
 fi
 [[ "${WR_OA_CHECKSUM:-}" == "$GATE_A_CHECKSUM" ]] \
   || die "Gate C approval checksum drifted since Gate A (retained fields are part of the file hash)"
-if ! assert_backend_notouch; then
+if ! assert_untouched_peer; then
   die "backend identity moved before commit"
 fi
 log "owner_approval_gate_c_ok live_be=$LIVE_BE_DIGEST_FINAL live_sf=$LIVE_SF_DIGEST_FINAL checksum=$WR_OA_CHECKSUM"

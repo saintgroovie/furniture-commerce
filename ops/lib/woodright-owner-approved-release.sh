@@ -164,6 +164,7 @@ wr_owner_approved_load() {
   WR_OA_OWNER_AUTHORIZATION_ID=""
   WR_OA_COMPONENT=""
   WR_OA_RETAINED_BACKEND_REVISION=""
+  WR_OA_RETAINED_STOREFRONT_REVISION=""
   WR_OA_EXPECTED_CURRENT_SF_DIGEST=""
   WR_OA_EXPECTED_CURRENT_BE_DIGEST=""
   WR_OA_GENERATION=""
@@ -212,6 +213,7 @@ auth_id = data.get("owner_authorization_id") or ""
 # Absent component stays pair. Explicit storefront is a different contract.
 component = data.get("component") or "pair"
 retained_rev = data.get("retained_backend_revision") or ""
+retained_sf_rev = data.get("retained_storefront_revision") or ""
 expect_sf = data.get("expected_current_storefront_digest") or ""
 expect_be = data.get("expected_current_backend_digest") or ""
 if "approval_generation" in data:
@@ -261,9 +263,13 @@ if not isinstance(file_norm, str) or re.search(r"[\r\n]", file_norm):
     print("MALFORMED"); sys.exit(2)
 if file_norm != env_norm:
     print("ENV_MISMATCH"); sys.exit(3)
-if component not in ("pair", "storefront"):
+if component not in ("pair", "storefront", "backend"):
+    print("MALFORMED"); sys.exit(2)
+if component == "pair" and retained_sf_rev:
     print("MALFORMED"); sys.exit(2)
 if component == "storefront":
+    if retained_sf_rev:
+        print("MALFORMED"); sys.exit(2)
     if not isinstance(retained_rev, str) or not re.fullmatch(r"[0-9a-f]{40}", retained_rev):
         print("MALFORMED"); sys.exit(2)
     if not isinstance(expect_sf, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", expect_sf):
@@ -273,6 +279,17 @@ if component == "storefront":
     if expect_be != be_dig:
         print("MALFORMED"); sys.exit(2)
     if expect_sf == sf_dig or retained_rev == app_sha:
+        print("MALFORMED"); sys.exit(2)
+elif component == "backend":
+    if env_f != "public_production" or retained_rev:
+        print("MALFORMED"); sys.exit(2)
+    if not isinstance(retained_sf_rev, str) or not re.fullmatch(r"[0-9a-f]{40}", retained_sf_rev):
+        print("MALFORMED"); sys.exit(2)
+    if not isinstance(expect_sf, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", expect_sf):
+        print("MALFORMED"); sys.exit(2)
+    if not isinstance(expect_be, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", expect_be):
+        print("MALFORMED"); sys.exit(2)
+    if expect_sf != sf_dig or expect_be == be_dig or retained_sf_rev == app_sha:
         print("MALFORMED"); sys.exit(2)
 elif data.get("component") not in (None, "pair"):
     print("MALFORMED"); sys.exit(2)
@@ -289,6 +306,7 @@ print(expect_sf)
 print(expect_be)
 print(generation)
 print(reservation)
+print(retained_sf_rev)
 PY
 )"
   rc=$?
@@ -313,6 +331,7 @@ PY
   WR_OA_EXPECTED_CURRENT_BE_DIGEST="$(printf '%s\n' "$out" | sed -n '10p')"
   WR_OA_GENERATION="$(printf '%s\n' "$out" | sed -n '11p')"
   WR_OA_RESERVATION_STATE="$(printf '%s\n' "$out" | sed -n '12p')"
+  WR_OA_RETAINED_STOREFRONT_REVISION="$(printf '%s\n' "$out" | sed -n '13p')"
   [[ -n "$WR_OA_COMPONENT" ]] || WR_OA_COMPONENT="pair"
   [[ -n "$WR_OA_RESERVATION_STATE" ]] || WR_OA_RESERVATION_STATE="legacy"
   WR_OWNER_APPROVAL_RESULT="OWNER_APPROVAL_OK"
@@ -363,12 +382,18 @@ wr_owner_approved_cas_precheck() {
 wr_owner_approved_same_candidate() {
   local app_sha="$1" be_digest="$2" sf_digest="$3" component="$4"
   local retained="${5:-}" expect_sf="${6:-}" expect_be="${7:-}"
+  local retained_sf="${8:-}"
   [[ "${WR_OA_APPLICATION_SHA:-}" == "$app_sha" ]] || return 1
   [[ "${WR_OA_BACKEND_DIGEST:-}" == "$be_digest" ]] || return 1
   [[ "${WR_OA_STOREFRONT_DIGEST:-}" == "$sf_digest" ]] || return 1
   [[ "${WR_OA_COMPONENT:-pair}" == "$component" ]] || return 1
   if [[ "$component" == "storefront" ]]; then
     [[ "${WR_OA_RETAINED_BACKEND_REVISION:-}" == "$retained" ]] || return 1
+    [[ "${WR_OA_EXPECTED_CURRENT_SF_DIGEST:-}" == "$expect_sf" ]] || return 1
+    [[ "${WR_OA_EXPECTED_CURRENT_BE_DIGEST:-}" == "$expect_be" ]] || return 1
+  fi
+  if [[ "$component" == "backend" ]]; then
+    [[ "${WR_OA_RETAINED_STOREFRONT_REVISION:-}" == "$retained_sf" ]] || return 1
     [[ "${WR_OA_EXPECTED_CURRENT_SF_DIGEST:-}" == "$expect_sf" ]] || return 1
     [[ "${WR_OA_EXPECTED_CURRENT_BE_DIGEST:-}" == "$expect_be" ]] || return 1
   fi

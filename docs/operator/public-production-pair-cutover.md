@@ -86,7 +86,7 @@ bash ops/release/reconcile-owner-approved-release.sh \
 - After recreate, the backend container id, image, `Created`, `StartedAt`, `RestartCount`, and OCI revision must be unchanged. If any of them move, the cutover fails.
 - `WOODRIGHT_BACKEND_IMAGE` and `WOODRIGHT_RELEASE_SHA` are not rewritten.
 - `--component pair` is unchanged: both images must still match `--source-sha`, and a storefront approval cannot satisfy it.
-- `--component backend` is refused.
+- `--component backend` updates only the backend with an explicit backend approval and a frozen live storefront (see the scoped contract below).
 
 Dry-run (`--mode dry-run`, the default) runs approval, image, CAS, and the planned mutation check, then exits without a Docker write. Image or CAS mismatch exits 4.
 
@@ -97,3 +97,12 @@ The dry-run line `owner_approval_gate_a_ok checksum=` is the preflight identity.
 ## Canonical merge required
 
 Do **not** run a branch-local copy of this helper against the VM. Production mutation is allowed only after this helper is merged into canonical ops.
+
+
+## Backend-only updates for Woodright OS
+
+Use `--component backend` only with an exact `public_production` approval declaring `component=backend`, the new backend digest/source, `retained_storefront_revision`, `expected_current_storefront_digest` equal to the retained storefront digest, and the exact `expected_current_backend_digest`. A legacy pair approval or storefront approval does not authorize this mode. The writer always checks both live digests and the retained storefront revision under the environment lease, even when predeploy approval is requested. Capture the current production version afresh; never restore an older historical storefront merely to update OS.
+
+The controller checks the approval checksum before mutation and again under the leases. It recreates only backend with `--no-deps`; the storefront image pin, shared release key, container ID/image/StartedAt/Created/RestartCount/revision remain unchanged in success and rollback. Its existing health/readiness and media/isolation gates remain in force. Buyer HTTP routes are checked against the retained storefront using the new backend before commit. Both component identities are recorded separately in ACTIVE/EXPECTED metadata; the common compose release marker remains the prior value. No catalog DML, schema migration, seed, asset rewrite, public routing or R2 operation is included in the controller.
+
+A Woodright OS release must separately qualify its backend/workspace images, preserve native database/private-file storage, complete fresh backup and disposable restore, apply only its explicitly approved targeted migration, then update the workspace's expected backend revision through `deploy-team-workspace.py`. Never auto-adopt backend health headers. Use existing owner authorization, protected pin CAS, controller provenance, global/environment/workspace leases and final acceptance. After employee writes, preserve data and use forward repair; do not restore an old database.
