@@ -341,7 +341,7 @@ if [[ "$APPLY" != "1" ]]; then
     fi
     if [[ "$OPERATION" == "approve" && "${WR_OA_RESERVATION_STATE:-}" == "reserved" ]]; then
       if wr_owner_approved_same_candidate "$APP_SHA" "$BE_DIGEST" "$SF_DIGEST" "$COMPONENT" \
-           "$RETAINED_REV" "$EXPECT_CURRENT_SF" "$EXPECT_CURRENT_BE"; then
+           "$RETAINED_REV" "$EXPECT_CURRENT_SF" "$EXPECT_CURRENT_BE" "$RETAINED_SF_REV"; then
         log "PLANNED OWNER_APPROVAL_UNCHANGED"
       else
         die "OWNER_APPROVAL_RESERVED checksum=$WR_OA_CHECKSUM"
