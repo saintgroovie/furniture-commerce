@@ -8,3 +8,5 @@ Owner-reviewed AI-assisted edits of original Woodright catalog materials, made w
 - `oliver-room-series-modern.webp`: ensemble from `7e7385ee12_oliver-teen copy.jpg`; linen curtains, quiet rug and one vase on the dresser.
 
 Prompts and source/output records: `apps/storefront/docs/design/editorial-images-20261023.json`.
+
+Final Greenwich correction: smooth uniform milk-gray matte painted wall, replacing mottled plaster. Furniture accent finish retained. Exact edit prompt is in the provenance record.
