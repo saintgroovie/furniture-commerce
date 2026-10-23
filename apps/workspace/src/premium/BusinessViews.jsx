@@ -53,6 +53,7 @@ import {
   event,
   invoiceTotal,
   todayGroups,
+  queueAssignee,
 } from "./model.mjs";
 const typeLabel = {
   STANDARD: "Готовое изделие",
@@ -290,7 +291,7 @@ export function TodayView({ data, go, openPanel, mutate, notify, ...rest }) {
                       ),
                     ],
                     ["Компания", company?.name || "Не указана"],
-                    ["Ответственный", person?.assignee || "Не назначен"],
+                    ["Ответственный", queueAssignee(row?.kind, item, person)],
                     ["Следующий шаг", item.next || "Проверить данные"],
                   ]
             }
