@@ -1,5 +1,5 @@
 /**
- * Behavioral fidelity: Medusa fetch budget without abort signals on Next 16 fetch.
+ * Behavioral fidelity: the fetch budget cancels underlying work as well as waiting.
  *
  *   cd apps/storefront && yarn dlx tsx src/lib/medusa-fetch-timeout.fidelity.test.ts
  */
@@ -10,11 +10,15 @@ async function main() {
   {
     const prev = globalThis.fetch
     const prevTimeout = process.env.MEDUSA_FETCH_TIMEOUT_MS
+    let requestSignal: AbortSignal | null = null
     process.env.MEDUSA_FETCH_TIMEOUT_MS = "80"
-    globalThis.fetch = (() =>
+    globalThis.fetch = ((_url, init) => {
+      requestSignal = init?.signal ?? null
+      return (
       new Promise(() => {
         /* never resolves */
-      })) as typeof fetch
+      }))
+    }) as typeof fetch
 
     const started = Date.now()
     let rejected = false
@@ -29,6 +33,7 @@ async function main() {
     }
 
     assert.equal(rejected, true)
+    assert.equal((requestSignal as AbortSignal | null)?.aborted, true, "Timed out work must be cancelled")
     assert.ok(Date.now() - started < 2_000, "timeout must reject promptly")
   }
 

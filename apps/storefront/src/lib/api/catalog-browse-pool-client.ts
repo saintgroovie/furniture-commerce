@@ -5,10 +5,12 @@ import { parseStoreCatalogProductsPayload } from "../catalog-browse-pool"
  * Browser fetch of the Medusa browse projection (same-origin `/store` rewrite).
  * Do not use `medusaCatalogFetch` here: `next.revalidate` is SSR-only.
  */
-export async function fetchStoreCatalogProducts(): Promise<
+export async function fetchStoreCatalogProducts(signal?: AbortSignal): Promise<
   Array<Record<string, unknown>>
 > {
-  const res = await medusaFetch(`${getBaseUrl()}/store/catalog-products`)
+  // Caller cancellation must keep the existing eight-second read budget too.
+  const requestSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(8_000)]) : undefined
+  const res = await medusaFetch(`${getBaseUrl()}/store/catalog-products`, requestSignal ? { signal: requestSignal } : undefined)
   if (!res.ok) {
     throw new Error("Не удалось загрузить каталог.")
   }

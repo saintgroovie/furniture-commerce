@@ -3,7 +3,7 @@ import type { MotifProductCard } from "@/lib/api/motif-themes"
 import { formatRub } from "@/lib/format"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
 import { willieWinkieMotifsCopy } from "@/lib/woodright-copy"
-import { withoutHeadingDimensions } from "@/lib/product-heading"
+import { presentBuyerTitleParts } from "@/lib/product-title-presentation"
 
 export function WillieWinkieMotifProductCard({
   product,
@@ -16,8 +16,11 @@ export function WillieWinkieMotifProductCard({
   const img = product.thumbnail
     ? resolveStorefrontProductImageSrc(product.thumbnail)
     : null
-  const title = withoutHeadingDimensions(product.title)
-  const familyTitle = product.family_title ? withoutHeadingDimensions(product.family_title) : null
+  const presented = presentBuyerTitleParts({ title: product.title, handle: product.handle })
+  const title = presented.base_title
+  const familyTitle = product.family_title
+    ? presentBuyerTitleParts({ title: product.family_title }).base_title
+    : null
 
   return (
     <article className="ww-product-card">
@@ -42,6 +45,7 @@ export function WillieWinkieMotifProductCard({
             <span className="ww-product-card-family">{familyTitle}</span>
           ) : null}
           <h3 className="ww-product-card-title">{title}</h3>
+          {presented.caption ? <span className="ww-product-card-choice">{presented.caption}</span> : null}
           <span
             className={
               product.price_amount != null

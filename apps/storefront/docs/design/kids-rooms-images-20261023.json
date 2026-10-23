@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-23",
+  "purpose": "Owner-selected kids/rooms landing images; retail products remain backend-owned",
+  "assets": [
+    {
+      "file": "apps/storefront/public/editorial/kids/oliver-playroom.webp",
+      "sha256": "12147db944e51cbefa9c3e5784885388bf1644085f40807c05bb6f5e36dcd0cb",
+      "origin": "01-oliver-playroom-v1.png",
+      "operation": "WebP encoding only, no crop, resize, retouch or new generation"
+    },
+    {
+      "file": "apps/storefront/public/editorial/kids/oliver-nursery.webp",
+      "sha256": "c289eaf64ac8ed344f43289f8f1f1b9baccb9a999565a2ad544ff46ac5c65a0b",
+      "origin": "02-oliver-nursery-v1.png",
+      "operation": "WebP encoding only, no crop, resize, retouch or new generation"
+    },
+    {
+      "file": "apps/storefront/public/editorial/kids/rural-scenery.webp",
+      "sha256": "52f1869beaddbc7336e4094f369a1cd7886fbb70f3db9a81d68a19899d289c8f",
+      "origin": "03-rural-chest-v1.png",
+      "operation": "WebP encoding only, no crop, resize, retouch or new generation"
+    },
+    {
+      "file": "apps/storefront/public/editorial/kids/oliver-hand-painting.webp",
+      "sha256": "2efd693a3b1b9be47b67b56a6f9562ad7662e0ec8efaef7a6a2d335d2ee97cea",
+      "origin": "04-oliver-painting-v5.png",
+      "operation": "WebP encoding only, no crop, resize, retouch or new generation"
+    },
+    {
+      "file": "apps/storefront/public/editorial/rooms/spalnya-cloud.jpg",
+      "sha256": "ed532ebba90ed37572d4b797390233767fbd0f779578cf99ba0eceeda8aadadb",
+      "origin": "spalnya-cloud.jpg",
+      "operation": "byte-identical catalog photograph copy"
+    },
+    {
+      "file": "apps/storefront/public/editorial/rooms/spalnya-greenwich.jpg",
+      "sha256": "5aa549592487e01c79f7756e194999054c60929510c72ea17cb8642700b5ab42",
+      "origin": "spalnya-greenwich.jpg",
+      "operation": "byte-identical catalog photograph copy"
+    }
+  ],
+  "bindings": {
+    "ol-81-1": "Oliver table: rectangular top, one drawer, brass floral knob, turned legs; compared to OL-81-1_gallery_01.jpg",
+    "ol-82-1": "Oliver chair: high rail back and turned front legs; compared to ol81-scene.jpg and nursery original",
+    "ol-85-1": "Oliver cot: waved/slatted headboard, end finials, enclosed base and turned feet; compared to OL-85-1_gallery_02.jpg",
+    "rs-05-3": "Rural Scenery tall chest: two small top drawers, six wide fronts, central landscape and ribbon borders; existing source-map confirmation",
+    "adult_room_items": "Coordinates from exact original Cloud/Greenwich photos; show a product only when current RoomSet membership and a unique published exact handle both agree"
+  },
+  "unlinked": [
+    "Oliver playroom bookcase, wall shelf, toy chest",
+    "Nursery changing chest, tall chest, mirror wardrobe",
+    "Decorations and painting tools"
+  ],
+  "product_price_source": "Existing resolveCatalogCardPrice projection of fresh Medusa catalog-products exact-handle reads; no prototype prices",
+  "furniture_edit_boundary": "First three retouched photos approved; current craft v5 uses original IMG_5340.tif as edit target. Encoding to WebP only."
+}

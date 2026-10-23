@@ -9,6 +9,7 @@ import { RoomSetCta } from "@/components/room-set-cta"
 import { CopyLines } from "@/components/copy-lines"
 import { indexingCanonical } from "@/lib/indexing-policy"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
+import { getBuyerFacingProductTitle } from "@/lib/product-metadata"
 import {
   roomSetProductLinkAriaLabel,
   roomSetProductThumbAlt,
@@ -143,7 +144,7 @@ export default async function RoomSetPage({
       <ul className="room-set-items">
         {items.map((item, i) => {
           const product = item.product
-          const title = String(product?.title ?? "Товар")
+          const title = product ? getBuyerFacingProductTitle(product) || "Товар" : "Товар"
           const qty = Number(item.quantity ?? 1)
           const href = productHref(product)
           const thumbRaw =

@@ -7,6 +7,8 @@
  * Nothing here is specific to one collection or SKU.
  */
 
+import { presentBuyerOptionChoice } from "./product-title-presentation"
+
 export type BuyerVariantChoice = {
   id: string
   sku: string
@@ -34,6 +36,17 @@ function liveVariants(product: Record<string, unknown>): Record<string, unknown>
   })
 }
 
+function bedOptionContext(product: Record<string, unknown>): { bed: boolean; mattress: boolean } {
+  const title = typeof product.title === "string" ? product.title : ""
+  const meta = asRecord(product.metadata)
+  const named = `${title} ${typeof meta?.canonical_name === "string" ? meta.canonical_name : ""} ${typeof meta?.public_title === "string" ? meta.public_title : ""}`
+  const mattress = liveVariants(product).some((variant) => {
+    const size = asRecord(asRecord(variant.metadata)?.mattress_size)
+    return size?.source === "title" && size.confidence === "high"
+  })
+  return { bed: /кроват/iu.test(named) || mattress, mattress }
+}
+
 function optionAxis(product: Record<string, unknown>): BuyerVariantAxis | null {
   const options = product.options
   if (!Array.isArray(options)) return null
@@ -50,7 +63,7 @@ function optionAxis(product: Record<string, unknown>): BuyerVariantAxis | null {
   const title = option.title.trim()
   const variants = liveVariants(product)
   if (variants.length < 2) return null
-  const choices: BuyerVariantChoice[] = []
+  const choices: Array<BuyerVariantChoice & { axisLabel?: string }> = []
   const rawValues = new Set<string>()
   for (const variant of variants) {
     const values = variant.options
@@ -72,22 +85,33 @@ function optionAxis(product: Record<string, unknown>): BuyerVariantAxis | null {
     rawValues.add(value)
     // Native draft creation starts with Default. Once staff add a second
     // distinct value this is a real execution axis, not a placeholder.
-    const label = title.toLowerCase() === "default" && value.toLowerCase() === "default"
-      ? (typeof variant.title === "string" && variant.title.trim() && variant.title.trim().toLowerCase() !== "default"
-          ? variant.title.trim() : "Базовое исполнение")
-      : value
+    const context = bedOptionContext(product)
+    const semantic = presentBuyerOptionChoice(title, value, context)
+    const label = semantic
+      ? semantic.valueLabel
+      : title.toLowerCase() === "default" && value.toLowerCase() === "default"
+        ? (typeof variant.title === "string" && variant.title.trim() && variant.title.trim().toLowerCase() !== "default"
+            ? variant.title.trim() : "Базовое исполнение")
+        : value
     choices.push({
       id: variant.id as string,
       sku: variant.sku,
       label,
       sort: Number.isFinite(rank) ? rank : choices.length,
+      axisLabel: semantic?.axisLabel,
     })
   }
   const labels = new Set(choices.map((choice) => choice.label))
   if (labels.size !== choices.length) return null
+  const agreed = new Set(choices.map((choice) => choice.axisLabel).filter((item): item is string => Boolean(item)))
+  const axisLabel = agreed.size === 1
+    ? [...agreed][0]!
+    : title.toLowerCase() === "default" ? "Исполнение" : title
   return {
-    label: title.toLowerCase() === "default" ? "Исполнение" : title,
-    choices: choices.sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label, "ru")),
+    label: axisLabel,
+    choices: choices
+      .map(({ axisLabel: _axis, ...choice }) => choice)
+      .sort((a, b) => a.sort - b.sort || a.label.localeCompare(b.label, "ru")),
   }
 }
 

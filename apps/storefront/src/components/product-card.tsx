@@ -11,7 +11,7 @@ import {
   getArticle,
   getDimensions,
   formatDimensionsCompactLabeled,
-  getBuyerFacingProductTitle,
+  getBuyerFacingProductTitleLayout,
 } from "@/lib/product-metadata"
 import { OliverCardMediaSwitcher } from "@/components/oliver-card-media-switcher"
 import { ProductCardMediaSwitcher } from "@/components/product-card-media-switcher"
@@ -121,7 +121,9 @@ export function ProductCard({
   const handle = product.handle ?? ""
   const isOliver = handle.startsWith("ol-")
   const productHref = productCanonicalPath(product, String(product.id ?? ""))
-  const displayTitle = getBuyerFacingProductTitle(product as Record<string, unknown>)
+  const titleLayout = getBuyerFacingProductTitleLayout(product as Record<string, unknown>)
+  const displayTitle = titleLayout.text
+  const choiceCaption = titleLayout.caption
   const thumbSrc = cardThumbnailSrc(product)
   const mainSrcForCard = thumbSrc ?? ""
 
@@ -340,6 +342,7 @@ export function ProductCard({
             </div>
           )}
           <h3>{displayTitle}</h3>
+          {choiceCaption ? <p className="card-choice">{choiceCaption}</p> : null}
           {dimDisplay != null && (
             <span className="card-dimensions" aria-label={dimAria ?? undefined}>
               {dimDisplay}

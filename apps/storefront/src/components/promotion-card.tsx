@@ -7,7 +7,7 @@ import { resolveCatalogCardHeroSrc } from "@/lib/catalog-card-image"
 import { formatRub } from "@/lib/format"
 import { formatRuInline } from "@/lib/format-ru-copy"
 import {
-  getBuyerFacingProductTitle,
+  getBuyerFacingProductTitleLayout,
   getCollectionLabel,
   getSubcollectionLabel,
 } from "@/lib/product-metadata"
@@ -64,11 +64,12 @@ function toViews(slot: PromotionSlotPayload): PromoView[] {
       | undefined
     const productType = (product.product_classification as { product_type?: string } | undefined)
       ?.product_type
-    const parts = [getCollectionLabel(product), getSubcollectionLabel(product)].filter(Boolean)
+    const titleLayout = getBuyerFacingProductTitleLayout(product)
+    const parts = [titleLayout.caption, getCollectionLabel(product), getSubcollectionLabel(product)].filter(Boolean)
     out.push({
       id,
       href: `/product/${id}`,
-      title: getBuyerFacingProductTitle(product),
+      title: titleLayout.text,
       context: parts.length > 0 ? parts.join(" · ") : null,
       imageSrc: src,
       salePrice: item.sale_price,

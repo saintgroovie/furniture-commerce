@@ -4982,6 +4982,7 @@ button.pdp-material-trigger:focus-visible {
 .product-card .card-body .card-text-stack > .card-context,
 .product-card .card-body .card-text-stack > .card-context-row,
 .product-card .card-body .card-text-stack > h3,
+.product-card .card-body .card-text-stack > .card-choice,
 .product-card .card-body .card-text-stack > .card-dimensions,
 .product-card .card-body .card-text-stack > .card-price-row {
   margin: 0;
@@ -5074,6 +5075,13 @@ a.product-card-member-chip:hover {
   margin-left: auto;
   font-size: 0.75rem;
   white-space: nowrap;
+}
+
+.card-choice {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--color-fg-muted);
 }
 
 .card-dimensions {
@@ -7477,6 +7485,13 @@ a.product-card-member-chip:hover {
   text-wrap: pretty;
 }
 
+.pdp-choice {
+  margin: 0.25rem 0 0;
+  color: var(--color-fg-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.4;
+}
+
 /* 3. Short positioning line (real subtitle field).
    CopyLines may emit 2 meaning rows (name / measure). */
 .pdp-subtitle {
@@ -8322,6 +8337,13 @@ button.pdp-size-chip:hover {
 
 .cart-line-title:hover {
   text-decoration: underline;
+}
+
+.cart-line-choice {
+  display: block;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--color-fg-muted);
 }
 
 /* Chosen execution («Цвет: Молочный · Дерево: Дуб · Арт. GR-09-1») —

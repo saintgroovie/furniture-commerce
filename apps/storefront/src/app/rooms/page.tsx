@@ -1,104 +1,66 @@
 import Link from "next/link"
 import type { Metadata } from "next"
-import { RoomSetCard } from "@/components/room-set-card"
-import { getRoomSets } from "@/lib/api/room-sets"
+import { getRoomSets, getRoomSetStorefrontBySlug } from "@/lib/api/room-sets"
 import { KIDS_ROOM_TYPE } from "@/lib/kids"
 import { actions, roomsCopy, seo } from "@/lib/woodright-copy"
 import { pageTitle } from "@/lib/page-title"
-import { CopyLines } from "@/components/copy-lines"
 import { canonicalAlternates } from "@/lib/page-canonical"
 import { getSiteUrl } from "@/lib/api/base"
 import { EditorialPageJsonLd } from "@/components/editorial-page-json-ld"
 import { roomDirectoryJsonLd } from "@/lib/editorial-page-json-ld"
+import { roomEditorialScenes } from "@/lib/editorial-scenes"
+import type { EditorialProduct } from "@/lib/editorial-scenes"
+import { getEditorialProducts } from "@/lib/editorial-shopping-data"
+import { RoomsEditorialLanding } from "@/components/rooms-editorial-landing"
+import type { EditorialRoom } from "@/components/rooms-editorial-landing"
 
 export const metadata: Metadata = {
-  title: pageTitle(seo.rooms.title),
-  description: seo.rooms.description,
-  openGraph: {
-    title: seo.rooms.title,
-    description: seo.rooms.description,
-    url: "/rooms",
-  },
+  title: pageTitle(seo.rooms.title), description: seo.rooms.description,
+  openGraph: { title: seo.rooms.title, description: seo.rooms.description, url: "/rooms" },
   ...canonicalAlternates("/rooms"),
 }
 
+function isPublishedAdultRoom(value: unknown): value is EditorialRoom & { is_active: true } {
+  if (!value || typeof value !== "object") return false
+  const room = value as Record<string, unknown>
+  return room.is_active === true && room.room_type !== KIDS_ROOM_TYPE
+    && typeof room.id === "string" && typeof room.title === "string" && !!room.title.trim()
+    && typeof room.slug === "string" && /^[a-z0-9][a-z0-9-]{0,120}$/i.test(room.slug)
+}
+
+async function loadRoomShopping(rooms: EditorialRoom[]) {
+  const memberships = await Promise.all(rooms.filter((room) => roomEditorialScenes[room.slug]).map(async (room) => {
+    try {
+      const data = await getRoomSetStorefrontBySlug(room.slug)
+      const items: unknown[] = Array.isArray(data.room_set?.items) ? data.room_set.items : []
+      const handles = new Set(items.flatMap((value) => {
+        if (!value || typeof value !== "object") return []
+        const product = (value as { product?: { handle?: unknown } }).product
+        return typeof product?.handle === "string" ? [product.handle] : []
+      }))
+      return { slug: room.slug, handles: roomEditorialScenes[room.slug]!.spots.map((spot) => spot.handle).filter((handle) => handles.has(handle)) }
+    } catch { return { slug: room.slug, handles: [] as string[] } }
+  }))
+  const products = await getEditorialProducts(memberships.flatMap((room) => room.handles))
+  const result: Record<string, Record<string, EditorialProduct>> = {}
+  for (const room of memberships) result[room.slug] = Object.fromEntries(room.handles.flatMap((handle) => products[handle] ? [[handle, products[handle]!]] : []))
+  return result
+}
+
 export default async function RoomsPage() {
-  let data: { room_sets?: unknown[] } = {}
+  let list: EditorialRoom[] = []
   try {
-    data = await getRoomSets()
-  } catch (err) {
-    console.error("[rooms] room sets load failed", err)
-    return (
-      <div data-state="empty">
-        <h1>{roomsCopy.h1}</h1>
-        <div className="status-message">
-          <p>{roomsCopy.emptyBody}</p>
-          <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
-            <Link href="/">{actions.toHome}</Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
-  const roomSets = data.room_sets ?? []
-  const all = Array.isArray(roomSets) ? roomSets : []
-  const list = all.filter((rs: any) => rs.room_type !== KIDS_ROOM_TYPE)
-
-  const kidsEntry = (
-    <section className="cross-entry-block cross-entry-kids">
-      <div className="cross-entry-header">
-        <h2 className="cross-entry-heading">{roomsCopy.kidsEntryTitle}</h2>
-        <p className="cross-entry-text">
-          {roomsCopy.kidsEntryText}
-        </p>
-      </div>
-      <div className="cross-entry-tiles">
-        <div className="cross-entry-tile">
-          <span className="cross-entry-tile-icon" aria-hidden="true">◈</span>
-          <span className="cross-entry-tile-label">Безопасные материалы</span>
-        </div>
-        <div className="cross-entry-tile">
-          <span className="cross-entry-tile-icon" aria-hidden="true">◇</span>
-          <span className="cross-entry-tile-label">Продуманная эргономика</span>
-        </div>
-        <div className="cross-entry-tile">
-          <span className="cross-entry-tile-icon" aria-hidden="true">○</span>
-          <span className="cross-entry-tile-label">Растёт с ребёнком</span>
-        </div>
-      </div>
-      <Link href="/kids/rooms" className="btn cross-entry-btn">В раздел детской →</Link>
-    </section>
-  )
-
-  if (list.length === 0) {
-    return (
-      <div data-state="empty">
-        <h1>{roomsCopy.h1}</h1>
-        <div className="status-message">
-          <p>{roomsCopy.emptyBody}</p>
-          <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}>
-            <Link href="/">{actions.toHome}</Link>
-          </div>
-        </div>
-        {kidsEntry}
-      </div>
-    )
-  }
-
-  return (
-    <div data-state="success">
-      <EditorialPageJsonLd payload={roomDirectoryJsonLd(getSiteUrl(), list, false, roomsCopy.h1)} />
-      <h1>{roomsCopy.h1}</h1>
-      <CopyLines className="info-text" style={{ marginTop: "0.5rem" }} lines={roomsCopy.lead} />
-      <p className="page-caption">{roomsCopy.supporting}</p>
-      <ul className="product-grid" style={{ marginTop: "1.5rem" }}>
-        {list.map((rs: { id?: string }) => (
-          <li key={rs.id}>
-            <RoomSetCard roomSet={rs as any} />
-          </li>
-        ))}
-      </ul>
-      {kidsEntry}
+    const data = await getRoomSets()
+    list = Array.isArray(data.room_sets) ? data.room_sets.filter(isPublishedAdultRoom) : []
+  } catch { /* No archived room fallback when the API is unavailable. */ }
+  if (!list.length) return <div data-state="empty">
+    <h1>{roomsCopy.h1}</h1><div className="status-message"><p>{roomsCopy.emptyBody}</p>
+      <div className="nav-links nav-links-center" style={{ marginTop: "1rem" }}><Link href="/">{actions.toHome}</Link></div>
     </div>
-  )
+  </div>
+  const productsByRoom = await loadRoomShopping(list)
+  return <>
+    <EditorialPageJsonLd payload={roomDirectoryJsonLd(getSiteUrl(), list, false, "Комнаты")} />
+    <RoomsEditorialLanding rooms={list} productsByRoom={productsByRoom} />
+  </>
 }

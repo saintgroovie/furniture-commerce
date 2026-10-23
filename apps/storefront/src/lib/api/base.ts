@@ -1,3 +1,4 @@
+import { cacheSignal } from "react"
 import {
   assertProductionLikeSiteUrl,
   assertPublicDemoSiteUrl,
@@ -109,7 +110,7 @@ function getPublishableKey(): string {
 /** Default server-side Medusa fetch budget (build/SSR without a live backend). */
 const DEFAULT_MEDUSA_FETCH_TIMEOUT_MS = 8_000
 
-function medusaFetchTimeoutMs(): number {
+export function medusaFetchTimeoutMs(): number {
   const raw = process.env.MEDUSA_FETCH_TIMEOUT_MS
   if (raw === undefined || raw === "") return DEFAULT_MEDUSA_FETCH_TIMEOUT_MS
   const parsed = Number.parseInt(raw, 10)
@@ -119,14 +120,11 @@ function medusaFetchTimeoutMs(): number {
 }
 
 /**
- * Next.js 16 patches `fetch` with streaming transforms. Attaching abort signals
- * to that patched fetch can throw
- * `TypeError: controller[kState].transformAlgorithm is not a function` during SSR
- * and leave catalog/PDP on the empty shell.
- *
- * Bound the wait with an outer `Promise.race` timer instead of attaching a signal
- * to the patched fetch. Callers that pass an explicit `signal` own lifecycle and
- * bypass the default race budget.
+ * Bound the actual request, not just the caller's wait. Server render reads also
+ * stop when React abandons that render, so disconnected clients do not leave a
+ * whole catalog fetch running. Mutations never inherit the render lifecycle.
+ * The outer race still guarantees the budget if a fetch implementation ignores
+ * its signal. Explicit caller-owned signals retain their existing lifecycle.
  */
 async function fetchWithMedusaTimeout(
   url: string,
@@ -135,17 +133,21 @@ async function fetchWithMedusaTimeout(
   if (init?.signal) {
     return fetch(url, init)
   }
-  const { signal: _ignored, ...rest } = init ?? {}
+  const method = (init?.method ?? "GET").toUpperCase()
+  const renderSignal = typeof window === "undefined" && (method === "GET" || method === "HEAD")
+    ? cacheSignal() : null
+  const controller = new AbortController()
+  const signal = renderSignal ? AbortSignal.any([controller.signal, renderSignal]) : controller.signal
   const timeoutMs = medusaFetchTimeoutMs()
   let timer: ReturnType<typeof setTimeout> | undefined
   try {
     return await Promise.race([
-      fetch(url, rest),
+      fetch(url, { ...init, signal }),
       new Promise<Response>((_, reject) => {
         timer = setTimeout(() => {
-          reject(
-            new Error(`Medusa fetch timed out after ${timeoutMs}ms: ${url}`)
-          )
+          const error = new Error(`Medusa fetch timed out after ${timeoutMs}ms: ${url}`)
+          controller.abort(error)
+          reject(error)
         }, timeoutMs)
       }),
     ])
