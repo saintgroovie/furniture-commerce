@@ -1995,10 +1995,10 @@ run_rollback() {
   verify_rollback_release_sha || release_ok=0
   verify_rollback_exposure || exposure_ok=0
   verify_rollback_http || http_ok=0
-  # Storefront rollback must not recreate the backend. If its container
-  # identity moved, this is not a successful rollback.
+  # A single-component rollback must preserve its retained peer.
+  # Peer movement can never be reported as a successful rollback.
   if [[ "$COMPONENT" != "pair" ]] && ! assert_untouched_peer; then
-    log "ROLLBACK_VERIFY backend identity moved - NOT reporting ROLLBACK_OK"
+    log "ROLLBACK_VERIFY retained peer identity moved - NOT reporting ROLLBACK_OK"
     backend_ok=0
   fi
 
@@ -2007,8 +2007,10 @@ run_rollback() {
   prod_cleanup_pin_stages || cleanup_ok=0
 
   if [[ -n "$EVIDENCE_DIR" && -d "$EVIDENCE_DIR/json" ]]; then
-    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"release_sha":%s,"exposure":%s,"http":%s,"metadata":%s,"backend_notouch":%s,"private_stage_cleanup":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s","pre_release_sha":"%s"}\n' \
-      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$release_ok" "$exposure_ok" "$http_ok" "$meta_ok" "$backend_ok" "$cleanup_ok" \
+    local backend_notouch_result="$backend_ok"
+    [[ "$COMPONENT" != "backend" ]] || backend_notouch_result=null
+    printf '{"phase_at_rollback":"%s","method":"restore_pins_then_compose_recreate","keepers_used":false,"pins":%s,"runtime_recreate":%s,"pins_equal_runtime":%s,"release_sha":%s,"exposure":%s,"http":%s,"metadata":%s,"backend_notouch":%s,"retained_peer_notouch":%s,"private_stage_cleanup":%s,"pre_backend_ref":"%s","pre_storefront_ref":"%s","pre_release_sha":"%s"}\n' \
+      "$PHASE" "$pin_ok" "$runtime_ok" "$verify_ok" "$release_ok" "$exposure_ok" "$http_ok" "$meta_ok" "$backend_notouch_result" "$backend_ok" "$cleanup_ok" \
       "$PRE_BE_REF" "$PRE_SF_REF" "${PRE_RELEASE_SHA}" >"$EVIDENCE_DIR/json/rollback-result.json" 2>/dev/null || true
   fi
 
@@ -2639,7 +2641,7 @@ if need_be; then
     die "backend HTTP gate failed"
   fi
 fi
-if need_sf; then
+if need_sf || [[ "$COMPONENT" == "backend" ]]; then
   SF_DEADLINE="$(component_ready_deadline_sec storefront "${WOODRIGHT_SF_CONTAINER_DEFAULT}")"
   log "readiness plan storefront deadline=${SF_DEADLINE}s poll=$(ready_poll_interval)s"
   if wr_fault storefront_health \
