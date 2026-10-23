@@ -4,7 +4,6 @@ import { buildOfferJsonLd, offerAvailabilityFromPurchase, readUniformRubAmounts,
 import { isRequestQuoteProduct } from "./request-quote"
 import { getSeoDescriptionSource } from "./product-seo"
 import { sharedOliverBedDescription } from "./oliver-bed-family-copy"
-import { withoutHeadingDimensions } from "./product-heading"
 import { readProductPurchase } from "./woodright-order/purchase-contract"
 
 type Product = Record<string, unknown>
@@ -94,7 +93,7 @@ export function buildSizeVariantJsonLd(input: {
     inProductGroupWithID: group,
     isVariantOf: {
       "@type": "ProductGroup", "@id": groupId, productGroupID: group,
-      name: withoutHeadingDimensions(String(meta.display_group_title || product.title)),
+      name: jsonLd.name,
       ...(sharedDescription ? { description: sharedDescription } : {}),
       brand: jsonLd.brand, variesBy: ["https://schema.org/size"],
       hasVariant: urls.map((url) => url === jsonLd.url
@@ -168,7 +167,7 @@ export function buildMaterialVariantJsonLd(input: {
         // Keep the real commercial SKU. The native variant + execution code
         // provides the distinct configuration identity without inventing a SKU.
         productID: `${variant.id}:${option.code}`,
-        name: `${jsonLd.name} — ${option.label}`, material: option.label,
+        name: jsonLd.name, material: option.label,
         inProductGroupWithID: `${product.id}:materials`, isVariantOf: { "@id": groupId },
         offers: buildOfferJsonLd({
           url: url.href, priceRub: option.price!,

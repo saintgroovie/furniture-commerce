@@ -1,13 +1,10 @@
-import { formatBuyerFacingMeasureText } from "@/lib/buyer-measure-text"
 import {
-  layoutBuyerFacingTitle,
   type BuyerFacingTitleLayout,
 } from "@/lib/en-name-ru"
 import { isOliverKidsHandle } from "@/lib/oliver-kids-scope"
-import { resolvePublicProductTitle } from "@/lib/catalog-normalization"
 import { openingVariant } from "@/lib/opening-variant"
 import { verifiedMissingDimensions, verifiedPositionDimensions } from "./verified-september-catalog"
-import { withoutHeadingDimensions } from "./product-heading"
+import { presentBuyerTitleParts, type BuyerTitleAttribute } from "./product-title-presentation"
 
 type Dimensions = {
   width_mm?: number
@@ -223,18 +220,21 @@ export function getCanonicalName(product: ProductLike): string | null {
  * canonical model; expand verified pedestal codes) before transcription.
  */
 export function getBuyerFacingProductTitleLayout(
-  product: ProductLike
-): BuyerFacingTitleLayout {
-  const resolved = resolvePublicProductTitle({
+  product: ProductLike,
+  selection?: { title?: string | null; metadata?: Record<string, unknown> | null; options?: unknown[] } | null,
+): BuyerFacingTitleLayout & { caption: string; attributes: BuyerTitleAttribute[] } {
+  const presented = presentBuyerTitleParts({
     title: typeof product.title === "string" ? product.title : null,
     handle: typeof product.handle === "string" ? product.handle : null,
     metadata: meta(product),
+    options: Array.isArray(product.options) ? product.options : undefined,
+    selection,
   })
-  const layout = layoutBuyerFacingTitle(withoutHeadingDimensions(resolved.public_title))
   return {
-    ...layout,
-    text: formatBuyerFacingMeasureText(layout.text),
-    lines: layout.lines.map((line) => formatBuyerFacingMeasureText(line)),
+    text: presented.base_title,
+    lines: presented.lines,
+    caption: presented.caption,
+    attributes: presented.attributes,
   }
 }
 

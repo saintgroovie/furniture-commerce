@@ -1,6 +1,7 @@
-import { cache } from "react"
+import { cache, cacheSignal } from "react"
 import { isBuyerPublicProductStatus } from "../buyer-publication"
-import { getBaseUrl, medusaFetch } from "./base"
+import { getBaseUrl, medusaFetch, medusaFetchTimeoutMs } from "./base"
+import { withCatalogReadBudget } from "../catalog-read-budget"
 
 export async function getProducts(params?: {
   category_id?: string
@@ -41,13 +42,13 @@ export async function getProducts(params?: {
  * Catalog pages call this once per render; related cards use exact handle reads.
  */
 export async function getCatalogProducts() {
-  return readCatalogProducts()
+  return withCatalogReadBudget(signal => readCatalogProducts(undefined, signal), cacheSignal(), medusaFetchTimeoutMs())
 }
 
-async function readCatalogProducts(handle?: string) {
+async function readCatalogProducts(handle?: string, signal?: AbortSignal) {
   const base = getBaseUrl()
   const query = handle == null ? "" : `?${new URLSearchParams({ handle })}`
-  const res = await medusaFetch(`${base}/store/catalog-products${query}`)
+  const res = await medusaFetch(`${base}/store/catalog-products${query}`, signal ? { signal } : undefined)
   if (!res.ok) {
     const text = await res.text()
     let message = "Не удалось загрузить каталог."

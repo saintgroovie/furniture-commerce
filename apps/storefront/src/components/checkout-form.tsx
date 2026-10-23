@@ -24,6 +24,13 @@ import { checkoutCopy as copy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { flatCopy } from "@/lib/format-ru-copy"
 import { mintOrderAccess } from "@/lib/woodright-order/api"
+import { presentBuyerCartLine } from "@/lib/product-title-presentation"
+
+function checkoutLineTitle(item: Record<string, unknown>): string {
+  const presented = presentBuyerCartLine(item)
+  if (!presented) return "Без названия"
+  return presented.caption ? `${presented.base_title} · ${presented.caption}` : presented.base_title
+}
 
 type CheckoutState =
   | "empty_cart"
@@ -353,7 +360,7 @@ export function CheckoutForm() {
             <ul className="checkout-composition-list">
               {items.map((item) => (
                 <li key={String(item.id)} className="checkout-composition-item">
-                  <span>{(item.title as string) ?? "Без названия"}</span>
+                  <span>{checkoutLineTitle(item)}</span>
                   <span>× {Number((item as { quantity?: number }).quantity ?? 1)}</span>
                 </li>
               ))}

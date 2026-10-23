@@ -111,7 +111,7 @@ export default async function KidsCatalogPage({
         basePath="/kids/catalog"
         initialState={filterState}
         atfProducts={collectAtfBrowseProducts(browseProducts, filterState)}
-        hydratedPool={browseProducts}
+        poolRevision={crypto.randomUUID()}
         poolScope="kids"
         kidsProductIds={kidsProductIds}
         showBespokeCta

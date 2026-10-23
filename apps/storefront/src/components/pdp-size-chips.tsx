@@ -44,6 +44,8 @@ type Props = {
    * applies to every chip price — matching what each sibling PDP would show.
    */
   materialTiers: MaterialTierOption[] | null
+  /** Legal material carried by a sparse sibling URL when no dropdown is mounted. */
+  initialMaterialCode?: string
   /** request_quote products keep the «от … ₽» reference-price shape. */
   requestQuote: boolean
   /** Heading for the chip row. Default: size. Fabric pairs use «Ткань». */
@@ -60,6 +62,7 @@ export function PdpSizeChips({
   productKey,
   chips,
   materialTiers,
+  initialMaterialCode,
   requestQuote,
   selectorLabel = pdpCopy.sizeSelectorLabel,
   preserveMaterialInHref = false,
@@ -68,7 +71,7 @@ export function PdpSizeChips({
   const gate = usePdpPurchaseGate()
   const gateOk = gateMatchesProduct(gate, productKey)
 
-  const selectedCode = materialCodeForProduct(materialSelection, productKey)
+  const selectedCode = materialCodeForProduct(materialSelection, productKey) ?? initialMaterialCode
   const colorMultiplier = gateOk
     ? resolveFinishColorMultiplier(gate.finishKey, gate.standardFinishKey)
     : 1

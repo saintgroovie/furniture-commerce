@@ -78,7 +78,9 @@ assert.deepEqual(accepted.files, ["apps/storefront/src/page.tsx"])
 rmSync(ok.repo, { recursive: true, force: true })
 
 const oldDockerfile = readFileSync(join(__dirname, "fixtures/isolated-storefront/Dockerfile.pre-component-revision"), "utf8")
-const revisionDockerfile = readFileSync(join(__dirname, "../../apps/storefront/Dockerfile"), "utf8")
+// This exception permits one historical byte-exact backport, not the current runtime.
+const revisionDockerfile = readFileSync(join(__dirname, "fixtures/isolated-storefront/Dockerfile.component-revision"), "utf8")
+const currentDockerfile = readFileSync(join(__dirname, "../../apps/storefront/Dockerfile"), "utf8")
 function checkDockerfileBackport(baseContent, sourceContent, accepted) {
   const sample = initRepo({ dockerfile: baseContent })
   writeFileSync(join(sample.repo, "apps/storefront/Dockerfile"), sourceContent)
@@ -91,6 +93,8 @@ function checkDockerfileBackport(baseContent, sourceContent, accepted) {
   rmSync(sample.repo, { recursive: true, force: true })
 }
 checkDockerfileBackport(oldDockerfile, revisionDockerfile, true)
+// Node/runtime updates require the normal paired release; never widen the exception.
+checkDockerfileBackport(oldDockerfile, currentDockerfile, false)
 checkDockerfileBackport(oldDockerfile, revisionDockerfile + "\nRUN echo unexpected-runtime-change\n", false)
 checkDockerfileBackport(oldDockerfile + "\n# unknown base\n", revisionDockerfile, false)
 

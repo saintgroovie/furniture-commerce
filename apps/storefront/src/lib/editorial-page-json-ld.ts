@@ -1,5 +1,5 @@
 import { resolveStorefrontProductImageSrc } from "./product-images"
-import { withoutHeadingDimensions } from "./product-heading"
+import { getBuyerFacingProductTitle } from "./product-metadata"
 
 type LinkEntry = { name: string; path: string }
 type Row = Record<string, unknown>
@@ -96,7 +96,7 @@ export function roomPageJsonLd(siteUrl: string, roomSet: Row): EditorialPageJson
       const product = row(row(item).product)
       const handle = slug(product.handle)
       const title = text(product.title)
-      return handle && title ? [{ name: title, path: `/product/${handle}` }] : []
+      return handle && title ? [{ name: getBuyerFacingProductTitle(product), path: `/product/${handle}` }] : []
     }),
   })
 }
@@ -120,7 +120,7 @@ export function motifPageJsonLd(siteUrl: string, theme: Row, cover: string | nul
     description: text(theme.motif_description), breadcrumbs: [home, kids, paintings, { name, path }],
     entries: theme.products.flatMap((value) => {
       const product = row(value), handle = slug(product.handle), title = text(product.title)
-      return handle && title ? [{ name: withoutHeadingDimensions(title), path: `/product/${handle}` }] : []
+      return handle && title ? [{ name: getBuyerFacingProductTitle(product), path: `/product/${handle}` }] : []
     }),
   })
 }

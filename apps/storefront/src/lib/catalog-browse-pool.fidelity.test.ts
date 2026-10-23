@@ -113,7 +113,8 @@ function product(
   assert.equal(items[0]?.url, "https://woodright.ru/product/ol-14-1", "ItemList points at the canonical handle URL")
   assert.equal(
     String(items[0]?.name).replace(/[\u00a0\u202f]/g, " "),
-    "Односпальная кровать Оливер"
+    "Кровать Оливер",
+    "ItemList keeps the approved base name; dimensions alone do not invent a bed class"
   )
 }
 

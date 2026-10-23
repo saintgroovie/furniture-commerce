@@ -36,7 +36,7 @@ export function buildProvenceFinishJsonLd(product: Product, scalar: Product, med
       url.searchParams.set("finish", item.key)
       return {
         ...scalar, "@id": `${url.href}#product`, url: url.href,
-        name: `${scalar.name} — ${item.label}`, sku: variant.sku,
+        name: scalar.name, sku: variant.sku,
         productID: `${variant.id}:finish:${item.key}`, color: item.label,
         image: [...new Set([item.mainSrc, ...item.extraSrcs])].map((src) => new URL(src, url).href),
         inProductGroupWithID: `${product.id}:finishes`, isVariantOf: { "@id": groupId },

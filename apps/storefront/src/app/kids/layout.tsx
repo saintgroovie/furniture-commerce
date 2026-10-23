@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 export const metadata: Metadata = {
   title: { default: "Детская", template: "%s | Детская | Woodright" },
   description:
-    "Мебель для детских комнат. Готовые комплекты, безопасные материалы, индивидуальные размеры.",
+    "Мебель из массива для сна, игр и первых открытий. Oliver Kids и росписи Вилли Винки.",
 }
 
 // The section subnav bar was removed: the main header's "Детская" dropdown

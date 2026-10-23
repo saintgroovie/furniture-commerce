@@ -4,6 +4,8 @@ import { resolvePdpMediaSrc } from "./product-images"
 import { variantRubPrice } from "./variant-rub-price"
 import { readProductPurchase } from "./woodright-order/purchase-contract"
 import { isRequestQuoteProduct } from "./request-quote"
+import { presentBuyerTitleParts } from "./product-title-presentation"
+import { withBuyerTitleProperties } from "./product-title-json-ld"
 
 type Row = Record<string, unknown>
 
@@ -37,17 +39,28 @@ export function buildNativeVariantJsonLd(input: {
     const gallery = (variant.metadata as Row | undefined)?.gallery_urls
     const images = Array.isArray(gallery) && gallery.length && gallery.every((u) => typeof u === "string" && u.trim())
       ? gallery.map((u) => resolvePdpMediaSrc(u as string)) : input.commonImages
-    const item = buildProductJsonLd({
-      name: `${jsonLd.name} — ${choice.label}`,
+    const presented = presentBuyerTitleParts({
+      title: String(product.title ?? ""),
+      handle: typeof product.handle === "string" ? product.handle : null,
+      metadata: product.metadata as Row | undefined,
+      options: Array.isArray(product.options) ? product.options : undefined,
+      selection: { title: typeof variant.title === "string" ? variant.title : null, metadata: variant.metadata as Row | undefined,
+        options: Array.isArray(variant.options) ? variant.options : undefined },
+    })
+    const item = withBuyerTitleProperties(buildProductJsonLd({
+      name: String(jsonLd.name),
       description: typeof jsonLd.description === "string" ? jsonLd.description : null,
       url: url.href, sku: choice.sku, images,
       material: typeof jsonLd.material === "string" ? jsonLd.material : null,
-    })
+    }), presented.attributes)
     if (!Array.isArray(item.image) || !item.image.length) return null
     members.push({
       ...item, "@id": `${url.href}#product`, productID: choice.id,
       ...(property ? { [property]: choice.label } : {}),
-      additionalProperty: [{ "@type": "PropertyValue", name: axis.label, value: choice.label }],
+      additionalProperty: [...new Map([
+        ...(Array.isArray(item.additionalProperty) ? item.additionalProperty : []),
+        { "@type": "PropertyValue", name: axis.label, value: choice.label },
+      ].map((value) => [JSON.stringify(value), value])).values()],
       inProductGroupWithID: String(product.id), isVariantOf: { "@id": groupId },
       offers: buildOfferJsonLd({ url: url.href, priceRub: price,
         availability: offerAvailabilityFromPurchase(readProductPurchase(product)) }),

@@ -32,7 +32,7 @@ export const CART_NOT_FOUND = "CART_NOT_FOUND"
  * storefront_section / willie-winkie collection without a catalog fan-out.
  * `+` keeps default cart retrieve fields.
  */
-const CART_RETRIEVE_FIELDS = "+items.product.metadata"
+const CART_RETRIEVE_FIELDS = "+items.product.metadata,+items.variant.options.value,+items.variant.options.option.title"
 
 export async function getCart(cartId: string) {
   const base = getBaseUrl()
