@@ -11,6 +11,8 @@ import { indexingCanonical } from "@/lib/indexing-policy"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
 import { seo, willieWinkieMotifsCopy } from "@/lib/woodright-copy"
 import { pageTitle } from "@/lib/page-title"
+import { EditorialPageJsonLd } from "@/components/editorial-page-json-ld"
+import { motifDirectoryJsonLd } from "@/lib/editorial-page-json-ld"
 
 const willieCanonical = indexingCanonical(`${getSiteUrl()}/kids/willie-winkie`)
 
@@ -93,6 +95,7 @@ export default async function WillieWinkieMotifDirectoryPage() {
 
   return (
     <div data-state="success" className="ww-motif-page">
+      <EditorialPageJsonLd payload={motifDirectoryJsonLd(getSiteUrl(), themes)} />
       <section className="ww-motif-hero" aria-labelledby="ww-motif-hero-title">
         <div className="ww-motif-hero-inner">
           <div className="ww-motif-hero-copy">

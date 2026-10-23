@@ -8,6 +8,8 @@ import { getMotifTheme } from "@/lib/api/motif-themes"
 import { indexingCanonical } from "@/lib/indexing-policy"
 import { resolveStorefrontProductImageSrc } from "@/lib/product-images"
 import { seo, willieWinkieMotifsCopy } from "@/lib/woodright-copy"
+import { EditorialPageJsonLd } from "@/components/editorial-page-json-ld"
+import { motifPageJsonLd } from "@/lib/editorial-page-json-ld"
 
 type PageProps = { params: Promise<{ motifSlug: string }> }
 
@@ -146,6 +148,7 @@ export default async function WillieWinkieMotifPage({ params }: PageProps) {
 
   return (
     <div data-state="success" className="ww-motif-page ww-motif-detail">
+      <EditorialPageJsonLd payload={motifPageJsonLd(getSiteUrl(), theme, cover)} />
       <section
         className="ww-detail-hero"
         aria-labelledby="ww-motif-detail-title"
