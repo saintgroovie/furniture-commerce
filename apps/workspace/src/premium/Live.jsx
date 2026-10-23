@@ -430,7 +430,7 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
       <Drawer title="Новый черновик счёта" onClose={onClose} wide>
         <InvoiceEditor
           data={data}
-          initialSource={panel.objectId}
+          initialSource={panel.objectId || panel.personId}
           go={go}
           refresh={refresh}
           notify={notify}

@@ -33,9 +33,13 @@ const emptyLine = () => ({
   variantId: null,
 });
 function fieldsFor(data, invoice, initialSource) {
-  const item = [...data.requests, ...data.orders].find(
-    (r) => r.id === initialSource,
-  );
+  const selectedPerson = data.people.find((p) => p.id === initialSource);
+  const related = selectedPerson
+    ? data.requests.filter((r) => r.personId === selectedPerson.id)
+    : [];
+  const item =
+    [...data.requests, ...data.orders].find((r) => r.id === initialSource) ||
+    (related.length === 1 ? related[0] : null);
   const type =
     invoice?.sourceType ||
     (data.access?.role === "accountant" ||
@@ -45,7 +49,8 @@ function fieldsFor(data, invoice, initialSource) {
   const company = data.companies.find(
     (c) => c.id === (invoice?.companyId || item?.companyId),
   );
-  const person = data.people.find((p) => p.id === item?.personId);
+  const person =
+    selectedPerson || data.people.find((p) => p.id === item?.personId);
   return {
     sourceType: type,
     sourceId: invoice?.sourceId || item?.id || "",
