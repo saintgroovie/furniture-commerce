@@ -1,0 +1,5 @@
+.role-guide p { line-height: 1.65; }
+.role-guide .section { margin-top: 20px; }
+.role-guide-common { margin: 24px 0; padding: 18px; border: 1px solid var(--line, #dedbd4); border-radius: 8px; }
+.role-guide-common > summary { cursor: pointer; font-weight: 600; line-height: 1.5; }
+.role-guide-common > summary:focus-visible { outline: 2px solid #B8923A; outline-offset: 5px; }
