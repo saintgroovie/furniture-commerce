@@ -103,6 +103,18 @@ function run(args, extraEnv = {}) {
 }
 
 {
+  const r = run(["--environment", "public_production", "--component", "backend", "--source-sha", SHA, "--backend-ref", BE_REF, "--storefront-ref", SF_REF])
+  check(r.status !== 0, "backend without a backend approval refused", r.stderr)
+  check(!/accepts pair or storefront/.test(r.stderr + r.stdout), "backend is not a blanket enum ban")
+  check(/OWNER_APPROVAL_MISMATCH|MALFORMED|requires both/.test(r.stderr + r.stdout), "backend fails closed on pair approval")
+}
+
+{
+  const r = run(["--environment", "public_demo", "--component", "backend", "--source-sha", SHA, "--backend-ref", BE_REF, "--storefront-ref", SF_REF])
+  check(r.status !== 0, "backend component refused outside public_production", r.stderr)
+}
+
+{
   const r = run(["--environment", "public_production", "--component", "pair", "--source-sha", SHA])
   check(r.status !== 0, "pair without refs fails closed", r.stderr)
 }

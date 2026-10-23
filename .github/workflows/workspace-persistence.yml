@@ -4,6 +4,9 @@ on:
     paths:
       - apps/backend/**
       - apps/workspace/**
+      - ops/release/cutover-public-production-pair.sh
+      - ops/release/reconcile-owner-approved-release.sh
+      - ops/lib/woodright-owner-approved-release.sh
       - ops/backup/**
       - ops/release/prepare-private-desk-runtime.py
       - ops/release/test-prepare-private-desk-runtime.py
