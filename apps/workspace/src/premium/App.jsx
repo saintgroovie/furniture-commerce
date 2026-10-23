@@ -468,7 +468,7 @@ export function App() {
                 </button>
                 <button onClick={() => openPanel({ type: "help" })}>
                   <Question size={18} />
-                  Интеграции и возможности
+                  Инструкция и помощь
                 </button>
               </div>
             </>

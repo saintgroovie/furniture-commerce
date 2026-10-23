@@ -40,6 +40,7 @@ import { PasswordChange } from "./PasswordChange.jsx";
 import { ProductCreate, ProductEditor } from "./ProductEditor.jsx";
 import { InvoiceEditor } from "./Invoices.jsx";
 import { linkedInvoices } from "./invoice-input.mjs";
+import { RoleHelp } from "./RoleHelp.jsx";
 const types = {
   STANDARD: "Готовое изделие",
   CONFIGURABLE: "Выбор исполнения",
@@ -417,6 +418,12 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
       setBusy(false);
     }
   }
+  if (panel.type === "help") return (
+    <Drawer title="Помощь по Woodright OS" onClose={onClose} wide>
+      <RoleHelp data={data} go={go} onClose={onClose} />
+      <details><summary>Подключения и возможности</summary><Integrations data={data} compact /></details>
+    </Drawer>
+  );
   const focus =
     panel.type === "invoiceEditor" ||
     panel.type === "invoices" ||
