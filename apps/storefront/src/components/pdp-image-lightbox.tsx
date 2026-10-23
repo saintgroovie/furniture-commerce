@@ -1,7 +1,7 @@
 "use client"
 
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { pdpLightboxCopy as copy } from "@/lib/woodright-copy"
 
@@ -9,6 +9,7 @@ type Props = {
   images: string[]
   activeIndex: number
   alt: string
+  captions?: Readonly<Record<string, string>>
   onClose: () => void
   onNavigate: (index: number) => void
 }
@@ -31,11 +32,14 @@ export function PdpImageLightbox({
   images,
   activeIndex,
   alt,
+  captions,
   onClose,
   onNavigate,
 }: Props) {
   const count = images.length
   const src = images[activeIndex]
+  const caption = captions?.[src]?.trim()
+  const captionId = useId()
   /* Guards effects when called with an empty list or out-of-range index:
      nothing renders, so nothing may lock scroll or steal focus either. */
   const hasImage = typeof src === "string" && src.length > 0
@@ -357,6 +361,7 @@ export function PdpImageLightbox({
       role="dialog"
       aria-modal="true"
       aria-label={`${alt} - ${copy.dialogSuffix}`}
+      aria-describedby={caption ? captionId : undefined}
       tabIndex={-1}
     >
       <div className="pdp-lightbox-backdrop" onClick={onClose} aria-hidden="true" />
@@ -427,6 +432,7 @@ export function PdpImageLightbox({
           key={src}
           src={src}
           alt={alt}
+          aria-describedby={caption ? captionId : undefined}
           className={`pdp-lightbox-img${imageReady ? " is-ready" : ""}`}
           style={imageStyle}
           draggable={false}
@@ -447,6 +453,17 @@ export function PdpImageLightbox({
         </button>
       )}
 
+      {caption && (
+        <p
+          id={captionId}
+          className="pdp-lightbox-caption"
+          style={{ position: "relative", zIndex: 2, flexShrink: 0, margin: 0,
+            padding: "8px 20px", textAlign: "center", color: "var(--color-fg)",
+            background: "var(--color-bg)", overflowWrap: "anywhere" }}
+        >
+          {caption}
+        </p>
+      )}
       {count > 1 && (
         <div className="pdp-lightbox-thumbs" ref={thumbsRef} role="toolbar" aria-label={copy.thumbsLabel}>
           {images.map((url, i) => (

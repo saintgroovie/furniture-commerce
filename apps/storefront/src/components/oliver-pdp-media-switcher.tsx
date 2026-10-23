@@ -1,7 +1,7 @@
 "use client"
 
 import type { MouseEvent } from "react"
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useId, useMemo, useRef, useState } from "react"
 import { ProductThumbCarousel } from "@/components/product-thumb-carousel"
 import { PdpHeroAffordance } from "@/components/pdp-hero-affordance"
 import { PdpImageLightbox } from "@/components/pdp-image-lightbox"
@@ -13,11 +13,13 @@ import {
   shouldShowBuyerGalleryRail,
 } from "@/lib/pdp-gallery-photo-set"
 import { pdpLightboxCopy, states } from "@/lib/woodright-copy"
+import { prepareOl664Gallery } from "@/lib/ol-66-4-gallery"
 
 type Props = {
   mainSrc: string
   extraSrcs: string[]
   title: string
+  captions?: Readonly<Record<string, string>>
 }
 
 function OliverPdpHeroAbsent({ className }: { className: string }) {
@@ -29,7 +31,7 @@ function OliverPdpHeroAbsent({ className }: { className: string }) {
 }
 
 /** Oliver PDP: hero from `mainSrc`; strip includes main + extras, preload before swap. */
-function OliverPdpMediaSwitcherInner({ mainSrc, extraSrcs, title }: Props) {
+function OliverPdpMediaSwitcherInner({ mainSrc, extraSrcs, title, captions }: Props) {
   const mainTrimmed = mainSrc.trim()
   const [displayHeroSrc, setDisplayHeroSrc] = useState(mainTrimmed)
   const [heroFailed, setHeroFailed] = useState(false)
@@ -38,6 +40,8 @@ function OliverPdpMediaSwitcherInner({ mainSrc, extraSrcs, title }: Props) {
   const [pendingPreloadUrl, setPendingPreloadUrl] = useState<string | null>(null)
   const pendingRef = useRef<string | null>(null)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const captionId = useId()
+  const activeCaption = captions?.[displayHeroSrc]?.trim()
 
   const galleryStripCandidates = useMemo(
     () => buildOliverPdpThumbStripUrls(mainTrimmed, extraSrcs),
@@ -181,6 +185,7 @@ function OliverPdpMediaSwitcherInner({ mainSrc, extraSrcs, title }: Props) {
             <img
               src={displayHeroSrc}
               alt={title}
+              aria-describedby={activeCaption ? captionId : undefined}
               className="product-detail-img is-zoomable"
               loading="eager"
               onError={onHeroError}
@@ -189,11 +194,17 @@ function OliverPdpMediaSwitcherInner({ mainSrc, extraSrcs, title }: Props) {
           </button>
         )}
       </div>
+      {activeCaption && (
+        <p id={captionId} className="pdp-photo-caption" style={{ margin: "8px 0", textAlign: "center" }}>
+          {activeCaption}
+        </p>
+      )}
       {lightboxIndex !== null && (
         <PdpImageLightbox
           images={lightboxImages}
           activeIndex={lightboxIndex}
           alt={title}
+          captions={captions}
           onClose={() => setLightboxIndex(null)}
           onNavigate={setLightboxIndex}
         />
@@ -232,7 +243,12 @@ function OliverPdpMediaSwitcherInner({ mainSrc, extraSrcs, title }: Props) {
 }
 
 export function OliverPdpMediaSwitcher(props: Props) {
-  const mainTrimmed = props.mainSrc.trim()
-  const stripKey = [mainTrimmed, ...props.extraSrcs.map((s) => s.trim())].join("\u0000")
-  return <OliverPdpMediaSwitcherInner key={stripKey} {...props} />
+  const prepared = useMemo(
+    () => prepareOl664Gallery(props.mainSrc, props.extraSrcs),
+    [props.mainSrc, props.extraSrcs]
+  )
+  const mediaProps = { ...props, ...prepared }
+  const mainTrimmed = mediaProps.mainSrc.trim()
+  const stripKey = [mainTrimmed, ...mediaProps.extraSrcs.map((s) => s.trim())].join("\u0000")
+  return <OliverPdpMediaSwitcherInner key={stripKey} {...mediaProps} />
 }
