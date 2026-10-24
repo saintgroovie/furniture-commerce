@@ -4,11 +4,8 @@ import { encodeSession, decodeSession } from "../lib/session-codec.ts";
 import { sameOriginAllowed } from "./request-policy.mjs";
 import { identityMatches, readBackendIdentity } from "./runtime-identity.mjs";
 import { BASE_PATH } from "../lib/paths.mjs";
-export const COOKIE = BASE_PATH
-  ? process.env.WOODRIGHT_WORKSPACE_RUNTIME === "local-private"
-    ? `wr_os_${process.env.PORT || "4320"}`
-    : "wr_os"
-  : "wr_desk";
+import { workspaceCookieName, workspaceCookieOptions } from "./session-policy.mjs";
+export const COOKIE = workspaceCookieName(BASE_PATH);
 export const NO_STORE = { "Cache-Control": "private, no-store" };
 export class LiveError extends Error {
   constructor(status, message) {
@@ -212,15 +209,6 @@ export async function readPaged(
 }
 /** @returns {{httpOnly:boolean,sameSite:'strict',secure:boolean,path:string,maxAge:number}} */
 export function cookieOptions(request) {
-  const local =
-    process.env.WOODRIGHT_WORKSPACE_RUNTIME === "local-private" &&
-    ["127.0.0.1", "localhost", "[::1]"].includes(new URL(request.url).hostname);
-  return {
-    httpOnly: true,
-    sameSite: "strict",
-    secure: !local,
-    path: BASE_PATH || "/",
-    maxAge: 60 * 60 * 12,
-  };
+  return workspaceCookieOptions(request.url, BASE_PATH);
 }
 export { encodeSession };

@@ -9,6 +9,7 @@ import {
 } from "@/server/live.mjs";
 import { readJsonBounded } from "@/server/request-policy.mjs";
 import { BASE_PATH } from "@/lib/paths.mjs";
+import { workspaceInvitationUrl } from "@/server/workspace-address.mjs";
 export async function GET() {
   try {
     const session = await staff();
@@ -152,7 +153,7 @@ export async function POST(request: Request) {
         email: invite.email,
         role,
         expiresAt: invite.expires_at,
-        url: `${origin}${BASE_PATH}/#/join/${encodeURIComponent(invite.token)}`,
+        url: workspaceInvitationUrl(origin, BASE_PATH, invite.token),
       },
       { headers: NO_STORE },
     );
