@@ -14,6 +14,11 @@ export function ymCounterObjectKey(counterId: string): string | null {
 /** Swallow later queue/hits if tag.js finishes after the visitor turns stats off. */
 function disabledYm(): void {}
 
+/** A fresh explicit opt-in may replace only our own disabled callback. */
+export function isMetrikaDisabled(callback: unknown): boolean {
+  return callback === disabledYm
+}
+
 export function teardownYandexMetrika(
   counterId: string,
   win: object,

@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { CopyLines } from "@/components/copy-lines"
 import { writeYmConsentToDocument } from "@/lib/analytics-consent"
 import type { YmConsent } from "@/lib/analytics-config"
-import { teardownYandexMetrika } from "@/lib/analytics-metrika"
+import { isMetrikaDisabled, teardownYandexMetrika } from "@/lib/analytics-metrika"
 import { bindMetrikaGoals } from "@/lib/analytics-goals"
 import { analyticsConsentCopy } from "@/lib/woodright-copy"
 
@@ -35,7 +35,7 @@ function ensureMetrika(counterId: string): void {
   if (metrikaBootstrappedFor === counterId) return
 
   try {
-    if (typeof window.ym !== "function") {
+    if (typeof window.ym !== "function" || isMetrikaDisabled(window.ym)) {
       const stub: YmStub = (...args: unknown[]) => {
         stub.a = stub.a || []
         stub.a.push(args)
@@ -114,7 +114,19 @@ export function StorefrontAnalytics({
     setConsent(next)
   }
 
-  if (consent === "0") return null
+  if (consent === "0") {
+    return (
+      <p className="analytics-consent-revoke">
+        <button
+          type="button"
+          className="analytics-consent-revoke-btn"
+          onClick={() => choose("1")}
+        >
+          {analyticsConsentCopy.accept}
+        </button>
+      </p>
+    )
+  }
 
   if (consent === "1") {
     return (
