@@ -153,13 +153,26 @@ function validateSourceReceipts(checks, policy, sourceSha, policySha) {
         !Number.isSafeInteger(x.check_id) || x.check_id <= 0 ||
         !Number.isSafeInteger(x.seal_artifact_id) || x.seal_artifact_id <= 0) fail(`source check not qualified: ${name}`)
   }
+  for (const check of checks) {
+    const key = policy.qualification_jobs[check.name]
+    const reused = check.reused_checks
+    if (!policy.qualification_reuse || key === "storefront") {
+      if (reused !== undefined) fail("unexpected reused source receipt")
+      continue
+    }
+    if (!reused || ![reused.runId, reused.runAttempt, reused.jobId, reused.checkId].every(x => Number.isSafeInteger(x) && x > 0)) fail("reused source receipt required")
+    if (key === "backend-fidelity") {
+      const pin = policy.qualification_reuse
+      if (reused.origin !== "prior-qualified-backend" || reused.runId !== pin.backend_run_id || reused.runAttempt !== pin.backend_run_attempt || reused.policySha !== pin.backend_policy_sha || reused.artifactId !== pin.backend_artifact_id || reused.artifactDigest !== pin.backend_artifact_digest || reused.sealSha256 !== pin.backend_seal_sha256) fail("reused backend receipt mismatch")
+    } else if (reused.origin !== "mandatory-pr-ci-exact-policy-tree" || reused.mergedPolicySha !== policySha || ![reused.policySha, reused.policyTree, reused.checkedOutSha].every(x => SHA_RE.test(x || "")) || reused.commandTemplateSha256 !== policy.qualification_job_template_sha256) fail("reused governance receipt mismatch")
+  }
   if (new Set(checks.map(x => `${x.run_id}/${x.run_attempt}`)).size !== 1 ||
       new Set(checks.map(x => x.check_id)).size !== checks.length) fail("source checks must belong to one execution attempt")
 }
 
 // The official workflow always uses the GitHub API collector. An explicit API
 // dependency permits offline wrong-event/base/ref/attempt tests, not a CLI bypass.
-function collectSourceChecks(input, request = null, readSeal = null) {
+function collectSourceChecks(input, request = null, readSeal = null, reuseCollector = collectQualificationReuse) {
   if (!SHA_RE.test(input.sourceSha || "") || !SHA_RE.test(input.trustedPolicySha || "")) fail("source checks require exact source and policy SHA")
   if (!/^[1-9][0-9]*$/.test(String(input.qualificationRunId || ""))) fail("qualification run ID required")
   if (String(input.qualificationRunId) === process.env.GITHUB_RUN_ID) fail("qualification cannot be the build execution itself")
@@ -211,14 +224,109 @@ function collectSourceChecks(input, request = null, readSeal = null) {
         seal.productionBaseSha !== policy.base_sha || seal.policySha !== input.trustedPolicySha ||
         seal.policyRegistrySha256 !== sha256(registryBytes) || seal.jobKey !== key ||
         seal.runId !== run.id || seal.runAttempt !== run.run_attempt || seal.postChecks !== true) fail("qualification source seal mismatch")
+    let reuse
+    if (policy.qualification_reuse && key !== "storefront") {
+      reuse = reuseCollector({ ...input, qualificationJob: key })
+      if (JSON.stringify(seal.reusedChecks) !== JSON.stringify(reuse)) fail("qualification reused provenance mismatch")
+    } else if (seal.reusedChecks !== undefined) fail("unexpected reused source gate")
     return { name, source_sha: input.sourceSha, head_sha: check.head_sha, policy_sha: run.head_sha,
       conclusion: check.conclusion, workflow_path: run.path, event: run.event, head_branch: run.head_branch,
       run_id: run.id, run_attempt: run.run_attempt, check_id: check.id, seal_artifact_id: rows[0].id,
-      source_base_sha: policy.base_sha, source_tree: policy.source_tree }
+      source_base_sha: policy.base_sha, source_tree: policy.source_tree, ...(reuse ? { reused_checks: reuse } : {}) }
   })
   validateSourceReceipts(receipts, policy, input.sourceSha, input.trustedPolicySha)
   fs.writeFileSync(input.sourceChecksFile, JSON.stringify(receipts, null, 2) + "\n")
   return receipts
+}
+
+// Reuse is explicit provenance, never a claim that the new run executed old tests.
+// The old SF job has no postseal: it is deliberately ineligible for reuse.
+function collectQualificationReuse(input, request = null, loadArtifact = null, readGit = null) {
+  const policyRepo = path.resolve(__dirname, "../..")
+  const at = readGit || ((ref, file) => blob(policyRepo, ref, file))
+  const rev = ref => readGit ? readGit(ref, null) : git(policyRepo, ["rev-parse", ref])
+  const registryBytes = fs.readFileSync(path.join(__dirname, "storefront-runtime-policies.json"))
+  const policy = JSON.parse(registryBytes).policies[input.runtimePolicy]
+  const reuse = policy?.qualification_reuse
+  if (!reuse || !["backend-fidelity", "release-governance"].includes(input.qualificationJob)) fail("qualification reuse role invalid")
+  const repo = process.env.GITHUB_REPOSITORY || ""
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) fail("qualification reuse repository required")
+  const api = request || ((suffix, paginate = false) => JSON.parse(execFileSync("gh", ["api", ...(paginate ? ["--paginate", "--slurp"] : []), `repos/${repo}/${suffix}`], { encoding: "utf8" })))
+  const validateJob = (run, name, head) => {
+    const jobs = api(`actions/runs/${run.id}/attempts/${run.run_attempt}/jobs?per_page=100`, true).flatMap(page => page.jobs)
+    const matches = jobs.filter(x => x.name === name)
+    const job = matches[0]
+    if (matches.length !== 1 || job.status !== "completed" || job.conclusion !== "success" || job.run_id !== run.id || job.run_attempt !== run.run_attempt || job.head_sha !== head) fail("reused job not successful in exact attempt")
+    const prefix = `https://api.github.com/repos/${repo}/check-runs/`
+    if (!String(job.check_run_url).startsWith(prefix)) fail("reused check URL invalid")
+    const id = Number(job.check_run_url.slice(prefix.length))
+    if (!Number.isSafeInteger(id) || id <= 0) fail("reused check ID invalid")
+    const check = api(`check-runs/${id}`)
+    if (check.id !== id || check.name !== name || check.app?.slug !== "github-actions" || check.head_sha !== head || check.check_suite?.id !== run.check_suite_id || check.status !== "completed" || check.conclusion !== "success") fail("reused check membership mismatch")
+    return { job, checkId: id, jobs }
+  }
+  if (input.qualificationJob === "backend-fidelity") {
+    const previousBytes = at(reuse.backend_policy_sha, "scripts/release/storefront-runtime-policies.json")
+    if (!previousBytes || sha256(previousBytes) !== reuse.backend_registry_sha256) fail("reused backend registry changed")
+    const previous = JSON.parse(previousBytes).policies[input.runtimePolicy]
+    const current = { ...policy }; delete current.qualification_reuse
+    if (JSON.stringify(current) !== JSON.stringify(previous)) fail("reused backend source or dependency contract changed")
+    for (const file of [".github/workflows/pr-checks.yml", "scripts/release/yarn-install-network-resilient.cjs"]) {
+      const before = at(reuse.backend_policy_sha, file), after = at(input.trustedPolicySha, file)
+      if (!before || !after || sha256(before) !== sha256(after)) fail("reused backend trusted command dependency changed")
+    }
+    const run = api(`actions/runs/${reuse.backend_run_id}`)
+    if (run.id !== reuse.backend_run_id || run.run_attempt !== reuse.backend_run_attempt || run.repository?.full_name !== repo || run.head_sha !== reuse.backend_policy_sha || run.path !== policy.required_workflow || run.event !== policy.source_ci_event || run.head_branch !== policy.source_ci_ref || run.status !== "completed" || run.conclusion !== "failure") fail("reused backend workflow mismatch")
+    const { job, checkId, jobs } = validateJob(run, "Backend fidelity tests", reuse.backend_policy_sha)
+    const builds = jobs.filter(x => x.name === "build")
+    if (builds.length !== 1 || builds[0].conclusion !== "skipped") fail("reused backend run published images")
+    const name = `runtime-qualification-${run.id}-${run.run_attempt}-backend-fidelity`
+    const artifacts = api(`actions/runs/${run.id}/artifacts?per_page=100`, true).flatMap(page => page.artifacts)
+    const found = artifacts.filter(x => x.name === name && !x.expired)
+    const artifact = found[0]
+    if (found.length !== 1 || artifact.id !== reuse.backend_artifact_id || artifact.digest !== reuse.backend_artifact_digest || artifact.workflow_run?.id !== run.id || artifact.workflow_run?.head_sha !== run.head_sha) fail("reused backend seal artifact missing or changed")
+    let bytes
+    if (loadArtifact) bytes = loadArtifact(run.id, name)
+    else {
+      const dir = fs.mkdtempSync(path.join(os.tmpdir(), "wr-reused-seal-"))
+      try {
+        execFileSync("gh", ["run", "download", String(run.id), "--repo", repo, "--name", name, "--dir", dir], { stdio: "pipe" })
+        const file = path.join(dir, "qualification.json")
+        if (fs.readdirSync(dir).length !== 1 || fs.statSync(file).size > 65536) fail("invalid reused seal payload")
+        bytes = fs.readFileSync(file)
+      } finally { fs.rmSync(dir, { recursive: true, force: true }) }
+    }
+    if (!bytes || sha256(bytes) !== reuse.backend_seal_sha256) fail("reused backend seal bytes changed")
+    const seal = JSON.parse(bytes)
+    if (seal.sourceSha !== input.sourceSha || seal.sourceTree !== policy.source_tree || seal.productionBaseSha !== policy.base_sha || seal.policySha !== run.head_sha || seal.policyRegistrySha256 !== reuse.backend_registry_sha256 || seal.jobKey !== "backend-fidelity" || seal.runId !== run.id || seal.runAttempt !== run.run_attempt || seal.postChecks !== true) fail("reused backend source seal mismatch")
+    return { origin: "prior-qualified-backend", runId: run.id, runAttempt: run.run_attempt, policySha: run.head_sha,
+      jobId: job.id, checkId, artifactId: artifact.id, artifactDigest: artifact.digest, sealSha256: reuse.backend_seal_sha256 }
+  }
+  // Governance runs once in mandatory PR CI of the reviewed tree. A genuine
+  // two-parent merge must retain that exact tree; arbitrary ancestors cannot qualify.
+  const reviewedSha = rev(`${input.trustedPolicySha}^2`)
+  const tree = rev(`${input.trustedPolicySha}^{tree}`)
+  if (!SHA_RE.test(reviewedSha) || rev(`${reviewedSha}^{tree}`) !== tree) fail("governance PR tree differs from merged policy")
+  const template = at(input.trustedPolicySha, ".github/workflows/pr-checks.yml")
+  const reviewedTemplate = at(reviewedSha, ".github/workflows/pr-checks.yml")
+  if (!template || !reviewedTemplate || sha256(template) !== policy.qualification_job_template_sha256 || sha256(template) !== sha256(reviewedTemplate)) fail("governance command template differs")
+  const runs = api(`actions/runs?head_sha=${reviewedSha}&event=pull_request&status=success&per_page=100`, true).flatMap(page => page.workflow_runs)
+  const candidates = runs.filter(x => x.path === ".github/workflows/pr-checks.yml" && x.head_sha === reviewedSha && x.status === "completed" && x.conclusion === "success" && x.event === "pull_request" && x.repository?.full_name === repo)
+  if (candidates.length !== 1) fail("governance PR CI missing or ambiguous")
+  const run = api(`actions/runs/${candidates[0].id}`)
+  if (run.id !== candidates[0].id || run.head_sha !== reviewedSha || run.repository?.full_name !== repo || run.path !== ".github/workflows/pr-checks.yml" || run.event !== "pull_request" || run.status !== "completed" || run.conclusion !== "success" || !Number.isSafeInteger(run.run_attempt) || run.run_attempt <= 0) fail("governance PR CI workflow mismatch")
+  const { job, checkId } = validateJob(run, "Release governance gates", reviewedSha)
+  // PR check head_sha is the feature head, while checkout defaults to the PR
+  // merge ref. Verify the actual checkout object from the completed job log.
+  const logPath = `actions/jobs/${job.id}/logs`
+  const logs = request ? api(logPath) : execFileSync("gh", ["api", "--allow-escape-sequences", `repos/${repo}/${logPath}`], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 })
+  const checkout = [...String(logs).matchAll(/\[command\][^\n]*\/git log -1 --format=%H\r?\n[^\n]*Z ([0-9a-f]{40})(?:\r?\n|$)/g)]
+  if (checkout.length !== 1) fail("governance actual checkout proof missing or ambiguous")
+  const checkoutSha = checkout[0][1]
+  const checkedCommit = api(`git/commits/${checkoutSha}`)
+  if (checkedCommit.sha !== checkoutSha || checkedCommit.tree?.sha !== tree || !checkedCommit.parents?.some(x => x.sha === reviewedSha)) fail("governance actual checkout tree differs")
+  return { origin: "mandatory-pr-ci-exact-policy-tree", runId: run.id, runAttempt: run.run_attempt, policySha: reviewedSha,
+    mergedPolicySha: input.trustedPolicySha, policyTree: tree, checkedOutSha: checkoutSha, commandTemplateSha256: sha256(template), jobId: job.id, checkId }
 }
 
 function assertNoExtraProductionSource(repo) {
@@ -249,7 +357,8 @@ function qualificationSeal(input, runtimePolicy) {
   return { sourceSha: input.sourceSha, sourceTree: policy.source_tree, productionBaseSha: policy.base_sha,
     policySha: input.trustedPolicySha, policyRegistrySha256: runtimePolicy.registry_sha256,
     jobKey: input.qualificationJob, runId: Number(process.env.GITHUB_RUN_ID),
-    runAttempt: Number(process.env.GITHUB_RUN_ATTEMPT), postChecks: !!input.postChecks }
+    runAttempt: Number(process.env.GITHUB_RUN_ATTEMPT), postChecks: !!input.postChecks,
+    ...(policy.qualification_reuse && input.qualificationJob !== "storefront" ? { reusedChecks: collectQualificationReuse(input) } : {}) }
 }
 
 function parseArgs(argv) {
@@ -366,18 +475,21 @@ function main() {
     const args = parseArgs(process.argv.slice(2))
     if (args.runtimePolicy && !args.fetchSourceChecks && !args.qualificationOnly) fail("runtime CLI requires live source CI collection")
     if (args.fetchSourceChecks) collectSourceChecks(args)
+    let reusedChecks
     const result = validateIsolatedStorefrontBake(args)
     if (args.qualificationOnly) {
       if (!args.runtimePolicy || args.fetchSourceChecks) fail("invalid qualification phase")
       const seal = qualificationSeal(args, result.runtimePolicy)
       if (!args.evidenceOutput) fail("qualification seal path required")
       fs.writeFileSync(args.evidenceOutput, JSON.stringify(seal, null, 2) + "\n")
+      reusedChecks = seal.reusedChecks
     } else if (args.evidenceOutput) fs.writeFileSync(args.evidenceOutput, JSON.stringify(result, null, 2) + "\n")
     if (process.argv.includes("--github-output") && process.env.GITHUB_OUTPUT) {
       const fs = require("fs")
       fs.appendFileSync(
         process.env.GITHUB_OUTPUT,
         [
+          `reused_gates=${reusedChecks ? "true" : "false"}`,
           `main_sha=${result.mainSha}`,
           `migration_count=${result.migrationCount}`,
           `build_backend=false`,
@@ -400,6 +512,7 @@ module.exports = {
   validateRuntimeContract,
   validateSourceReceipts,
   collectSourceChecks,
+  collectQualificationReuse,
   qualificationSeal,
   assertNoExtraProductionSource,
 }

@@ -155,9 +155,18 @@ function qualificationRole(doc) {
     const actual = job.steps.filter(step => step.name === name)
     const expected = template.steps.filter(step => step.name === name)
     assert.equal(actual.length, 1); assert.equal(expected.length, 1)
-    assert.deepEqual(actual[0], expected[0], 'Qualification install/tests must execute the exact failure-preserving trusted step')
+    const { if: reuseCondition, ...executed } = actual[0]
+    assert.equal(reuseCondition, "${{ steps.reuse.outputs.reused_gates != 'true' }}", 'Only verified exact prior qualification may replace execution')
+    assert.deepEqual(executed, expected[0], 'Qualification install/tests must retain the exact failure-preserving trusted step')
     return actual[0]
   }
+  const reuse = job.steps.filter(step => step.id === 'reuse')
+  assert.equal(reuse.length, 1)
+  assert.equal(reuse[0].name, 'Verify exact source and qualification context')
+  assert.match(reuse[0].run, /node \.runtime-policy\/scripts\/release\/validate-isolated-storefront-bake\.cjs/)
+  assert.match(reuse[0].run, /--github-output --qualification-only --qualification-job backend-fidelity/)
+  assert.equal(reuse[0].env.GH_TOKEN, '${{ github.token }}')
+  assert.ok(!reuse[0].if && !reuse[0]['continue-on-error'])
   const install = exactStep('Install')
   exactStep('Run classification/cart/catalog fidelity')
   assert.equal(install.env.YARN_NPM_REGISTRY_SERVER, 'https://registry.npmjs.org')

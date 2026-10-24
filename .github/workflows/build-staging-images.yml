@@ -837,7 +837,10 @@ jobs:
       - name: Fidelity tests
         run: yarn test:fidelity
 
+      # This tests the CI audit CLI, not buyer runtime source. The frozen app
+      # intentionally predates this helper; keep it out of the app source tree.
       - name: Streamed schema audit regression tests
+        working-directory: .runtime-policy/apps/storefront
         run: python3 scripts/test_catalog_schema_stream.py
       - name: Seal checked source after all gates
         working-directory: .
@@ -898,8 +901,10 @@ jobs:
           persist-credentials: false
           path: .runtime-policy
       - name: Verify exact source and qualification context
+        id: reuse
         working-directory: .
         env:
+          GH_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ inputs.source_sha }}
           RELEASE_REF: ${{ inputs.release_ref }}
           MODE: ${{ inputs.release_mode }}
@@ -920,7 +925,7 @@ jobs:
           git -C .runtime-policy diff --exit-code HEAD --
           git -C . fetch --no-tags origin "refs/heads/${RELEASE_REF}:refs/remotes/origin/${RELEASE_REF}"
           node .runtime-policy/scripts/release/validate-isolated-storefront-bake.cjs \
-            --qualification-only --qualification-job backend-fidelity \
+            --github-output --qualification-only --qualification-job backend-fidelity \
             --release-mode isolated_storefront --runtime-policy "${POLICY_ID}" \
             --trusted-policy-sha "${TRUSTED_SHA}" --source-sha "${SOURCE_SHA}" \
             --production-base-sha "${BASE_SHA}" \
@@ -932,6 +937,7 @@ jobs:
         with:
           node-version: "22"
       - name: Enable Corepack (Yarn 4)
+        if: ${{ steps.reuse.outputs.reused_gates != 'true' }}
         working-directory: .
         run: |
           corepack enable
@@ -941,6 +947,7 @@ jobs:
       # Yarn Berry global cache (enableGlobalCache=true → ~/.yarn/berry/cache).
       # Explicit path avoids setup-node detecting Yarn 1 before Corepack activates Yarn 4.
       - name: Restore Yarn Berry cache
+        if: ${{ steps.reuse.outputs.reused_gates != 'true' }}
         uses: actions/cache@v4
         with:
           path: ~/.yarn/berry/cache
@@ -952,11 +959,13 @@ jobs:
       # Install-level bounded retry for residual registry 429 after Yarn httpRetry.
       # Canonical command remains: yarn install --immutable
       - name: Install
+        if: ${{ steps.reuse.outputs.reused_gates != 'true' }}
         working-directory: .
         env:
           YARN_NPM_REGISTRY_SERVER: https://registry.npmjs.org
         run: node scripts/release/yarn-install-network-resilient.cjs --cwd apps/backend
       - name: Run classification/cart/catalog fidelity
+        if: ${{ steps.reuse.outputs.reused_gates != 'true' }}
         run: |
           set -euo pipefail
           mapfile -t FILES < <(find src -name '*.fidelity.test.ts' | sort)
@@ -967,6 +976,7 @@ jobs:
       - name: Seal checked source after all gates
         working-directory: .
         env:
+          GH_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ inputs.source_sha }}
           RELEASE_REF: ${{ inputs.release_ref }}
           MODE: ${{ inputs.release_mode }}
@@ -1022,8 +1032,10 @@ jobs:
           persist-credentials: true
           path: .runtime-source
       - name: Verify exact source and qualification context
+        id: reuse
         working-directory: .
         env:
+          GH_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ inputs.source_sha }}
           RELEASE_REF: ${{ inputs.release_ref }}
           MODE: ${{ inputs.release_mode }}
@@ -1044,7 +1056,7 @@ jobs:
           git -C . diff --exit-code HEAD --
           git -C .runtime-source fetch --no-tags origin "refs/heads/${RELEASE_REF}:refs/remotes/origin/${RELEASE_REF}"
           node ./scripts/release/validate-isolated-storefront-bake.cjs \
-            --qualification-only --qualification-job release-governance \
+            --github-output --qualification-only --qualification-job release-governance \
             --release-mode isolated_storefront --runtime-policy "${POLICY_ID}" \
             --trusted-policy-sha "${TRUSTED_SHA}" --source-sha "${SOURCE_SHA}" \
             --production-base-sha "${BASE_SHA}" \
@@ -1056,6 +1068,7 @@ jobs:
         with:
           node-version: "22"
       - name: Manifest / deploy / owner / report fixtures
+        if: ${{ steps.reuse.outputs.reused_gates != 'true' }}
         run: |
           set -euo pipefail
           node scripts/release/build-identity.cjs --self-test
@@ -1220,6 +1233,7 @@ jobs:
       - name: Seal checked source after all gates
         working-directory: .
         env:
+          GH_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ inputs.source_sha }}
           RELEASE_REF: ${{ inputs.release_ref }}
           MODE: ${{ inputs.release_mode }}

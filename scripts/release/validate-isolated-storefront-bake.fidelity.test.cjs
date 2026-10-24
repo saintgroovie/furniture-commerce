@@ -305,6 +305,15 @@ const runtimeFixture = readFileSync(join(__dirname, "fixtures/isolated-storefron
 const registryBytes = readFileSync(join(__dirname, "storefront-runtime-policies.json"))
 const runtimeRegistry = JSON.parse(registryBytes)
 const sealed = runtimeRegistry.policies["node20-to-node24-catalog-v1"]
+const fixtureReuse = key => key === "backend-fidelity" ? {
+  origin: "prior-qualified-backend", runId: sealed.qualification_reuse.backend_run_id,
+  runAttempt: 1, policySha: sealed.qualification_reuse.backend_policy_sha, jobId: 20, checkId: 20,
+  artifactId: sealed.qualification_reuse.backend_artifact_id, artifactDigest: sealed.qualification_reuse.backend_artifact_digest,
+  sealSha256: sealed.qualification_reuse.backend_seal_sha256,
+} : { origin: "mandatory-pr-ci-exact-policy-tree", runId: 42, runAttempt: 1, jobId: 44, checkId: 44,
+  policySha: other, mergedPolicySha: sha, policyTree: sha, checkedOutSha: "c".repeat(40),
+  commandTemplateSha256: sealed.qualification_job_template_sha256 }
+
 assert.equal(sealed.paths["apps/storefront/Dockerfile"].after, hash(runtimeFixture))
 assert.equal(Object.keys(sealed.paths).length, 8)
 assert.equal(Object.keys(sealed.protected).length, 9)
@@ -322,7 +331,7 @@ git(rt.repo, ["commit", "-m", "retained backend fixture"])
 const rtBackend = git(rt.repo, ["rev-parse", "HEAD"])
 git(rt.repo, ["checkout", "-q", rtSource])
 const rtPaths = ["apps/storefront/Dockerfile", "apps/storefront/src/page.tsx"]
-const rtPolicy = { ...sealed, source_sha: rtSource, base_sha: rt.base,
+const rtPolicy = { ...sealed, qualification_reuse: undefined, source_sha: rtSource, base_sha: rt.base,
   source_tree: git(rt.repo, ["rev-parse", `${rtSource}^{tree}`]), base_tree: git(rt.repo, ["rev-parse", `${rt.base}^{tree}`]),
   backend_revision: rtBackend, backend_digest: BACKEND_DIGEST,
   backend_tree: git(rt.repo, ["rev-parse", `${rtBackend}:apps/backend`]), protected: {},
@@ -378,7 +387,8 @@ const realEvidence = { id: "node20-to-node24-catalog-v1", policy_sha: sha, regis
   source_checks: sealed.required_checks.map((name, i) => ({ name, source_sha: sealed.source_sha, head_sha: sha, policy_sha: sha, seal_artifact_id: i + 10, conclusion: "success",
     workflow_path: sealed.required_workflow, run_id: 1, run_attempt: 1, check_id: i + 1,
     event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
-    source_base_sha: sealed.base_sha, source_tree: sealed.source_tree })) }
+    source_base_sha: sealed.base_sha, source_tree: sealed.source_tree,
+    ...(sealed.qualification_jobs[name] !== "storefront" ? { reused_checks: fixtureReuse(sealed.qualification_jobs[name]) } : {}) })) }
 const runtimeManifest = manifest({ source_sha: sealed.source_sha, release_mode: "isolated_storefront",
   source_branch: "release/storefront-memory-20261024", production_base_sha: sealed.base_sha,
   production_storefront_digest: sealed.production_storefront_digest, main_sha: sha,
@@ -457,7 +467,90 @@ assert.doesNotMatch(cutover, /storefront_runtime_policy/)
 rmSync(writerDir, { recursive: true, force: true })
 // Mock the collector itself: successful source checks from a PR merge/base,
 // another branch/workflow, a stale rerun attempt or an unrelated job must fail.
-const { collectSourceChecks } = require("./validate-isolated-storefront-bake.cjs")
+const previousReuseRepo = process.env.GITHUB_REPOSITORY
+process.env.GITHUB_REPOSITORY = "fixture/repository"
+// Pinned backend reuse and same-tree PR governance acceptance are different
+// evidence origins; neither may pretend to be fresh candidate SF checks.
+const { collectQualificationReuse } = require("./validate-isolated-storefront-bake.cjs")
+const reusePolicy = sealed.qualification_reuse
+const previousRegistry = structuredClone(runtimeRegistry)
+delete previousRegistry.policies["node20-to-node24-catalog-v1"].qualification_reuse
+const previousBytes = Buffer.from(JSON.stringify(previousRegistry, null, 2) + "\n")
+assert.equal(hash(previousBytes), reusePolicy.backend_registry_sha256)
+const previousSeal = Buffer.from(JSON.stringify({ sourceSha: sealed.source_sha, sourceTree: sealed.source_tree,
+  productionBaseSha: sealed.base_sha, policySha: reusePolicy.backend_policy_sha,
+  policyRegistrySha256: reusePolicy.backend_registry_sha256, jobKey: "backend-fidelity",
+  runId: reusePolicy.backend_run_id, runAttempt: 1, postChecks: true }, null, 2) + "\n")
+assert.equal(hash(previousSeal), reusePolicy.backend_seal_sha256)
+const reuseRepo = "fixture/repository"
+const oldRun = { id: reusePolicy.backend_run_id, run_attempt: 1, repository: { full_name: reuseRepo },
+  head_sha: reusePolicy.backend_policy_sha, path: sealed.required_workflow, event: "workflow_dispatch", head_branch: "main",
+  status: "completed", conclusion: "failure", check_suite_id: 19 }
+const oldJob = { name: "Backend fidelity tests", id: 20, run_id: oldRun.id, run_attempt: 1, head_sha: oldRun.head_sha,
+  status: "completed", conclusion: "success", check_run_url: `https://api.github.com/repos/${reuseRepo}/check-runs/20` }
+const oldCheck = { id: 20, name: oldJob.name, app: { slug: "github-actions" }, head_sha: oldRun.head_sha,
+  check_suite: { id: 19 }, status: "completed", conclusion: "success" }
+const oldArtifact = { id: reusePolicy.backend_artifact_id, digest: reusePolicy.backend_artifact_digest,
+  name: `runtime-qualification-${oldRun.id}-1-backend-fidelity`, expired: false,
+  workflow_run: { id: oldRun.id, head_sha: oldRun.head_sha } }
+const prRun = { id: 42, run_attempt: 1, repository: { full_name: reuseRepo }, head_sha: other,
+  path: ".github/workflows/pr-checks.yml", event: "pull_request", status: "completed", conclusion: "success", check_suite_id: 43 }
+const prJob = { id: 44, name: "Release governance gates", run_id: 42, run_attempt: 1, head_sha: other,
+  status: "completed", conclusion: "success", check_run_url: `https://api.github.com/repos/${reuseRepo}/check-runs/44` }
+const prCheck = { id: 44, name: prJob.name, app: { slug: "github-actions" }, head_sha: other,
+  check_suite: { id: 43 }, status: "completed", conclusion: "success" }
+const checkoutObject = { sha: "c".repeat(40), tree: { sha }, parents: [{ sha: other }] }
+const checkoutLog = `2026-10-24T00:00:00Z [command]/usr/bin/git log -1 --format=%H\n2026-10-24T00:00:01Z ${checkoutObject.sha}\n`
+const trustedTemplate = readFileSync(join(__dirname, "../../.github/workflows/pr-checks.yml"))
+const reuseGit = (ref, file) => {
+  if (!file) return ref.endsWith("^2") ? other : sha
+  if (file.endsWith("storefront-runtime-policies.json")) return previousBytes
+  if (file.endsWith("pr-checks.yml")) return trustedTemplate
+  return Buffer.from("unchanged trusted backend install dependency")
+}
+const reuseApi = suffix => {
+  if (suffix === `actions/runs/${oldRun.id}`) return oldRun
+  if (suffix === `actions/runs/${oldRun.id}/attempts/1/jobs?per_page=100`) return [{ jobs: [oldJob, { name: "build", conclusion: "skipped" }] }]
+  if (suffix === `actions/runs/${oldRun.id}/artifacts?per_page=100`) return [{ artifacts: [oldArtifact] }]
+  if (suffix === "check-runs/20") return oldCheck
+  if (suffix.startsWith("actions/runs?head_sha=")) return [{ workflow_runs: [prRun] }]
+  if (suffix === "actions/runs/42") return prRun
+  if (suffix === "actions/runs/42/attempts/1/jobs?per_page=100") return [{ jobs: [prJob] }]
+  if (suffix === "check-runs/44") return prCheck
+  if (suffix === "actions/jobs/44/logs") return checkoutLog
+  if (suffix === `git/commits/${checkoutObject.sha}`) return checkoutObject
+  throw Error("Unexpected reuse request: " + suffix)
+}
+const reuseInput = { sourceSha: sealed.source_sha, trustedPolicySha: sha, runtimePolicy: "node20-to-node24-catalog-v1", qualificationJob: "backend-fidelity" }
+const loadOld = () => previousSeal
+const validateReuse = (input = reuseInput, api = reuseApi, loader = loadOld, readGit = reuseGit) => collectQualificationReuse(input, api, loader, readGit)
+const backendProvenance = validateReuse()
+assert.equal(backendProvenance.policySha, oldRun.head_sha)
+assert.equal(backendProvenance.origin, "prior-qualified-backend")
+const changedApi = (suffix, value) => key => key === suffix ? value : reuseApi(key)
+rejects(() => validateReuse(reuseInput, changedApi(`actions/runs/${oldRun.id}`, { ...oldRun, run_attempt: 2 })), /workflow mismatch/)
+rejects(() => validateReuse(reuseInput, changedApi("check-runs/20", { ...oldCheck, check_suite: { id: 99 } })), /membership/)
+rejects(() => validateReuse(reuseInput, changedApi(`actions/runs/${oldRun.id}/artifacts?per_page=100`, [{ artifacts: [] }])), /artifact/)
+rejects(() => validateReuse(reuseInput, changedApi(`actions/runs/${oldRun.id}/artifacts?per_page=100`, [{ artifacts: [{ ...oldArtifact, expired: true }] }])), /artifact/)
+rejects(() => validateReuse(reuseInput, reuseApi, () => Buffer.from("{}")), /seal bytes/)
+rejects(() => validateReuse(reuseInput, reuseApi, loadOld, (ref, file) => file?.endsWith("yarn-install-network-resilient.cjs") && ref === sha ? Buffer.from("changed") : reuseGit(ref, file)), /dependency changed/)
+rejects(() => validateReuse({ ...reuseInput, qualificationJob: "storefront" }), /reuse role/)
+const govInput = { ...reuseInput, qualificationJob: "release-governance" }
+const governanceProvenance = validateReuse(govInput)
+assert.equal(governanceProvenance.origin, "mandatory-pr-ci-exact-policy-tree")
+assert.equal(governanceProvenance.checkedOutSha, checkoutObject.sha)
+rejects(() => validateReuse(govInput, reuseApi, loadOld, (ref, file) => !file && ref === `${other}^{tree}` ? "d".repeat(40) : reuseGit(ref, file)), /PR tree/)
+rejects(() => validateReuse(govInput, changedApi("actions/runs/42", { ...prRun, event: "workflow_dispatch" })), /workflow mismatch/)
+rejects(() => validateReuse(govInput, changedApi("actions/runs/42/attempts/1/jobs?per_page=100", [{ jobs: [{ ...prJob, run_attempt: 2 }] }])), /exact attempt/)
+rejects(() => validateReuse(govInput, changedApi("actions/jobs/44/logs", "missing checkout proof")), /checkout proof/)
+rejects(() => validateReuse(govInput, changedApi(`git/commits/${checkoutObject.sha}`, { ...checkoutObject, tree: { sha: other } })), /actual checkout tree/)
+rejects(() => validateReuse(govInput, changedApi("check-runs/44", { ...prCheck, conclusion: "failure" })), /membership/)
+
+if (previousReuseRepo === undefined) delete process.env.GITHUB_REPOSITORY
+else process.env.GITHUB_REPOSITORY = previousReuseRepo
+const { collectSourceChecks: liveCollectSourceChecks } = require("./validate-isolated-storefront-bake.cjs")
+const reuseProof = key => key === "backend-fidelity" ? backendProvenance : governanceProvenance
+const collectSourceChecks = (input, api, seal) => liveCollectSourceChecks(input, api, seal, x => reuseProof(x.qualificationJob))
 const apiDir = mkdtempSync(join(tmpdir(), "wr-ci-collector-"))
 const previousRepo = process.env.GITHUB_REPOSITORY
 process.env.GITHUB_REPOSITORY = "fixture/repository"
@@ -475,7 +568,8 @@ const seals = Object.fromEntries(sealed.required_checks.map(name => [
   `runtime-qualification-7-1-${sealed.qualification_jobs[name]}`,
   { sourceSha: sealed.source_sha, sourceTree: sealed.source_tree, productionBaseSha: sealed.base_sha,
     policySha: sha, policyRegistrySha256: hash(registryBytes), jobKey: sealed.qualification_jobs[name],
-    runId: 7, runAttempt: 1, postChecks: true },
+    runId: 7, runAttempt: 1, postChecks: true,
+    ...(sealed.qualification_jobs[name] !== "storefront" ? { reusedChecks: reuseProof(sealed.qualification_jobs[name]) } : {}) },
 ]))
 function mockApi(run = apiRun, checks = apiChecks, jobs = apiJobs, artifacts = apiArtifacts) {
   return suffix => {
@@ -505,6 +599,7 @@ rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, wrongSuite), loadSea
 rejects(() => collectSourceChecks(apiInput, mockApi(), name => ({ ...seals[name], sourceSha: other })), /source seal/)
 rejects(() => collectSourceChecks(apiInput, mockApi(), name => ({ ...seals[name], policySha: other })), /source seal/)
 rejects(() => collectSourceChecks(apiInput, mockApi(), name => ({ ...seals[name], postChecks: false })), /source seal/)
+rejects(() => collectSourceChecks(apiInput, mockApi(), name => ({ ...seals[name], reusedChecks: { origin: "forged" } })), /unexpected reused|reused provenance/)
 const wrongJobs = structuredClone(apiJobs); wrongJobs[1].check_run_url = "https://api.github.com/repos/other/repository/check-runs/1"
 rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, apiChecks, wrongJobs), loadSeal), /URL invalid/)
 if (previousRepo === undefined) delete process.env.GITHUB_REPOSITORY
@@ -519,6 +614,25 @@ for (const key of Object.values(sealed.qualification_jobs)) {
 const originalRuns = [...template.matchAll(/        run: \|\n((?:          .*\n|\n)+)/g)].map(x => x[0])
 for (const command of originalRuns) assert.ok(workflow.includes(command.trimEnd()), "qualification must preserve full trusted job command block")
 assert.doesNotMatch(workflow.split("  qualify-storefront:")[1], /docker\/login-action|docker\/build-push-action/)
+// The streamed-page parser regression belongs to the trusted CI audit CLI.
+// A passing product-source check must never imply this absent helper was tested.
+const parseYml = source => {
+  const parsed = spawnSync("ruby", ["-rpsych", "-rjson", "-e", "puts JSON.generate(Psych.safe_load(STDIN.read, permitted_classes: [], permitted_symbols: [], aliases: false))"], { input: source, encoding: "utf8" })
+  assert.equal(parsed.status, 0, parsed.stderr)
+  return JSON.parse(parsed.stdout)
+}
+function assertTrustedAuditContext(source) {
+  const job = parseYml(source).jobs["qualify-storefront"]
+  const steps = job.steps.filter(step => step.name === "Streamed schema audit regression tests")
+  assert.equal(steps.length, 1)
+  assert.deepEqual(steps[0], { name: "Streamed schema audit regression tests",
+    "working-directory": ".runtime-policy/apps/storefront", run: "python3 scripts/test_catalog_schema_stream.py" })
+  assert.ok(!job["continue-on-error"])
+}
+assertTrustedAuditContext(workflow)
+assert.throws(() => assertTrustedAuditContext(workflow.replace("working-directory: .runtime-policy/apps/storefront", "working-directory: apps/storefront")))
+assert.throws(() => assertTrustedAuditContext(workflow.replace("run: python3 scripts/test_catalog_schema_stream.py", "if: false\n        run: python3 scripts/test_catalog_schema_stream.py")))
+assert.throws(() => assertTrustedAuditContext(workflow.replace("run: python3 scripts/test_catalog_schema_stream.py", "run: python3 scripts/test_catalog_schema_stream.py || true")))
 assert.match(workflow, /--post-checks/)
 assert.match(workflow, /runtime-qualification-\$\{\{ github.run_id \}\}/)
 const { assertNoExtraProductionSource } = require("./validate-isolated-storefront-bake.cjs")
