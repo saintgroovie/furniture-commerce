@@ -249,7 +249,7 @@ function validate(doc, errors) {
       if (doc.source_sha !== policy.source_sha || doc.production_base_sha !== policy.base_sha ||
           doc.production_storefront_digest !== policy.production_storefront_digest ||
           doc.backend?.oci_revision !== policy.backend_revision || doc.backend?.digest !== policy.backend_digest || doc.backend?.reused !== true) fail("runtime policy source/backend binding mismatch", errors)
-      try { validateSourceReceipts(evidence.source_checks, policy, doc.source_sha) }
+      try { validateSourceReceipts(evidence.source_checks, policy, doc.source_sha, evidence.policy_sha) }
       catch (error) { fail(error.message, errors) }
     }
   } else {

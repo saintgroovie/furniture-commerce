@@ -62,10 +62,19 @@
         "Backend fidelity tests",
         "Release governance gates"
       ],
-      "required_workflow": ".github/workflows/pr-checks.yml",
+      "required_workflow": ".github/workflows/build-staging-images.yml",
       "purpose": "Explicit reviewed runtime migration plus catalog read controls. Backend reused only; DB mutation forbidden. No generic Dockerfile exemption.",
       "source_ci_event": "workflow_dispatch",
-      "source_ci_ref": "release/storefront-memory-20261024"
+      "source_ci_ref": "main",
+      "qualification_test_overlays": {
+        "apps/storefront/src/lib/catalog-fetch-cache.fidelity.test.mjs": "a5c74a68fecaa954fb4068f62a454645bc658cdfa870297e730154869c826f18"
+      },
+      "qualification_job_template_sha256": "9d67c7ebd33db880a2298f363ddea0a829fdf38921947f6b238f9363df1691c6",
+      "qualification_jobs": {
+        "Storefront production gates": "storefront",
+        "Backend fidelity tests": "backend-fidelity",
+        "Release governance gates": "release-governance"
+      }
     }
   }
 }

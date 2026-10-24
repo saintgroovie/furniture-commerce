@@ -332,7 +332,7 @@ const rtPolicy = { ...sealed, source_sha: rtSource, base_sha: rt.base,
   }])) }
 const rtBytes = Buffer.from(JSON.stringify({ schema_version: 1, policies: { "node20-to-node24-catalog-v1": rtPolicy } }))
 const checkFile = join(rt.repo, "checks.json")
-const rtChecks = sealed.required_checks.map((name, i) => ({ name, head_sha: rtSource, conclusion: "success",
+const rtChecks = sealed.required_checks.map((name, i) => ({ name, source_sha: rtSource, head_sha: sha, policy_sha: sha, seal_artifact_id: i + 10, conclusion: "success",
   workflow_path: sealed.required_workflow, run_id: 1, run_attempt: 1, check_id: i + 1,
   event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
   source_base_sha: rtPolicy.base_sha, source_tree: rtPolicy.source_tree }))
@@ -361,7 +361,7 @@ rejects(() => validateFixture(rtInput, rtPaths, Buffer.from(JSON.stringify(badPr
 const badBlob = JSON.parse(rtBytes)
 badBlob.policies[rtInput.runtimePolicy].paths[rtPaths[0]].after = "0".repeat(64)
 rejects(() => validateFixture(rtInput, rtPaths, Buffer.from(JSON.stringify(badBlob))), /blob mismatch/)
-for (const mutate of [x => x.pop(), x => x.push(x[0]), x => x[0].head_sha = sha,
+for (const mutate of [x => x.pop(), x => x.push(x[0]), x => x[0].head_sha = other,
   x => x[0].conclusion = "failure", x => x[0].workflow_path = "other.yml", x => x[0].run_id = 0,
   x => x[0].event = "pull_request", x => x[0].source_base_sha = sha,
   x => x[0].run_attempt = 2]) {
@@ -375,7 +375,7 @@ const sealedTag = `build-${sealed.source_sha}-run-7-attempt-1`
 const realEvidence = { id: "node20-to-node24-catalog-v1", policy_sha: sha, registry_sha256: hash(registryBytes),
   source_tree: sealed.source_tree, backend_tree: sealed.backend_tree,
   runtime_before: sealed.runtime_before, runtime_after: sealed.runtime_after,
-  source_checks: sealed.required_checks.map((name, i) => ({ name, head_sha: sealed.source_sha, conclusion: "success",
+  source_checks: sealed.required_checks.map((name, i) => ({ name, source_sha: sealed.source_sha, head_sha: sha, policy_sha: sha, seal_artifact_id: i + 10, conclusion: "success",
     workflow_path: sealed.required_workflow, run_id: 1, run_attempt: 1, check_id: i + 1,
     event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
     source_base_sha: sealed.base_sha, source_tree: sealed.source_tree })) }
@@ -462,35 +462,82 @@ const apiDir = mkdtempSync(join(tmpdir(), "wr-ci-collector-"))
 const previousRepo = process.env.GITHUB_REPOSITORY
 process.env.GITHUB_REPOSITORY = "fixture/repository"
 const apiChecks = sealed.required_checks.map((name, i) => ({ name, id: i + 1,
-  head_sha: sealed.source_sha, status: "completed", conclusion: "success", app: { slug: "github-actions" },
-  check_suite: { id: 17 }, details_url: "https://github.com/fixture/repository/actions/runs/7/job/" + (i + 1) }))
+  head_sha: sha, status: "completed", conclusion: "success", app: { slug: "github-actions" },
+  check_suite: { id: 17 } }))
 const apiRun = { id: 7, repository: { full_name: "fixture/repository" }, path: sealed.required_workflow,
-  head_sha: sealed.source_sha, event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
+  head_sha: sha, event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
   run_attempt: 1, check_suite_id: 17, status: "completed", conclusion: "success" }
-const apiJobs = apiChecks.map(x => ({ name: x.name, status: "completed", conclusion: "success",
-  check_run_url: "https://api.github.com/repos/fixture/repository/check-runs/" + x.id }))
-function mockApi(run = apiRun, checks = apiChecks, jobs = apiJobs) {
+const apiJobs = [{ name: "build", status: "completed", conclusion: "skipped" }, ...apiChecks.map(x => ({ name: x.name, status: "completed", conclusion: "success",
+  check_run_url: "https://api.github.com/repos/fixture/repository/check-runs/" + x.id }))]
+const apiArtifacts = sealed.required_checks.map((name, i) => ({ id: i + 10,
+  name: `runtime-qualification-7-1-${sealed.qualification_jobs[name]}`, expired: false }))
+const seals = Object.fromEntries(sealed.required_checks.map(name => [
+  `runtime-qualification-7-1-${sealed.qualification_jobs[name]}`,
+  { sourceSha: sealed.source_sha, sourceTree: sealed.source_tree, productionBaseSha: sealed.base_sha,
+    policySha: sha, policyRegistrySha256: hash(registryBytes), jobKey: sealed.qualification_jobs[name],
+    runId: 7, runAttempt: 1, postChecks: true },
+]))
+function mockApi(run = apiRun, checks = apiChecks, jobs = apiJobs, artifacts = apiArtifacts) {
   return suffix => {
-    if (suffix.startsWith("commits/")) return [{ check_runs: checks }]
     if (suffix === "actions/runs/7") return run
-    if (suffix === `actions/runs/7/attempts/${run.run_attempt}/jobs?per_page=100`) return [{ jobs }]
+    if (suffix.startsWith("actions/runs/7/attempts/")) return [{ jobs }]
+    if (suffix === "actions/runs/7/artifacts?per_page=100") return [{ artifacts }]
+    if (suffix.startsWith("check-runs/")) return checks.find(x => x.id === Number(suffix.split("/")[1]))
     throw new Error("Unexpected API request: " + suffix)
   }
 }
-const apiInput = { sourceSha: sealed.source_sha, runtimePolicy: "node20-to-node24-catalog-v1",
-  sourceChecksFile: join(apiDir, "receipts.json") }
-assert.equal(collectSourceChecks(apiInput, mockApi()).length, 3)
+const apiInput = { sourceSha: sealed.source_sha, trustedPolicySha: sha, qualificationRunId: "7",
+  runtimePolicy: "node20-to-node24-catalog-v1", sourceChecksFile: join(apiDir, "receipts.json") }
+const loadSeal = name => seals[name]
+assert.equal(collectSourceChecks(apiInput, mockApi(), loadSeal).length, 3)
 for (const bad of [
   { ...apiRun, event: "pull_request", pull_requests: [{ base: { sha: other } }] },
   { ...apiRun, head_branch: "other-branch" }, { ...apiRun, path: "other.yml" },
-  { ...apiRun, head_sha: other }, { ...apiRun, check_suite_id: 18 },
-  { ...apiRun, repository: { full_name: "other/repository" } },
-]) rejects(() => collectSourceChecks(apiInput, mockApi(bad)), /workflow\/ref\/event/)
-rejects(() => collectSourceChecks(apiInput, mockApi({ ...apiRun, run_attempt: 2 }, apiChecks, [])), /another run attempt/)
-rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, apiChecks, apiJobs.slice(1))), /another run attempt/)
-const latestFailed = [...apiChecks, { ...apiChecks[0], id: 99, conclusion: "failure" }]
-rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, latestFailed)), /not successful/)
+  { ...apiRun, head_sha: other }, { ...apiRun, repository: { full_name: "other/repository" } },
+]) rejects(() => collectSourceChecks(apiInput, mockApi(bad), loadSeal), /workflow\/ref\/event/)
+rejects(() => collectSourceChecks(apiInput, mockApi({ ...apiRun, run_attempt: 2 }), loadSeal), /artifact missing/)
+rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, apiChecks, apiJobs.slice(1)), loadSeal), /must not build/)
+rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, apiChecks, apiJobs.slice(0, 3)), loadSeal), /not successful/)
+const failedChecks = structuredClone(apiChecks); failedChecks[0].conclusion = "failure"
+rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, failedChecks), loadSeal), /membership/)
+const wrongSuite = structuredClone(apiChecks); wrongSuite[0].check_suite.id = 99
+rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, wrongSuite), loadSeal), /membership/)
+rejects(() => collectSourceChecks(apiInput, mockApi(), name => ({ ...seals[name], sourceSha: other })), /source seal/)
+rejects(() => collectSourceChecks(apiInput, mockApi(), name => ({ ...seals[name], policySha: other })), /source seal/)
+rejects(() => collectSourceChecks(apiInput, mockApi(), name => ({ ...seals[name], postChecks: false })), /source seal/)
+const wrongJobs = structuredClone(apiJobs); wrongJobs[1].check_run_url = "https://api.github.com/repos/other/repository/check-runs/1"
+rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, apiChecks, wrongJobs), loadSeal), /URL invalid/)
 if (previousRepo === undefined) delete process.env.GITHUB_REPOSITORY
 else process.env.GITHUB_REPOSITORY = previousRepo
 rmSync(apiDir, { recursive: true, force: true })
+const template = readFileSync(join(__dirname, "../../.github/workflows/pr-checks.yml"), "utf8")
+assert.equal(hash(template), sealed.qualification_job_template_sha256)
+assert.match(workflow, /build:\n\s+if: \$\{\{ !inputs\.qualification_only \}\}/)
+for (const key of Object.values(sealed.qualification_jobs)) {
+  assert.ok(workflow.includes(`qualify-${key}:\n    if: \${{ inputs.qualification_only }}`))
+}
+const originalRuns = [...template.matchAll(/        run: \|\n((?:          .*\n|\n)+)/g)].map(x => x[0])
+for (const command of originalRuns) assert.ok(workflow.includes(command.trimEnd()), "qualification must preserve full trusted job command block")
+assert.doesNotMatch(workflow.split("  qualify-storefront:")[1], /docker\/login-action|docker\/build-push-action/)
+assert.match(workflow, /--post-checks/)
+assert.match(workflow, /runtime-qualification-\$\{\{ github.run_id \}\}/)
+const { assertNoExtraProductionSource } = require("./validate-isolated-storefront-bake.cjs")
+const ignoredFixture = initRepo()
+writeFileSync(join(ignoredFixture.repo, ".gitignore"), "apps/storefront/src/ignored-generated.ts\n")
+assertNoExtraProductionSource(ignoredFixture.repo)
+writeFileSync(join(ignoredFixture.repo, "apps/storefront/src/ignored-generated.ts"), "export const injected = true\n")
+assert.equal(git(ignoredFixture.repo, ["ls-files", "--others", "--exclude-standard", "--", "apps/storefront/src"]), "")
+rejects(() => assertNoExtraProductionSource(ignoredFixture.repo), /untracked production source/)
+rmSync(ignoredFixture.repo, { recursive: true, force: true })
+const stagedFixture = initRepo()
+const unchangedHead = git(stagedFixture.repo, ["rev-parse", "HEAD"])
+writeFileSync(join(stagedFixture.repo, "apps/storefront/src/page.tsx"), "export const stagedPolicyChange = true\n")
+git(stagedFixture.repo, ["add", "apps/storefront/src/page.tsx"])
+assert.equal(git(stagedFixture.repo, ["rev-parse", "HEAD"]), unchangedHead)
+assert.equal(spawnSync("git", ["-C", stagedFixture.repo, "diff", "--exit-code"], { encoding: "utf8" }).status, 0)
+assert.equal(spawnSync("git", ["-C", stagedFixture.repo, "diff", "--exit-code", "HEAD", "--"], { encoding: "utf8" }).status, 1)
+rmSync(stagedFixture.repo, { recursive: true, force: true })
+const trustChecks = workflow.split("\n").filter(line => /git -C.*diff --exit-code/.test(line))
+assert.equal(trustChecks.length, 7)
+for (const line of trustChecks) assert.ok(line.endsWith("diff --exit-code HEAD --"))
 console.log("sealed runtime policy and manifest binding: PASS")
