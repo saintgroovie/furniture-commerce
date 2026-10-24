@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "policies": {
+    "node20-to-node24-catalog-v1": {
+      "source_sha": "e983c436dac64e4e443917976e9a59dfb16c99b8",
+      "source_tree": "5b0bfc31be555721ae1ec2d3bd406d4a6b2c1b0f",
+      "base_sha": "3684ada30170df2bcf8bd2722fc5fd085cd3d685",
+      "base_tree": "3756a22c5620e4efab3b9270cdb4f084a6e0f4cb",
+      "backend_revision": "ec0d00550ed9b3558fc9dbb08c636ab2802d5b4a",
+      "backend_digest": "sha256:a1c7bec2d2fc5f71ee560a35c14137b18380920a44409a0a0af079ab2241c0c7",
+      "backend_tree": "46b9a0e273e4489914c643fd3c9acf69f21f9453",
+      "production_storefront_digest": "sha256:1fcd17521e23644ff2dd514be9b1c0b52ed79ddd11967859b9a429f658cbd59c",
+      "paths": {
+        "apps/storefront/Dockerfile": {
+          "before": "b9acdbddaca5f7d5742b0ba6f548482685818f0adf6e9d228785d321547f69db",
+          "after": "a2d1ce5ab83c76e74dd875df21929fcd4a1eb90562ae6763bdf7fbfdd96e5ee7"
+        },
+        "apps/storefront/src/lib/api/base.ts": {
+          "before": "a56a6d216874cf821fbb84627dc68f9324452338775e72848c1c95d5c7cd8b65",
+          "after": "f98ef87935650cbfa455b95e7435927303bc74381e3e04ec4f92bcd955b874d9"
+        },
+        "apps/storefront/src/lib/api/products.ts": {
+          "before": "3aeeb2b5e0e2d9fe472f8f2244309e66c7ba5c49bf9cec7245d4fba6f7ea7577",
+          "after": "4e4ba22b44521e3885dafd2346bb2a967ad8d151bb670b2994ae4e19634debc6"
+        },
+        "apps/storefront/src/lib/catalog-read-budget.ts": {
+          "before": null,
+          "after": "72f6f21a2678ea4ec1782a40589aa3b3e6f4c7c8a47944ae1ea7412506962154"
+        },
+        "apps/storefront/src/lib/api/catalog-browse-pool-client.ts": {
+          "before": "121413929254603955ee38abd26e5ceec3e6c5043258e864858cf397367c16e1",
+          "after": "2c2502fa9f8286251b765195282e19e33d9cd0936e9366d200893e0487497a9f"
+        },
+        "apps/storefront/src/components/catalog-browse-client.tsx": {
+          "before": "93eaae6cc8ebefdd94a4007c6d479dadb238f7e1de58e634c0643bfd765b39e6",
+          "after": "21f41ea55fd22160f6c3318e9adb70a8977017c73664069c421d63dc0b16232e"
+        },
+        "apps/storefront/src/app/catalog/page.tsx": {
+          "before": "ac4b8235f4f8bd085c5879cbc919a3da53187f2bd2167416a679d47aab2f707a",
+          "after": "af243e2d3a89f4d0315a417d7f18fac762e2c75fa478b4b3d2152c53a3806e0b"
+        },
+        "apps/storefront/src/app/kids/catalog/page.tsx": {
+          "before": "26e77b911493fc61e0c5cc9a54326a18eb903ad2e10510d25d78ffda1fcf08f0",
+          "after": "f72cbfa3d41dc8a90c0bb06de4915eed7aa2c1fb8ce4a9e8b6372eb08db3e3df"
+        }
+      },
+      "protected": {
+        "apps/storefront/src/lib/analytics-goals.ts": "a22654d7617f5355c6f4d9001c128383feb4bbbb6e995d254323a64d24104dbf",
+        "apps/storefront/src/lib/analytics-metrika.ts": "6535619b07f86b182ddb3be4eb294538dca32cdc29eb53e75b677342790c225b",
+        "apps/storefront/src/components/storefront-analytics.tsx": "8d1e92ebf1d63fe5d8b4798743c9b54dd3442572a4b6dd3d7352a2aa3f724377",
+        "apps/storefront/src/components/bespoke-form.tsx": "eaa9568c88aebf217bb0d89fec90aa7355cb492404bca26e7de3b3d230b56f57",
+        "apps/storefront/src/components/checkout-form.tsx": "5a51cdfc83246632fc9c0be1bba4100ef11cf82911dc9c4d109c998f357b81ec",
+        "apps/storefront/src/proxy.ts": "a7f7b9096a4b51a139eb7bba2f7678f985d16a117dfe051120191b1c6abbd55b",
+        "apps/storefront/package.json": "27efcbb3257add043c70a4dbd54c6eaaa796da75078c80ec47b9dc8aadcee298",
+        "apps/storefront/yarn.lock": "92f8e832b6c696a9bb4f9e422c98fc2ecd0fd5d8a4d68ae35a32f1572e82c459",
+        "apps/storefront/.yarnrc.yml": "a0305ab3fc20b06d20d0fcb3dcfb6cd52ec4310d442e3bc2e722becca38ca477"
+      },
+      "runtime_before": "node:20-bookworm-slim",
+      "runtime_after": "node:24.22.1-bookworm-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205",
+      "required_checks": [
+        "Storefront production gates",
+        "Backend fidelity tests",
+        "Release governance gates"
+      ],
+      "required_workflow": ".github/workflows/build-staging-images.yml",
+      "purpose": "Explicit reviewed runtime migration plus catalog read controls. Backend reused only; DB mutation forbidden. No generic Dockerfile exemption.",
+      "source_ci_event": "workflow_dispatch",
+      "source_ci_ref": "main",
+      "qualification_test_overlays": {
+        "apps/storefront/src/lib/catalog-fetch-cache.fidelity.test.mjs": "a5c74a68fecaa954fb4068f62a454645bc658cdfa870297e730154869c826f18"
+      },
+      "qualification_job_template_sha256": "9d67c7ebd33db880a2298f363ddea0a829fdf38921947f6b238f9363df1691c6",
+      "qualification_jobs": {
+        "Storefront production gates": "storefront",
+        "Backend fidelity tests": "backend-fidelity",
+        "Release governance gates": "release-governance"
+      }
+    }
+  }
+}
