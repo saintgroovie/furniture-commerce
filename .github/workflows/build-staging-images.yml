@@ -265,6 +265,7 @@ jobs:
         with:
           ref: ${{ github.sha }}
           path: trusted-governance
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Run trusted isolated bake gate

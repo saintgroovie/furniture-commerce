@@ -305,13 +305,19 @@ const runtimeFixture = readFileSync(join(__dirname, "fixtures/isolated-storefron
 const registryBytes = readFileSync(join(__dirname, "storefront-runtime-policies.json"))
 const runtimeRegistry = JSON.parse(registryBytes)
 const sealed = runtimeRegistry.policies["node20-to-node24-catalog-v1"]
+const qualificationFixtureSha = sealed.qualification_receipt.policy_sha
+const qualificationFixtureRun = sealed.qualification_receipt.run_id
+const qualifiedRegistry = structuredClone(runtimeRegistry)
+delete qualifiedRegistry.policies["node20-to-node24-catalog-v1"].qualification_receipt
+const qualifiedRegistryBytes = Buffer.from(JSON.stringify(qualifiedRegistry, null, 2) + "\n")
+
 const fixtureReuse = key => key === "backend-fidelity" ? {
   origin: "prior-qualified-backend", runId: sealed.qualification_reuse.backend_run_id,
   runAttempt: 1, policySha: sealed.qualification_reuse.backend_policy_sha, jobId: 20, checkId: 20,
   artifactId: sealed.qualification_reuse.backend_artifact_id, artifactDigest: sealed.qualification_reuse.backend_artifact_digest,
   sealSha256: sealed.qualification_reuse.backend_seal_sha256,
 } : { origin: "mandatory-pr-ci-exact-policy-tree", runId: 42, runAttempt: 1, jobId: 44, checkId: 44,
-  policySha: other, mergedPolicySha: sha, policyTree: sha, checkedOutSha: "c".repeat(40),
+  policySha: other, mergedPolicySha: qualificationFixtureSha, policyTree: sha, checkedOutSha: "c".repeat(40),
   commandTemplateSha256: sealed.qualification_job_template_sha256 }
 
 assert.equal(sealed.paths["apps/storefront/Dockerfile"].after, hash(runtimeFixture))
@@ -331,7 +337,7 @@ git(rt.repo, ["commit", "-m", "retained backend fixture"])
 const rtBackend = git(rt.repo, ["rev-parse", "HEAD"])
 git(rt.repo, ["checkout", "-q", rtSource])
 const rtPaths = ["apps/storefront/Dockerfile", "apps/storefront/src/page.tsx"]
-const rtPolicy = { ...sealed, qualification_reuse: undefined, source_sha: rtSource, base_sha: rt.base,
+const rtPolicy = { ...sealed, qualification_reuse: undefined, qualification_receipt: undefined, source_sha: rtSource, base_sha: rt.base,
   source_tree: git(rt.repo, ["rev-parse", `${rtSource}^{tree}`]), base_tree: git(rt.repo, ["rev-parse", `${rt.base}^{tree}`]),
   backend_revision: rtBackend, backend_digest: BACKEND_DIGEST,
   backend_tree: git(rt.repo, ["rev-parse", `${rtBackend}:apps/backend`]), protected: {},
@@ -342,7 +348,7 @@ const rtPolicy = { ...sealed, qualification_reuse: undefined, source_sha: rtSour
 const rtBytes = Buffer.from(JSON.stringify({ schema_version: 1, policies: { "node20-to-node24-catalog-v1": rtPolicy } }))
 const checkFile = join(rt.repo, "checks.json")
 const rtChecks = sealed.required_checks.map((name, i) => ({ name, source_sha: rtSource, head_sha: sha, policy_sha: sha, seal_artifact_id: i + 10, conclusion: "success",
-  workflow_path: sealed.required_workflow, run_id: 1, run_attempt: 1, check_id: i + 1,
+  workflow_path: sealed.required_workflow, run_id: qualificationFixtureRun, run_attempt: 1, check_id: i + 1,
   event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
   source_base_sha: rtPolicy.base_sha, source_tree: rtPolicy.source_tree }))
 writeFileSync(checkFile, JSON.stringify(rtChecks))
@@ -384,8 +390,8 @@ const sealedTag = `build-${sealed.source_sha}-run-7-attempt-1`
 const realEvidence = { id: "node20-to-node24-catalog-v1", policy_sha: sha, registry_sha256: hash(registryBytes),
   source_tree: sealed.source_tree, backend_tree: sealed.backend_tree,
   runtime_before: sealed.runtime_before, runtime_after: sealed.runtime_after,
-  source_checks: sealed.required_checks.map((name, i) => ({ name, source_sha: sealed.source_sha, head_sha: sha, policy_sha: sha, seal_artifact_id: i + 10, conclusion: "success",
-    workflow_path: sealed.required_workflow, run_id: 1, run_attempt: 1, check_id: i + 1,
+  source_checks: sealed.required_checks.map((name, i) => ({ name, source_sha: sealed.source_sha, head_sha: qualificationFixtureSha, policy_sha: qualificationFixtureSha, qualification_registry_sha256: sealed.qualification_receipt.registry_sha256, seal_artifact_id: i + 10, conclusion: "success",
+    workflow_path: sealed.required_workflow, run_id: qualificationFixtureRun, run_attempt: 1, check_id: i + 1,
     event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
     source_base_sha: sealed.base_sha, source_tree: sealed.source_tree,
     ...(sealed.qualification_jobs[name] !== "storefront" ? { reused_checks: fixtureReuse(sealed.qualification_jobs[name]) } : {}) })) }
@@ -401,7 +407,10 @@ assert.equal(runtimeManifestResult.status, 0, runtimeManifestResult.stderr)
 for (const mutate of [d => delete d.storefront_runtime_policy, d => d.storefront_runtime_policy.policy_sha = "bad",
   d => d.storefront_runtime_policy.registry_sha256 = "0".repeat(64), d => d.backend.reused = false,
   d => d.backend.digest = "sha256:" + "ff".repeat(32), d => d.storefront_runtime_policy.source_checks.pop(),
-  d => d.storefront_runtime_policy.runtime_after = "node:24", d => d.storefront_runtime_policy.id = "unknown"]) {
+  d => d.storefront_runtime_policy.runtime_after = "node:24", d => d.storefront_runtime_policy.id = "unknown",
+  d => d.storefront_runtime_policy.source_checks[0].qualification_registry_sha256 = "0".repeat(64),
+  d => d.storefront_runtime_policy.source_checks[0].run_id += 1,
+  d => d.storefront_runtime_policy.source_checks[0].policy_sha = sha]) {
   const doc = structuredClone(runtimeManifest); mutate(doc); assert.notEqual(checkManifest(doc).status, 0)
 }
 assert.match(workflow, /STOREFRONT_RUNTIME_POLICY: \$\{\{ inputs.storefront_runtime_policy \}\}/)
@@ -475,6 +484,7 @@ const { collectQualificationReuse } = require("./validate-isolated-storefront-ba
 const reusePolicy = sealed.qualification_reuse
 const previousRegistry = structuredClone(runtimeRegistry)
 delete previousRegistry.policies["node20-to-node24-catalog-v1"].qualification_reuse
+delete previousRegistry.policies["node20-to-node24-catalog-v1"].qualification_receipt
 const previousBytes = Buffer.from(JSON.stringify(previousRegistry, null, 2) + "\n")
 assert.equal(hash(previousBytes), reusePolicy.backend_registry_sha256)
 const previousSeal = Buffer.from(JSON.stringify({ sourceSha: sealed.source_sha, sourceTree: sealed.source_tree,
@@ -549,49 +559,55 @@ rejects(() => validateReuse(govInput, changedApi("check-runs/44", { ...prCheck, 
 if (previousReuseRepo === undefined) delete process.env.GITHUB_REPOSITORY
 else process.env.GITHUB_REPOSITORY = previousReuseRepo
 const { collectSourceChecks: liveCollectSourceChecks } = require("./validate-isolated-storefront-bake.cjs")
-const reuseProof = key => key === "backend-fidelity" ? backendProvenance : governanceProvenance
-const collectSourceChecks = (input, api, seal) => liveCollectSourceChecks(input, api, seal, x => reuseProof(x.qualificationJob))
+const reuseProof = key => key === "backend-fidelity" ? backendProvenance : { ...governanceProvenance, mergedPolicySha: qualificationFixtureSha }
+const collectSourceChecks = (input, api, seal) => liveCollectSourceChecks(input, api, seal, x => reuseProof(x.qualificationJob), () => qualifiedRegistryBytes)
 const apiDir = mkdtempSync(join(tmpdir(), "wr-ci-collector-"))
 const previousRepo = process.env.GITHUB_REPOSITORY
 process.env.GITHUB_REPOSITORY = "fixture/repository"
 const apiChecks = sealed.required_checks.map((name, i) => ({ name, id: i + 1,
-  head_sha: sha, status: "completed", conclusion: "success", app: { slug: "github-actions" },
+  head_sha: qualificationFixtureSha, status: "completed", conclusion: "success", app: { slug: "github-actions" },
   check_suite: { id: 17 } }))
-const apiRun = { id: 7, repository: { full_name: "fixture/repository" }, path: sealed.required_workflow,
-  head_sha: sha, event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
+const apiRun = { id: qualificationFixtureRun, repository: { full_name: "fixture/repository" }, path: sealed.required_workflow,
+  head_sha: qualificationFixtureSha, event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
   run_attempt: 1, check_suite_id: 17, status: "completed", conclusion: "success" }
 const apiJobs = [{ name: "build", status: "completed", conclusion: "skipped" }, ...apiChecks.map(x => ({ name: x.name, status: "completed", conclusion: "success",
   check_run_url: "https://api.github.com/repos/fixture/repository/check-runs/" + x.id }))]
 const apiArtifacts = sealed.required_checks.map((name, i) => ({ id: i + 10,
-  name: `runtime-qualification-7-1-${sealed.qualification_jobs[name]}`, expired: false }))
+  name: `runtime-qualification-${qualificationFixtureRun}-1-${sealed.qualification_jobs[name]}`, expired: false }))
 const seals = Object.fromEntries(sealed.required_checks.map(name => [
-  `runtime-qualification-7-1-${sealed.qualification_jobs[name]}`,
+  `runtime-qualification-${qualificationFixtureRun}-1-${sealed.qualification_jobs[name]}`,
   { sourceSha: sealed.source_sha, sourceTree: sealed.source_tree, productionBaseSha: sealed.base_sha,
-    policySha: sha, policyRegistrySha256: hash(registryBytes), jobKey: sealed.qualification_jobs[name],
-    runId: 7, runAttempt: 1, postChecks: true,
+    policySha: qualificationFixtureSha, policyRegistrySha256: sealed.qualification_receipt.registry_sha256, jobKey: sealed.qualification_jobs[name],
+    runId: qualificationFixtureRun, runAttempt: 1, postChecks: true,
     ...(sealed.qualification_jobs[name] !== "storefront" ? { reusedChecks: reuseProof(sealed.qualification_jobs[name]) } : {}) },
 ]))
 function mockApi(run = apiRun, checks = apiChecks, jobs = apiJobs, artifacts = apiArtifacts) {
   return suffix => {
-    if (suffix === "actions/runs/7") return run
-    if (suffix.startsWith("actions/runs/7/attempts/")) return [{ jobs }]
-    if (suffix === "actions/runs/7/artifacts?per_page=100") return [{ artifacts }]
+    if (suffix === `actions/runs/${qualificationFixtureRun}`) return run
+    if (suffix.startsWith(`actions/runs/${qualificationFixtureRun}/attempts/`)) return [{ jobs }]
+    if (suffix === `actions/runs/${qualificationFixtureRun}/artifacts?per_page=100`) return [{ artifacts }]
     if (suffix.startsWith("check-runs/")) return checks.find(x => x.id === Number(suffix.split("/")[1]))
     throw new Error("Unexpected API request: " + suffix)
   }
 }
-const apiInput = { sourceSha: sealed.source_sha, trustedPolicySha: sha, qualificationRunId: "7",
+const apiInput = { sourceSha: sealed.source_sha, trustedPolicySha: sha, qualificationRunId: String(qualificationFixtureRun),
   runtimePolicy: "node20-to-node24-catalog-v1", sourceChecksFile: join(apiDir, "receipts.json") }
 const loadSeal = name => seals[name]
 assert.equal(collectSourceChecks(apiInput, mockApi(), loadSeal).length, 3)
+rejects(() => collectSourceChecks({ ...apiInput, qualificationRunId: "7" }, mockApi(), loadSeal), /continuity run/)
+rejects(() => liveCollectSourceChecks(apiInput, mockApi(), loadSeal, x => reuseProof(x.qualificationJob), () => null), /history missing/)
+
 for (const bad of [
   { ...apiRun, event: "pull_request", pull_requests: [{ base: { sha: other } }] },
   { ...apiRun, head_branch: "other-branch" }, { ...apiRun, path: "other.yml" },
   { ...apiRun, head_sha: other }, { ...apiRun, repository: { full_name: "other/repository" } },
 ]) rejects(() => collectSourceChecks(apiInput, mockApi(bad), loadSeal), /workflow\/ref\/event/)
-rejects(() => collectSourceChecks(apiInput, mockApi({ ...apiRun, run_attempt: 2 }), loadSeal), /artifact missing/)
+rejects(() => collectSourceChecks(apiInput, mockApi({ ...apiRun, run_attempt: 2 }), loadSeal), /workflow\/ref\/event/)
 rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, apiChecks, apiJobs.slice(1)), loadSeal), /must not build/)
 rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, apiChecks, apiJobs.slice(0, 3)), loadSeal), /not successful/)
+const expiredSeals = structuredClone(apiArtifacts); expiredSeals[0].expired = true
+rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, apiChecks, apiJobs, expiredSeals), loadSeal), /artifact missing/)
+
 const failedChecks = structuredClone(apiChecks); failedChecks[0].conclusion = "failure"
 rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, failedChecks), loadSeal), /membership/)
 const wrongSuite = structuredClone(apiChecks); wrongSuite[0].check_suite.id = 99
@@ -630,6 +646,47 @@ function assertTrustedAuditContext(source) {
   assert.ok(!job["continue-on-error"])
 }
 assertTrustedAuditContext(workflow)
+// The production failure was a real shallow checkout, not a bad registry.
+const { validateQualificationContinuity } = require("./validate-isolated-storefront-bake.cjs")
+assert.equal(validateQualificationContinuity(sealed, () => qualifiedRegistryBytes).policy_sha, qualificationFixtureSha)
+rejects(() => validateQualificationContinuity(sealed, () => null), /history missing/)
+rejects(() => validateQualificationContinuity(sealed, () => Buffer.from("{}")), /registry mismatch/)
+const changedCore = structuredClone(sealed); changedCore.source_tree = other
+rejects(() => validateQualificationContinuity(changedCore, () => qualifiedRegistryBytes), /core mismatch/)
+const changedOverlay = structuredClone(sealed); changedOverlay.qualification_test_overlays = {}
+rejects(() => validateQualificationContinuity(changedOverlay, () => qualifiedRegistryBytes), /core mismatch/)
+const chainedRegistry = structuredClone(qualifiedRegistry)
+chainedRegistry.policies["node20-to-node24-catalog-v1"].qualification_receipt = { policy_sha: sha }
+const chainedBytes = Buffer.from(JSON.stringify(chainedRegistry))
+const chainedPolicy = structuredClone(sealed); chainedPolicy.qualification_receipt.registry_sha256 = hash(chainedBytes)
+rejects(() => validateQualificationContinuity(chainedPolicy, () => chainedBytes), /reuse chain/)
+const historyFixture = initRepo()
+const historyRegistryPath = join(historyFixture.repo, "scripts/release/storefront-runtime-policies.json")
+mkdirSync(join(historyFixture.repo, "scripts/release"), { recursive: true })
+writeFileSync(historyRegistryPath, qualifiedRegistryBytes)
+git(historyFixture.repo, ["add", "scripts/release/storefront-runtime-policies.json"])
+git(historyFixture.repo, ["commit", "-m", "accepted registry"])
+const historySha = git(historyFixture.repo, ["rev-parse", "HEAD"])
+writeFileSync(join(historyFixture.repo, "history-marker"), "transport fix")
+git(historyFixture.repo, ["add", "history-marker"]); git(historyFixture.repo, ["commit", "-m", "transport fix"])
+const shallowParent = mkdtempSync(join(tmpdir(), "wr-shallow-history-"))
+const shallowRepo = join(shallowParent, "checkout")
+execFileSync("git", ["clone", "--quiet", "--depth=1", "file://" + historyFixture.repo, shallowRepo], { stdio: "pipe" })
+const historyPolicy = structuredClone(sealed); historyPolicy.qualification_receipt.policy_sha = historySha
+const readShallow = (ref, file) => {
+  const result = spawnSync("git", ["-C", shallowRepo, "show", `${ref}:${file}`])
+  return result.status === 0 ? result.stdout : null
+}
+rejects(() => validateQualificationContinuity(historyPolicy, readShallow), /history missing/)
+git(shallowRepo, ["fetch", "--quiet", "--unshallow", "origin"])
+assert.equal(validateQualificationContinuity(historyPolicy, readShallow).policy_sha, historySha)
+rmSync(shallowParent, { recursive: true, force: true }); rmSync(historyFixture.repo, { recursive: true, force: true })
+const parsedBake = parseYml(workflow)
+const trustedLoader = parsedBake.jobs.build.steps.find(step => step.name === "Load isolated bake gate from the workflow SHA")
+assert.equal(trustedLoader.with["fetch-depth"], 0)
+assert.equal(trustedLoader.with.ref, "${{ github.sha }}")
+assert.equal(trustedLoader.with["persist-credentials"], false)
+// Only transport changed in the image-gate loader; app source remains frozen.
 assert.throws(() => assertTrustedAuditContext(workflow.replace("working-directory: .runtime-policy/apps/storefront", "working-directory: apps/storefront")))
 assert.throws(() => assertTrustedAuditContext(workflow.replace("run: python3 scripts/test_catalog_schema_stream.py", "if: false\n        run: python3 scripts/test_catalog_schema_stream.py")))
 assert.throws(() => assertTrustedAuditContext(workflow.replace("run: python3 scripts/test_catalog_schema_stream.py", "run: python3 scripts/test_catalog_schema_stream.py || true")))
