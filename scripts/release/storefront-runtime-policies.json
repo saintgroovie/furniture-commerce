@@ -85,6 +85,13 @@
         "backend_seal_sha256": "2510c90f1f6ee55db6628d34c040be1212a48d75d2ded9d4335b85b332075252",
         "governance_origin": "successful-pr-checks-exact-merged-tree",
         "storefront_origin": "fresh-complete-source-gates-required-no-prior-postseal"
+      },
+      "qualification_receipt": {
+        "policy_sha": "8f71e3b0178854660aa4b047b49d3a7aa6e5c7ec",
+        "registry_sha256": "91f42c348f4a1764562a214d75a5c6f3d25625121f9c8cdfc25da78ac799c178",
+        "contract_sha256": "d4a3948948c3da7464beec13ea20b0e1227a8eada013e7d200b64259acdb92fb",
+        "run_id": 40121396368,
+        "run_attempt": 1
       }
     }
   }

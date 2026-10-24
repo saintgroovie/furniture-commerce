@@ -140,12 +140,32 @@ function validateRuntimeContract(input, files, registryBytes, fixture, requireCh
     runtime_before: policy.runtime_before, runtime_after: policy.runtime_after, source_checks: checks }
 }
 
+// A build-transport fix may consume a single already accepted qualification.
+// Source/test/runtime contracts are byte-canonical equal; no prior-policy chain.
+function validateQualificationContinuity(policy, readPolicy = null) {
+  const pin = policy.qualification_receipt
+  if (!pin) return null
+  if (!SHA_RE.test(pin.policy_sha || "") || !/^[0-9a-f]{64}$/.test(pin.registry_sha256 || "") || !/^[0-9a-f]{64}$/.test(pin.contract_sha256 || "") || !Number.isSafeInteger(pin.run_id) || pin.run_id <= 0 || pin.run_attempt !== 1) fail("qualification continuity pin invalid")
+  const file = "scripts/release/storefront-runtime-policies.json"
+  const bytes = readPolicy ? readPolicy(pin.policy_sha, file) : blob(path.resolve(__dirname, "../.."), pin.policy_sha, file)
+  if (!bytes || sha256(bytes) !== pin.registry_sha256) fail("qualification history missing or registry mismatch")
+  const before = JSON.parse(bytes).policies["node20-to-node24-catalog-v1"]
+  const current = { ...policy }; delete current.qualification_receipt
+  if (!before || before.qualification_receipt || sha256(JSON.stringify(before)) !== pin.contract_sha256 || JSON.stringify(current) !== JSON.stringify(before)) fail("qualification policy core mismatch or reuse chain")
+  return pin
+}
+
 function validateSourceReceipts(checks, policy, sourceSha, policySha) {
+  const qualificationSha = policy.qualification_receipt?.policy_sha || policySha
+  if (policy.qualification_receipt) {
+    const core = { ...policy }; delete core.qualification_receipt
+    if (sha256(JSON.stringify(core)) !== policy.qualification_receipt.contract_sha256) fail("qualification continuity core mismatch")
+  }
   if (!Array.isArray(checks) || checks.length !== policy.required_checks.length) fail("incomplete source checks")
   for (const name of policy.required_checks) {
     const rows = checks.filter(x => x.name === name)
     const x = rows[0]
-    if (rows.length !== 1 || x.source_sha !== sourceSha || x.head_sha !== policySha || x.policy_sha !== policySha || x.conclusion !== "success" ||
+    if (rows.length !== 1 || x.source_sha !== sourceSha || x.head_sha !== qualificationSha || x.policy_sha !== qualificationSha || x.conclusion !== "success" ||
         x.workflow_path !== policy.required_workflow || x.event !== policy.source_ci_event ||
         x.head_branch !== policy.source_ci_ref || x.source_base_sha !== policy.base_sha ||
         x.source_tree !== policy.source_tree || !Number.isSafeInteger(x.run_id) || x.run_id <= 0 ||
@@ -156,6 +176,8 @@ function validateSourceReceipts(checks, policy, sourceSha, policySha) {
   for (const check of checks) {
     const key = policy.qualification_jobs[check.name]
     const reused = check.reused_checks
+    const pin = policy.qualification_receipt
+    if (pin && (check.run_id !== pin.run_id || check.run_attempt !== pin.run_attempt || check.qualification_registry_sha256 !== pin.registry_sha256)) fail("qualification continuity receipt mismatch")
     if (!policy.qualification_reuse || key === "storefront") {
       if (reused !== undefined) fail("unexpected reused source receipt")
       continue
@@ -164,7 +186,7 @@ function validateSourceReceipts(checks, policy, sourceSha, policySha) {
     if (key === "backend-fidelity") {
       const pin = policy.qualification_reuse
       if (reused.origin !== "prior-qualified-backend" || reused.runId !== pin.backend_run_id || reused.runAttempt !== pin.backend_run_attempt || reused.policySha !== pin.backend_policy_sha || reused.artifactId !== pin.backend_artifact_id || reused.artifactDigest !== pin.backend_artifact_digest || reused.sealSha256 !== pin.backend_seal_sha256) fail("reused backend receipt mismatch")
-    } else if (reused.origin !== "mandatory-pr-ci-exact-policy-tree" || reused.mergedPolicySha !== policySha || ![reused.policySha, reused.policyTree, reused.checkedOutSha].every(x => SHA_RE.test(x || "")) || reused.commandTemplateSha256 !== policy.qualification_job_template_sha256) fail("reused governance receipt mismatch")
+    } else if (reused.origin !== "mandatory-pr-ci-exact-policy-tree" || reused.mergedPolicySha !== qualificationSha || ![reused.policySha, reused.policyTree, reused.checkedOutSha].every(x => SHA_RE.test(x || "")) || reused.commandTemplateSha256 !== policy.qualification_job_template_sha256) fail("reused governance receipt mismatch")
   }
   if (new Set(checks.map(x => `${x.run_id}/${x.run_attempt}`)).size !== 1 ||
       new Set(checks.map(x => x.check_id)).size !== checks.length) fail("source checks must belong to one execution attempt")
@@ -172,7 +194,7 @@ function validateSourceReceipts(checks, policy, sourceSha, policySha) {
 
 // The official workflow always uses the GitHub API collector. An explicit API
 // dependency permits offline wrong-event/base/ref/attempt tests, not a CLI bypass.
-function collectSourceChecks(input, request = null, readSeal = null, reuseCollector = collectQualificationReuse) {
+function collectSourceChecks(input, request = null, readSeal = null, reuseCollector = collectQualificationReuse, readPolicy = null) {
   if (!SHA_RE.test(input.sourceSha || "") || !SHA_RE.test(input.trustedPolicySha || "")) fail("source checks require exact source and policy SHA")
   if (!/^[1-9][0-9]*$/.test(String(input.qualificationRunId || ""))) fail("qualification run ID required")
   if (String(input.qualificationRunId) === process.env.GITHUB_RUN_ID) fail("qualification cannot be the build execution itself")
@@ -181,14 +203,18 @@ function collectSourceChecks(input, request = null, readSeal = null, reuseCollec
   const registryBytes = fs.readFileSync(path.join(__dirname, "storefront-runtime-policies.json"))
   const policy = JSON.parse(registryBytes).policies[input.runtimePolicy]
   if (!policy) fail("unknown runtime policy")
+  const pinned = validateQualificationContinuity(policy, readPolicy)
+  if (pinned && Number(input.qualificationRunId) !== pinned.run_id) fail("qualification continuity run mismatch")
+  const qualificationSha = pinned?.policy_sha || input.trustedPolicySha
+  const qualificationRegistrySha = pinned?.registry_sha256 || sha256(registryBytes)
   const api = request || ((suffix, paginate = false) => JSON.parse(execFileSync("gh", ["api",
     ...(paginate ? ["--paginate", "--slurp"] : []), `repos/${repo}/${suffix}`], { encoding: "utf8" })))
   const run = api(`actions/runs/${input.qualificationRunId}`)
   if (run.id !== Number(input.qualificationRunId) || run.repository?.full_name !== repo ||
-      run.path !== policy.required_workflow || run.head_sha !== input.trustedPolicySha ||
+      run.path !== policy.required_workflow || run.head_sha !== qualificationSha ||
       run.event !== policy.source_ci_event || run.head_branch !== policy.source_ci_ref ||
       !Number.isSafeInteger(run.run_attempt) || run.run_attempt <= 0 ||
-      run.status !== "completed" || run.conclusion !== "success") fail("source CI workflow/ref/event/policy mismatch")
+      run.status !== "completed" || run.conclusion !== "success" || (pinned && run.run_attempt !== pinned.run_attempt)) fail("source CI workflow/ref/event/policy mismatch")
   const jobs = api(`actions/runs/${run.id}/attempts/${run.run_attempt}/jobs?per_page=100`, true).flatMap(page => page.jobs)
   const buildJobs = jobs.filter(x => x.name === "build")
   if (buildJobs.length !== 1 || buildJobs[0].conclusion !== "skipped") fail("qualification must not build or publish images")
@@ -203,7 +229,7 @@ function collectSourceChecks(input, request = null, readSeal = null, reuseCollec
     if (!Number.isSafeInteger(checkId) || checkId <= 0) fail("source check ID invalid")
     const check = api(`check-runs/${checkId}`)
     if (check.id !== checkId || check.name !== name || check.app?.slug !== "github-actions" ||
-        check.head_sha !== input.trustedPolicySha || check.check_suite?.id !== run.check_suite_id ||
+        check.head_sha !== qualificationSha || check.check_suite?.id !== run.check_suite_id ||
         check.status !== "completed" || check.conclusion !== "success") fail("source check membership mismatch")
     const key = policy.qualification_jobs[name]
     const artifactName = `runtime-qualification-${run.id}-${run.run_attempt}-${key}`
@@ -221,18 +247,18 @@ function collectSourceChecks(input, request = null, readSeal = null, reuseCollec
       } finally { fs.rmSync(dir, { recursive: true, force: true }) }
     }
     if (seal.sourceSha !== input.sourceSha || seal.sourceTree !== policy.source_tree ||
-        seal.productionBaseSha !== policy.base_sha || seal.policySha !== input.trustedPolicySha ||
-        seal.policyRegistrySha256 !== sha256(registryBytes) || seal.jobKey !== key ||
+        seal.productionBaseSha !== policy.base_sha || seal.policySha !== qualificationSha ||
+        seal.policyRegistrySha256 !== qualificationRegistrySha || seal.jobKey !== key ||
         seal.runId !== run.id || seal.runAttempt !== run.run_attempt || seal.postChecks !== true) fail("qualification source seal mismatch")
     let reuse
     if (policy.qualification_reuse && key !== "storefront") {
-      reuse = reuseCollector({ ...input, qualificationJob: key })
+      reuse = reuseCollector({ ...input, trustedPolicySha: qualificationSha, qualificationJob: key })
       if (JSON.stringify(seal.reusedChecks) !== JSON.stringify(reuse)) fail("qualification reused provenance mismatch")
     } else if (seal.reusedChecks !== undefined) fail("unexpected reused source gate")
     return { name, source_sha: input.sourceSha, head_sha: check.head_sha, policy_sha: run.head_sha,
       conclusion: check.conclusion, workflow_path: run.path, event: run.event, head_branch: run.head_branch,
       run_id: run.id, run_attempt: run.run_attempt, check_id: check.id, seal_artifact_id: rows[0].id,
-      source_base_sha: policy.base_sha, source_tree: policy.source_tree, ...(reuse ? { reused_checks: reuse } : {}) }
+      source_base_sha: policy.base_sha, source_tree: policy.source_tree, ...(pinned ? { qualification_registry_sha256: qualificationRegistrySha } : {}), ...(reuse ? { reused_checks: reuse } : {}) }
   })
   validateSourceReceipts(receipts, policy, input.sourceSha, input.trustedPolicySha)
   fs.writeFileSync(input.sourceChecksFile, JSON.stringify(receipts, null, 2) + "\n")
@@ -269,7 +295,7 @@ function collectQualificationReuse(input, request = null, loadArtifact = null, r
     const previousBytes = at(reuse.backend_policy_sha, "scripts/release/storefront-runtime-policies.json")
     if (!previousBytes || sha256(previousBytes) !== reuse.backend_registry_sha256) fail("reused backend registry changed")
     const previous = JSON.parse(previousBytes).policies[input.runtimePolicy]
-    const current = { ...policy }; delete current.qualification_reuse
+    const current = { ...policy }; delete current.qualification_reuse; delete current.qualification_receipt
     if (JSON.stringify(current) !== JSON.stringify(previous)) fail("reused backend source or dependency contract changed")
     for (const file of [".github/workflows/pr-checks.yml", "scripts/release/yarn-install-network-resilient.cjs"]) {
       const before = at(reuse.backend_policy_sha, file), after = at(input.trustedPolicySha, file)
@@ -511,6 +537,7 @@ module.exports = {
   validateRuntimePolicy,
   validateRuntimeContract,
   validateSourceReceipts,
+  validateQualificationContinuity,
   collectSourceChecks,
   collectQualificationReuse,
   qualificationSeal,
