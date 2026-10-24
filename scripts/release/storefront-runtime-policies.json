@@ -74,6 +74,17 @@
         "Storefront production gates": "storefront",
         "Backend fidelity tests": "backend-fidelity",
         "Release governance gates": "release-governance"
+      },
+      "qualification_reuse": {
+        "backend_run_id": 40108899239,
+        "backend_run_attempt": 1,
+        "backend_policy_sha": "513512b1a4575415ed3ea90b4080272d1be26927",
+        "backend_registry_sha256": "8b3a670e0e9b1ec33e987032367eeae4befe79511fbc8b80b9132ee36679ce4f",
+        "backend_artifact_id": 12565379327,
+        "backend_artifact_digest": "sha256:4283973217990f3d8f03b54ef02b6ed0871113f4e315b6695de00cb6b995e72d",
+        "backend_seal_sha256": "2510c90f1f6ee55db6628d34c040be1212a48d75d2ded9d4335b85b332075252",
+        "governance_origin": "successful-pr-checks-exact-merged-tree",
+        "storefront_origin": "fresh-complete-source-gates-required-no-prior-postseal"
       }
     }
   }
