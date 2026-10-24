@@ -77,7 +77,7 @@ jobs:
         run: |
           python3 - <<'PY'
           import json,os
-          d={'schema':'woodright-workspace-build-v1','source_sha':os.environ['SOURCE'],'image':'ghcr.io/saintgroovie/woodright-workspace@'+os.environ['DIGEST'],'workflow_run_id':os.environ['RUN_ID'],'workflow_run_attempt':os.environ['ATTEMPT'],'base_path':'/os','release_authorized':False}
+          d={'schema':'woodright-workspace-build-v1','source_sha':os.environ['SOURCE'],'image':'ghcr.io/saintgroovie/woodright-workspace@'+os.environ['DIGEST'],'workflow_run_id':os.environ['RUN_ID'],'workflow_run_attempt':os.environ['ATTEMPT'],'base_path':'','release_authorized':False}
           open('workspace-build-manifest.json','w').write(json.dumps(d,indent=2)+'\n')
           PY
       - uses: actions/upload-artifact@v4
