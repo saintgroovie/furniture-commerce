@@ -5,6 +5,8 @@
 const fs = require("fs")
 const path = require("path")
 const { uniqueBuildTag } = require("./build-identity.cjs")
+const { createHash } = require("node:crypto")
+const { validateSourceReceipts } = require("./validate-isolated-storefront-bake.cjs")
 
 const DIGEST_RE = /^sha256:[0-9a-f]{64}$/
 const SHA_RE = /^[0-9a-f]{40}$/
@@ -41,6 +43,7 @@ const ALLOWED_ROOT = new Set([
   "migration_count",
   "db_mutation",
   "storefront_delta_scope",
+  "storefront_runtime_policy",
 ])
 const ALLOWED_IMG = new Set(["repository", "unique_tag", "digest", "oci_revision", "reused"])
 const ISOLATED_ONLY_ROOT = [
@@ -50,6 +53,7 @@ const ISOLATED_ONLY_ROOT = [
   "migration_count",
   "db_mutation",
   "storefront_delta_scope",
+  "storefront_runtime_policy",
 ]
 const ALLOWED_BUILD_PROFILE_NAMES = new Set(["public_demo", "production_candidate", "public_production"])
 const ALLOWED_BAKED_STOREFRONT_KEYS = new Set([
@@ -230,6 +234,29 @@ function validate(doc, errors) {
   }
 
   validateImage("backend", doc.backend, doc.source_sha, errors, { reused: isolated })
+  if (doc.storefront_runtime_policy != null) {
+    const evidence = doc.storefront_runtime_policy
+    const registryBytes = fs.readFileSync(path.join(__dirname, "storefront-runtime-policies.json"))
+    const registry = JSON.parse(registryBytes)
+    const policy = Object.hasOwn(registry.policies, evidence.id) && registry.policies[evidence.id]
+    rejectExtra(evidence, new Set(["id", "policy_sha", "registry_sha256", "source_tree", "backend_tree", "runtime_before", "runtime_after", "source_checks"]), "storefront_runtime_policy", errors)
+    if (!isolated || !policy || !SHA_RE.test(evidence.policy_sha || "")) fail("invalid runtime policy provenance", errors)
+    else {
+      const expected = { registry_sha256: createHash("sha256").update(registryBytes).digest("hex"),
+        source_tree: policy.source_tree, backend_tree: policy.backend_tree,
+        runtime_before: policy.runtime_before, runtime_after: policy.runtime_after }
+      for (const [key, value] of Object.entries(expected)) if (evidence[key] !== value) fail(`runtime policy ${key} mismatch`, errors)
+      if (doc.source_sha !== policy.source_sha || doc.production_base_sha !== policy.base_sha ||
+          doc.production_storefront_digest !== policy.production_storefront_digest ||
+          doc.backend?.oci_revision !== policy.backend_revision || doc.backend?.digest !== policy.backend_digest || doc.backend?.reused !== true) fail("runtime policy source/backend binding mismatch", errors)
+      try { validateSourceReceipts(evidence.source_checks, policy, doc.source_sha) }
+      catch (error) { fail(error.message, errors) }
+    }
+  } else {
+    // A sealed runtime candidate cannot masquerade as a legacy source-only bake.
+    const registry = JSON.parse(fs.readFileSync(path.join(__dirname, "storefront-runtime-policies.json")))
+    if (Object.values(registry.policies).some(p => p.source_sha === doc.source_sha)) fail("runtime candidate requires policy evidence", errors)
+  }
   validateImage("storefront", doc.storefront, doc.source_sha, errors)
   if (!isolated && doc.backend?.oci_revision && doc.storefront?.oci_revision) {
     if (doc.backend.oci_revision !== doc.storefront.oci_revision) {

@@ -93,7 +93,7 @@ function checkDockerfileBackport(baseContent, sourceContent, accepted) {
   rmSync(sample.repo, { recursive: true, force: true })
 }
 checkDockerfileBackport(oldDockerfile, revisionDockerfile, true)
-// Node/runtime updates require the normal paired release; never widen the exception.
+// Runtime updates remain forbidden without a separate sealed runtime policy.
 checkDockerfileBackport(oldDockerfile, currentDockerfile, false)
 checkDockerfileBackport(oldDockerfile, revisionDockerfile + "\nRUN echo unexpected-runtime-change\n", false)
 checkDockerfileBackport(oldDockerfile + "\n# unknown base\n", revisionDockerfile, false)
@@ -295,3 +295,202 @@ assert.notEqual(substituted.status, 0)
 assert.match(substituted.stderr, /must stay the reused revision/)
 
 console.log("validate-isolated-storefront-bake.fidelity.test.cjs: ok")
+
+// New runtime policy tests use an independent tiny Git fixture. They do not
+// mutate the production registry or require fetching private production source.
+const { createHash } = require("node:crypto")
+const { validateRuntimeContract } = require("./validate-isolated-storefront-bake.cjs")
+const hash = bytes => createHash("sha256").update(bytes).digest("hex")
+const runtimeFixture = readFileSync(join(__dirname, "fixtures/isolated-storefront/Dockerfile.node24-catalog-v1"))
+const registryBytes = readFileSync(join(__dirname, "storefront-runtime-policies.json"))
+const runtimeRegistry = JSON.parse(registryBytes)
+const sealed = runtimeRegistry.policies["node20-to-node24-catalog-v1"]
+assert.equal(sealed.paths["apps/storefront/Dockerfile"].after, hash(runtimeFixture))
+assert.equal(Object.keys(sealed.paths).length, 8)
+assert.equal(Object.keys(sealed.protected).length, 9)
+assert.match(runtimeFixture.toString(), /FROM node:24\.22\.1-bookworm-slim@sha256:[a-f0-9]{64} AS runner/)
+const rt = initRepo({ dockerfile: revisionDockerfile })
+writeFileSync(join(rt.repo, "apps/storefront/Dockerfile"), runtimeFixture)
+git(rt.repo, ["add", "apps/storefront/Dockerfile"])
+git(rt.repo, ["commit", "-m", "explicit runtime fixture"])
+const rtSource = git(rt.repo, ["rev-parse", "HEAD"])
+// The retained backend fixture has its own tree; it is never built or changed.
+mkdirSync(join(rt.repo, "apps/backend"), { recursive: true })
+writeFileSync(join(rt.repo, "apps/backend/package.json"), "{}\n")
+git(rt.repo, ["add", "apps/backend/package.json"])
+git(rt.repo, ["commit", "-m", "retained backend fixture"])
+const rtBackend = git(rt.repo, ["rev-parse", "HEAD"])
+git(rt.repo, ["checkout", "-q", rtSource])
+const rtPaths = ["apps/storefront/Dockerfile", "apps/storefront/src/page.tsx"]
+const rtPolicy = { ...sealed, source_sha: rtSource, base_sha: rt.base,
+  source_tree: git(rt.repo, ["rev-parse", `${rtSource}^{tree}`]), base_tree: git(rt.repo, ["rev-parse", `${rt.base}^{tree}`]),
+  backend_revision: rtBackend, backend_digest: BACKEND_DIGEST,
+  backend_tree: git(rt.repo, ["rev-parse", `${rtBackend}:apps/backend`]), protected: {},
+  paths: Object.fromEntries(rtPaths.map(file => [file, {
+    before: file.endsWith("Dockerfile") ? hash(revisionDockerfile) : null,
+    after: hash(readFileSync(join(rt.repo, file))),
+  }])) }
+const rtBytes = Buffer.from(JSON.stringify({ schema_version: 1, policies: { "node20-to-node24-catalog-v1": rtPolicy } }))
+const checkFile = join(rt.repo, "checks.json")
+const rtChecks = sealed.required_checks.map((name, i) => ({ name, head_sha: rtSource, conclusion: "success",
+  workflow_path: sealed.required_workflow, run_id: 1, run_attempt: 1, check_id: i + 1,
+  event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
+  source_base_sha: rtPolicy.base_sha, source_tree: rtPolicy.source_tree }))
+writeFileSync(checkFile, JSON.stringify(rtChecks))
+const rtInput = { repo: rt.repo, sourceSha: rtSource, productionBaseSha: rt.base,
+  backendRevision: rtBackend, backendDigest: BACKEND_DIGEST, productionStorefrontDigest: sealed.production_storefront_digest,
+  runtimePolicy: "node20-to-node24-catalog-v1", trustedPolicySha: sha, sourceChecksFile: checkFile }
+const validateFixture = (input = rtInput, paths = rtPaths, bytes = rtBytes, fixture = runtimeFixture) =>
+  validateRuntimeContract(input, paths, bytes, fixture)
+const rtEvidence = validateFixture()
+assert.equal(rtEvidence.runtime_after, sealed.runtime_after)
+assert.equal(rtEvidence.source_checks.length, 3)
+for (const [key, value] of [["runtimePolicy", "unknown"], ["trustedPolicySha", ""], ["sourceChecksFile", ""],
+  ["sourceSha", sha], ["productionBaseSha", sha], ["backendRevision", rtSource],
+  ["backendDigest", "sha256:" + "ff".repeat(32)], ["productionStorefrontDigest", "sha256:" + "ff".repeat(32)]]) {
+  rejects(() => validateFixture({ ...rtInput, [key]: value }), /policy|receipts/)
+}
+rejects(() => validateFixture(rtInput, [...rtPaths, "apps/backend/extra.ts"]), /path set/)
+rejects(() => validateFixture(rtInput, rtPaths, rtBytes, Buffer.from("FROM node:24 AS runner\n")), /runner\/fixture/)
+const badTree = JSON.parse(rtBytes)
+badTree.policies[rtInput.runtimePolicy].source_tree = "0".repeat(40)
+rejects(() => validateFixture(rtInput, rtPaths, Buffer.from(JSON.stringify(badTree))), /source tree/)
+const badProtected = JSON.parse(rtBytes)
+badProtected.policies[rtInput.runtimePolicy].protected = { "apps/storefront/Dockerfile": "0".repeat(64) }
+rejects(() => validateFixture(rtInput, rtPaths, Buffer.from(JSON.stringify(badProtected))), /protected/)
+const badBlob = JSON.parse(rtBytes)
+badBlob.policies[rtInput.runtimePolicy].paths[rtPaths[0]].after = "0".repeat(64)
+rejects(() => validateFixture(rtInput, rtPaths, Buffer.from(JSON.stringify(badBlob))), /blob mismatch/)
+for (const mutate of [x => x.pop(), x => x.push(x[0]), x => x[0].head_sha = sha,
+  x => x[0].conclusion = "failure", x => x[0].workflow_path = "other.yml", x => x[0].run_id = 0,
+  x => x[0].event = "pull_request", x => x[0].source_base_sha = sha,
+  x => x[0].run_attempt = 2]) {
+  const checks = structuredClone(rtChecks); mutate(checks); writeFileSync(checkFile, JSON.stringify(checks))
+  rejects(() => validateFixture(), /checks|check not qualified/)
+}
+writeFileSync(checkFile, JSON.stringify(rtChecks))
+rmSync(rt.repo, { recursive: true, force: true })
+
+const sealedTag = `build-${sealed.source_sha}-run-7-attempt-1`
+const realEvidence = { id: "node20-to-node24-catalog-v1", policy_sha: sha, registry_sha256: hash(registryBytes),
+  source_tree: sealed.source_tree, backend_tree: sealed.backend_tree,
+  runtime_before: sealed.runtime_before, runtime_after: sealed.runtime_after,
+  source_checks: sealed.required_checks.map((name, i) => ({ name, head_sha: sealed.source_sha, conclusion: "success",
+    workflow_path: sealed.required_workflow, run_id: 1, run_attempt: 1, check_id: i + 1,
+    event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
+    source_base_sha: sealed.base_sha, source_tree: sealed.source_tree })) }
+const runtimeManifest = manifest({ source_sha: sealed.source_sha, release_mode: "isolated_storefront",
+  source_branch: "release/storefront-memory-20261024", production_base_sha: sealed.base_sha,
+  production_storefront_digest: sealed.production_storefront_digest, main_sha: sha,
+  migration_count: 0, db_mutation: "forbidden", storefront_delta_scope: "apps/storefront",
+  backend: { repository: "ghcr.io/saintgroovie/woodright-backend", unique_tag: "reused-ec0d00550ed9",
+    digest: sealed.backend_digest, oci_revision: sealed.backend_revision, reused: true },
+  storefront: image(sealed.source_sha, "sha256:" + "22".repeat(32), sealedTag), storefront_runtime_policy: realEvidence })
+const runtimeManifestResult = checkManifest(runtimeManifest)
+assert.equal(runtimeManifestResult.status, 0, runtimeManifestResult.stderr)
+for (const mutate of [d => delete d.storefront_runtime_policy, d => d.storefront_runtime_policy.policy_sha = "bad",
+  d => d.storefront_runtime_policy.registry_sha256 = "0".repeat(64), d => d.backend.reused = false,
+  d => d.backend.digest = "sha256:" + "ff".repeat(32), d => d.storefront_runtime_policy.source_checks.pop(),
+  d => d.storefront_runtime_policy.runtime_after = "node:24", d => d.storefront_runtime_policy.id = "unknown"]) {
+  const doc = structuredClone(runtimeManifest); mutate(doc); assert.notEqual(checkManifest(doc).status, 0)
+}
+assert.match(workflow, /STOREFRONT_RUNTIME_POLICY: \$\{\{ inputs.storefront_runtime_policy \}\}/)
+assert.match(workflow, /--fetch-source-checks/)
+assert.match(workflow, /--evidence-output/)
+// Exercise the actual Python writer, not only hand-assembled manifests.
+const writerDir = mkdtempSync(join(tmpdir(), "wr-runtime-writer-"))
+const writerEvidence = join(writerDir, "evidence.json")
+writeFileSync(writerEvidence, JSON.stringify({ sourceSha: sealed.source_sha,
+  productionBaseSha: sealed.base_sha, backendDigest: sealed.backend_digest,
+  backendRevision: sealed.backend_revision, buildBackend: false, dbMutation: "forbidden", runtimePolicy: realEvidence }))
+const writerEnv = { ...process.env, SHA: sealed.source_sha, RUN_ID: "7", ATTEMPT: "1", UNIQUE: sealedTag,
+  BACKEND_DIGEST: sealed.backend_digest, STOREFRONT_DIGEST: runtimeManifest.storefront.digest,
+  RELEASE_MODE: "isolated_storefront", RELEASE_REF: runtimeManifest.source_branch,
+  BACKEND_REVISION: sealed.backend_revision, PRODUCTION_BASE_SHA: sealed.base_sha,
+  PRODUCTION_STOREFRONT_DIGEST: sealed.production_storefront_digest, MAIN_SHA: sha, GITHUB_SHA: sha,
+  GITHUB_WORKFLOW: "Build staging images", GITHUB_EVENT_NAME: "workflow_dispatch",
+  STOREFRONT_RUNTIME_POLICY: realEvidence.id, ISOLATED_BAKE_EVIDENCE: writerEvidence,
+  BUILD_PROFILE: "", PUBLISH_MUTABLE_ALIAS: "false" }
+const writeRuntime = env => spawnSync("python3", [join(__dirname, "write-build-manifest.py")], {
+  cwd: writerDir, env, encoding: "utf8",
+})
+const writerResult = writeRuntime(writerEnv)
+assert.equal(writerResult.status, 0, writerResult.stderr)
+const written = JSON.parse(readFileSync(join(writerDir, "release-artifacts/build-manifest.json")))
+assert.equal(checkManifest(written).status, 0)
+assert.deepEqual(written.storefront_runtime_policy, realEvidence)
+assert.equal(written.backend.reused, true)
+assert.equal(written.release_authorized, false)
+assert.notEqual(writeRuntime({ ...writerEnv, GITHUB_SHA: other }).status, 0)
+assert.notEqual(writeRuntime({ ...writerEnv, RELEASE_MODE: "main" }).status, 0)
+// Installed595 uses a separate canonical approval contract, not build-manifest
+// root fields. Run its unchanged parser locally against a synthetic SF-only
+// projection; this is not an owner approval or a production cutover.
+const ownerParserText = readFileSync(join(__dirname, "../../ops/lib/woodright-owner-approved-release.sh"), "utf8")
+const parserStart = ownerParserText.indexOf("import hashlib, json, os, re, sys\n")
+assert.ok(parserStart > 0)
+const parserEnd = ownerParserText.indexOf("\nPY\n", parserStart)
+assert.ok(parserEnd > parserStart)
+const nativeParser = ownerParserText.slice(parserStart, parserEnd)
+const approvalFixture = join(writerDir, "synthetic-approval-fixture.json")
+const projection = { schema_version: "1", environment: "public_production", owner_decision: "approved",
+  application_sha: written.source_sha, backend_digest: written.backend.digest,
+  storefront_digest: written.storefront.digest, component: "storefront",
+  retained_backend_revision: written.backend.oci_revision,
+  expected_current_storefront_digest: written.production_storefront_digest,
+  expected_current_backend_digest: written.backend.digest, owner_authorization_id: "LOCAL-FIXTURE-NOT-AUTHORITY" }
+const parseProjection = doc => {
+  writeFileSync(approvalFixture, JSON.stringify(doc))
+  return spawnSync("python3", ["-c", nativeParser, approvalFixture, "public_production"], { encoding: "utf8" })
+}
+const nativeOk = parseProjection(projection)
+assert.equal(nativeOk.status, 0, nativeOk.stderr)
+const nativeFields = nativeOk.stdout.trimEnd().split("\n")
+assert.equal(nativeFields[2], sealed.source_sha)
+assert.equal(nativeFields[3], sealed.backend_digest)
+assert.equal(nativeFields[6], "storefront")
+assert.equal(nativeFields[7], sealed.backend_revision)
+assert.notEqual(parseProjection({ ...projection, retained_backend_revision: sealed.source_sha }).status, 0)
+assert.notEqual(parseProjection({ ...projection, expected_current_backend_digest: "sha256:" + "ff".repeat(32) }).status, 0)
+assert.match(cutover, /assert_backend_notouch/)
+assert.doesNotMatch(cutover, /storefront_runtime_policy/)
+rmSync(writerDir, { recursive: true, force: true })
+// Mock the collector itself: successful source checks from a PR merge/base,
+// another branch/workflow, a stale rerun attempt or an unrelated job must fail.
+const { collectSourceChecks } = require("./validate-isolated-storefront-bake.cjs")
+const apiDir = mkdtempSync(join(tmpdir(), "wr-ci-collector-"))
+const previousRepo = process.env.GITHUB_REPOSITORY
+process.env.GITHUB_REPOSITORY = "fixture/repository"
+const apiChecks = sealed.required_checks.map((name, i) => ({ name, id: i + 1,
+  head_sha: sealed.source_sha, status: "completed", conclusion: "success", app: { slug: "github-actions" },
+  check_suite: { id: 17 }, details_url: "https://github.com/fixture/repository/actions/runs/7/job/" + (i + 1) }))
+const apiRun = { id: 7, repository: { full_name: "fixture/repository" }, path: sealed.required_workflow,
+  head_sha: sealed.source_sha, event: sealed.source_ci_event, head_branch: sealed.source_ci_ref,
+  run_attempt: 1, check_suite_id: 17, status: "completed", conclusion: "success" }
+const apiJobs = apiChecks.map(x => ({ name: x.name, status: "completed", conclusion: "success",
+  check_run_url: "https://api.github.com/repos/fixture/repository/check-runs/" + x.id }))
+function mockApi(run = apiRun, checks = apiChecks, jobs = apiJobs) {
+  return suffix => {
+    if (suffix.startsWith("commits/")) return [{ check_runs: checks }]
+    if (suffix === "actions/runs/7") return run
+    if (suffix === `actions/runs/7/attempts/${run.run_attempt}/jobs?per_page=100`) return [{ jobs }]
+    throw new Error("Unexpected API request: " + suffix)
+  }
+}
+const apiInput = { sourceSha: sealed.source_sha, runtimePolicy: "node20-to-node24-catalog-v1",
+  sourceChecksFile: join(apiDir, "receipts.json") }
+assert.equal(collectSourceChecks(apiInput, mockApi()).length, 3)
+for (const bad of [
+  { ...apiRun, event: "pull_request", pull_requests: [{ base: { sha: other } }] },
+  { ...apiRun, head_branch: "other-branch" }, { ...apiRun, path: "other.yml" },
+  { ...apiRun, head_sha: other }, { ...apiRun, check_suite_id: 18 },
+  { ...apiRun, repository: { full_name: "other/repository" } },
+]) rejects(() => collectSourceChecks(apiInput, mockApi(bad)), /workflow\/ref\/event/)
+rejects(() => collectSourceChecks(apiInput, mockApi({ ...apiRun, run_attempt: 2 }, apiChecks, [])), /another run attempt/)
+rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, apiChecks, apiJobs.slice(1))), /another run attempt/)
+const latestFailed = [...apiChecks, { ...apiChecks[0], id: 99, conclusion: "failure" }]
+rejects(() => collectSourceChecks(apiInput, mockApi(apiRun, latestFailed)), /not successful/)
+if (previousRepo === undefined) delete process.env.GITHUB_REPOSITORY
+else process.env.GITHUB_REPOSITORY = previousRepo
+rmSync(apiDir, { recursive: true, force: true })
+console.log("sealed runtime policy and manifest binding: PASS")

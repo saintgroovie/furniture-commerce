@@ -58,6 +58,11 @@ on:
         options:
           - main
           - isolated_storefront
+      storefront_runtime_policy:
+        description: "Explicit trusted runtime migration contract; empty retains the default runtime prohibition. Build only, never deployment authority."
+        required: false
+        type: string
+        default: ""
       production_base_sha:
         description: "Required for isolated_storefront. Live storefront OCI revision the candidate must descend from."
         required: false
@@ -85,6 +90,8 @@ on:
         default: ""
 
 permissions:
+  checks: read
+  actions: read
   contents: read
   packages: write
   id-token: write
@@ -115,10 +122,16 @@ jobs:
         id: sha
         env:
           INPUT_SHA: ${{ inputs.source_sha }}
+          RUNTIME_POLICY: ${{ inputs.storefront_runtime_policy }}
+          RELEASE_MODE: ${{ inputs.release_mode }}
         run: |
           set -euo pipefail
           if ! printf '%s' "${INPUT_SHA}" | grep -Eq '^[0-9a-fA-F]{40}$'; then
             echo "Invalid source_sha: must be a full 40-char hex commit SHA (got '${INPUT_SHA}')" >&2
+            exit 1
+          fi
+          if [ -n "${RUNTIME_POLICY}" ] && [ "${RELEASE_MODE}" != "isolated_storefront" ]; then
+            echo "runtime policy requires isolated_storefront" >&2
             exit 1
           fi
           echo "sha=${INPUT_SHA}" >> "${GITHUB_OUTPUT}"
@@ -250,9 +263,18 @@ jobs:
           BACKEND_DIGEST: ${{ inputs.backend_digest }}
           BACKEND_REVISION: ${{ inputs.backend_revision }}
           PRODUCTION_STOREFRONT_DIGEST: ${{ inputs.production_storefront_digest }}
+          RUNTIME_POLICY: ${{ inputs.storefront_runtime_policy }}
+          TRUSTED_POLICY_SHA: ${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           test -f trusted-governance/scripts/release/validate-isolated-storefront-bake.cjs
+          test "$(git -C trusted-governance rev-parse HEAD)" = "${TRUSTED_POLICY_SHA}"
+          git -C trusted-governance diff --exit-code
+          EXTRA=()
+          if [ -n "${RUNTIME_POLICY}" ]; then
+            EXTRA=(--runtime-policy "${RUNTIME_POLICY}" --trusted-policy-sha "${TRUSTED_POLICY_SHA}" --source-checks-file "${GITHUB_WORKSPACE}/source-checks.json" --fetch-source-checks)
+          fi
           node trusted-governance/scripts/release/validate-isolated-storefront-bake.cjs \
             --release-mode "${RELEASE_MODE}" \
             --source-sha "${SOURCE_SHA}" \
@@ -261,6 +283,9 @@ jobs:
             --backend-digest "${BACKEND_DIGEST}" \
             --backend-revision "${BACKEND_REVISION}" \
             --repo "${GITHUB_WORKSPACE}" \
+            --production-storefront-digest "${PRODUCTION_STOREFRONT_DIGEST}" \
+            --evidence-output "${GITHUB_WORKSPACE}/isolated-bake-evidence.json" \
+            "${EXTRA[@]}" \
             --github-output
 
       - name: Choose release script root
@@ -505,6 +530,8 @@ jobs:
           PRODUCTION_BASE_SHA: ${{ inputs.production_base_sha }}
           PRODUCTION_STOREFRONT_DIGEST: ${{ inputs.production_storefront_digest }}
           MAIN_SHA: ${{ steps.isolated.outputs.main_sha }}
+          STOREFRONT_RUNTIME_POLICY: ${{ inputs.storefront_runtime_policy }}
+          ISOLATED_BAKE_EVIDENCE: ${{ github.workspace }}/isolated-bake-evidence.json
           BACKEND_DIGEST: ${{ steps.backend.outputs.digest }}
           STOREFRONT_DIGEST: ${{ steps.storefront.outputs.digest }}
           SHA: ${{ steps.sha.outputs.sha }}
