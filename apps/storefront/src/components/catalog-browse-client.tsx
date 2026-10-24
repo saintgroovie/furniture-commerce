@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState, useTransition, type ReactNode } from "react"
 import { ProductCard } from "@/components/product-card"
 import { PromotionCard } from "@/components/promotion-card"
@@ -46,6 +47,8 @@ type Props = {
    * When present, the client does not call `/store/catalog-products` again.
    */
   hydratedPool?: Array<Record<string, unknown>>
+  /** A fresh server read invalidates any browser pool from an older render. */
+  poolRevision?: string
   poolScope: CatalogBrowsePoolScope
   kidsProductIds: string[]
   showBespokeCta?: boolean
@@ -60,25 +63,17 @@ type Props = {
   promotionSlot?: PromotionSlotPayload | null
 }
 
-function stateFromLocation(): CatalogFilterState {
-  if (typeof window === "undefined") {
-    return { category: [], collection: [] }
-  }
-  return parseCatalogFilterState(
-    Object.fromEntries(new URLSearchParams(window.location.search))
-  )
-}
-
 /**
- * SSR loads the catalog once and passes the scoped pool in.
- * Filter clicks recompute locally. A second full-catalog fetch runs only
- * when the server did not pass `hydratedPool`.
+ * SSR renders the first screen. The browser loads the complete pool directly
+ * without rendering/serializing every catalog card in each server request.
+ * A refreshed server read invalidates the previous browser snapshot.
  */
 export function CatalogBrowseClient({
   basePath,
   initialState,
   atfProducts,
   hydratedPool,
+  poolRevision = "initial",
   poolScope,
   kidsProductIds,
   showBespokeCta = false,
@@ -87,60 +82,65 @@ export function CatalogBrowseClient({
   emptySecondaryLabel,
   promotionSlot = null,
 }: Props) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const hasHydratedPool = Array.isArray(hydratedPool)
-  const [state, setState] = useState<CatalogFilterState>(initialState)
-  const [fetchedPool, setFetchedPool] = useState<Array<Record<string, unknown>> | null>(
-    null
+  // Next synchronizes this hook for both Link navigation and native history
+  // changes. A retained catalog component must follow the current URL too.
+  const state = useMemo(
+    () => searchParams ? parseCatalogFilterState(Object.fromEntries(searchParams)) : initialState,
+    [searchParams, initialState]
   )
-  const [fetchStatus, setFetchStatus] = useState<"atf" | "full" | "error">("atf")
+  const [fetchedPool, setFetchedPool] = useState<{
+    revision: string; status: "full" | "error"; products?: Array<Record<string, unknown>>
+  } | null>(null)
   const [retryTick, setRetryTick] = useState(0)
   const [, startTransition] = useTransition()
-  // Server pool is rendered directly so a later RSC payload replaces prices
-  // without a second network fetch and without setState inside an effect.
-  const pool = hasHydratedPool ? hydratedPool : fetchedPool
-  const poolStatus: "atf" | "full" | "error" = hasHydratedPool ? "full" : fetchStatus
+  const currentRead = fetchedPool?.revision === poolRevision ? fetchedPool : null
+  const pool = hasHydratedPool ? hydratedPool : currentRead?.products
+  const poolStatus: "atf" | "full" | "error" = hasHydratedPool ? "full" : currentRead?.status ?? "atf"
   const products = pool ?? atfProducts
   const poolReady = poolStatus === "full"
   const kidsKey = kidsProductIds.join(",")
 
   useEffect(() => {
-    const onPopState = () => {
-      startTransition(() => setState(stateFromLocation()))
-    }
-    window.addEventListener("popstate", onPopState)
-    return () => window.removeEventListener("popstate", onPopState)
-  }, [])
-
-  useEffect(() => {
     if (hasHydratedPool) return
     let cancelled = false
+    const controller = new AbortController()
     ;(async () => {
       try {
-        const raw = await fetchStoreCatalogProducts()
+        const raw = await fetchStoreCatalogProducts(controller.signal)
         const ids = kidsKey ? kidsKey.split(",") : []
         const scoped = toCatalogBrowseClientProducts(
           scopeCatalogBrowsePool(raw, poolScope, ids)
         )
         if (!cancelled) {
-          setFetchedPool(scoped)
-          setFetchStatus("full")
+          setFetchedPool({ revision: poolRevision, status: "full", products: scoped })
         }
       } catch {
-        if (!cancelled) setFetchStatus("error")
+        if (!cancelled) setFetchedPool({ revision: poolRevision, status: "error" })
       }
     })()
     return () => {
       cancelled = true
+      controller.abort()
     }
-  }, [hasHydratedPool, poolScope, kidsKey, retryTick])
+  }, [hasHydratedPool, poolScope, kidsKey, poolRevision, retryTick])
 
   const onClientNavigate = useCallback(
     (next: CatalogFilterState) => {
       const href = buildCatalogHref(basePath, next)
-      window.history.pushState(null, "", href)
-      setState(next)
+      // Let one router transaction own both URL/history and the fresh RSC.
+      // A separate native push followed by refresh can race a fast Back.
+      startTransition(() => {
+        if (href !== `${window.location.pathname}${window.location.search}`) {
+          router.push(href, { scroll: false })
+        } else {
+          router.refresh()
+        }
+      })
     },
-    [basePath]
+    [basePath, router]
   )
 
   const filtered = useMemo(
@@ -182,7 +182,7 @@ export function CatalogBrowseClient({
             type="button"
             className="catalog-search-btn"
             onClick={() => {
-              setFetchStatus("atf")
+              setFetchedPool(null)
               setRetryTick((n) => n + 1)
             }}
           >

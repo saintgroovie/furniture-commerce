@@ -204,7 +204,9 @@ RUN test -n "$MEDUSA_BACKEND_URL" \
  && ls -la .next-build/standalone/apps/storefront \
  && { du -sh .next-build/standalone .next-build/standalone/apps/storefront/node_modules .next-build/standalone/node_modules 2>/dev/null || true; }
 
-FROM node:20-bookworm-slim AS runner
+# Keep the qualified build toolchain; runtime24 fixes TransformStream cancellation
+# races exposed by disconnected catalog requests. Pin the official LTS manifest.
+FROM node:24.22.1-bookworm-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS runner
 WORKDIR /workspace
 # Re-declared so `docker image inspect` on the FINAL runtime image (not just
 # the intermediate build stage) shows the build-time profile/role/exposure/db
