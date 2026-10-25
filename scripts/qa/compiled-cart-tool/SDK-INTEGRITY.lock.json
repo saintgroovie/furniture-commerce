@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "name": "playwright-core",
+  "version": "1.64.1",
+  "tarball": "https://registry.npmjs.org/playwright-core/-/playwright-core-1.64.1.tgz",
+  "integrity": "sha512-BC4s8y6SEVA6Q1rSxZTto8hI1KUI3xXlHGZgvGqP4IqPdI/a6FX9H29IDNz7vKo9l21b6LfYosScPL6M3xxyDQ==",
+  "unpacked_bytes_expected": 13656167,
+  "registry_key": {
+    "expires": null,
+    "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U",
+    "keytype": "ecdsa-sha2-nistp256",
+    "scheme": "ecdsa-sha2-nistp256",
+    "key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEY6Ya7W++7aUPzvMTrezH6Ycx3c+HOKYCcNGybJZSCJq/fd7Qa8uuAKtdIkUQtQiEKERhAmE5lMMJhP8OkDOa2g=="
+  },
+  "registry_signatures": [
+    {
+      "sig": "MEUCIEy7ciU53V1ZZJIkZvHIGATvtyEPLUleM1JWQxeFRlu4AiEArrd3bWuynItY0FVNEtlpIlAYVToI3blY/GyCM9kQI9s=",
+      "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+    },
+    {
+      "sig": "MEUCICBo1DLENR92t5nYaJT1l8Zypymt05u0OH1+XJHVBkY7AiEA5EeIRBCAlllIBkJKjKPVKWvIyl8iPCNYMwwLs8jDC6E=",
+      "keyid": "SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U"
+    }
+  ],
+  "base": "mcr.microsoft.com/playwright@sha256:969a9e3655576186a7f3b3d85502f8c4041f4afce571df7aadba6384d93ee61f",
+  "platform": "linux/arm64",
+  "chromium_revision": "1248",
+  "chromium_version": "156.0.8078.4",
+  "module_path": "/opt/woodright-cart-probe/node_modules/playwright-core/index.mjs",
+  "chromium_path": "/ms-playwright/chromium-1248/chrome-linux-arm64/chrome",
+  "metadata_signature_verified_local": true,
+  "actual_tarball_downloaded_or_verified": false,
+  "SDK_sigstore_bundle_verified": false
+}

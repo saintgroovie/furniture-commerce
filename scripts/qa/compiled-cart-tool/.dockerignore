@@ -1,0 +1,7 @@
+*
+!Dockerfile
+!package.json
+!package-lock.json
+!SDK-INTEGRITY.lock.json
+!verify-sdk-lock.cjs
+!offline-probe.cjs

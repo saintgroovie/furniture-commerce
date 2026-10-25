@@ -1,0 +1,100 @@
+# LOCAL DRAFT ONLY. Not installed, committed, dispatched, or permitted to execute.
+# Image writer uses docker push via supervised buildx; woodright.tag.namespace=compiled-cart-tool
+name: Build sealed compiled-cart tool
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      recipe_sha:
+        description: Exact reviewed runtime recipe SHA256
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: compiled-cart-tool-${{ github.event_name }}-${{ github.event.pull_request.number || 'manual' }}
+  cancel-in-progress: false
+jobs:
+  proposal-checks:
+    if: ${{ github.event_name == 'pull_request' }}
+    name: Compiled cart tool proposal checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: scripts/qa/compiled-cart-tool
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: New supervisor faults and syntax only (no Docker/browser/packages)
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 supervisor_adapter.test.py
+          node --check offline-probe.cjs
+          node --check verify-sdk-lock.cjs
+          node <<'JS'
+          const assert=require('node:assert/strict'),v=require('./verify-sdk-lock.cjs');
+          const a=require('./SDK-INTEGRITY.lock.json'),p=require('./package.json'),l=require('./package-lock.json');
+          v.verify(a,p,l);v.resourceBounds('805306368','0','100000 100000');
+          for(const args of [['max','0','100000 100000'],['805306368','max','100000 100000'],['805306368','0','max 100000']])assert.throws(()=>v.resourceBounds(...args));
+          JS
+  build-tool:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: write
+    env:
+      EXPECTED_RECIPE_SHA: 1f76e69a31ae4cf5c94e3179d27b0f54b44ebbe961aba755e6c8589705cb4a1a
+      INPUT_RECIPE_SHA: ${{ inputs.recipe_sha }}
+      TOOL_DIR: ${{ github.workspace }}/scripts/qa/compiled-cart-tool
+      TOOL_RUN: ${{ runner.temp }}/wr-tool-${{ github.run_id }}-1
+      DOCKER_CONFIG: ${{ runner.temp }}/wr-tool-docker-config-${{ github.run_id }}-1
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Record exact reviewed recipe and absent own builder name
+        run: python3 "$TOOL_DIR/supervisor_adapter.py" hosted-prepare "$TOOL_RUN"
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # Deliberately privileged BUILDER, only in this fresh hosted VM.
+      # Never used on the user's Docker engine or as a browser runtime.
+      - name: Create resource-bounded own hosted builder
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+        with:
+          name: wr-cart-tool-${{ github.run_id }}-1
+          version: v0.38.1
+          driver: docker-container
+          driver-opts: |
+            image=moby/buildkit@sha256:3ad6bb9bc8c78c0069d03247adb9a59b3b43d68e55353e876e558b888c6c1768
+            memory=768m
+            memory-swap=768m
+            cpu-period=100000
+            cpu-quota=100000
+            network=bridge
+            restart-policy=no
+          buildkitd-flags: --oci-worker-net bridge
+          buildkitd-config-inline: |
+            [worker.oci]
+              max-parallelism = 1
+          cleanup: false
+      - name: Build and publish one immutable QA tool (not an application)
+        run: python3 "$TOOL_DIR/supervisor_adapter.py" hosted-build "$TOOL_RUN"
+      - name: Reconcile and remove only the own hosted builder
+        if: ${{ always() }}
+        run: python3 "$TOOL_DIR/supervisor_adapter.py" hosted-cleanup "$TOOL_RUN"
+      - name: Preserve exact inputs, result, metadata and owned cleanup evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: compiled-cart-tool-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.TOOL_RUN }}
+          if-no-files-found: error
