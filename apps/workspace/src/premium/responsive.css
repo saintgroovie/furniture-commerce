@@ -118,6 +118,11 @@
   .definition > div {
     grid-template-columns: 90px minmax(0, 1fr);
   }
+  .today-inspector .definition > div,
+  .object-inspector .definition > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+  }
   .data-table th,
   .data-table td {
     padding-left: 9px;
@@ -848,6 +853,22 @@
   .form-grid {
     gap: 13px;
   }
+  .form-grid:not(.three),
+  .filter-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tabs {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    row-gap: 0;
+  }
+  .tabs > button {
+    min-height: 44px;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   .form-footer {
     flex-wrap: wrap;
   }
@@ -916,7 +937,7 @@
     overflow-x: auto;
   }
   .invoice-line {
-    min-width: 590px;
+    min-width: 0;
   }
   .order-form-line {
     grid-template-columns: minmax(0, 1fr) 55px 85px 25px;

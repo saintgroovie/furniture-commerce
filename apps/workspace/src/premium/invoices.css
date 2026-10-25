@@ -5,11 +5,13 @@
 }
 .invoice-lines {
   display: grid;
+  min-width: 0;
   gap: 16px;
   margin-bottom: 18px;
 }
-.invoice-line {
+.invoice-lines > .invoice-line {
   display: grid;
+  min-width: 0;
   grid-template-columns: minmax(200px, 1fr) 120px 160px auto;
   gap: 12px;
   align-items: end;
@@ -87,12 +89,12 @@
 }
 @media (max-width: 800px) {
   .invoice-form-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
-  .invoice-line {
-    grid-template-columns: 1fr 1fr;
+  .invoice-lines > .invoice-line {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .invoice-line > .field:first-child {
+  .invoice-lines > .invoice-line > .field:first-child {
     grid-column: 1/-1;
   }
   .invoice-list-link {
