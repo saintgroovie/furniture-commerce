@@ -87,13 +87,15 @@ SHA_FILE="$OUT_DIR/${OUT_BASE}.tar.gz.sha256"
 MAN="$BACKUP_ROOT/manifests/${OUT_BASE}.media.json"
 LIST="$OUT_DIR/${OUT_BASE}.list.txt"
 
-rm -f "$TMP"
+for target in "$TMP" "$FINAL" "$SHA_FILE" "$LIST" "$MAN"; do
+  [[ ! -e "$target" && ! -L "$target" ]] || die "refuse existing media timestamp artifact: $target"
+done
 log "media archive start files=$FILE_COUNT bytes=$BYTE_SIZE"
 
 # Create archive inside helper, stream out
-if ! docker exec "$HELPER" sh -c 'cd /media && tar -czf - .' >"$TMP"; then
+if ! (set -o noclobber; docker exec "$HELPER" sh -c 'cd /media && tar -czf - .' >"$TMP"); then
   mkdir -p "$BACKUP_ROOT/quarantine"
-  mv -f "$TMP" "$BACKUP_ROOT/quarantine/${OUT_BASE}.tar.gz.failed" 2>/dev/null || rm -f "$TMP"
+  mv -n "$TMP" "$BACKUP_ROOT/quarantine/${OUT_BASE}.tar.gz.failed" 2>/dev/null || true
   die "media tar failed"
 fi
 
@@ -101,23 +103,23 @@ SIZE=$(wc -c <"$TMP" | tr -d ' ')
 [[ "$SIZE" -gt 0 ]] || die "empty media archive"
 
 # Integrity list (paths only)
-tar -tzf "$TMP" >"$LIST" || die "tar list failed"
+(set -o noclobber; tar -tzf "$TMP" >"$LIST") || die "tar list failed"
 LIST_COUNT=$(wc -l <"$LIST" | tr -d ' ')
 [[ "$LIST_COUNT" -gt 0 ]] || die "empty archive listing"
 
 chmod 0600 "$TMP" "$LIST"
 SHA=$(sha256sum "$TMP" | awk '{print $1}')
-printf '%s  %s\n' "$SHA" "$(basename "$FINAL")" >"$SHA_FILE"
+(set -o noclobber; printf '%s  %s\n' "$SHA" "$(basename "$FINAL")" >"$SHA_FILE")
 chmod 0600 "$SHA_FILE"
-mv -f "$TMP" "$FINAL"
+ln -- "$TMP" "$FINAL" || die "media final exists; refuse overwrite"
+rm -- "$TMP"
 chmod 0600 "$FINAL"
 
 WEEKLY="$BACKUP_ROOT/media/weekly/${OUT_BASE}.tar.gz"
 if [[ ! -e "$BACKUP_ROOT/media/weekly/woodright_media_${WEEK}.marker" ]]; then
-  cp -an "$FINAL" "$WEEKLY" 2>/dev/null || cp -a "$FINAL" "$WEEKLY"
-  cp -an "$SHA_FILE" "${WEEKLY}.sha256" 2>/dev/null || cp -a "$SHA_FILE" "${WEEKLY}.sha256"
+  python3 "$SCRIPT_DIR/immutable_weekly.py" "$FINAL" "$WEEKLY" "$SHA" || die "weekly immutable publication failed"
   touch "$BACKUP_ROOT/media/weekly/woodright_media_${WEEK}.marker"
-  chmod 0600 "$WEEKLY" "${WEEKLY}.sha256" 2>/dev/null || true
+  # Existing weekly aliases are never chmod/truncated/overwritten in place.
 fi
 
 END=$(date +%s)
@@ -145,10 +147,10 @@ obj = {
   "media_mount_signature": mount_sig,
   "active_owner_sha256": owner_sha or None,
   "script": "woodright-media-backup.sh",
-  "script_version": 1,
+  "script_version": 2,
 }
 os.makedirs(os.path.dirname(man), exist_ok=True)
-with open(man, "w", encoding="utf-8") as f:
+with open(man, "x", encoding="utf-8") as f:
   json.dump(obj, f, indent=2)
   f.write("\n")
 os.chmod(man, 0o600)

@@ -131,6 +131,8 @@ REQUIRED_JSON='[
   "ops/release/deploy-team-workspace.py",
   "docs/operator/woodright-team-workspace.md",
   "ops/backup/woodright-backup-retention.sh",
+  "ops/backup/retention_catalog.py",
+  "ops/backup/immutable_weekly.py",
   "ops/backup/woodright-public-production-backup-run.sh",
   "ops/backup/woodright-public-production-restore-rehearsal.sh",
   "ops/systemd/woodright-monitor.service",
