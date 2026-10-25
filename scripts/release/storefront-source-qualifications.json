@@ -37,19 +37,19 @@
         "apps/storefront/src/lib/catalog-fetch-cache.fidelity.test.mjs": "a5c74a68fecaa954fb4068f62a454645bc658cdfa870297e730154869c826f18"
       },
       "context_hashes": {
-        ".github/workflows/pr-checks.yml": "8879344d751d22a5a1e9175a540bbf47c3ed08c97b9e07e361e4382fb4eb070d",
+        ".github/workflows/pr-checks.yml": "9d67c7ebd33db880a2298f363ddea0a829fdf38921947f6b238f9363df1691c6",
         "scripts/release/storefront-runtime-policies.json": "cc286523d35bb7aef90c230dd427be9b447767db9894dc3ed5f7e89c4578cb57",
         "scripts/release/validate-isolated-storefront-bake.cjs": "d71863b2025443951f76d9724cd0c8b65cd85baa18d913cf3ce4b940dd0438c6"
       },
       "workflow": ".github/workflows/qualify-storefront-source.yml",
-      "workflow_sha256": "adcd53b3451301b52d4c575614d496d7d6d7b1ff243f110d50e652720c2d5524",
+      "workflow_sha256": "98333501fba7b63a04f359322d97873802eecf1ed970dbc4e6a89817dc6ef2a9",
       "retained_backend_proof": {
         "source_sha": "e983c436dac64e4e443917976e9a59dfb16c99b8",
         "runtime_policy": "node20-to-node24-catalog-v1",
         "run_id": 40121396368,
         "purpose": "Authenticated accepted BEcomponent only; never a qualification of newcartsource"
       },
-      "context_scope_note": "Requires proposed sixth path PR-checks gate addition; missing integration fails trusted-context hash validation. Backend authenticated reuse follows unchanged historical runtime receipts, not new main tests claimed as candidate."
+      "context_scope_note": "Keeps historical pr-checks.yml immutable; new validator mandatory PR-only job lives in this new qualification workflow. Three qualification jobs run only on workflow_dispatch. Backend authenticated reuse remains unchanged historical component proof."
     }
   }
 }

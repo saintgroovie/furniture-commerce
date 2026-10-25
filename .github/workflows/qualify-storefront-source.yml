@@ -1,6 +1,7 @@
 # LOCAL candidate, not installed or dispatched. No image, deploy or data operations.
 name: Qualify sealed storefront source
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       source_sha:
@@ -12,10 +13,25 @@ permissions:
   actions: read
   checks: read
 concurrency:
-  group: qualify-sealed-cart-${{ inputs.source_sha }}
+  group: qualify-sealed-cart-${{ github.event_name }}-${{ github.event.pull_request.number || inputs.source_sha }}
   cancel-in-progress: false
 jobs:
+  source-contract-pr:
+    if: ${{ github.event_name == 'pull_request' }}
+    name: Sealed source validator fidelity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: New sealed source validator and event-routing negatives
+        run: node scripts/release/validate-storefront-source-qualification.fidelity.test.cjs
   qualify-storefront:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     name: Storefront production gates
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -241,6 +257,7 @@ jobs:
           if-no-files-found: error
 
   qualify-backend-fidelity:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     name: Backend fidelity tests
     runs-on: ubuntu-latest
     # Raised from 30: install-level retry may sleep up to 600s cumulative on 429.
@@ -374,6 +391,7 @@ jobs:
           if-no-files-found: error
 
   qualify-release-governance:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     name: Release governance gates
     runs-on: ubuntu-latest
     # Raised from 10: the cutover execute-path shell harnesses spawn a few

@@ -43,6 +43,25 @@ assert(workflow.includes('ref: ${{ inputs.source_sha }}')&&workflow.includes('re
 assert(workflow.includes('source-qualification-${{ github.run_id }}-${{ github.run_attempt }}-storefront'));
 assert(workflow.includes('validate-storefront-source-qualification.fidelity.test.cjs'));
 count+=5;
+// Event routing is part of the new workflow contract, not an edit to the sealed old PR template.
+const {execFileSync}=require('node:child_process');
+const parseYaml=text=>JSON.parse(execFileSync('ruby',['-rpsych','-rjson','-e','puts JSON.generate(Psych.safe_load(STDIN.read, permitted_classes: [], permitted_symbols: [], aliases: false))'],{input:text,encoding:'utf8'}));
+function routeContract(doc){
+ const events=doc.on??doc.true;
+ assert.deepEqual(Object.keys(events).sort(),['pull_request','workflow_dispatch']);
+ const jobs=doc.jobs, pr=jobs['source-contract-pr'];
+ assert.equal(pr.if,"${{ github.event_name == 'pull_request' }}");
+ assert.equal(pr.name,'Sealed source validator fidelity');
+ assert.equal(pr['timeout-minutes'],5);
+ assert.deepEqual(pr.steps,[{uses:'actions/checkout@v4',with:{'persist-credentials':false}},{uses:'actions/setup-node@v4',with:{'node-version':'22'}},{name:'New sealed source validator and event-routing negatives',run:'node scripts/release/validate-storefront-source-qualification.fidelity.test.cjs'}]);
+ for(const key of ['qualify-storefront','qualify-backend-fidelity','qualify-release-governance'])assert.equal(jobs[key].if,"${{ github.event_name == 'workflow_dispatch' }}");
+ assert.deepEqual(doc.permissions,{contents:'read',actions:'read',checks:'read'});
+ assert(!JSON.stringify(pr).includes('secrets.')&&!JSON.stringify(pr).includes('inputs.')&&!JSON.stringify(pr).includes('github.event.pull_request.head'));
+}
+const routing=parseYaml(workflow);routeContract(routing);count++;
+for(const mutate of [x=>delete x.jobs['qualify-storefront'].if,x=>x.jobs['qualify-backend-fidelity'].if="${{ github.event_name == 'pull_request' }}",x=>x.jobs['qualify-release-governance'].if='${{ always() }}',x=>x.jobs['source-contract-pr'].if="${{ github.event_name == 'workflow_dispatch' }}",x=>x.jobs['source-contract-pr'].steps[0].with['persist-credentials']=true,x=>x.jobs['source-contract-pr'].steps[2].run='curl ${{ secrets.TOKEN }}',x=>x.permissions.contents='write']){const q=clone(routing);mutate(q);assert.throws(()=>routeContract(q));count++;}
+assert.equal(crypto.createHash('sha256').update(workflow).digest('hex'),c.workflow_sha256);count++;
+assert.equal(c.context_hashes['.github/workflows/pr-checks.yml'],'9d67c7ebd33db880a2298f363ddea0a829fdf38921947f6b238f9363df1691c6');count++;
 const archiveFixtures={"good": "UEsDBBQAAAAAAAAAIQCQX9SnCwAAAAsAAAASAAAAcXVhbGlmaWNhdGlvbi5qc29ueyJvayI6dHJ1ZX1QSwECFAMUAAAAAAAAACEAkF/UpwsAAAALAAAAEgAAAAAAAAAAAAAAgAEAAAAAcXVhbGlmaWNhdGlvbi5qc29uUEsFBgAAAAABAAEAQAAAADsAAAAAAA==", "path": "UEsDBBQAAAAAAAAAIQBDv6ajAgAAAAIAAAAVAAAALi4vcXVhbGlmaWNhdGlvbi5qc29ue31QSwECFAMUAAAAAAAAACEAQ7+mowIAAAACAAAAFQAAAAAAAAAAAAAAgAEAAAAALi4vcXVhbGlmaWNhdGlvbi5qc29uUEsFBgAAAAABAAEAQwAAADUAAAAAAA==", "symlink": "UEsDBBQAAAAAAAAAIQD8L29GBgAAAAYAAAASAAAAcXVhbGlmaWNhdGlvbi5qc29udGFyZ2V0UEsBAhQDFAAAAAAAAAAhAPwvb0YGAAAABgAAABIAAAAAAAAAAAAAAP+hAAAAAHF1YWxpZmljYXRpb24uanNvblBLBQYAAAAAAQABAEAAAAA2AAAAAAA="};
 assert.equal(v.extractArchive(Buffer.from(archiveFixtures.good,'base64')).toString(),'{"ok":true}');count++;
 for(const key of ['path','symlink']){assert.throws(()=>v.extractArchive(Buffer.from(archiveFixtures[key],'base64')));count++;}
