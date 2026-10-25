@@ -110,6 +110,7 @@ export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) 
   const sessionCartId = useSessionCartId()
   const [cart, setCart] = useState<Record<string, unknown> | null>(null)
   const [viewState, setViewState] = useState<CartViewState>(initialViewState)
+  const [resolvedCartId, setResolvedCartId] = useState<string | null>(null)
   const [mutating, setMutating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -122,6 +123,7 @@ export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) 
     getCart(sessionCartId)
       .then((data: { cart?: Record<string, unknown> }) => {
         if (cancelled) return
+        setResolvedCartId(sessionCartId)
         const c = data.cart ?? null
         const items = (c?.items as unknown[]) ?? []
         if (!c || !Array.isArray(items) || items.length === 0) {
@@ -134,6 +136,7 @@ export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) 
       })
       .catch((e: unknown) => {
         if (cancelled) return
+        setResolvedCartId(sessionCartId)
         if (e instanceof Error && e.message === CART_NOT_FOUND) {
           clearCartIdFromSession()
           setCart(null)
@@ -154,7 +157,7 @@ export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) 
       ? viewState === "error" || viewState === "invalid_state"
         ? viewState
         : "empty"
-      : viewState === "empty" && !cart
+      : resolvedCartId !== sessionCartId
         ? "loading"
         : viewState
 
