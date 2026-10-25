@@ -59,7 +59,7 @@ on:
           - main
           - isolated_storefront
       qualification_run_id:
-        description: "Completed qualification-only workflow execution for this exact source/policy; required by an explicit runtime build."
+        description: "Completed exact-source qualification run; consumed by sealed runtime or non-runtime source admission."
         required: false
         type: string
         default: ""
@@ -304,6 +304,35 @@ jobs:
             --evidence-output "${GITHUB_WORKSPACE}/isolated-bake-evidence.json" \
             "${EXTRA[@]}" \
             --github-output
+
+      - name: Admit sealed non-runtime storefront source qualification
+        if: ${{ inputs.release_mode == 'isolated_storefront' && inputs.storefront_runtime_policy == '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ steps.sha.outputs.sha }}
+          TRUSTED_SHA: ${{ github.sha }}
+          RELEASE_REF: ${{ inputs.release_ref }}
+          BASE_SHA: ${{ inputs.production_base_sha }}
+          BE_DIGEST: ${{ inputs.backend_digest }}
+          BE_REVISION: ${{ inputs.backend_revision }}
+          SF_BASE_DIGEST: ${{ inputs.production_storefront_digest }}
+          QUALIFICATION_RUN_ID: ${{ inputs.qualification_run_id }}
+        run: |
+          set -euo pipefail
+          node trusted-governance/scripts/release/validate-storefront-source-qualification.cjs \
+            --admit-build --source-sha "${SOURCE_SHA}" --trusted-policy-sha "${TRUSTED_SHA}" \
+            --release-ref "${RELEASE_REF}" --production-base-sha "${BASE_SHA}" \
+            --backend-digest "${BE_DIGEST}" --backend-revision "${BE_REVISION}" \
+            --production-storefront-digest "${SF_BASE_DIGEST}" \
+            --qualification-run-id "${QUALIFICATION_RUN_ID}" --repo "${GITHUB_WORKSPACE}" \
+            --evidence-output "${GITHUB_WORKSPACE}/storefront-source-qualification.json"
+      - name: Preserve source admission evidence separately from unchanged native build manifest
+        if: ${{ inputs.release_mode == 'isolated_storefront' && inputs.storefront_runtime_policy == '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: storefront-source-admission-${{ github.run_id }}-${{ github.run_attempt }}
+          path: storefront-source-qualification.json
+          if-no-files-found: error
 
       - name: Choose release script root
         id: scripts
