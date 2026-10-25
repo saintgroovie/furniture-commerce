@@ -95,9 +95,132 @@ check(/yarn install --immutable/.test(storefront), "storefront still uses yarn i
 check(!/YARN_NPM_REGISTRY_SERVER/.test(storefront), "storefront job does not set YARN_NPM_REGISTRY_SERVER")
 
 // Image bake workflow not modified by this contract.
+
+// Parse actual YAML; reject duplicate mapping/job IDs and aliases before loading.
+// Ruby/Psych is part of the hosted Ubuntu runner and macOS; no npm install here.
+function parseWorkflow(source) {
+  const ruby = `require 'psych'; require 'json'
+source = STDIN.read
+walk = lambda do |node|
+  raise 'YAML aliases forbidden' if node.is_a?(Psych::Nodes::Alias)
+  if node.is_a?(Psych::Nodes::Mapping)
+    seen = {}
+    node.children.each_slice(2) do |key, value|
+      raise 'Non-scalar mapping key' unless key.is_a?(Psych::Nodes::Scalar)
+      raise 'Duplicate or merged mapping key' if seen[key.value] || key.value == '<<'
+      seen[key.value] = true
+    end
+  end
+  (node.children || []).each { |child| walk.call(child) } if node.respond_to?(:children)
+end
+walk.call(Psych.parse_stream(source))
+puts JSON.generate(Psych.safe_load(source, permitted_classes: [], permitted_symbols: [], aliases: false))`
+  const result = require('node:child_process').spawnSync('ruby', ['-e', ruby], {
+    input: source, encoding: 'utf8', timeout: 10000, maxBuffer: 2 * 1024 * 1024,
+  })
+  assert.equal(result.status, 0, result.stderr || 'YAML parser unavailable')
+  const doc = JSON.parse(result.stdout)
+  assert.ok(doc && doc.jobs && !Array.isArray(doc.jobs), 'Workflow jobs mapping required')
+  for (const [id, job] of Object.entries(doc.jobs)) {
+    assert.match(id, /^[A-Za-z_][A-Za-z0-9_-]*$/)
+    assert.ok(job && typeof job === 'object' && !Array.isArray(job), 'Unique job object required')
+  }
+  return doc
+}
+function imageJobs(doc) {
+  const known = new Set(['build', 'qualify-storefront', 'qualify-backend-fidelity', 'qualify-release-governance'])
+  assert.ok(Object.keys(doc.jobs).every(id => known.has(id)), 'Unknown image job requires explicit classification')
+  assert.ok(doc.jobs.build && Array.isArray(doc.jobs.build.steps), 'Actual build job required')
+  const writers = Object.values(doc.jobs).filter(job => (job.steps || []).some(step =>
+    /docker\/build-push-action/.test(step.uses || '') || /\bdocker\s+(?:build|push|buildx\s+build)\b/.test(step.run || '')))
+  assert.ok(writers.includes(doc.jobs.build), 'Named build job must carry the image build')
+  return writers
+}
+function qualificationRole(doc) {
+  const qualified = Object.entries(doc.jobs).filter(([id]) => id.startsWith('qualify-'))
+  if (!qualified.length) return null
+  assert.equal(qualified.length, 3, 'All three qualification roles required')
+  for (const [id, role] of qualified) {
+    assert.equal(role.if, '${{ inputs.qualification_only }}')
+    const permissions = role.permissions || doc.permissions
+    assert.ok(permissions && typeof permissions === 'object')
+    assert.equal(permissions.contents, 'read')
+    assert.ok(Object.values(permissions).every(value => value === 'read' || value === 'none'), 'Qualification must be read-only')
+    if (id !== 'qualify-backend-fidelity') {
+      assert.doesNotMatch(JSON.stringify(role), /YARN_NPM_REGISTRY_SERVER|npmRegistryServer|yarn-install-network-resilient\.cjs\b/, 'CI install exception is backend Install only')
+    }
+  }
+  const job = doc.jobs['qualify-backend-fidelity']
+  assert.ok(job, 'Backend qualification role required')
+  assert.equal(doc.jobs.build.if, '${{ !inputs.qualification_only }}')
+  const template = parseWorkflow(text).jobs['backend-fidelity']
+  const exactStep = name => {
+    const actual = job.steps.filter(step => step.name === name)
+    const expected = template.steps.filter(step => step.name === name)
+    assert.equal(actual.length, 1); assert.equal(expected.length, 1)
+    const { if: reuseCondition, ...executed } = actual[0]
+    assert.equal(reuseCondition, "${{ steps.reuse.outputs.reused_gates != 'true' }}", 'Only verified exact prior qualification may replace execution')
+    assert.deepEqual(executed, expected[0], 'Qualification install/tests must retain the exact failure-preserving trusted step')
+    return actual[0]
+  }
+  const reuse = job.steps.filter(step => step.id === 'reuse')
+  assert.equal(reuse.length, 1)
+  assert.equal(reuse[0].name, 'Verify exact source and qualification context')
+  assert.match(reuse[0].run, /node \.runtime-policy\/scripts\/release\/validate-isolated-storefront-bake\.cjs/)
+  assert.match(reuse[0].run, /--github-output --qualification-only --qualification-job backend-fidelity/)
+  assert.equal(reuse[0].env.GH_TOKEN, '${{ github.token }}')
+  assert.ok(!reuse[0].if && !reuse[0]['continue-on-error'])
+  const install = exactStep('Install')
+  exactStep('Run classification/cart/catalog fidelity')
+  assert.equal(install.env.YARN_NPM_REGISTRY_SERVER, 'https://registry.npmjs.org')
+  assert.equal(install.run, 'node scripts/release/yarn-install-network-resilient.cjs --cwd apps/backend')
+  assert.ok(!job['continue-on-error'] && !job.steps.some(step => step['continue-on-error']), 'No ignored failures')
+  const outsideInstall = { ...job, steps: job.steps.filter(step => step !== install) }
+  assert.doesNotMatch(JSON.stringify(outsideInstall), /YARN_NPM_REGISTRY_SERVER|npmRegistryServer|yarn-install-network-resilient\.cjs\b/, 'CI install exception is backend Install only')
+  return job
+}
+
+function validateBakeRegistry(doc) {
+  assert.doesNotMatch(JSON.stringify(doc.env || {}), /YARN_NPM_REGISTRY_SERVER|npmRegistryServer/, 'No global registry override')
+  for (const job of imageJobs(doc)) {
+    assert.doesNotMatch(JSON.stringify(job), /YARN_NPM_REGISTRY_SERVER|npmRegistryServer/, 'No registry override in any actual image job')
+  }
+  qualificationRole(doc)
+}
 if (fs.existsSync(bakeWorkflow)) {
-  const bake = fs.readFileSync(bakeWorkflow, "utf8")
-  check(!/YARN_NPM_REGISTRY_SERVER:\s*https:\/\/registry\.npmjs\.org/.test(bake), "bake workflow not carrying this Backend CI registry override")
+  const bake = fs.readFileSync(bakeWorkflow, 'utf8')
+  const doc = parseWorkflow(bake)
+  validateBakeRegistry(doc)
+  check(true, 'Parsed image jobs prohibit registry override; qualification registry is explicitly scoped')
+  const leak = structuredClone(doc); leak.jobs.build.env = { YARN_NPM_REGISTRY_SERVER: 'https://registry.npmjs.org' }
+  assert.throws(() => validateBakeRegistry(leak), /registry override/)
+  const globalLeak = structuredClone(doc); globalLeak.env.YARN_NPM_REGISTRY_SERVER = 'https://registry.npmjs.org'
+  assert.throws(() => validateBakeRegistry(globalLeak), /registry override/)
+  const rogue = structuredClone(doc); rogue.jobs.rogue = { steps: [{ uses: 'docker/build-push-action@v6', env: { YARN_NPM_REGISTRY_SERVER: 'https://registry.npmjs.org' } }] }
+  assert.throws(() => validateBakeRegistry(rogue), /image job/)
+  const missing = structuredClone(doc); delete missing.jobs.build
+  assert.throws(() => validateBakeRegistry(missing), /build job/)
+  assert.throws(() => parseWorkflow(bake.replace('  build:\n', '  build: {}\n  build:\n')), /Duplicate/)
+  if (doc.jobs['qualify-backend-fidelity']) {
+    const wrongMode = structuredClone(doc); wrongMode.jobs['qualify-backend-fidelity'].if = '${{ always() }}'
+    assert.throws(() => validateBakeRegistry(wrongMode))
+    const wrongRegistry = structuredClone(doc); wrongRegistry.jobs['qualify-backend-fidelity'].steps.find(x => x.name === 'Install').env.YARN_NPM_REGISTRY_SERVER = 'https://registry.yarnpkg.com'
+    assert.throws(() => validateBakeRegistry(wrongRegistry))
+    const skipped = structuredClone(doc); skipped.jobs['qualify-backend-fidelity'].steps.find(x => x.name === 'Install').if = false
+    assert.throws(() => validateBakeRegistry(skipped))
+    const skippedTests = structuredClone(doc); skippedTests.jobs['qualify-backend-fidelity'].steps.find(x => x.name === 'Run classification/cart/catalog fidelity').if = false
+    assert.throws(() => validateBakeRegistry(skippedTests))
+    const swallowed = structuredClone(doc); swallowed.jobs['qualify-backend-fidelity'].steps.find(x => x.name === 'Run classification/cart/catalog fidelity').run += ' || true'
+    assert.throws(() => validateBakeRegistry(swallowed))
+    const misplaced = structuredClone(doc); misplaced.jobs['qualify-storefront'].steps.push({ run: 'node scripts/release/yarn-install-network-resilient.cjs', env: { YARN_NPM_REGISTRY_SERVER: 'https://registry.npmjs.org' } })
+    assert.throws(() => validateBakeRegistry(misplaced), /backend Install only/)
+    const wrongOtherMode = structuredClone(doc); wrongOtherMode.jobs['qualify-storefront'].if = '${{ always() }}'
+    assert.throws(() => validateBakeRegistry(wrongOtherMode))
+    const legacy = structuredClone(doc)
+    for (const key of Object.keys(legacy.jobs)) if (key.startsWith('qualify-')) delete legacy.jobs[key]
+    delete legacy.jobs.build.if
+    validateBakeRegistry(legacy)
+  }
 }
 
 // Repo yarnrc not rewritten to force npmjs (developer/bake blast radius).

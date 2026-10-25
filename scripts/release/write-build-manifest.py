@@ -138,6 +138,19 @@ def main() -> None:
             "Isolated storefront bake. Backend image was reused, not built. "
             "Candidate is not current main. Deploy requires a separate storefront-only cutover."
         )
+    runtime_policy = os.environ.get("STOREFRONT_RUNTIME_POLICY", "")
+    if runtime_policy:
+        if release_mode != "isolated_storefront":
+            raise ValueError("runtime policy requires isolated_storefront")
+        evidence = json.loads(Path(os.environ["ISOLATED_BAKE_EVIDENCE"]).read_text())
+        if (evidence["sourceSha"] != sha or evidence["backendDigest"] != be
+                or evidence["backendRevision"] != backend_revision
+                or evidence["productionBaseSha"] != doc["production_base_sha"]
+                or evidence["runtimePolicy"]["id"] != runtime_policy
+                or evidence["runtimePolicy"]["policy_sha"] != os.environ["GITHUB_SHA"]
+                or evidence["buildBackend"] is not False or evidence["dbMutation"] != "forbidden"):
+            raise ValueError("runtime policy evidence mismatch")
+        doc["storefront_runtime_policy"] = evidence["runtimePolicy"]
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {OUT}")
