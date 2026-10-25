@@ -1,0 +1,36 @@
+{
+  "buildkit": {
+    "observed_tag": "buildx-stable-1",
+    "image": "moby/buildkit@sha256:3ad6bb9bc8c78c0069d03247adb9a59b3b43d68e55353e876e558b888c6c1768",
+    "platform": "linux/arm64",
+    "compressed_layer_bytes": 106530023,
+    "no_layers_downloaded": true
+  },
+  "actions/checkout": {
+    "observed_tag": "v4",
+    "commit": "11d5960a326750d5838078e36cf38b85af677262"
+  },
+  "docker/setup-buildx-action": {
+    "observed_tag": "v3",
+    "commit": "8d2750c68a42422c14e847fe6c8ac0403b4cbd6f"
+  },
+  "docker/login-action": {
+    "observed_tag": "v3",
+    "commit": "c94ce9fb468520275223c153574b00df6fe4bcc9"
+  },
+  "actions/upload-artifact": {
+    "observed_tag": "v4",
+    "commit": "ea165f8d65b6e75b540449e92b4886f43607fa02"
+  },
+  "buildx_version": "v0.38.1",
+  "buildx_binary": {
+    "version": "v0.38.1",
+    "platform": "linux/arm64",
+    "sha256": "3b83b3731916ba433feccaaa689fe5bcdc81c641d92c8e6c2ea865dfa141c97a",
+    "asset_id": 660618318,
+    "size": 63766690,
+    "url": "https://github.com/docker/buildx/releases/download/v0.38.1/buildx-v0.38.1.linux-arm64",
+    "job_owned_path": "DOCKER_CONFIG/cli-plugins/docker-buildx",
+    "must_execute_binary_directly_no_Docker_wrapper": true
+  }
+}
