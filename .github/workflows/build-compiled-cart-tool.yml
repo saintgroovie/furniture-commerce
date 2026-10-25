@@ -51,13 +51,15 @@ jobs:
       EXPECTED_RECIPE_SHA: 1f76e69a31ae4cf5c94e3179d27b0f54b44ebbe961aba755e6c8589705cb4a1a
       INPUT_RECIPE_SHA: ${{ inputs.recipe_sha }}
       TOOL_DIR: ${{ github.workspace }}/scripts/qa/compiled-cart-tool
-      TOOL_RUN: ${{ runner.temp }}/wr-tool-${{ github.run_id }}-1
-      DOCKER_CONFIG: ${{ runner.temp }}/wr-tool-docker-config-${{ github.run_id }}-1
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.sha }}
           persist-credentials: false
+      - name: Bind owned paths on the runner
+        run: |
+          echo "TOOL_RUN=$RUNNER_TEMP/wr-tool-$GITHUB_RUN_ID-1" >> "$GITHUB_ENV"
+          echo "DOCKER_CONFIG=$RUNNER_TEMP/wr-tool-docker-config-$GITHUB_RUN_ID-1" >> "$GITHUB_ENV"
       - name: Record exact reviewed recipe and absent own builder name
         run: python3 "$TOOL_DIR/supervisor_adapter.py" hosted-prepare "$TOOL_RUN"
       - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9

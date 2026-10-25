@@ -1,5 +1,5 @@
 """NEW adapter fault tests. Fake Docker only; tiny owned Python children for Popen faults."""
-import copy, datetime, json, pathlib, subprocess, sys, tempfile, time, unittest
+import copy, datetime, json, pathlib, re, subprocess, sys, tempfile, time, unittest
 from unittest.mock import patch
 import supervisor_adapter as a
 
@@ -42,6 +42,28 @@ class Fake:
         raise AssertionError(v)
 
 class Adapter(unittest.TestCase):
+    def test_workflow_job_env_context_availability_and_runtime_bind_order(self):
+        file=a.HERE.parents[2]/'.github/workflows/build-compiled-cart-tool.yml'
+        raw=subprocess.check_output(['ruby','-rpsych','-rjson','-e','puts JSON.generate(Psych.safe_load(File.read(ARGV[0]), aliases: false))',str(file)])
+        doc=json.loads(raw)
+        allowed={'github','needs','strategy','matrix','vars','secrets','inputs'}
+        def guard(value):
+            for job in value['jobs'].values():
+                for text in job.get('env',{}).values():
+                    for expr in re.findall(r'\$\{\{(.*?)\}\}',str(text)):
+                        roots=re.findall(r'(?<![.\w])([A-Za-z_]\w*)\s*\.',expr)
+                        self.assertTrue(set(roots)<=allowed,'context unavailable at jobs.<id>.env')
+        guard(doc)
+        for forbidden in ['runner','env','steps','job']:
+            bad=copy.deepcopy(doc);bad['jobs']['build-tool']['env']['UNIT_BAD']='${{ '+forbidden+'.temp }}'
+            with self.subTest(context=forbidden),self.assertRaises(AssertionError):guard(bad)
+        build=doc['jobs']['build-tool'];self.assertNotIn('TOOL_RUN',build['env']);self.assertNotIn('DOCKER_CONFIG',build['env'])
+        names=[s.get('name','') for s in build['steps']];i=names.index('Bind owned paths on the runner')
+        self.assertLess(i,names.index('Record exact reviewed recipe and absent own builder name'))
+        script=build['steps'][i]['run']
+        self.assertIn('TOOL_RUN=$RUNNER_TEMP/wr-tool-$GITHUB_RUN_ID-1',script)
+        self.assertIn('DOCKER_CONFIG=$RUNNER_TEMP/wr-tool-docker-config-$GITHUB_RUN_ID-1',script)
+        self.assertEqual(script.count('>> "$GITHUB_ENV"'),2)
     def invoke(self,fault=None):
         p=permit();s=Fake(p,fault)
         with tempfile.TemporaryDirectory() as d,patch.object(a,'load_hosted_receipt',return_value={'UNIT_TEST_FAKE_ONLY':True}),patch.object(a.os,'statvfs',return_value=type('Disk',(),{'f_bavail':10000000,'f_frsize':4096})()):r=a.local_probe(p,pathlib.Path(d),s)
