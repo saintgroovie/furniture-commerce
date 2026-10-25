@@ -251,10 +251,314 @@ def restore_workspace(operation, existing, baseline, previous_compose, previous_
     if previous_compose: check_http(baseline['url'], existing['source'])
 
 
+GOVERNANCE_MARKER = Path('/srv/woodright/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt')
+GOVERNANCE_MANIFEST = Path('/srv/woodright/tools/release/ENV_GOVERNANCE_BUNDLE_MANIFEST.json')
+GOVERNANCE_PROGRESS = Path('/srv/woodright/tools/release/ENV_GOVERNANCE_INSTALL_IN_PROGRESS.json')
+GOVERNANCE_CONTROLLER = Path('/srv/woodright/ops/release/deploy-team-workspace.py')
+GOVERNANCE_VERIFIER = Path('/srv/woodright/ops/release/verify-environment-governance-bundle.sh')
+
+
+def governance_request(args, intent):
+    source = args.governance_source or args.source
+    checksum = args.governance_manifest_checksum
+    if not re.fullmatch(r'[a-f0-9]{40}', source):
+        raise ValueError('exact governance source revision required')
+    explicit = args.governance_source is not None or checksum is not None
+    if explicit:
+        if args.governance_source is None or not checksum or not re.fullmatch(r'[a-f0-9]{64}', checksum):
+            raise ValueError('explicit governance source and manifest checksum required together')
+        if intent.get('governance_source_sha') != source or intent.get('governance_manifest_sha256') != checksum:
+            raise ValueError('exact owner governance authorization required')
+    return {'source': source, 'manifest_sha256': checksum, 'explicit': explicit}
+
+
+def protected_governance_file(path):
+    raw = regular(path)
+    info = path.stat()
+    if info.st_uid != 0 or info.st_mode & 0o022:
+        raise ValueError('protected root-owned governance file required')
+    return raw
+
+
+def verify_governance(request):
+    marker = protected_governance_file(GOVERNANCE_MARKER).decode().strip()
+    if marker != request['source']:
+        raise ValueError('qualified workspace controller bundle is not installed')
+    if not request['explicit']:
+        # Compatibility with existing same-source qualified operations only.
+        return None
+    if Path(__file__).absolute() != GOVERNANCE_CONTROLLER:
+        raise ValueError('canonical installed workspace controller required')
+    if GOVERNANCE_PROGRESS.exists() or GOVERNANCE_PROGRESS.is_symlink():
+        raise ValueError('governance installation is in progress')
+    raw = protected_governance_file(GOVERNANCE_MANIFEST)
+    manifest = json.loads(raw)
+    if digest(raw) != request['manifest_sha256'] or manifest.get('source_sha') != request['source']:
+        raise ValueError('qualified governance manifest mismatch')
+    entries = {}
+    for entry in manifest.get('files', []):
+        relative = entry.get('relative_path')
+        if not isinstance(relative, str) or not relative or relative in entries:
+            raise ValueError('invalid or duplicate governance manifest entry')
+        entries[relative] = entry
+    for relative, path in [('ops/release/deploy-team-workspace.py', GOVERNANCE_CONTROLLER),
+                           ('ops/release/verify-environment-governance-bundle.sh', GOVERNANCE_VERIFIER)]:
+        entry = entries.get(relative, {})
+        if entry.get('installed_path') != str(path) or entry.get('sha256') != digest(protected_governance_file(path)):
+            raise ValueError('installed governance code differs from qualified manifest')
+    result = subprocess.run(['bash', str(GOVERNANCE_VERIFIER), '--expected-sha', request['source']],
+                            capture_output=True, text=True)
+    if result.returncode:
+        raise ValueError('full native governance bundle verification failed')
+    return {'source': request['source'], 'manifest_sha256': request['manifest_sha256'],
+            'controller_sha256': digest(protected_governance_file(GOVERNANCE_CONTROLLER))}
+
+
+def pending_governance(packet, authority):
+    recorded = packet.get('governance')
+    if recorded != authority:
+        raise ValueError('pending workspace governance qualification changed')
+
+
+# Dedicated authority handover; these helpers never restart an application.
+HANDOVER_JOURNAL = ROOT / 'GOVERNANCE_HANDOVER_PENDING.json'
+HANDOVER_STORAGE_SIX = {
+    'ops/backup/immutable_weekly.py', 'ops/backup/retention_catalog.py',
+    'ops/backup/woodright-backup-retention.sh', 'ops/backup/woodright-media-backup.sh',
+    'ops/release/install-environment-governance.sh',
+    'ops/release/verify-environment-governance-bundle.sh',
+}
+HANDOVER_CONTROLS = [
+    ROOT / 'compose.json', ROUTE,
+    Path('/srv/woodright/runtime-ownership-public-production/ACTIVE_RELEASE.json'),
+    Path('/srv/woodright/runtime-ownership-public-production/ACTIVE_OWNER.json'),
+    Path('/srv/woodright/runtime-ownership-public-production/EXPECTED_RELEASE.json'),
+    Path('/srv/woodright/meta/public_production/OWNER_APPROVED_RELEASE.json'),
+    Path('/etc/dokploy/compose/woodright-public-production/code/docker-compose.yml'),
+    Path('/etc/dokploy/compose/woodright-public-production/code/.env'),
+]
+
+
+def handover_json(raw):
+    def unique(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError('duplicate authority JSON key')
+            result[key] = value
+        return result
+    return json.loads(raw, object_pairs_hook=unique)
+
+
+def handover_projection(raw, authorization):
+    manifest = handover_json(raw)
+    if set(manifest) != {'schema_version', 'source_sha', 'installed_at_utc', 'files'} or type(manifest['schema_version']) is not int or manifest['schema_version'] != 1:
+        raise ValueError('exact native manifest schema required')
+    if manifest['source_sha'] != authorization['governance_source_sha']:
+        raise ValueError('native manifest source changed')
+    stamp = manifest['installed_at_utc']
+    if not isinstance(stamp, str) or not re.fullmatch(r'[0-9]{8}T[0-9]{6}Z', stamp):
+        raise ValueError('strict native UTC installation timestamp required')
+    installed = datetime.datetime.strptime(stamp, '%Y%m%dT%H%M%SZ').replace(tzinfo=datetime.timezone.utc)
+    def utc(value):
+        if not re.fullmatch(r'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z', value):
+            raise ValueError('strict authorization UTC window required')
+        return datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%SZ').replace(tzinfo=datetime.timezone.utc)
+    start, end = utc(authorization['install_window_start']), utc(authorization['install_window_end'])
+    if not start <= installed <= end or start > end:
+        raise ValueError('native timestamp outside approved installation window')
+    entries = manifest['files']
+    if not isinstance(entries, list) or len(entries) != 91:
+        raise ValueError('native91 coverage required')
+    by_path = {}
+    for entry in entries:
+        if set(entry) != {'relative_path', 'installed_path', 'sha256', 'mode', 'role', 'required'} or entry['required'] is not True or entry['relative_path'] in by_path:
+            raise ValueError('exact unique native manifest entries required')
+        by_path[entry['relative_path']] = entry['sha256']
+    expected = authorization['native_bundle_files_sha256']
+    six = authorization['preserved_storage_files_sha256']
+    if by_path != expected or set(six) != HANDOVER_STORAGE_SIX or any(expected.get(path) != value for path, value in six.items()):
+        raise ValueError('predeclared native91/storage6 hashset mismatch')
+    projection = dict(manifest)
+    del projection['installed_at_utc']  # the ONE dynamic key, never arbitrary removal
+    h0 = digest(json.dumps(projection, sort_keys=True, separators=(',', ':'), ensure_ascii=True).encode())
+    if h0 != authorization['native_manifest_projection_sha256']:
+        raise ValueError('exact predeclared manifest projection required')
+    return h0
+
+
+def handover_read(path):
+    for ancestor in path.parents:
+        info = ancestor.lstat()
+        if ancestor.is_symlink() or not ancestor.is_dir() or info.st_uid != 0 or info.st_mode & 0o022:
+            raise ValueError('protected canonical authority parent required')
+    return protected_governance_file(path)
+
+
+def handover_authorization(args, application_intent_raw):
+    if not args.governance_authorization or not args.governance_authorization_checksum:
+        raise ValueError('separate exact handover owner authorization required')
+    raw = handover_read(args.governance_authorization)
+    b = handover_json(raw)
+    if digest(raw) != args.governance_authorization_checksum or b.get('schema') != 'woodright-governance-handover-authorization-v1' or b.get('scope') != 'adopt_exact_current_verified_workspace_governance' or b.get('owner_decision') != 'approved' or b.get('allow_native_installed_timestamp_for_exact_projection') is not True:
+        raise ValueError('exact approved handover-only scope required')
+    if b.get('application_owner_intent_sha256') != digest(application_intent_raw) or b.get('application_source_sha') != args.source or b.get('application_image') != args.image or b.get('application_url') != URL:
+        raise ValueError('original application authority mismatch')
+    if not args.governance_source or not re.fullmatch(r'[a-f0-9]{40}', args.governance_source) or b.get('governance_source_sha') != args.governance_source or not args.governance_manifest_checksum or not re.fullmatch(r'[a-f0-9]{64}', args.governance_manifest_checksum):
+        raise ValueError('exact governance source/raw-H required')
+    return b
+
+
+def handover_request(args, authorization):
+    raw = handover_read(GOVERNANCE_MANIFEST)
+    if digest(raw) != args.governance_manifest_checksum:
+        raise ValueError('actual native raw-H mismatch')
+    handover_projection(raw, authorization)
+    return {'source': args.governance_source, 'manifest_sha256': args.governance_manifest_checksum, 'explicit': True}
+
+
+def handover_peers():
+    services = {}
+    for name in [CONTAINER, 'woodright-public-production-backend', 'woodright-public-production-storefront']:
+        item = json.loads(subprocess.check_output(['docker', 'inspect', name], timeout=10))[0]
+        if not item['State']['Running'] or item['State'].get('Health', {}).get('Status') != 'healthy':
+            raise ValueError('handover runtime unhealthy')
+        services[name] = {'container_id': item['Id'], 'image': item['Config']['Image'], 'source': item['Config'].get('Labels', {}).get('org.opencontainers.image.revision'), 'started': item['State']['StartedAt'], 'restarts': item['RestartCount']}
+    st = SECRET.lstat()  # secret STAT ONLY, never read/hash contents
+    if SECRET.is_symlink() or not SECRET.is_file() or st.st_uid != 0 or st.st_mode & 0o777 != 0o600:
+        raise ValueError('protected session stat required')
+    return {'services': services, 'control_sha256': {str(path): digest(handover_read(path)) for path in HANDOVER_CONTROLS}, 'active_owner_sha256': digest(handover_read(ROOT / 'ACTIVE_OWNER.json')), 'session_stat': [st.st_ino, st.st_mode, st.st_uid, st.st_size, st.st_mtime_ns]}
+
+
+def handover_sync_directory(path):
+    fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def handover_write(path, raw):
+    write(path, raw)
+    handover_sync_directory(path.parent)
+
+
+def handover_clear_journal():
+    pointer = handover_read(HANDOVER_JOURNAL)
+    HANDOVER_JOURNAL.unlink()
+    try:
+        handover_sync_directory(ROOT)
+    except BaseException:
+        # Preserve the fail-closed marker if the durable-removal barrier fails.
+        handover_write(HANDOVER_JOURNAL, pointer)
+        raise
+
+
+def handover_recover(authorization, authorization_sha, request):
+    verified = verify_governance(request)
+    if verified['source'] != request['source'] or verified['manifest_sha256'] != request['manifest_sha256']:
+        raise ValueError('qualified governance required for handover recovery')
+    pointer_raw = handover_read(HANDOVER_JOURNAL)
+    pointer = handover_json(pointer_raw)
+    if pointer.get('schema') != 'woodright-governance-handover-journal-v1' or pointer.get('authorization_sha256') != authorization_sha or pointer.get('request') != request:
+        raise ValueError('incomplete handover authority mismatch')
+    op = Path(pointer['operation'])
+    if op.parent != ROOT or not re.fullmatch(r'governance-handover-[a-f0-9]{32}', op.name) or op.is_symlink():
+        raise ValueError('owned handover operation required')
+    snapshot_raw = handover_read(op / 'snapshot.json')
+    if digest(snapshot_raw) != pointer['snapshot_sha256']:
+        raise ValueError('handover snapshot checksum mismatch')
+    snapshot = handover_json(snapshot_raw)
+    if snapshot['original_sha256'] != authorization['current_release_sha256'] or snapshot['authorization_sha256'] != authorization_sha or snapshot['request'] != request:
+        raise ValueError('handover recovery binding mismatch')
+    original = handover_read(op / 'original-release.json')
+    if digest(original) != snapshot['original_sha256']:
+        raise ValueError('handover original metadata checksum mismatch')
+    if handover_peers() != authorization['expected_preservation']:
+        raise ValueError('handover recovery runtime/preimage changed')
+    for name in ['ACTIVE_RELEASE.json', 'PENDING_RELEASE.json']:
+        if digest(handover_read(ROOT / name)) not in [snapshot['original_sha256'], snapshot['adopted_sha256']]:
+            raise ValueError('foreign metadata cannot be overwritten by handover recovery')
+    for name in ['ACTIVE_RELEASE.json', 'PENDING_RELEASE.json']:
+        handover_write(ROOT / name, original)
+    if any(handover_read(ROOT / name) != original for name in ['ACTIVE_RELEASE.json', 'PENDING_RELEASE.json']):
+        raise ValueError('handover recovery incomplete')
+    if verify_governance(request) != verified or handover_peers() != authorization['expected_preservation']:
+        raise ValueError('authority changed during handover recovery')
+    handover_write(op / 'recovery.json', json_bytes({'state': 'RECOVERED_ORIGINAL_NOT_ADOPTED', 'governance_downgraded': False}))
+    handover_clear_journal()
+    return {'status': 'handover_recovered_not_adopted', 'operation': str(op)}
+
+
+def handover_governance(args, authorization, authority, request, intent_raw, artifact_raw):
+    b_sha = args.governance_authorization_checksum
+    if HANDOVER_JOURNAL.exists() or HANDOVER_JOURNAL.is_symlink():
+        if not args.handover_recover:
+            raise ValueError('incomplete handover; explicit qualified recovery required')
+        return handover_recover(authorization, b_sha, request)
+    if args.handover_recover:
+        raise ValueError('no pending handover to recover')
+    if args.expected_workspace_source != args.source or args.expected_workspace_ref != args.image:
+        raise ValueError('handover current application preimage required')
+    original = handover_read(ROOT / 'ACTIVE_RELEASE.json')
+    if handover_read(ROOT / 'PENDING_RELEASE.json') != original or digest(original) != authorization['current_release_sha256']:
+        raise ValueError('exact matching current release required')
+    packet = handover_json(original)
+    if packet.get('schema') != 'woodright-team-workspace-release-v1' or packet.get('state') != 'done_deployed_and_verified' or 'governance' in packet or 'governance_handover' in packet:
+        raise ValueError('only explicit verified legacy release handover permitted')
+    if packet.get('source') != args.source or packet.get('url') != URL or packet.get('owner_authorization_sha256') != digest(intent_raw) or packet.get('build_manifest_sha256') != digest(artifact_raw):
+        raise ValueError('original release application qualification changed')
+    before = handover_peers()
+    if before != authorization['expected_preservation']:
+        raise ValueError('handover runtime/control CAS changed')
+    for key, name in [('workspace', CONTAINER), ('backend', 'woodright-public-production-backend')]:
+        if packet.get(key) != {k: before['services'][name][k] for k in ['container_id', 'image', 'source']}:
+            raise ValueError('current release runtime binding mismatch')
+    if digest(handover_read(ROOT / 'compose.json')) != packet.get('compose_sha256') or digest(handover_read(ROUTE)) != packet.get('route_sha256'):
+        raise ValueError('current release configuration binding mismatch')
+    owner = handover_json(handover_read(ROOT / 'ACTIVE_OWNER.json'))
+    if owner.get('owner') != 'deploy-team-workspace.py' or owner.get('source') != args.source or owner.get('url') != URL or owner.get('runtime_role') != 'team_workspace':
+        raise ValueError('current workspace owner mismatch')
+    op = ROOT / ('governance-handover-' + uuid.uuid4().hex)
+    op.mkdir(mode=0o700)
+    handover_sync_directory(ROOT)
+    # C attests observations and references B; it is NOT an owner approval.
+    c = {'schema': 'woodright-governance-handover-attestation-v1', 'authorization_sha256': b_sha, 'application_intent_sha256': digest(intent_raw), 'original_release_sha256': digest(original), 'governance': authority, 'native_manifest_projection_sha256': handover_projection(handover_read(GOVERNANCE_MANIFEST), authorization), 'observed_at_utc': datetime.datetime.now(datetime.timezone.utc).isoformat()}
+    c_raw = json_bytes(c)
+    adopted = dict(packet)
+    adopted['governance'] = authority
+    adopted['governance_handover'] = {'operation': str(op), 'authorization_sha256': b_sha, 'attestation_sha256': digest(c_raw), 'previous_release_sha256': digest(original)}
+    adopted_raw = json_bytes(adopted)
+    snapshot = {'original_sha256': digest(original), 'adopted_sha256': digest(adopted_raw), 'authorization_sha256': b_sha, 'request': request}
+    handover_write(op / 'original-release.json', original)
+    handover_write(op / 'authorization.json', handover_read(args.governance_authorization))
+    handover_write(op / 'attestation.json', c_raw)
+    handover_write(op / 'snapshot.json', json_bytes(snapshot))
+    pointer = {'schema': 'woodright-governance-handover-journal-v1', 'operation': str(op), 'authorization_sha256': b_sha, 'request': request, 'snapshot_sha256': digest(json_bytes(snapshot))}
+    handover_write(HANDOVER_JOURNAL, json_bytes(pointer))  # durable BEFORE first metadata write
+    try:
+        for name in ['ACTIVE_RELEASE.json', 'PENDING_RELEASE.json']:
+            handover_write(ROOT / name, adopted_raw)
+        if handover_peers() != before or verify_governance(request) != authority:
+            raise ValueError('peer or governance changed during handover')
+        if any(handover_read(ROOT / name) != adopted_raw for name in ['ACTIVE_RELEASE.json', 'PENDING_RELEASE.json']):
+            raise ValueError('handover metadata commit incomplete')
+        handover_write(op / 'result.json', json_bytes({'state': 'HANDOVER_VERIFIED', 'application_runtime_changed': False}))
+        handover_clear_journal()
+    except BaseException:
+        # The journal stays present if any restoration/proof fails. All other
+        # controller mutation modes refuse while it exists. No bundle downgrade.
+        handover_recover(authorization, b_sha, request)
+        raise
+    return {'status': 'governance_handover_verified', 'application_source': args.source, 'governance': authority, 'operation': str(op), 'runtime_changed': False}
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', choices=['plan', 'deploy', 'finalize', 'rollback'], default='plan')
+    parser.add_argument('--mode', choices=['plan', 'deploy', 'finalize', 'rollback', 'handover-governance'], default='plan')
     parser.add_argument('--source', required=True)
+    parser.add_argument('--governance-source')
+    parser.add_argument('--governance-manifest-checksum')
     parser.add_argument('--image', required=True)
     parser.add_argument('--backend-source', required=True)
     parser.add_argument('--backend-ref', required=True)
@@ -265,6 +569,9 @@ def main():
     parser.add_argument('--intent', type=Path, required=True)
     parser.add_argument('--intent-checksum', required=True)
     parser.add_argument('--dom-evidence', type=Path)
+    parser.add_argument('--governance-authorization', type=Path)
+    parser.add_argument('--governance-authorization-checksum')
+    parser.add_argument('--handover-recover', action='store_true')
     args = parser.parse_args()
     for value in [args.source, args.backend_source]:
         if not re.fullmatch(r'[a-f0-9]{40}', value): raise ValueError('exact source revision required')
@@ -275,14 +582,23 @@ def main():
     intent_raw = regular(args.intent); intent = json.loads(intent_raw)
     if digest(intent_raw) != args.intent_checksum or intent.get('owner_decision') != 'approved' or intent.get('scope') != 'team_workspace' or intent.get('source_sha') != args.source or intent.get('image') != args.image or intent.get('url') != URL:
         raise ValueError('exact owner workspace authorization required')
+    handover = args.mode == 'handover-governance'
+    if not handover and (args.governance_authorization or args.governance_authorization_checksum or args.handover_recover):
+        raise ValueError('handover authorization cannot authorize normal mutators')
+    authorization = handover_authorization(args, intent_raw) if handover else None
+    governance = None if handover else governance_request(args, intent)
+    authority = None
     leases = []
     if args.mode != 'plan':
-        if regular(Path('/srv/woodright/tools/release/INSTALLED_ENV_GOVERNANCE_SHA.txt')).decode().strip() != args.source:
-            raise ValueError('qualified workspace controller bundle is not installed')
         lock_dir = Path('/srv/woodright/locks/team_workspace'); lock_dir.mkdir(mode=0o755, exist_ok=True)
         for path in [Path('/srv/woodright/locks/live-cutover.lock'), lock_dir / 'live-cutover.lock']:
             fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_CREAT, 0o644)
             fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB); leases.append(fd)
+        if handover:
+            governance = handover_request(args, authorization)
+        elif HANDOVER_JOURNAL.exists() or HANDOVER_JOURNAL.is_symlink():
+            raise ValueError('incomplete governance handover blocks mutation')
+        authority = verify_governance(governance)
     backend = inspect('woodright-public-production-backend')
     if not backend or backend['image'] != args.backend_ref or backend['source'] != args.backend_source:
         raise ValueError('aborted_conflict: backend identity changed')
@@ -292,9 +608,12 @@ def main():
     revision = subprocess.check_output(['docker', 'image', 'inspect', args.image, '--format', '{{index .Config.Labels "org.opencontainers.image.revision"}}'], text=True).strip()
     if revision != args.source: raise ValueError('workspace image revision mismatch')
     existing = inspect(CONTAINER)
+    if handover:
+        print(json.dumps(handover_governance(args, authorization, authority, governance, intent_raw, artifact_raw))); return
     if args.mode == 'rollback':
         current = workspace_baseline(existing, args.source, args.image)
         packet = json.loads(current['raw'])
+        pending_governance(packet, authority)
         if packet.get('backend') != backend or packet.get('owner_authorization_sha256') != args.intent_checksum or packet.get('build_manifest_sha256') != args.build_checksum:
             raise ValueError('aborted_conflict: rollback deployment qualification changed')
         snapshot = rollback_snapshot(packet)
@@ -311,6 +630,7 @@ def main():
         print(json.dumps(result)); return
     if args.mode == 'finalize':
         packet = json.loads(regular(ROOT / 'PENDING_RELEASE.json'))
+        pending_governance(packet, authority)
         if existing != packet['workspace'] or existing['image'] != args.image or packet['source'] != args.source or packet.get('url') != URL or digest(regular(ROUTE)) != packet['route_sha256']:
             raise ValueError('aborted_conflict: pending workspace changed')
         evidence_raw = regular(args.dom_evidence) if args.dom_evidence else b'{}'
@@ -331,7 +651,7 @@ def main():
         baseline = workspace_baseline(existing, args.expected_workspace_source, args.expected_workspace_ref)
     compose = json_bytes(compose_document(args.image, args.backend_source)); route = json_bytes(router_document())
     if args.mode == 'plan':
-        print(json.dumps({'mode':'plan','url':URL,'source':args.source,'image':args.image,'backend':backend,'previous_workspace':existing,'previous_release_state':baseline['state'] if baseline else None,'compose_sha256':digest(compose),'route_sha256':digest(route),'anonymous_access':'login_only','public_raw_admin':False}));return
+        print(json.dumps({'mode':'plan','url':URL,'source':args.source,'image':args.image,'backend':backend,'previous_workspace':existing,'previous_release_state':baseline['state'] if baseline else None,'governance_request':governance,'compose_sha256':digest(compose),'route_sha256':digest(route),'anonymous_access':'login_only','public_raw_admin':False}));return
     ROOT.mkdir(mode=0o700, exist_ok=True)
     operation = ROOT / ('operation-' + datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid.uuid4().hex[:8]); operation.mkdir(mode=0o700)
     previous_compose = regular(ROOT / 'compose.json') if (ROOT / 'compose.json').exists() else None
@@ -347,6 +667,7 @@ def main():
     write(operation / 'metadata-checksums.json', metadata_checksums)
     if baseline: write(operation / 'baseline.json', json_bytes({key: value for key, value in baseline.items() if key != 'raw'}))
     write(operation / 'owner-intent.json', intent_raw); write(operation / 'build-manifest.json', artifact_raw)
+    if authority is not None: write(operation / 'governance-qualification.json', json_bytes(authority))
     SECRET.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     if SECRET.exists():
         if SECRET.is_symlink() or SECRET.stat().st_uid != 0 or SECRET.stat().st_mode & 0o077 or not regular(SECRET).startswith(b'WOODRIGHT_WORKSPACE_SESSION_SECRET=') or len(regular(SECRET).split(b'=',1)[1].strip()) < 32:
@@ -371,7 +692,7 @@ def main():
             except Exception:
                 if attempt == 19: raise
                 time.sleep(1)
-        packet = {'schema':'woodright-team-workspace-release-v1','state':'deployed_not_verified','source':args.source,'workspace':inspect(CONTAINER),'backend':backend,'url':URL,'base_path':'','compose_sha256':digest(compose),'route_sha256':digest(route),'build_manifest_sha256':digest(artifact_raw),'workflow_run_id':artifact['workflow_run_id'],'workflow_run_attempt':artifact['workflow_run_attempt'],'owner_authorization_sha256':digest(intent_raw),'rollback_evidence':str(operation),'rollback_metadata_sha256':digest(metadata_checksums),'previous_workspace':existing,'previous_release_state':baseline['state'] if baseline else None,'previous_release_url':baseline['url'] if baseline else None,'previous_release_metadata_sha256':baseline['metadata_sha256'] if baseline else None,'controller':'deploy-team-workspace.py','claim_bypass_closed':False,'activated_at':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+        packet = {'schema':'woodright-team-workspace-release-v1','state':'deployed_not_verified','source':args.source,'workspace':inspect(CONTAINER),'backend':backend,'url':URL,'base_path':'','compose_sha256':digest(compose),'route_sha256':digest(route),'build_manifest_sha256':digest(artifact_raw),'workflow_run_id':artifact['workflow_run_id'],'workflow_run_attempt':artifact['workflow_run_attempt'],'owner_authorization_sha256':digest(intent_raw),'rollback_evidence':str(operation),'rollback_metadata_sha256':digest(metadata_checksums),'previous_workspace':existing,'previous_release_state':baseline['state'] if baseline else None,'previous_release_url':baseline['url'] if baseline else None,'previous_release_metadata_sha256':baseline['metadata_sha256'] if baseline else None,'controller':'deploy-team-workspace.py','claim_bypass_closed':False,'governance':authority,'activated_at':datetime.datetime.now(datetime.timezone.utc).isoformat()}
         write(ROOT/'PENDING_RELEASE.json',json_bytes(packet))
         write(ROOT/'ACTIVE_OWNER.json',json_bytes({'owner':'deploy-team-workspace.py','runtime_role':'team_workspace','url':URL,'database':'Medusa public_production_db via authenticated BFF','auto_deploy':False,'claim_bypass_closed':False,'source':args.source}))
         print(json.dumps({'status':packet['state'],'url':URL,'source':args.source,'evidence':str(operation)}))
