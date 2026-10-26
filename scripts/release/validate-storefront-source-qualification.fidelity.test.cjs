@@ -3,7 +3,9 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--retained-backend-context-only')){
+if(process.argv.includes('--test-context-only')){
+ console.log(JSON.stringify(testContextRegression(),null,2));
+}else if(process.argv.includes('--retained-backend-context-only')){
  console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 }else{
 v.requireInput(c,good);count++;
@@ -21,6 +23,7 @@ function fixture(contract=c,input=good){
     artifacts.push({id:id+100,name:artifactName,expired:false,workflow_run:{id:888,head_sha:policy},digest:'sha256:'+'c'.repeat(64)});
     const seal={schema:1,sourceSha:c.source_sha,sourceTree:c.source_tree,baseSha:c.base_sha,releaseRef:c.release_ref,backendTree:c.backend_tree,policySha:policy,registrySha,job:key,runId:888,attempt:1,postChecks:true,context:key==='release-governance'?'trusted-policy':key==='backend-fidelity'?'retained-backend-proof':'candidate-with-sealed-test-context',overlay:key==='storefront'?c.test_overlays:{}};
     if(key==='backend-fidelity')seal.retainedBackend={origin:'authenticated-retained-backend-only',componentRevision:c.backend_revision,componentTree:c.backend_tree,componentDigest:c.backend_digest,qualificationSource:c.retained_backend_proof.source_sha,check:{source_sha:c.retained_backend_proof.source_sha,run_id:c.retained_backend_proof.run_id,name:'Backend fidelity tests',conclusion:'success'}};
+    if(c.test_context){seal.testContext=key==='storefront'?v.testContextMap(c):{};seal.testContextDigest=crypto.createHash('sha256').update(JSON.stringify(seal.testContext)).digest('hex');}
     seals[artifactName]=seal;
   }
   const api=key=>key==='actions/runs/888'?run:key.includes('/jobs?')?{jobs}:key.includes('/artifacts?')?{artifacts}:checks[Number(key.split('/').pop())];
@@ -97,7 +100,8 @@ for(const [field,value]of [['sourceSha',c.source_sha],['sourceTree',c.source_tre
 passes(()=>assert.equal(cf.seals[sf].overlay&&Object.keys(cf.seals[sf].overlay).length,0));
 rejects(()=>v.validateSeal(common,fixture().seals[sf],commonInput,'storefront',888,cf.registrySha));
 // A real, disposable Git repository exercises full map and mode checks; no application runs.
-const temp=fs.mkdtempSync(path.join(require('node:os').tmpdir(),'wr-common-contract-'));
+const temp=fs.realpathSync(fs.mkdtempSync(path.join(require('node:os').tmpdir(),'wr-common-contract-')));
+const markerTemp=fs.realpathSync(fs.mkdtempSync(path.join(require('node:os').tmpdir(),'wr-common-owner-')));
 try{
  const admissionOutput=path.join(temp,'admission.json');
  const validator=path.join(__dirname,'validate-storefront-source-qualification.cjs');
@@ -124,10 +128,13 @@ try{
  }
  g('update-ref','refs/remotes/origin/'+x.release_ref,source);
  passes(()=>v.sourceFacts(x,temp,false,'storefront',()=>{}));
- passes(()=>v.sourceFacts(x,temp,true,'storefront',()=>{}));
+ const ctx={runnerTemp:markerTemp,identity:{runId:888,attempt:1,job:'storefront',sourceSha:x.source_sha,policySha:good.trustedPolicySha}};
+ v.contextWorker(x,temp,'install',true,ctx);
+ passes(()=>v.sourceFacts(x,temp,true,'storefront',()=>{},ctx));
+ v.contextWorker(x,temp,'cleanup',true,ctx);
  for(const change of [y=>delete y.paths[Object.keys(y.paths)[0]],y=>y.paths['apps/storefront/src/extra.ts']=clone(Object.values(y.paths)[0]),y=>y.paths[Object.keys(y.paths)[0]].after='0'.repeat(64),y=>y.paths[Object.keys(y.paths)[0]].mode='100755',y=>y.paths[Object.keys(y.paths)[0]].before_blob='0'.repeat(40),y=>y.source_tree='0'.repeat(40),y=>y.base_sha=source,y=>y.backend_tree='0'.repeat(40),y=>y.protected['apps/storefront/src/protected.ts']='0'.repeat(64)]){const y=clone(x);change(y);rejects(()=>v.sourceFacts(y,temp,false,'storefront',()=>{}));}
  write('apps/storefront/src/test-00.ts','dirty\n');rejects(()=>v.sourceFacts(x,temp,false,'storefront',()=>{}));
-}finally{fs.rmSync(temp,{recursive:true,force:true});}
+}finally{fs.rmSync(temp,{recursive:true,force:true});fs.rmSync(markerTemp,{recursive:true,force:true});}
 // Existing build consumer must call this registry-aware admission before publication.
 const build=parseYaml(fs.readFileSync(path.join(__dirname,'../../.github/workflows/build-staging-images.yml'),'utf8'));
 const buildSteps=Object.values(build.jobs).flatMap(x=>x.steps||[]);
@@ -138,12 +145,14 @@ passes(()=>{for(const key of ['qualify-storefront','qualify-backend-fidelity','q
  }const overlay=routing.jobs['qualify-storefront'].steps.find(s=>s.name==='Use registry sealed cache test overlay only when required');assert.equal(overlay.if,"${{ env.TEST_OVERLAY_MODE == 'sealed' }}");});
 console.log(JSON.stringify({status:'PASS_COMMON_CLOSED_CONTRACT_AND_ADMISSION_SEAMS',cases:commonCases,scope:'new contract and shared selector/seal regression; isolated Git fixture only, no apps/network/CI/build/runtime'},null,2));
 console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
+console.log(JSON.stringify(testContextRegression(),null,2));
 }
 
 function retainedBackendContextRegression(){
  const {execFileSync}=require('node:child_process');
  const contract=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['common-storefront-b461-v1'];
- const dir=fs.mkdtempSync(path.join(require('node:os').tmpdir(),'wr-retained-be-context-'));
+ const dir=fs.realpathSync(fs.mkdtempSync(path.join(require('node:os').tmpdir(),'wr-retained-be-context-')));
+ const markerDir=fs.realpathSync(fs.mkdtempSync(path.join(require('node:os').tmpdir(),'wr-retained-context-owner-')));
  let cases=0;
  try{
   const env={...process.env,GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:'/dev/null',GIT_AUTHOR_NAME:'Context fixture',GIT_AUTHOR_EMAIL:'fixture@example.invalid',GIT_COMMITTER_NAME:'Context fixture',GIT_COMMITTER_EMAIL:'fixture@example.invalid'};
@@ -165,10 +174,92 @@ function retainedBackendContextRegression(){
   assert.notEqual(g('rev-parse',source+':apps/backend'),x.backend_tree);
   assert.equal(g('rev-parse',source+':apps/backend'),g('rev-parse',base+':apps/backend'));
   v.sourceFacts(x,dir,false,'storefront',()=>{});cases++;
-  v.sourceFacts(x,dir,true,'storefront',()=>{});cases++;
+  const opts={runnerTemp:markerDir,identity:{runId:889,attempt:1,job:'storefront',sourceSha:x.source_sha,policySha:good.trustedPolicySha}};
+  v.contextWorker(x,dir,'install',true,opts);
+  v.sourceFacts(x,dir,true,'storefront',()=>{},opts);cases++;
+  v.contextWorker(x,dir,'cleanup',true,opts);
   assert.throws(()=>v.sourceFacts({...x,backend_tree:'0'.repeat(40)},dir,false,'storefront',()=>{}),/retained backend tree/);cases++;
   assert.throws(()=>v.sourceFacts({...x,backend_revision:base},dir,false,'storefront',()=>{}),/retained backend tree/);cases++;
   const same={...x,backend_revision:base,backend_tree:g('rev-parse',base+':apps/backend')};v.sourceFacts(same,dir,false,'storefront',()=>{});cases++;
- }finally{fs.rmSync(dir,{recursive:true,force:true});}
+ }finally{fs.rmSync(dir,{recursive:true,force:true});fs.rmSync(markerDir,{recursive:true,force:true});}
  return {status:'PASS_DISTINCT_SOURCE_BASE_VS_RETAINED_BACKEND_CONTEXT',cases,scope:'new bounded Git fixture only; unchanged historical source/base backend and distinct retained component, wrong retained tree/revision rejected; no app/network/CI'};
+}
+
+function testContextRegression(){
+ const {execFileSync}=require('node:child_process');
+ const reg=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))),common=reg.qualifications['common-storefront-b461-v1'];
+ const file=v.TEST_CONTEXT_FILE,body=fs.readFileSync(path.join(__dirname,'../..',file)),map=v.testContextMap(common),sha=x=>crypto.createHash('sha256').update(x).digest('hex');
+ let cases=0;const pass=fn=>{fn();cases++;},reject=fn=>{assert.throws(fn);cases++;};
+ function sandbox(fn){
+  const root=fs.realpathSync(fs.mkdtempSync(path.join(require('node:os').tmpdir(),'wr-test-context-'))),repo=path.join(root,'repo'),runnerTemp=path.join(root,'runner');
+  fs.mkdirSync(repo);fs.mkdirSync(runnerTemp);execFileSync('git',['init','-q',repo],{stdio:'pipe'});
+  const target=path.join(repo,file),opts={runnerTemp,identity:{runId:1234,attempt:1,job:'storefront',sourceSha:common.source_sha,policySha:'a'.repeat(40)}};
+  try{fn({root,repo,runnerTemp,target,opts});}finally{fs.rmSync(root,{recursive:true,force:true});}
+ }
+ pass(()=>assert.deepEqual(common.test_overlays,{}));
+ pass(()=>assert.equal(v.testContextMap(c),null));
+ pass(()=>assert(v.workflowEnvironment('common-storefront-b461-v1',common).includes('TEST_CONTEXT_MODE=sealed\n')));
+ pass(()=>assert(v.workflowEnvironment('cart-state-e983-v1',c).includes('TEST_CONTEXT_MODE=none\n')));
+ sandbox(f=>{
+  pass(()=>assert.deepEqual(v.testContextFacts(common,f.repo,false,'storefront').testContext,{}));
+  reject(()=>v.testContextFacts(common,f.repo,true,'storefront',f.opts));
+  pass(()=>assert(v.contextWorker(common,f.repo,'install',true,f.opts).owned));
+  pass(()=>assert.equal(sha(fs.readFileSync(f.target)),map[file].sha256));
+  pass(()=>assert.deepEqual(v.testContextFacts(common,f.repo,true,'storefront',f.opts).testContext,map));
+  reject(()=>v.contextWorker(common,f.repo,'install',true,f.opts));
+  reject(()=>v.testContextFacts(common,f.repo,false,'storefront')); // same precheck used by build admission
+  reject(()=>v.testContextFacts(common,f.repo,true,'backend-fidelity'));
+  reject(()=>v.testContextFacts(common,f.repo,true,'release-governance'));
+  for(const change of [x=>x.runId++,x=>x.policySha='b'.repeat(40),x=>x.sourceSha='b'.repeat(40),x=>x.attempt=2]){
+   const o=clone(f.opts);change(o.identity);reject(()=>v.contextWorker(common,f.repo,'cleanup',true,o));assert(fs.existsSync(f.target));
+  }
+  fs.appendFileSync(f.target,'\n// changed by fixture\n');reject(()=>v.testContextFacts(common,f.repo,true,'storefront',f.opts));reject(()=>v.contextWorker(common,f.repo,'cleanup',true,f.opts));assert(fs.existsSync(f.target));
+  fs.writeFileSync(f.target,body);pass(()=>assert(v.contextWorker(common,f.repo,'cleanup',true,f.opts).clean));
+  pass(()=>{assert(!fs.existsSync(f.target));assert(!fs.existsSync(path.join(f.repo,'apps')));assert.equal(fs.readdirSync(f.runnerTemp).length,0);});
+  pass(()=>assert(v.contextWorker(common,f.repo,'cleanup',true,f.opts).already_absent));
+ });
+ sandbox(f=>{const marker=path.join(f.runnerTemp,'woodright-source-context-1234-1-storefront.json');fs.writeFileSync(marker,'foreign',{mode:0o600});reject(()=>v.contextWorker(common,f.repo,'install',true,f.opts));assert.equal(fs.readFileSync(marker,'utf8'),'foreign');assert(!fs.existsSync(f.target));});
+ sandbox(f=>{v.contextWorker(common,f.repo,'install',true,f.opts);const marker=path.join(f.runnerTemp,'woodright-source-context-1234-1-storefront.json'),replacement=path.join(f.root,'marker-copy');fs.writeFileSync(replacement,fs.readFileSync(marker),{mode:0o600});fs.renameSync(replacement,marker);reject(()=>v.contextWorker(common,f.repo,'cleanup',true,f.opts));assert(fs.existsSync(f.target));assert(fs.existsSync(marker));});
+ sandbox(f=>{v.contextWorker(common,f.repo,'install',true,f.opts);const marker=path.join(f.runnerTemp,'woodright-source-context-1234-1-storefront.json');fs.linkSync(marker,path.join(f.root,'marker-hardlink'));reject(()=>v.contextWorker(common,f.repo,'cleanup',true,f.opts));assert(fs.existsSync(f.target));});
+ for(const mutate of [x=>{x.test_context[file].sha256='0'.repeat(64);x.context_hashes[file]='0'.repeat(64);},x=>x.test_context[file].blob='0'.repeat(40),x=>x.test_context[file].mode='100755',x=>x.test_context['apps/workspace/src/server/extra.mjs']=clone(x.test_context[file])])sandbox(f=>{
+  const bad=clone(common);mutate(bad);reject(()=>v.contextWorker(bad,f.repo,'install',true,f.opts));assert(!fs.existsSync(f.target));
+ });
+ sandbox(f=>{fs.mkdirSync(path.dirname(f.target),{recursive:true});fs.writeFileSync(f.target,body);reject(()=>v.contextWorker(common,f.repo,'install',true,f.opts));reject(()=>v.contextWorker(common,f.repo,'cleanup',true,f.opts));assert.equal(sha(fs.readFileSync(f.target)),sha(body));});
+ sandbox(f=>{const outside=path.join(f.root,'outside');fs.mkdirSync(outside);fs.mkdirSync(path.join(f.repo,'apps'));fs.symlinkSync(outside,path.join(f.repo,'apps/workspace'),'dir');reject(()=>v.contextWorker(common,f.repo,'install',true,f.opts));assert.equal(fs.readdirSync(outside).length,0);});
+ sandbox(f=>{fs.mkdirSync(path.dirname(f.target),{recursive:true});const other=path.join(f.root,'foreign.mjs');fs.writeFileSync(other,body);fs.symlinkSync(other,f.target);reject(()=>v.contextWorker(common,f.repo,'install',true,f.opts));reject(()=>v.contextWorker(common,f.repo,'cleanup',true,f.opts));assert(fs.lstatSync(f.target).isSymbolicLink());assert.equal(sha(fs.readFileSync(other)),sha(body));});
+ sandbox(f=>{v.contextWorker(common,f.repo,'install',true,f.opts);const before=fs.statSync(f.target).ino;const replacement=path.join(f.root,'replacement.mjs');fs.writeFileSync(replacement,body);assert.notEqual(fs.statSync(replacement).ino,before);fs.renameSync(replacement,f.target);reject(()=>v.contextWorker(common,f.repo,'cleanup',true,f.opts));assert(fs.existsSync(f.target));});
+ sandbox(f=>{v.contextWorker(common,f.repo,'install',true,f.opts);fs.chmodSync(f.target,0o640);reject(()=>v.testContextFacts(common,f.repo,true,'storefront',f.opts));reject(()=>v.contextWorker(common,f.repo,'cleanup',true,f.opts));assert(fs.existsSync(f.target));});
+ sandbox(f=>{v.contextWorker(common,f.repo,'install',true,f.opts);const parent=path.dirname(f.target);fs.chmodSync(parent,0o750);reject(()=>v.contextWorker(common,f.repo,'cleanup',true,f.opts));assert(fs.existsSync(parent));assert.equal(fs.statSync(parent).mode&0o777,0o750);});
+ sandbox(f=>{v.contextWorker(common,f.repo,'install',true,f.opts);const extra=path.join(path.dirname(f.target),'foreign.mjs');fs.writeFileSync(extra,'foreign');reject(()=>v.testContextFacts(common,f.repo,true,'storefront',f.opts));reject(()=>v.contextWorker(common,f.repo,'cleanup',true,f.opts));assert.equal(fs.readFileSync(extra,'utf8'),'foreign');});
+ sandbox(f=>{
+  // Partial creation must remove its file/directories if the owner marker cannot be written.
+  assert.notEqual(process.getuid(),0,'permission fixture requires ordinary runner user');fs.chmodSync(f.runnerTemp,0o500);
+  try{reject(()=>v.contextWorker(common,f.repo,'install',true,f.opts));assert(!fs.existsSync(f.target));assert(!fs.existsSync(path.join(f.repo,'apps')));}finally{fs.chmodSync(f.runnerTemp,0o700);}
+ });
+ const input={sourceSha:common.source_sha,productionBaseSha:common.base_sha,releaseRef:common.release_ref,backendRevision:common.backend_revision,backendDigest:common.backend_digest,productionStorefrontDigest:common.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
+ const registrySha='b'.repeat(64),run={id:888,repository:{full_name:'saintgroovie/furniture-commerce'},path:common.workflow,event:'workflow_dispatch',head_branch:'main',head_sha:input.trustedPolicySha,run_attempt:1,status:'completed',conclusion:'success',check_suite_id:777};
+ function admission(){
+  const jobs=[],artifacts=[],checks={},archives={};let n=10;
+  for(const [job,name]of Object.entries(v.JOBS)){
+   const id=++n,context=job==='storefront'?map:{};
+   jobs.push({id,name,status:'completed',conclusion:'success',head_sha:input.trustedPolicySha,run_id:888,run_attempt:1,check_run_url:`https://api.github.com/repos/saintgroovie/furniture-commerce/check-runs/${id}`});
+   checks[id]={id,name,app:{slug:'github-actions'},head_sha:input.trustedPolicySha,check_suite:{id:777},status:'completed',conclusion:'success'};
+   const seal={schema:1,sourceSha:common.source_sha,sourceTree:common.source_tree,baseSha:common.base_sha,releaseRef:common.release_ref,backendTree:common.backend_tree,policySha:input.trustedPolicySha,registrySha,job,runId:888,attempt:1,postChecks:true,context:job==='storefront'?'candidate-with-sealed-test-context':job==='backend-fidelity'?'retained-backend-proof':'trusted-policy',overlay:{},testContext:context,testContextDigest:sha(JSON.stringify(context))};
+   if(job==='backend-fidelity')seal.retainedBackend={origin:'authenticated-retained-backend-only',componentRevision:common.backend_revision,componentDigest:common.backend_digest,componentTree:common.backend_tree,qualificationSource:common.retained_backend_proof.source_sha,check:{source_sha:common.retained_backend_proof.source_sha,run_id:common.retained_backend_proof.run_id,name:'Backend fidelity tests',conclusion:'success'}};
+   const bytes=Buffer.from(JSON.stringify(seal));archives[id+100]=bytes;artifacts.push({id:id+100,name:`source-qualification-888-1-${job}`,expired:false,workflow_run:{id:888,head_sha:input.trustedPolicySha},digest:'sha256:'+sha(bytes)});
+  }
+  const api=p=>p==='actions/runs/888'?run:p.includes('/jobs?')?{jobs}:p.includes('/artifacts?')?{artifacts}:checks[Number(p.split('/').pop())];
+  return {api,artifacts,archives,load:(_run,id)=>archives[id]};
+ }
+ const collect=f=>v.collectRun(common,input,f.api,f.load,registrySha,b=>b); // mock ZIP envelope, real digest + consumer
+ pass(()=>assert.equal(collect(admission()).receipts[0].testContextDigest,sha(JSON.stringify(map))));
+ const reordered=admission(),reorderedSeal=JSON.parse(reordered.archives[111]);reorderedSeal.testContext[file]={mode:map[file].mode,sha256:map[file].sha256,blob:map[file].blob};reordered.archives[111]=Buffer.from(JSON.stringify(reorderedSeal));reordered.artifacts[0].digest='sha256:'+sha(reordered.archives[111]);pass(()=>assert.equal(collect(reordered).receipts.length,3));
+ for(const change of [x=>delete x.testContext,x=>x.testContext={},x=>x.testContextDigest='0'.repeat(64),x=>x.testContext[file].sha256='0'.repeat(64),x=>x.testContext['apps/workspace/src/server/extra.mjs']=clone(x.testContext[file]),x=>x.sourceSha='0'.repeat(40),x=>x.policySha='0'.repeat(40),x=>x.runId=889,x=>x.attempt=2]){
+  const a=admission(),seal=JSON.parse(a.archives[111]);change(seal);a.archives[111]=Buffer.from(JSON.stringify(seal));a.artifacts[0].digest='sha256:'+sha(a.archives[111]);reject(()=>collect(a));
+ }
+ const mismatch=admission();mismatch.archives[111]=Buffer.from('wrong ZIP bytes');reject(()=>collect(mismatch));
+ const legacy=admission(),legacySeal=JSON.parse(legacy.archives[111]);Object.assign(legacySeal,{sourceSha:c.source_sha,sourceTree:c.source_tree,baseSha:c.base_sha,releaseRef:c.release_ref,overlay:c.test_overlays});reject(()=>v.validateSeal(c,legacySeal,input,'storefront',888,registrySha));delete legacySeal.testContext;delete legacySeal.testContextDigest;pass(()=>v.validateSeal(c,legacySeal,input,'storefront',888,registrySha));
+ const workflow=fs.readFileSync(path.join(__dirname,'../../.github/workflows/qualify-storefront-source.yml'),'utf8');
+ pass(()=>{assert.equal((workflow.match(/--install-test-context/g)||[]).length,1);assert.equal((workflow.match(/--cleanup-test-context/g)||[]).length,1);assert(workflow.includes("always() && env.TEST_CONTEXT_MODE == 'sealed'"));});
+ return {status:'PASS_CLOSED_OWNED_TEST_CONTEXT_AND_BUILD_CONSUMER',cases,scope:'new FD/ownership/cleanup/context-digest consumer cases only; synthetic API/ZIP envelope, actual archive parser reused; no old128/191/native/schema/network/install/server'};
 }
