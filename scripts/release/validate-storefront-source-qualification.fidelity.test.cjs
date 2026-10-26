@@ -3,6 +3,9 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
+if(process.argv.includes('--retained-backend-context-only')){
+ console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
+}else{
 v.requireInput(c,good);count++;
 for(const key of ['sourceSha','productionBaseSha','releaseRef','backendRevision','backendDigest','productionStorefrontDigest','trustedPolicySha']){const x={...good,[key]:'wrong'};assert.throws(()=>v.requireInput(c,x));count++;}
 assert(v.recognized(c,good));assert(v.recognized(c,{releaseRef:c.release_ref,sourceSha:'wrong'}));assert(!v.recognized(c,{releaseRef:'release/other',sourceSha:'other'}));count+=3;
@@ -134,3 +137,38 @@ passes(()=>{for(const key of ['qualify-storefront','qualify-backend-fidelity','q
  const steps=routing.jobs[key].steps,resolvers=steps.filter(s=>s.name==='Resolve closed registered source inputs from trusted policy');assert.equal(resolvers.length,1);assert(resolvers[0].run.includes('--resolve-contract'));assert(resolvers[0].run.includes('--environment-output "${GITHUB_ENV}"'));assert(!steps.some(s=>s.env?.POLICY_ID||s.env?.RELEASE_REF||s.env?.BASE_SHA));
  }const overlay=routing.jobs['qualify-storefront'].steps.find(s=>s.name==='Use registry sealed cache test overlay only when required');assert.equal(overlay.if,"${{ env.TEST_OVERLAY_MODE == 'sealed' }}");});
 console.log(JSON.stringify({status:'PASS_COMMON_CLOSED_CONTRACT_AND_ADMISSION_SEAMS',cases:commonCases,scope:'new contract and shared selector/seal regression; isolated Git fixture only, no apps/network/CI/build/runtime'},null,2));
+console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
+}
+
+function retainedBackendContextRegression(){
+ const {execFileSync}=require('node:child_process');
+ const contract=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['common-storefront-b461-v1'];
+ const dir=fs.mkdtempSync(path.join(require('node:os').tmpdir(),'wr-retained-be-context-'));
+ let cases=0;
+ try{
+  const env={...process.env,GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:'/dev/null',GIT_AUTHOR_NAME:'Context fixture',GIT_AUTHOR_EMAIL:'fixture@example.invalid',GIT_COMMITTER_NAME:'Context fixture',GIT_COMMITTER_EMAIL:'fixture@example.invalid'};
+  const g=(...args)=>execFileSync('git',['-C',dir,...args],{env,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+  const write=(f,s)=>{const p=path.join(dir,f);fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,s);};
+  const h=s=>crypto.createHash('sha256').update(s).digest('hex');
+  g('init','-q');write('apps/backend/src/identity.ts','retained backend component\n');
+  for(let n=0;n<79;n++)write(`apps/storefront/src/context-${String(n).padStart(2,'0')}.ts`,'before\n');
+  g('add','--','apps');g('commit','-qm','retained component');const retained=g('rev-parse','HEAD');
+  write('apps/backend/src/identity.ts','historical storefront branch context\n');g('add','--','apps/backend');g('commit','-qm','historical storefront base');const base=g('rev-parse','HEAD');
+  for(let n=0;n<79;n++)write(`apps/storefront/src/context-${String(n).padStart(2,'0')}.ts`,'after\n');
+  g('add','--','apps/storefront');g('commit','-qm','exact storefront only');const source=g('rev-parse','HEAD');
+  const x={...clone(contract),source_sha:source,source_tree:g('rev-parse','HEAD^{tree}'),base_sha:base,base_tree:g('rev-parse',base+'^{tree}'),backend_revision:retained,backend_tree:g('rev-parse',retained+':apps/backend'),protected:{},protected_before:{},paths:{}};
+  for(const file of g('diff','--name-only',base,source).split('\n')){
+   const a=g('ls-tree',source,'--',file).split(/\s+/),b=g('ls-tree',base,'--',file).split(/\s+/);
+   x.paths[file]={before:h('before\n'),after:h('after\n'),mode:a[0],before_mode:b[0],after_blob:a[2],before_blob:b[2]};
+  }
+  g('update-ref','refs/remotes/origin/'+x.release_ref,source);
+  assert.notEqual(g('rev-parse',source+':apps/backend'),x.backend_tree);
+  assert.equal(g('rev-parse',source+':apps/backend'),g('rev-parse',base+':apps/backend'));
+  v.sourceFacts(x,dir,false,'storefront',()=>{});cases++;
+  v.sourceFacts(x,dir,true,'storefront',()=>{});cases++;
+  assert.throws(()=>v.sourceFacts({...x,backend_tree:'0'.repeat(40)},dir,false,'storefront',()=>{}),/retained backend tree/);cases++;
+  assert.throws(()=>v.sourceFacts({...x,backend_revision:base},dir,false,'storefront',()=>{}),/retained backend tree/);cases++;
+  const same={...x,backend_revision:base,backend_tree:g('rev-parse',base+':apps/backend')};v.sourceFacts(same,dir,false,'storefront',()=>{});cases++;
+ }finally{fs.rmSync(dir,{recursive:true,force:true});}
+ return {status:'PASS_DISTINCT_SOURCE_BASE_VS_RETAINED_BACKEND_CONTEXT',cases,scope:'new bounded Git fixture only; unchanged historical source/base backend and distinct retained component, wrong retained tree/revision rejected; no app/network/CI'};
+}

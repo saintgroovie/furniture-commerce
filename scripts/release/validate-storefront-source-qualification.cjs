@@ -59,7 +59,9 @@ function sourceFacts(c,repo,post,job,checkExtra=null){
   for(const [file,sha]of Object.entries(c.protected))if(hash(fs.readFileSync(path.join(repo,file)))!==sha||hash(blob(c.source_sha,file))!==sha)fail('protected blob');
   if(c.paths)for(const [file,sha]of Object.entries(c.protected_before))if(hash(blob(c.base_sha,file))!==sha)fail('protected base blob');
   if(git(repo,['rev-parse',c.backend_revision+':apps/backend'])!==c.backend_tree)fail('retained backend tree');
-  if(c.paths&&git(repo,['rev-parse',c.source_sha+':apps/backend'])!==c.backend_tree)fail('common source backend changed');
+  // SF-only Git context stays equal to its declared base. The retained live
+  // backend is a separate component, authenticated above and by retainedBackend.
+  if(c.paths&&git(repo,['rev-parse',c.source_sha+':apps/backend'])!==git(repo,['rev-parse',c.base_sha+':apps/backend']))fail('common source backend differs from declared base');
   const delta=git(repo,['diff','--name-only','HEAD']).split('\n').filter(Boolean);
   const expected=post&&job==='storefront'?Object.keys(c.test_overlays):[];
   if(JSON.stringify(delta.sort())!==JSON.stringify(expected.sort()))fail('working source delta');
