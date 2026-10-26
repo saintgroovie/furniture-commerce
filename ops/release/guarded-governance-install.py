@@ -40,11 +40,334 @@ ENV = {'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
        'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_NO_REPLACE_OBJECTS': '1'}
 
 
+# BEGIN EXACT OPERATOR PARENT POLICY V1
+# The authorized deployment operator is trusted; hostile operator races are not
+# excluded by descriptors or checkpoints. This policy grants no release rights.
+class OperatorParentPolicy:
+    BOOTSTRAP = '/etc/woodright/operator-parent-contract.json'
+    EXCEPTIONS = {'/srv/woodright': (1000, 1000, 0o700),
+                  '/srv/woodright/locks': (1000, 1000, 0o775)}
+    ROLES = {'READ_PREFLIGHT', 'STORAGE_PIPELINE', 'GOVERNANCE_INSTALL',
+             'GOVERNANCE_HANDOVER'}
+
+    @staticmethod
+    def _identity(info):
+        return (info.st_dev, info.st_ino, info.st_mode, info.st_uid, info.st_gid)
+
+    @staticmethod
+    def _file_identity(info):
+        return OperatorParentPolicy._identity(info) + (
+            info.st_nlink, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+
+    @staticmethod
+    def _path(path):
+        value = os.fspath(path)
+        if (not value.startswith('/') or str(Path(value)) != value or
+                '..' in Path(value).parts):
+            raise ValueError('exact absolute canonical path required')
+        return value
+
+    @staticmethod
+    def _root_object(info, directory=False):
+        kind = stat.S_ISDIR(info.st_mode) if directory else stat.S_ISREG(info.st_mode)
+        if (not kind or info.st_uid != 0 or info.st_mode & 0o022 or
+                (not directory and info.st_nlink != 1)):
+            raise ValueError('protected root-owned canonical object required')
+
+    def __init__(self, path, checksum, role):
+        self._dirs = {}
+        self._locks = []
+        self._parents = {}
+        self._closed = False
+        self.role = role
+        self.contract_sha256 = checksum
+        try:
+            if (self._path(path) != self.BOOTSTRAP or role not in self.ROLES or
+                    not isinstance(checksum, str) or len(checksum) != 64 or
+                    any(c not in '0123456789abcdef' for c in checksum)):
+                raise ValueError('independent exact parent bootstrap required')
+            # No exceptions exist while the independent authority is read.
+            raw = self.read(path, expected_sha256=checksum, max_bytes=65536)
+            def unique(pairs):
+                result = {}
+                for key, value in pairs:
+                    if key in result:
+                        raise ValueError('duplicate parent contract key')
+                    result[key] = value
+                return result
+            contract = json.loads(raw, object_pairs_hook=unique)
+            if (set(contract) != {'schema', 'trust_model', 'allowed_roles', 'parents'} or
+                    contract['schema'] != 'woodright-operator-parent-contract-v1' or
+                    contract['trust_model'] != 'authorized_operator_not_hostile_uid1000'):
+                raise ValueError('exact trusted-operator parent schema required')
+            roles = contract['allowed_roles']
+            if (not isinstance(roles, list) or not roles or
+                    any(not isinstance(x, str) or x not in self.ROLES for x in roles) or
+                    len(roles) != len(set(roles)) or role not in roles):
+                raise ValueError('parent contract caller role refused')
+            parents = contract['parents']
+            if not isinstance(parents, dict) or set(parents) != set(self.EXCEPTIONS):
+                raise ValueError('only two exact witnessed parents may differ')
+            for name, row in parents.items():
+                if (not isinstance(row, dict) or
+                        set(row) != {'dev', 'ino', 'uid', 'gid', 'mode'} or
+                        any(type(v) is not int for v in row.values()) or
+                        row['dev'] <= 0 or row['ino'] <= 0 or
+                        (row['uid'], row['gid'], row['mode']) != self.EXCEPTIONS[name]):
+                    raise ValueError('exact witnessed parent identity required')
+            self._parents = parents
+            self.checkpoint()
+        except BaseException:
+            self.close()
+            raise
+
+    def _parent(self, name, info):
+        expected = self._parents.get(name)
+        try:
+            if expected is None:
+                self._root_object(info, directory=True)
+            elif (not stat.S_ISDIR(info.st_mode) or
+                    (info.st_dev, info.st_ino, info.st_uid, info.st_gid,
+                     stat.S_IMODE(info.st_mode)) != tuple(expected[k] for k in
+                                                         ['dev', 'ino', 'uid', 'gid', 'mode'])):
+                raise ValueError('witnessed parent identity drift')
+        except ValueError:
+            # Diagnostic facts do not approve this parent or add an exception.
+            facts = dict(path=name, dev=info.st_dev, ino=info.st_ino,
+                         uid=info.st_uid, gid=info.st_gid, mode=oct(stat.S_IMODE(info.st_mode)),
+                         type='directory' if stat.S_ISDIR(info.st_mode) else
+                              'symlink' if stat.S_ISLNK(info.st_mode) else 'other')
+            raise ValueError('parent_contract_refused ' + json.dumps(facts, sort_keys=True)) from None
+
+    def _walk(self, path):
+        name = self._path(path)
+        if '/' not in self._dirs:
+            fd = os.open('/', os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+            try:
+                info = os.fstat(fd)
+                self._parent('/', info)
+                if self._identity(os.lstat('/')) != self._identity(info):
+                    raise ValueError('root descriptor identity drift')
+                self._dirs['/'] = (fd, self._identity(info))
+            except BaseException:
+                os.close(fd)
+                raise
+        current = '/'
+        for part in Path(name).parts[1:]:
+            parent_fd = self._dirs[current][0]
+            child = str(Path(current) / part)
+            before = os.stat(part, dir_fd=parent_fd, follow_symlinks=False)
+            self._parent(child, before)
+            if child not in self._dirs:
+                fd = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW,
+                             dir_fd=parent_fd)
+                try:
+                    if self._identity(os.fstat(fd)) != self._identity(before):
+                        raise ValueError('parent descriptor identity drift')
+                    self._dirs[child] = (fd, self._identity(before))
+                except BaseException:
+                    os.close(fd)
+                    raise
+            elif (self._dirs[child][1] != self._identity(before) or
+                  self._identity(os.fstat(self._dirs[child][0])) != self._identity(before)):
+                raise ValueError('anchored parent pathname changed')
+            current = child
+        return self._dirs[current][0]
+
+    def checkpoint(self):
+        if self._closed:
+            raise ValueError('closed parent policy cannot be reused')
+        for path, (fd, expected) in self._dirs.items():
+            info = os.fstat(fd)
+            self._parent(path, info)
+            if path == '/':
+                actual = os.lstat('/')
+            else:
+                actual = os.stat(Path(path).name,
+                                 dir_fd=self._dirs[str(Path(path).parent)][0],
+                                 follow_symlinks=False)
+            if self._identity(info) != expected or self._identity(actual) != expected:
+                raise ValueError('retained parent path or descriptor changed')
+        for path, fd, expected in self._locks:
+            parent = self._dirs[str(Path(path).parent)][0]
+            actual = os.stat(Path(path).name, dir_fd=parent, follow_symlinks=False)
+            self._root_object(actual)
+            if (self._file_identity(actual) != expected or
+                    self._file_identity(os.fstat(fd)) != expected):
+                raise ValueError('canonical lease pathname or inode changed')
+
+    def _leaf(self, path, directory=False):
+        path = self._path(path)
+        self.checkpoint()
+        parent = self._walk(str(Path(path).parent))
+        info = os.stat(Path(path).name, dir_fd=parent, follow_symlinks=False)
+        self._root_object(info, directory=directory)
+        return parent, Path(path).name, info
+
+    def protected(self, path, directory=False):
+        _, _, info = self._leaf(path, directory)
+        if directory:
+            self._walk(self._path(path))
+        self.checkpoint()
+        return info
+
+    def read(self, path, expected_sha256=None, max_bytes=4 * 1024 * 1024):
+        if type(max_bytes) is not int or not 0 < max_bytes <= 16 * 1024 * 1024:
+            raise ValueError('bounded authority read required')
+        parent, name, before = self._leaf(path)
+        if before.st_size > max_bytes:
+            raise ValueError('authority exceeds read bound')
+        fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+        try:
+            if self._file_identity(os.fstat(fd)) != self._file_identity(before):
+                raise ValueError('authority opened identity changed')
+            chunks = []
+            size = 0
+            while True:
+                block = os.read(fd, min(65536, max_bytes + 1 - size))
+                if not block:
+                    break
+                chunks.append(block)
+                size += len(block)
+                if size > max_bytes:
+                    raise ValueError('authority exceeds read bound')
+            after = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            if (self._file_identity(os.fstat(fd)) != self._file_identity(before) or
+                    self._file_identity(after) != self._file_identity(before)):
+                raise ValueError('authority changed while reading')
+            raw = b''.join(chunks)
+            if expected_sha256 is not None and hashlib.sha256(raw).hexdigest() != expected_sha256:
+                raise ValueError('authority checksum mismatch')
+            self.checkpoint()
+            return raw
+        finally:
+            os.close(fd)
+
+    def open_lock(self, path, operation):
+        if operation not in (fcntl.LOCK_SH, fcntl.LOCK_EX):
+            raise ValueError('explicit nonblocking lease mode required')
+        parent, name, before = self._leaf(path)
+        fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+        try:
+            if self._file_identity(os.fstat(fd)) != self._file_identity(before):
+                raise ValueError('lease opened identity changed')
+            fcntl.flock(fd, operation | fcntl.LOCK_NB)
+            self._locks.append((self._path(path), fd, self._file_identity(before)))
+            self.checkpoint()
+            return fd
+        except BaseException:
+            self._locks = [item for item in self._locks if item[1] != fd]
+            os.close(fd)
+            raise
+
+    def _writable_parent(self, path):
+        if self.role == 'READ_PREFLIGHT':
+            raise ValueError('read preflight cannot authorize output')
+        self.checkpoint()
+        path = self._path(path)
+        return self._walk(str(Path(path).parent)), Path(path).name
+
+    def mkdir(self, path):
+        parent, name = self._writable_parent(path)
+        os.mkdir(name, mode=0o700, dir_fd=parent)
+        self.protected(path, directory=True)
+        os.fsync(parent)
+        self.checkpoint()
+
+    def create_output(self, path):
+        # Caller owns this one new output FD. Existing outputs are never replaced.
+        parent, name = self._writable_parent(path)
+        fd = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                     0o600, dir_fd=parent)
+        try:
+            self._root_object(os.fstat(fd))
+            self.checkpoint()
+            return fd
+        except BaseException:
+            os.close(fd)
+            raise
+
+    def write(self, path, raw):
+        if not isinstance(raw, bytes) or len(raw) > 4 * 1024 * 1024:
+            raise ValueError('bounded authority bytes required')
+        parent, name = self._writable_parent(path)
+        try:
+            before = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            self._root_object(before)
+        except FileNotFoundError:
+            before = None
+        temp = '.parent-policy-' + os.urandom(16).hex()
+        fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                     0o600, dir_fd=parent)
+        staged = os.fstat(fd)
+        try:
+            with os.fdopen(fd, 'wb') as stream:
+                self._root_object(staged)
+                stream.write(raw)
+                stream.flush()
+                os.fsync(stream.fileno())
+                staged = os.fstat(stream.fileno())
+            self.checkpoint()
+            if self._file_identity(os.stat(temp, dir_fd=parent, follow_symlinks=False)) != self._file_identity(staged):
+                raise ValueError('staged authority changed before replace')
+            try:
+                now = os.stat(name, dir_fd=parent, follow_symlinks=False)
+            except FileNotFoundError:
+                now = None
+            if ((before is None) != (now is None) or
+                    before is not None and self._file_identity(before) != self._file_identity(now)):
+                raise ValueError('authority target changed before replace')
+            os.replace(temp, name, src_dir_fd=parent, dst_dir_fd=parent)
+            os.fsync(parent)
+            self.read(path, expected_sha256=hashlib.sha256(raw).hexdigest())
+        finally:
+            try:
+                leftover = os.stat(temp, dir_fd=parent, follow_symlinks=False)
+            except FileNotFoundError:
+                leftover = None
+            if leftover is not None:
+                if self._file_identity(leftover) != self._file_identity(staged):
+                    raise ValueError('owned temporary authority identity changed')
+                os.unlink(temp, dir_fd=parent)
+
+    def unlink(self, path, expected_sha256):
+        parent, name = self._writable_parent(path)
+        before = os.stat(name, dir_fd=parent, follow_symlinks=False)
+        self._root_object(before)
+        self.read(path, expected_sha256=expected_sha256)
+        if self._file_identity(os.stat(name, dir_fd=parent, follow_symlinks=False)) != self._file_identity(before):
+            raise ValueError('authority target changed before removal')
+        self.checkpoint()
+        os.unlink(name, dir_fd=parent)
+        os.fsync(parent)
+        self.checkpoint()
+
+    def close(self):
+        # Caller must retain this object until every inherited worker is drained.
+        # Close only: never LOCK_UN on a description shared with a child.
+        for _, fd, _ in self._locks:
+            os.close(fd)
+        self._locks = []
+        for fd, _ in reversed(list(self._dirs.values())):
+            os.close(fd)
+        self._dirs = {}
+        self._closed = True
+
+    def retained_fds(self):
+        self.checkpoint()
+        return tuple(fd for fd, _ in self._dirs.values()) + tuple(fd for _, fd, _ in self._locks)
+# END EXACT OPERATOR PARENT POLICY V1
+
+
+_PARENT_POLICY = None
+
 def sha(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
 def protected(path, directory=False):
+    if _PARENT_POLICY is not None:
+        return _PARENT_POLICY.protected(path, directory)
     path = Path(path)
     if not path.is_absolute():
         raise ValueError('absolute canonical path required')
@@ -60,6 +383,8 @@ def protected(path, directory=False):
 
 
 def read(path):
+    if _PARENT_POLICY is not None:
+        return _PARENT_POLICY.read(path)
     protected(path)
     fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
     try:
@@ -220,8 +545,10 @@ def record_busy_and_hold(evidence, result, pgid):
     # Retention is independent of disk space, log I/O, stdout and interrupts.
     with shield_interrupts():
         try:
-            with (evidence / 'busy-unknown-worker.json').open('x') as stream:
-                os.chmod(evidence / 'busy-unknown-worker.json', 0o600)
+            output = evidence / 'busy-unknown-worker.json'
+            stream = (os.fdopen(_PARENT_POLICY.create_output(output), 'w') if _PARENT_POLICY is not None else output.open('x'))
+            with stream:
+                os.fchmod(stream.fileno(), 0o600)
                 json.dump(result, stream, indent=2)
             print(json.dumps(result), flush=True)
         except BaseException:
@@ -241,13 +568,17 @@ def run_guarded_child(argv, lease_fd, log, seconds):
     # The child inherits the SAME open file description. Closing the parent's
     # descriptor cannot free its lease while a surviving child still holds it.
     # Never issue LOCK_UN: that would unlock the shared description prematurely.
+    if _PARENT_POLICY is not None:
+        _PARENT_POLICY.checkpoint()
     child = subprocess.Popen(argv, env=ENV, stdout=log, stderr=subprocess.STDOUT,
-                             start_new_session=True, pass_fds=(lease_fd,))
+                             start_new_session=True, pass_fds=(_PARENT_POLICY.retained_fds() if _PARENT_POLICY is not None else (lease_fd,)))
     try:
         code = child.wait(timeout=seconds)
         if group_exists(child.pid):
             drain_owned_group(child)
             raise RuntimeError('native child left workers; no install acceptance')
+        if _PARENT_POLICY is not None:
+            _PARENT_POLICY.checkpoint()
         return code
     except BaseException:
         try:
@@ -332,22 +663,26 @@ def verify_storage_postimages():
 
 
 def main():
+    global _PARENT_POLICY
     ap = argparse.ArgumentParser()
     ap.add_argument('--source-root', type=Path, required=True)
     ap.add_argument('--intent', type=Path, required=True)
     ap.add_argument('--intent-checksum', required=True)
     ap.add_argument('--evidence', type=Path, required=True)
+    ap.add_argument('--parent-contract', type=Path, required=True)
+    ap.add_argument('--parent-contract-checksum', required=True)
     args = ap.parse_args()
     if os.geteuid() != 0:
         raise ValueError('qualified root operator required')
+    _PARENT_POLICY = OperatorParentPolicy(args.parent_contract, args.parent_contract_checksum, 'GOVERNANCE_INSTALL')
     intent_raw = read(args.intent)
     intent = json.loads(intent_raw)
     if sha(intent_raw) != args.intent_checksum or intent.get('schema') != 'woodright-governance-install-intent-v1' or intent.get('scope') != 'governance_install' or intent.get('owner_decision') != 'approved' or intent.get('operator_only_boundary_accepted') is not True:
         raise ValueError('exact approved governance-install operator intent required')
+    if intent.get('operator_parent_contract_sha256') != args.parent_contract_checksum:
+        raise ValueError('install authority must bind independent parent contract')
     validate_source(args.source_root, intent)
-    protected(LOCK)
-    lease_fd = os.open(LOCK, os.O_RDONLY | os.O_NOFOLLOW)
-    fcntl.flock(lease_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    lease_fd = _PARENT_POLICY.open_lock(LOCK, fcntl.LOCK_EX)
     # No global lock here: the unchanged native installer obtains it itself.
     refuse_incomplete_handover()
     active_raw = read(WS / 'ACTIVE_RELEASE.json')
@@ -367,17 +702,21 @@ def main():
     if marker != intent['expected_current_governance_source_sha'] or sha(read(TOOLS / 'ENV_GOVERNANCE_BUNDLE_MANIFEST.json')) != intent['expected_current_governance_manifest_sha256']:
         raise ValueError('current governance authority changed')
     protected(args.evidence.parent, directory=True)
-    args.evidence.mkdir(mode=0o700)  # unique; no overwrite or symlink reuse
-    fd = os.open(args.evidence / 'native-install-and-verify.log', os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+    _PARENT_POLICY.mkdir(args.evidence)  # unique; no overwrite or symlink reuse
+    fd = _PARENT_POLICY.create_output(args.evidence / 'native-install-and-verify.log')
     result = {'state': 'RUNNING', 'source': intent['governance_source_sha'],
               'application_source': intent['application_source_sha'], 'operator_only_boundary': True}
     try:
         with os.fdopen(fd, 'wb') as log:
+            _PARENT_POLICY.checkpoint()
             verify_previous_bundle(intent, lease_fd, log)
+            _PARENT_POLICY.checkpoint()
             result['storage_preimages'] = storage_preimages(intent)
+            _PARENT_POLICY.checkpoint()
             code = run_guarded_child(['bash', str(args.source_root / 'ops/release/install-environment-governance.sh'),
                                       '--source-sha', intent['governance_source_sha'],
                                       '--repo-root', str(args.source_root)], lease_fd, log, 180)
+            _PARENT_POLICY.checkpoint()
             if code:
                 raise RuntimeError('native installer refused; no install acceptance')
             result['governance_manifest_sha256'] = bundle_verify(intent, lease_fd, log)
@@ -394,6 +733,8 @@ def main():
         for file, expected in intent['expected_control_file_sha256'].items():
             if sha(read(Path(file))) != expected:
                 raise ValueError('protected control preimage changed during install')
+        _PARENT_POLICY.checkpoint()
+        result['operator_parent_contract_sha256'] = args.parent_contract_checksum
         result['state'] = 'NATIVE_INSTALL_AND_VERIFY_ACCEPTED'
     except UnknownWorker as error:
         result['state'] = 'BUSY_UNKNOWN_WORKER'
@@ -405,13 +746,18 @@ def main():
         result['state'] = 'FAILED_NOT_ACCEPTED'
         raise
     finally:
-        with (args.evidence / 'operator-result.json').open('x') as stream:
-            os.chmod(args.evidence / 'operator-result.json', 0o600)
-            json.dump(result, stream, indent=2)
-        # close only; NEVER LOCK_UN. A surviving child must retain its copy.
-        os.close(lease_fd)
+        try:
+            with os.fdopen(_PARENT_POLICY.create_output(args.evidence / 'operator-result.json'), 'w') as stream:
+                json.dump(result, stream, indent=2)
+        finally:
+            # close only; NEVER LOCK_UN. Existing BUSY guard drains workers first.
+            _PARENT_POLICY.close()
 
 
 if __name__ == '__main__':
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt()))
-    main()
+    try:
+        main()
+    finally:
+        if _PARENT_POLICY is not None:
+            _PARENT_POLICY.close()
