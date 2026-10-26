@@ -6,7 +6,8 @@ const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.rel
 v.requireInput(c,good);count++;
 for(const key of ['sourceSha','productionBaseSha','releaseRef','backendRevision','backendDigest','productionStorefrontDigest','trustedPolicySha']){const x={...good,[key]:'wrong'};assert.throws(()=>v.requireInput(c,x));count++;}
 assert(v.recognized(c,good));assert(v.recognized(c,{releaseRef:c.release_ref,sourceSha:'wrong'}));assert(!v.recognized(c,{releaseRef:'release/other',sourceSha:'other'}));count+=3;
-function fixture(){
+function fixture(contract=c,input=good){
+  const c=contract,good=input;
   const policy=good.trustedPolicySha,registrySha='b'.repeat(64),run={id:888,repository:{full_name:'saintgroovie/furniture-commerce'},path:c.workflow,event:'workflow_dispatch',head_branch:'main',head_sha:policy,run_attempt:1,status:'completed',conclusion:'success',check_suite_id:777};
   const jobs=[],artifacts=[],checks={},seals={};
   let id=10;
@@ -65,4 +66,71 @@ assert.equal(c.context_hashes['.github/workflows/pr-checks.yml'],'9d67c7ebd33db8
 const archiveFixtures={"good": "UEsDBBQAAAAAAAAAIQCQX9SnCwAAAAsAAAASAAAAcXVhbGlmaWNhdGlvbi5qc29ueyJvayI6dHJ1ZX1QSwECFAMUAAAAAAAAACEAkF/UpwsAAAALAAAAEgAAAAAAAAAAAAAAgAEAAAAAcXVhbGlmaWNhdGlvbi5qc29uUEsFBgAAAAABAAEAQAAAADsAAAAAAA==", "path": "UEsDBBQAAAAAAAAAIQBDv6ajAgAAAAIAAAAVAAAALi4vcXVhbGlmaWNhdGlvbi5qc29ue31QSwECFAMUAAAAAAAAACEAQ7+mowIAAAACAAAAFQAAAAAAAAAAAAAAgAEAAAAALi4vcXVhbGlmaWNhdGlvbi5qc29uUEsFBgAAAAABAAEAQwAAADUAAAAAAA==", "symlink": "UEsDBBQAAAAAAAAAIQD8L29GBgAAAAYAAAASAAAAcXVhbGlmaWNhdGlvbi5qc29udGFyZ2V0UEsBAhQDFAAAAAAAAAAhAPwvb0YGAAAABgAAABIAAAAAAAAAAAAAAP+hAAAAAHF1YWxpZmljYXRpb24uanNvblBLBQYAAAAAAQABAEAAAAA2AAAAAAA="};
 assert.equal(v.extractArchive(Buffer.from(archiveFixtures.good,'base64')).toString(),'{"ok":true}');count++;
 for(const key of ['path','symlink']){assert.throws(()=>v.extractArchive(Buffer.from(archiveFixtures[key],'base64')));count++;}
-console.log(JSON.stringify({status:'PASS_NEW_QUALIFICATION_VALIDATOR_CASES',cases:count,execution:'synthetic authenticated-metadata model plus static workflow contract only; no old tests, network, Git writes, CI dispatch or applications'},null,2));
+console.log(JSON.stringify({status:'PASS_NEW_QUALIFICATION_VALIDATOR_CASES',cases:count,execution:'shared validator regressions affected by the new contract; authenticated-metadata model and static workflow, no network/CI dispatch/applications'},null,2));
+
+// Only the changed common contract / shared selector / artifact consumer seams.
+const reg=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json')));
+const common=reg.qualifications['common-storefront-b461-v1'];
+const commonInput={...good,sourceSha:common.source_sha,productionBaseSha:common.base_sha,releaseRef:common.release_ref,productionStorefrontDigest:common.production_storefront_digest};
+let commonCases=0;
+const passes=fn=>{fn();commonCases++;};
+const rejects=fn=>{assert.throws(fn);commonCases++;};
+passes(()=>assert.equal(v.selectContract(reg,commonInput).id,'common-storefront-b461-v1'));
+passes(()=>assert.equal(v.selectContract(reg,good).id,'cart-state-e983-v1'));
+passes(()=>assert.equal(v.selectContract(reg,{sourceSha:'0'.repeat(40),releaseRef:'release/unregistered'}),null));
+for(const x of [{...commonInput,sourceSha:c.source_sha},{...commonInput,releaseRef:c.release_ref},{...commonInput,sourceSha:'0'.repeat(40)},{...commonInput,releaseRef:'release/other'}])rejects(()=>v.selectContract(reg,x));
+rejects(()=>v.selectContract({...reg,qualifications:{...reg.qualifications,duplicate:clone(common)}},commonInput));
+rejects(()=>v.selectContract(reg,commonInput,'cart-state-e983-v1'));
+passes(()=>v.requireInput(common,commonInput));
+passes(()=>assert.equal(Object.keys(v.sourcePaths(common)).length,79));
+passes(()=>assert(v.workflowEnvironment('common-storefront-b461-v1',common).includes('TEST_OVERLAY_MODE=none\n')));
+passes(()=>assert(v.workflowEnvironment('cart-state-e983-v1',c).includes('TEST_OVERLAY_MODE=sealed\n')));
+for(const change of [x=>x.release_ref+='\nINJECT=1',x=>x.test_overlays.inject='x',x=>delete x.paths[Object.keys(x.paths)[0]],x=>x.paths['apps/backend/src/evil.ts']=clone(Object.values(x.paths)[0])]){const x=clone(common);change(x);rejects(()=>v.workflowEnvironment('common-storefront-b461-v1',x));}
+const cf=fixture(common,commonInput);
+passes(()=>assert.equal(v.collectRun(common,commonInput,cf.api,cf.load,cf.registrySha,cf.extract).receipts.length,3));
+for(const [field,value]of [['sourceSha',c.source_sha],['sourceTree',c.source_tree],['baseSha',c.base_sha],['releaseRef',c.release_ref],['policySha','f'.repeat(40)],['registrySha','f'.repeat(64)],['runId',889],['attempt',2],['job','release-governance'],['overlay',c.test_overlays]]){
+ const seal=clone(cf.seals[sf]);seal[field]=value;rejects(()=>v.validateSeal(common,seal,commonInput,'storefront',888,cf.registrySha));
+}
+passes(()=>assert.equal(cf.seals[sf].overlay&&Object.keys(cf.seals[sf].overlay).length,0));
+rejects(()=>v.validateSeal(common,fixture().seals[sf],commonInput,'storefront',888,cf.registrySha));
+// A real, disposable Git repository exercises full map and mode checks; no application runs.
+const temp=fs.mkdtempSync(path.join(require('node:os').tmpdir(),'wr-common-contract-'));
+try{
+ const admissionOutput=path.join(temp,'admission.json');
+ const validator=path.join(__dirname,'validate-storefront-source-qualification.cjs');
+ // Exercise the same CLI invoked by build-staging: a partial known identity
+ // must fail before trusted context / network, never write NOT_REGISTERED.
+ for(const args of [
+  ['--source-sha',common.source_sha,'--release-ref','release/wrong'],
+  ['--source-sha','0'.repeat(40),'--release-ref',common.release_ref],
+  ['--source-sha',c.source_sha,'--release-ref',common.release_ref]
+ ]){rejects(()=>execFileSync(process.execPath,[validator,'--admit-build',...args,'--evidence-output',admissionOutput],{stdio:'pipe'}));assert.equal(fs.existsSync(admissionOutput),false);}
+ const env={...process.env,GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:'/dev/null',GIT_AUTHOR_NAME:'Contract fixture',GIT_AUTHOR_EMAIL:'fixture@example.invalid',GIT_COMMITTER_NAME:'Contract fixture',GIT_COMMITTER_EMAIL:'fixture@example.invalid'};
+ const g=(...args)=>execFileSync('git',['-C',temp,...args],{env,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+ const write=(file,text)=>{const p=path.join(temp,file);fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,text);};
+ g('init','-q');write('apps/backend/src/retained.ts','retained\n');write('apps/storefront/src/protected.ts','protected\n');
+ for(let n=0;n<79;n++)write(`apps/storefront/src/test-${String(n).padStart(2,'0')}.ts`,'before\n');
+ g('add','--','apps');g('commit','-qm','baseline');const base=g('rev-parse','HEAD');
+ for(let n=0;n<79;n++)write(`apps/storefront/src/test-${String(n).padStart(2,'0')}.ts`,'after\n');
+ g('add','--','apps/storefront/src');g('commit','-qm','sealed common fixture');const source=g('rev-parse','HEAD');
+ const x={...clone(common),source_sha:source,source_tree:g('rev-parse','HEAD^{tree}'),base_sha:base,base_tree:g('rev-parse',base+'^{tree}'),backend_revision:base,backend_tree:g('rev-parse',base+':apps/backend'),protected:{'apps/storefront/src/protected.ts':crypto.createHash('sha256').update('protected\n').digest('hex')},paths:{}};
+ x.protected_before={...x.protected};
+ for(const file of g('diff','--name-only',base,source).split('\n')){
+  const ls=g('ls-tree',source,'--',file).split(/\s+/),before=g('ls-tree',base,'--',file).split(/\s+/);
+  x.paths[file]={before:crypto.createHash('sha256').update('before\n').digest('hex'),after:crypto.createHash('sha256').update('after\n').digest('hex'),mode:ls[0],before_mode:before[0],after_blob:ls[2],before_blob:before[2]};
+ }
+ g('update-ref','refs/remotes/origin/'+x.release_ref,source);
+ passes(()=>v.sourceFacts(x,temp,false,'storefront',()=>{}));
+ passes(()=>v.sourceFacts(x,temp,true,'storefront',()=>{}));
+ for(const change of [y=>delete y.paths[Object.keys(y.paths)[0]],y=>y.paths['apps/storefront/src/extra.ts']=clone(Object.values(y.paths)[0]),y=>y.paths[Object.keys(y.paths)[0]].after='0'.repeat(64),y=>y.paths[Object.keys(y.paths)[0]].mode='100755',y=>y.paths[Object.keys(y.paths)[0]].before_blob='0'.repeat(40),y=>y.source_tree='0'.repeat(40),y=>y.base_sha=source,y=>y.backend_tree='0'.repeat(40),y=>y.protected['apps/storefront/src/protected.ts']='0'.repeat(64)]){const y=clone(x);change(y);rejects(()=>v.sourceFacts(y,temp,false,'storefront',()=>{}));}
+ write('apps/storefront/src/test-00.ts','dirty\n');rejects(()=>v.sourceFacts(x,temp,false,'storefront',()=>{}));
+}finally{fs.rmSync(temp,{recursive:true,force:true});}
+// Existing build consumer must call this registry-aware admission before publication.
+const build=parseYaml(fs.readFileSync(path.join(__dirname,'../../.github/workflows/build-staging-images.yml'),'utf8'));
+const buildSteps=Object.values(build.jobs).flatMap(x=>x.steps||[]);
+const admission=buildSteps.findIndex(s=>s.name==='Admit sealed non-runtime storefront source qualification');
+passes(()=>{assert(admission>=0);assert.equal(buildSteps[admission].if,"${{ inputs.release_mode == 'isolated_storefront' && inputs.storefront_runtime_policy == '' }}");assert(buildSteps[admission].run.includes('trusted-governance/scripts/release/validate-storefront-source-qualification.cjs'));assert(buildSteps[admission].run.includes('--admit-build'));assert(buildSteps[admission].run.includes('--qualification-run-id'));const login=buildSteps.findIndex(s=>s.uses?.startsWith('docker/login-action'));const publish=buildSteps.findIndex(s=>s.uses?.startsWith('docker/build-push-action'));assert(login>admission);assert(publish>admission);assert(buildSteps[admission].run.includes('set -euo pipefail'));});
+passes(()=>{for(const key of ['qualify-storefront','qualify-backend-fidelity','qualify-release-governance']){
+ const steps=routing.jobs[key].steps,resolvers=steps.filter(s=>s.name==='Resolve closed registered source inputs from trusted policy');assert.equal(resolvers.length,1);assert(resolvers[0].run.includes('--resolve-contract'));assert(resolvers[0].run.includes('--environment-output "${GITHUB_ENV}"'));assert(!steps.some(s=>s.env?.POLICY_ID||s.env?.RELEASE_REF||s.env?.BASE_SHA));
+ }const overlay=routing.jobs['qualify-storefront'].steps.find(s=>s.name==='Use registry sealed cache test overlay only when required');assert.equal(overlay.if,"${{ env.TEST_OVERLAY_MODE == 'sealed' }}");});
+console.log(JSON.stringify({status:'PASS_COMMON_CLOSED_CONTRACT_AND_ADMISSION_SEAMS',cases:commonCases,scope:'new contract and shared selector/seal regression; isolated Git fixture only, no apps/network/CI/build/runtime'},null,2));

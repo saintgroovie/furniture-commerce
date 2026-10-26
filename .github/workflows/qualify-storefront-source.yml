@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       source_sha:
-        description: "Full sealed cart source SHA; registry rejects every other source."
+        description: "Full registered source SHA; registry rejects every other source."
         required: true
         type: string
 permissions:
@@ -13,7 +13,7 @@ permissions:
   actions: read
   checks: read
 concurrency:
-  group: qualify-sealed-cart-${{ github.event_name }}-${{ github.event.pull_request.number || inputs.source_sha }}
+  group: qualify-sealed-source-${{ github.event_name }}-${{ github.event.pull_request.number || inputs.source_sha }}
   cancel-in-progress: false
 jobs:
   source-contract-pr:
@@ -50,18 +50,22 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
           path: .runtime-policy
+      - name: Resolve closed registered source inputs from trusted policy
+        working-directory: .
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          TRUSTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node .runtime-policy/scripts/release/validate-storefront-source-qualification.cjs \
+            --resolve-contract --source-sha "${SOURCE_SHA}" --trusted-policy-sha "${TRUSTED_SHA}" \
+            --environment-output "${GITHUB_ENV}"
       - name: Verify exact source and qualification context
         working-directory: .
         env:
           SOURCE_SHA: ${{ inputs.source_sha }}
-          RELEASE_REF: release/cart-state-20261025
           MODE: isolated_storefront
-          POLICY_ID: cart-state-e983-v1
           TRUSTED_SHA: ${{ github.sha }}
-          BASE_SHA: e983c436dac64e4e443917976e9a59dfb16c99b8
-          BE_DIGEST: sha256:a1c7bec2d2fc5f71ee560a35c14137b18380920a44409a0a0af079ab2241c0c7
-          BE_REVISION: ec0d00550ed9b3558fc9dbb08c636ab2802d5b4a
-          SF_BASE_DIGEST: sha256:fa277c383bdedf831069679839d0c8fd5624ac8beac19e7f6fa7f3580d3647e0
         run: |
           set -euo pipefail
           test "${GITHUB_REF}" = "refs/heads/main"
@@ -82,7 +86,8 @@ jobs:
             --production-storefront-digest "${SF_BASE_DIGEST}" \
             --release-ref "${RELEASE_REF}" --repo "${GITHUB_WORKSPACE}/." \
             --evidence-output "${GITHUB_WORKSPACE}/qualification.json"
-      - name: Use sealed trusted test context for the changed cache contract
+      - name: Use registry sealed cache test overlay only when required
+        if: ${{ env.TEST_OVERLAY_MODE == 'sealed' }}
         working-directory: .
         run: cp .runtime-policy/apps/storefront/src/lib/catalog-fetch-cache.fidelity.test.mjs apps/storefront/src/lib/catalog-fetch-cache.fidelity.test.mjs
 
@@ -222,14 +227,8 @@ jobs:
         working-directory: .
         env:
           SOURCE_SHA: ${{ inputs.source_sha }}
-          RELEASE_REF: release/cart-state-20261025
           MODE: isolated_storefront
-          POLICY_ID: cart-state-e983-v1
           TRUSTED_SHA: ${{ github.sha }}
-          BASE_SHA: e983c436dac64e4e443917976e9a59dfb16c99b8
-          BE_DIGEST: sha256:a1c7bec2d2fc5f71ee560a35c14137b18380920a44409a0a0af079ab2241c0c7
-          BE_REVISION: ec0d00550ed9b3558fc9dbb08c636ab2802d5b4a
-          SF_BASE_DIGEST: sha256:fa277c383bdedf831069679839d0c8fd5624ac8beac19e7f6fa7f3580d3647e0
         run: |
           set -euo pipefail
           test "${GITHUB_REF}" = "refs/heads/main"
@@ -277,20 +276,24 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
           path: .runtime-policy
+      - name: Resolve closed registered source inputs from trusted policy
+        working-directory: .
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          TRUSTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node .runtime-policy/scripts/release/validate-storefront-source-qualification.cjs \
+            --resolve-contract --source-sha "${SOURCE_SHA}" --trusted-policy-sha "${TRUSTED_SHA}" \
+            --environment-output "${GITHUB_ENV}"
       - name: Verify exact source and qualification context
         id: reuse
         working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ inputs.source_sha }}
-          RELEASE_REF: release/cart-state-20261025
           MODE: isolated_storefront
-          POLICY_ID: cart-state-e983-v1
           TRUSTED_SHA: ${{ github.sha }}
-          BASE_SHA: e983c436dac64e4e443917976e9a59dfb16c99b8
-          BE_DIGEST: sha256:a1c7bec2d2fc5f71ee560a35c14137b18380920a44409a0a0af079ab2241c0c7
-          BE_REVISION: ec0d00550ed9b3558fc9dbb08c636ab2802d5b4a
-          SF_BASE_DIGEST: sha256:fa277c383bdedf831069679839d0c8fd5624ac8beac19e7f6fa7f3580d3647e0
         run: |
           set -euo pipefail
           test "${GITHUB_REF}" = "refs/heads/main"
@@ -356,14 +359,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ inputs.source_sha }}
-          RELEASE_REF: release/cart-state-20261025
           MODE: isolated_storefront
-          POLICY_ID: cart-state-e983-v1
           TRUSTED_SHA: ${{ github.sha }}
-          BASE_SHA: e983c436dac64e4e443917976e9a59dfb16c99b8
-          BE_DIGEST: sha256:a1c7bec2d2fc5f71ee560a35c14137b18380920a44409a0a0af079ab2241c0c7
-          BE_REVISION: ec0d00550ed9b3558fc9dbb08c636ab2802d5b4a
-          SF_BASE_DIGEST: sha256:fa277c383bdedf831069679839d0c8fd5624ac8beac19e7f6fa7f3580d3647e0
         run: |
           set -euo pipefail
           test "${GITHUB_REF}" = "refs/heads/main"
@@ -410,20 +407,24 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
           path: .runtime-source
+      - name: Resolve closed registered source inputs from trusted policy
+        working-directory: .
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          TRUSTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node ./scripts/release/validate-storefront-source-qualification.cjs \
+            --resolve-contract --source-sha "${SOURCE_SHA}" --trusted-policy-sha "${TRUSTED_SHA}" \
+            --environment-output "${GITHUB_ENV}"
       - name: Verify exact source and qualification context
         id: reuse
         working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ inputs.source_sha }}
-          RELEASE_REF: release/cart-state-20261025
           MODE: isolated_storefront
-          POLICY_ID: cart-state-e983-v1
           TRUSTED_SHA: ${{ github.sha }}
-          BASE_SHA: e983c436dac64e4e443917976e9a59dfb16c99b8
-          BE_DIGEST: sha256:a1c7bec2d2fc5f71ee560a35c14137b18380920a44409a0a0af079ab2241c0c7
-          BE_REVISION: ec0d00550ed9b3558fc9dbb08c636ab2802d5b4a
-          SF_BASE_DIGEST: sha256:fa277c383bdedf831069679839d0c8fd5624ac8beac19e7f6fa7f3580d3647e0
         run: |
           set -euo pipefail
           test "${GITHUB_REF}" = "refs/heads/main"
@@ -616,14 +617,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_SHA: ${{ inputs.source_sha }}
-          RELEASE_REF: release/cart-state-20261025
           MODE: isolated_storefront
-          POLICY_ID: cart-state-e983-v1
           TRUSTED_SHA: ${{ github.sha }}
-          BASE_SHA: e983c436dac64e4e443917976e9a59dfb16c99b8
-          BE_DIGEST: sha256:a1c7bec2d2fc5f71ee560a35c14137b18380920a44409a0a0af079ab2241c0c7
-          BE_REVISION: ec0d00550ed9b3558fc9dbb08c636ab2802d5b4a
-          SF_BASE_DIGEST: sha256:fa277c383bdedf831069679839d0c8fd5624ac8beac19e7f6fa7f3580d3647e0
         run: |
           set -euo pipefail
           test "${GITHUB_REF}" = "refs/heads/main"
