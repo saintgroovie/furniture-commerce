@@ -1,4 +1,6 @@
 import { getBaseUrl, medusaFetch } from "./base"
+import { getCatalogProductsForHandles } from "./products"
+import { motifCatalogIndex, refreshMotifCards, refreshMotifOptions } from "../motif-card-catalog"
 
 export type MotifCtaKind = "view_product" | "view_furniture" | "view_collection"
 
@@ -7,6 +9,8 @@ export type MotifProductCard = {
   title: string
   thumbnail: string | null
   price_amount: number | null
+  price_prefix?: "от " | ""
+  price_label?: string | null
   motif_key: string
   motif_slug: string
   motif_title: string
@@ -82,7 +86,15 @@ export async function getMotifThemes(): Promise<{ motif_themes: MotifTheme[] }> 
   if (!res.ok) {
     throw new Error(await readError(res, "Не удалось загрузить росписи"))
   }
-  return res.json()
+  const data = await res.json() as { motif_themes: MotifTheme[] }
+  const { products } = await getCatalogProductsForHandles(
+    data.motif_themes.flatMap((theme) => theme.preview_products.map((product) => product.handle))
+  )
+  const index = motifCatalogIndex(products)
+  return { ...data, motif_themes: data.motif_themes.map((theme) => ({
+    ...theme,
+    preview_products: refreshMotifCards(theme.preview_products, index),
+  })) }
 }
 
 export async function getMotifTheme(
@@ -96,7 +108,16 @@ export async function getMotifTheme(
   if (!res.ok) {
     throw new Error(await readError(res, "Не удалось загрузить роспись"))
   }
-  return res.json()
+  const data = await res.json() as { motif_theme: MotifThemeDetail }
+  const { products } = await getCatalogProductsForHandles(
+    [...data.motif_theme.preview_products, ...data.motif_theme.products].map((product) => product.handle)
+  )
+  const index = motifCatalogIndex(products)
+  return { motif_theme: {
+    ...data.motif_theme,
+    preview_products: refreshMotifCards(data.motif_theme.preview_products, index),
+    products: refreshMotifCards(data.motif_theme.products, index),
+  } }
 }
 
 export async function getMotifContext(args: {
@@ -112,5 +133,17 @@ export async function getMotifContext(args: {
     throw new Error(await readError(res, "Не удалось загрузить росписи товара"))
   }
   const data = (await res.json()) as { motif_context?: MotifContext }
-  return data.motif_context ?? null
+  if (!data.motif_context) return null
+  const context = data.motif_context
+  if (!context.related_products_in_motif.length && !context.motif_options.length) return context
+  const { products } = await getCatalogProductsForHandles([
+    ...context.related_products_in_motif.map((product) => product.handle),
+    ...context.motif_options.map((option) => option.product_handle),
+  ])
+  const index = motifCatalogIndex(products)
+  return {
+    ...context,
+    related_products_in_motif: refreshMotifCards(context.related_products_in_motif, index),
+    motif_options: refreshMotifOptions(context.motif_options, index),
+  }
 }

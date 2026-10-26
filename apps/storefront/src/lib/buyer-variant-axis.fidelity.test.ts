@@ -98,4 +98,28 @@ const ignoredDefault = buyerVariantAxis({
 })
 assert.equal(ignoredDefault, null)
 
+const bedOption = buyerVariantAxis({
+  title: "Кровать Гринвич",
+  options: [{ id: "opt_size", title: "Размер" }],
+  variants: [
+    {
+      id: "b1",
+      sku: "GR-09-1",
+      variant_rank: 1,
+      options: [{ option_id: "opt_size", value: "90 × 200 см" }],
+    },
+    {
+      id: "b2",
+      sku: "GR-18-1",
+      variant_rank: 0,
+      options: [{ option_id: "opt_size", value: "180 × 200 см" }],
+    },
+  ],
+})
+assert.equal(bedOption?.label, "Размер спального места")
+assert.deepEqual(
+  bedOption?.choices.map((choice) => choice.sku),
+  ["GR-18-1", "GR-09-1"]
+)
+
 console.log("buyer-variant-axis.fidelity.test.ts ok")

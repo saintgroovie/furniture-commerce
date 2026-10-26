@@ -98,7 +98,7 @@ export function buildOliverDeskJsonLd(product: Product, desk: OliverDesk | null,
       target.searchParams.set("material", material.code)
       const copy = oliverDeskTextProduct(product, desk, choice.id)
       const variant = buildProductJsonLd({
-        name: `${scalar.name} — ${choice.label.toLowerCase()} — ${material.label}`,
+        name: String(scalar.name),
         description: typeof copy.description === "string" ? copy.description : null,
         url: target.href, images: [choice.hero.replace(/^\/static\//, "/product-static/")],
         sku: choice.sku, offerPriceRub: material.price,

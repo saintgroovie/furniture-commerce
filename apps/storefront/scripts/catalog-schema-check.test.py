@@ -58,6 +58,16 @@ class Regression(unittest.TestCase):
         self.assertRaises(ValueError, audit.image_url, "https://other.example/photo.jpg", URL)
         self.assertIn("invalid_json_ld", audit.inspect_page('<script type="application/ld+json">{broken}</script>', URL)["issues"])
 
+    def test_variant_only_url_uses_visible_material_without_overriding_explicit_query(self):
+        choices = [dict(PRODUCT, url=URL + "?variant=v1&material=ldsp", material="ЛДСП"),
+                   dict(PRODUCT, url=URL + "?variant=v1&material=solid", material="Массив",
+                        offers=dict(PRODUCT["offers"], price=89900))]
+        group = {"@type": "ProductGroup", "hasVariant": choices}
+        content = html(group) + '<span class="pdp-material-trigger-value">ЛДСП</span>'
+        self.assertEqual(audit.inspect_page(content, URL + "?variant=v1")["issues"], [])
+        self.assertIn("visible_price_mismatch", audit.inspect_page(content, URL + "?variant=v1&material=solid")["issues"])
+        self.assertIn("ambiguous_selected_variant", audit.inspect_page(content, URL + "?variant=unrelated")["issues"])
+
 
 if __name__ == "__main__":
     unittest.main()

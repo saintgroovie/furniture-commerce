@@ -23,6 +23,7 @@ import { ChecklistIcon } from "@/components/bespoke-help-icons"
 import { actions, cartCopy, pdpCopy } from "@/lib/woodright-copy"
 import { CopyLines } from "@/components/copy-lines"
 import { flatCopy } from "@/lib/format-ru-copy"
+import { presentBuyerCartLine } from "@/lib/product-title-presentation"
 
 type CartViewState = "loading" | "empty" | "ready" | "mutating" | "error" | "invalid_state"
 
@@ -280,11 +281,16 @@ export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) 
     const article = itemArticle(item)
     const total = lineTotal(item, qty)
     const productId = (item as { product_id?: string }).product_id
+    const variantId = typeof item.variant_id === "string" ? item.variant_id : ""
+    const productHref = productId
+      ? `/product/${encodeURIComponent(productId)}${variantId ? `?variant=${encodeURIComponent(variantId)}` : ""}`
+      : "#"
+    const presented = presentBuyerCartLine(item)
     return (
       <li key={lineId} className="cart-line">
         {thumbSrc ? (
           <Link
-            href={productId ? `/product/${productId}` : "#"}
+            href={productHref}
             className="cart-line-thumb"
             tabIndex={-1}
             aria-hidden="true"
@@ -296,11 +302,14 @@ export function CartSummary({ initialViewState = "loading" }: CartSummaryProps) 
         )}
         <div className="cart-line-info">
           <Link
-            href={productId ? `/product/${productId}` : "#"}
+            href={productHref}
             className="cart-line-title"
           >
-            {(item.title as string) ?? "—"}
+            {presented?.base_title || "Товар"}
           </Link>
+          {presented?.caption ? (
+            <span className="cart-line-choice">{presented.caption}</span>
+          ) : null}
           {(specs.length > 0 || article) && (
             <span className="cart-line-specs">
               {[

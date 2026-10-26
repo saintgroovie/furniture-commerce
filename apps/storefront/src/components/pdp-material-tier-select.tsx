@@ -4,6 +4,10 @@ import type { KeyboardEvent } from "react"
 import { useCallback, useEffect, useId, useRef, useState } from "react"
 import type { MaterialTierOption } from "@/lib/material-tiers"
 import {
+  materialAddressCommit,
+  materialCodeFromSearch,
+} from "@/lib/pdp-material-address"
+import {
   clearPdpMaterialSelection,
   materialCodeForProduct,
   publishPdpMaterialSelection,
@@ -25,6 +29,8 @@ type Props = {
   productKey: string
   /** Ordered tier options from `metadata.material_tiers` (position 0 = default). */
   options: MaterialTierOption[]
+  /** Canonical backend default before SSR reorders an explicit URL pick. */
+  defaultCode?: string
   /** request_quote products show reference prices as «от … ₽». */
   requestQuote?: boolean
 }
@@ -35,7 +41,7 @@ type Props = {
  * selected by default; the pick is published to pdp-material-selection so the
  * price block and CTA react as one unit.
  */
-export function PdpMaterialTierSelect({ productKey, options, requestQuote = false }: Props) {
+export function PdpMaterialTierSelect({ productKey, options, defaultCode, requestQuote = false }: Props) {
   const [open, setOpen] = useState(false)
   const selection = usePdpMaterialSelection()
   const gate = usePdpPurchaseGate()
@@ -52,17 +58,32 @@ export function PdpMaterialTierSelect({ productKey, options, requestQuote = fals
     ? resolveFinishColorMultiplier(gate.finishKey, gate.standardFinishKey)
     : 1
 
-  /* Publish cheapest (position 0) tier as the selected default so price, CTA,
-     and cart metadata share one configuration identity from first paint. */
+  const canonicalDefault = options.some((option) => option.code === defaultCode)
+    ? defaultCode : options[0]?.code
+  const allowedKey = options.map((option) => option.code).join(",")
+
+  /* First paint follows the URL when it names a tier of this variant.
+     Otherwise use the canonical default, independent of URL-reordered props. */
   useEffect(() => {
-    const defaultTier = options[0]
-    if (defaultTier) {
-      publishPdpMaterialSelection({ productKey, code: defaultTier.code })
-    }
+    const allowed = allowedKey ? allowedKey.split(",") : []
+    const fallback = canonicalDefault
+    if (!fallback) return
+    const code = materialCodeFromSearch(window.location.search, allowed, fallback)
+    publishPdpMaterialSelection({ productKey, code })
     return () => clearPdpMaterialSelection()
-    // options identity changes every render; key off the default code.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional
-  }, [productKey, options[0]?.code])
+  }, [productKey, allowedKey, canonicalDefault])
+
+  useEffect(() => {
+    const allowed = allowedKey ? allowedKey.split(",") : []
+    const fallback = canonicalDefault
+    if (!fallback) return
+    const onPop = () => {
+      const code = materialCodeFromSearch(window.location.search, allowed, fallback)
+      publishPdpMaterialSelection({ productKey, code })
+    }
+    window.addEventListener("popstate", onPop)
+    return () => window.removeEventListener("popstate", onPop)
+  }, [productKey, allowedKey, canonicalDefault])
 
   useEffect(() => {
     if (!open) return
@@ -85,9 +106,18 @@ export function PdpMaterialTierSelect({ productKey, options, requestQuote = fals
       const opt = options[idx]
       setOpen(false)
       buttonRef.current?.focus()
-      if (opt && opt.code !== selectedCode) {
-        publishPdpMaterialSelection({ productKey, code: opt.code })
-      }
+      if (!opt) return
+      const next = materialAddressCommit({
+        href: `${window.location.pathname}${window.location.search}${window.location.hash}`,
+        nextCode: opt.code,
+        currentCode: selectedCode,
+        allowedCodes: options.map((option) => option.code),
+      })
+      // Same null-state push the c67 catalog uses. A repeated current
+      // material whose query already matches does not add a history entry.
+      if (!next.push) return
+      publishPdpMaterialSelection({ productKey, code: next.code })
+      window.history.pushState(null, "", next.href)
     },
     [options, productKey, selectedCode]
   )

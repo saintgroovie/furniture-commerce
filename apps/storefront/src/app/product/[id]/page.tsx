@@ -1,4 +1,7 @@
+import { PdpGreenwichBedJsonLd } from "@/components/pdp-greenwich-bed-json-ld"
+import { greenwichBedJsonLdContext } from "@/lib/greenwich-bed-json-ld"
 import Link from "next/link"
+import { Fragment } from "react"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
@@ -36,7 +39,11 @@ import {
   offerAvailabilityFromPurchase,
 } from "@/lib/product-json-ld"
 import { readProductPurchase } from "@/lib/woodright-order/purchase-contract"
+import { supportsUpholsteryJsonLd } from "@/lib/product-upholstery-json-ld"
 import { buildNativeVariantJsonLd } from "@/lib/native-variant-json-ld"
+import { verifiedOliverFacadeConfigurations, oliverFacadeMaterialOptions, oliverFacadeVariantTarget, buildOliverFacadeJsonLd } from "@/lib/oliver-facade-json-ld"
+import { PdpOliverFacadeJsonLd } from "@/components/pdp-oliver-facade-json-ld"
+import { PdpUpholsteryJsonLd } from "@/components/pdp-upholstery-json-ld"
 import {
   formatRequestQuotePriceLabel,
   isRequestQuoteProduct,
@@ -121,6 +128,7 @@ import {
   getPdpHeroObjectPosition,
   pdpDimensionCells,
 } from "@/lib/product-metadata"
+import { withBuyerTitleProperties } from "@/lib/product-title-json-ld"
 import {
   buildProductMetaDescription,
   getBuyerDescription,
@@ -375,7 +383,8 @@ export default async function ProductPage({
   const price = pdpVariantPrice(product, selectedVariant)
   /* Material execution options from metadata.material_tiers (backend SoT). */
   const defaultMaterialTiers = buildMaterialTierOptions(viewProduct, price)
-  const addressableMaterialTiers = oliverDesk?.materials ?? verifiedMaterialOptions(product, defaultMaterialTiers)
+  const oliverFacade = verifiedOliverFacadeConfigurations(product)
+  const addressableMaterialTiers = oliverFacadeMaterialOptions(oliverFacade, selectedVariantId) ?? oliverDesk?.materials ?? verifiedMaterialOptions(product, defaultMaterialTiers)
   const materialTiers = addressableMaterialTiers
     ? materialOptionsForUrl(addressableMaterialTiers, resolvedSearchParams?.material)
     : defaultMaterialTiers
@@ -422,15 +431,19 @@ export default async function ProductPage({
   }
 
   const selectedGallery = (selectedVariant?.metadata as Record<string, unknown> | undefined)?.gallery_urls
-  const nativeVariantGallery = !useExecutionPdp && Array.isArray(selectedGallery) && selectedGallery.length > 0 &&
+  const variantOwnedGallery = Array.isArray(selectedGallery) && selectedGallery.length > 0 &&
     selectedGallery.every((url): url is string => typeof url === "string" && url.trim().length > 0)
-    ? { mainSrc: selectedGallery[0], extraSrcs: selectedGallery.slice(1) } : null
+    ? { mainSrc: selectedGallery[0], extraSrcs: selectedGallery.slice(1) }
+    : null
 
+  // A merged SKU owns its approved angles. Legacy role slots can mistake two
+  // different facades/handle sides for duplicate front views.
   const oliverBuyerGallery =
     isOliver && !useExecutionPdp && !bedMatrixMedia && !paintMatrixMedia
-      ? buildPdpBuyerFacingGallery(viewProduct)
+      ? variantOwnedGallery ?? buildPdpBuyerFacingGallery(viewProduct)
       : null
 
+  const nativeVariantGallery = !useExecutionPdp ? variantOwnedGallery : null
   const mainImage =
     (nativeVariantGallery?.mainSrc ?? oliverBuyerGallery?.mainSrc ??
       executionPdpMedia?.mainSrc ??
@@ -476,7 +489,16 @@ export default async function ProductPage({
     oliverDesk, selectedVariantId, resolvedMedia.mainSrc, resolvedMedia.extraSrcs
   )
 
-  const titleLayout = getBuyerFacingProductTitleLayout(product)
+  const titleLayout = getBuyerFacingProductTitleLayout(
+    product,
+    selectedVariant
+      ? {
+          title: typeof selectedVariant.title === "string" ? selectedVariant.title : null,
+          metadata: (selectedVariant.metadata as Record<string, unknown> | null | undefined) ?? null,
+          options: Array.isArray(selectedVariant.options) ? selectedVariant.options : undefined,
+        }
+      : null,
+  )
   const titleStr = getBuyerFacingProductTitle(product)
   const collectionLabel = getCollectionLabel(product)
   const subcollectionLabel = getSubcollectionLabel(product)
@@ -485,7 +507,7 @@ export default async function ProductPage({
       ? selectedVariant.sku
       : getArticle(product)
   const dim = getDimensions(product, selectedVariant)
-  const textProduct = oliverDeskTextProduct(product, oliverDesk, selectedVariantId)
+  const textProduct = oliverDeskTextProduct(viewProduct, oliverDesk, selectedVariantId)
   const subtitle = getPdpSubtitle(textProduct)
   const description = getBuyerDescription(textProduct)
 
@@ -565,7 +587,9 @@ export default async function ProductPage({
             const variant = variants.find((item) => item.id === choice.variantId) ?? null
             const basePrice = priceOfVariant(variant)
             return {
-              id: variantChipTarget(handleForVariant, choice.variantId, resolvedSearchParams),
+              id: oliverFacade
+                ? oliverFacadeVariantTarget(oliverFacade, handleForVariant, choice.variantId, resolvedSearchParams)
+                : variantChipTarget(handleForVariant, choice.variantId, resolvedSearchParams),
               label: choice.label,
               basePrice,
               materialTiers: buildMaterialTierOptions(
@@ -647,8 +671,8 @@ export default async function ProductPage({
     variantAmounts: readUniformRubAmounts(product),
     displayedPriceRub: openingPrice,
   })
-  const scalarProductJsonLd = buildProductJsonLd({
-    name: getProductSeoName(product) || "Товар",
+  const scalarProductJsonLd = withBuyerTitleProperties(buildProductJsonLd({
+    name: getBuyerFacingProductTitle(product) || "Товар",
     description: getSeoDescriptionSource(textProduct),
     material: typeof (product.metadata as Record<string, unknown> | undefined)?.material === "string"
       ? (product.metadata as Record<string, unknown>).material as string : null,
@@ -658,7 +682,7 @@ export default async function ProductPage({
     sku: article,
     offerPriceRub,
     offerAvailability: offerAvailabilityFromPurchase(readProductPurchase(product)),
-  })
+  }), titleLayout.attributes)
   const sizeVariantInput = {
     product, siblings: displayGroupMembers, jsonLd: scalarProductJsonLd,
     displayedPriceRub: openingPrice, requestQuote: isRequestQuoteProduct(product),
@@ -682,6 +706,7 @@ export default async function ProductPage({
       ...(executionSelectors.finish ?? []), ...(executionSelectors.wood ?? []),
     ])) ||
     buildOliverDeskJsonLd(product, oliverDesk, scalarProductJsonLd) ||
+    buildOliverFacadeJsonLd(product, oliverFacade, scalarProductJsonLd) ||
     (addressableMaterialTiers && buildMaterialVariantJsonLd({
       product, options: addressableMaterialTiers, jsonLd: scalarProductJsonLd,
       requestQuote: isRequestQuoteProduct(product),
@@ -714,7 +739,18 @@ export default async function ProductPage({
   ])
   const oliverUpholsteryOptions = oliverBedUpholsteryJsonLdOptions(product, executionSelectors)
 
+  const upholsteryJsonLdOptions = supportsUpholsteryJsonLd(product, executionSelectors)
+    ? executionSelectors.upholstery!.map((option) => {
+        // Same evidence-based gallery collapse as ProductCardMediaGalleryCore.
+        const media = resolveCardHeroAndNearDuplicateExtras(option.mainSrc, option.extraSrcs, handle)
+        const normalized = resolvePdpMediaBundle(media.mainSrc, media.extraSrcs)
+        return { label: option.label, images: [normalized.mainSrc, ...normalized.extraSrcs] }
+      })
+    : null
+
   const configuredPriceContext = configuredPriceJsonLdContext({ product, selectors: executionSelectors, basePrice: price, materialTiers })
+
+  const greenwichBedContext = greenwichBedJsonLdContext({ product: viewProduct, selectedVariant, selectors: executionSelectors, displayedPrice: openingPrice, materialTierCount: materialTiers?.length ?? 0, jsonLd: productJsonLd })
 
   const cspNonce = (await headers()).get("x-nonce") ?? undefined
 
@@ -734,10 +770,19 @@ export default async function ProductPage({
           }}
         />
       ) : null}
-      {configuredPriceContext ? <PdpConfiguredPriceJsonLd
+      {oliverFacade && selectedVariantId ? <PdpOliverFacadeJsonLd key={selectedVariantId}
+        jsonLd={productJsonLd} variantId={selectedVariantId} productKey={handle}
+        initialMaterialCode={materialTiers?.[0]?.code ?? oliverFacade.find(c => c.variantId === selectedVariantId)!.material.code} nonce={cspNonce}
+      /> : greenwichBedContext ? <PdpGreenwichBedJsonLd key={selectedVariantId ?? handle} context={greenwichBedContext} nonce={cspNonce} /> : configuredPriceContext ? <PdpConfiguredPriceJsonLd
         key={handle}
         jsonLd={productJsonLd}
         context={configuredPriceContext}
+        nonce={cspNonce}
+      /> : upholsteryJsonLdOptions ? <PdpUpholsteryJsonLd
+        key={handle}
+        productKey={handle}
+        options={upholsteryJsonLdOptions}
+        jsonLd={productJsonLd}
         nonce={cspNonce}
       /> : oliverUpholsteryOptions ? <OliverBedUpholsteryJsonLd
         jsonLd={productJsonLd}
@@ -855,11 +900,15 @@ export default async function ProductPage({
 
               {/* 2. Title */}
               <div className="product-detail-header">
-                <CopyLines
-                  as="h1"
-                  className="pdp-title"
-                  lines={titleLayout.lines}
-                />
+                <h1 className="pdp-title">
+                  {titleLayout.lines.map((line, index) => (
+                    <Fragment key={index}>
+                      {index > 0 ? <> {"\n"}<br /></> : null}
+                      {line}
+                    </Fragment>
+                  ))}
+                </h1>
+                {titleLayout.caption ? <p className="pdp-choice">{titleLayout.caption}</p> : null}
                 {badgeLabel && <span className="badge">{badgeLabel}</span>}
               </div>
               {/* 3. Short positioning line (real `subtitle` field only).
@@ -923,6 +972,7 @@ export default async function ProductPage({
                 <PdpMaterialTierSelect
                   productKey={handle || (product.id as string)}
                   options={materialTiers}
+                  defaultCode={(addressableMaterialTiers ?? defaultMaterialTiers)?.[0]?.code}
                   requestQuote={isRequestQuoteProduct(product)}
                 />
               )}
@@ -934,6 +984,8 @@ export default async function ProductPage({
                   materialTiers={materialTiers}
                   requestQuote={isRequestQuoteProduct(product)}
                   selectorLabel={row.label}
+                  initialMaterialCode={oliverFacade && typeof resolvedSearchParams?.material === "string"
+                    ? resolvedSearchParams.material : undefined}
                 />
               ))}
               {sparseChipRows.length === 0 && sizeChips.length > 0 && (
@@ -946,7 +998,7 @@ export default async function ProductPage({
                   selectorLabel={displayGroupSelector}
                 />
               )}
-              {productHasHingeSideOption(product) && (
+              {productHasHingeSideOption(viewProduct) && (
                 <PdpHingeSideSelect
                   productKey={handle || (product.id as string)}
                 />
@@ -983,7 +1035,7 @@ export default async function ProductPage({
               {/* 7. CTA */}
               <ProductCta
                 initialFinishKey={provencePrices ? initialProvenceFinish : undefined}
-                product={product}
+                product={viewProduct}
                 variantId={selectedVariantId ?? undefined}
                 variantImage={oliverDesk || provencePrices ? pdpMainSrc : undefined}
                 requiresBuyerSelection={

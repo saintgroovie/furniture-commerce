@@ -29,19 +29,38 @@ class Page(html.parser.HTMLParser):
         self.buffer = None
         self.price, self.article, self.material, self.panel, self.images = [], [], [], [], []
         self.canonical = None
+        self.stream_slots, self.slot_contexts, self.stream_contexts = {}, {}, []
+
+    def feed(self, data):
+        # React may send a child in S:n after its parent's HTML has closed.
+        # Recognize only the numeric relocation protocol; never run scripts.
+        self.stream_slots.update(re.findall(r'\$RS\("(S:\d+)","(P:\d+)"\)', data))
+        super().feed(data)
+
+    def classes(self):
+        return {name for _, attrs in self.stack for name in attrs.get("class", "").split()} | {
+            name for _, names, _ in self.stream_contexts for name in names
+        }
 
     def has(self, name):
-        return any(name in a.get("class", "").split() for _, a in self.stack)
+        return name in self.classes()
 
     def hidden(self):
         # React's streamed S:<n> transport div is revealed by the boundary
         # completion script. It contains the actual PDP, not hidden UI copy.
-        return any(("hidden" in a and not (tag == "div" and re.fullmatch(r"S:\d+", a.get("id", "")))) or
+        return any(hidden for _, _, hidden in self.stream_contexts) or any(("hidden" in a and not (tag == "div" and re.fullmatch(r"S:\d+", a.get("id", "")))) or
                    a.get("aria-hidden") == "true" or
                    "display:none" in a.get("style", "").replace(" ", "") for tag, a in self.stack)
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
+        identifier = attrs.get("id", "")
+        if tag == "template" and re.fullmatch(r"P:\d+", identifier):
+            self.slot_contexts[identifier] = (self.classes(), self.hidden())
+        if tag == "div" and identifier in self.stream_slots:
+            context = self.slot_contexts.get(self.stream_slots[identifier])
+            if context is not None:
+                self.stream_contexts.append((len(self.stack) + 1, *context))
         if tag == "script" and attrs.get("type") == "application/ld+json":
             self.buffer = []
         if tag == "link" and attrs.get("rel") == "canonical":
@@ -66,6 +85,7 @@ class Page(html.parser.HTMLParser):
         for i in range(len(self.stack) - 1, -1, -1):
             if self.stack[i][0] == tag:
                 self.stack = self.stack[:i]
+                self.stream_contexts = [context for context in self.stream_contexts if context[0] <= len(self.stack)]
                 break
 
     def handle_data(self, data):
@@ -130,10 +150,10 @@ def inspect_page(content, url):
     selected = choices
     if params:
         selected = [c for c in choices if all(urllib.parse.parse_qs(urllib.parse.urlsplit(c.get("url", "")).query).get(k) == v for k, v in params.items())]
-    elif len(choices) > 1:
+    if len(selected) > 1:
         material = "".join(page.material).strip()
         if material:
-            selected = [c for c in choices if c.get("material") == material]
+            selected = [c for c in selected if c.get("material") == material]
         if len(selected) > 1 and page.images:
             hero = image_url(page.images[0], url)
             selected = [c for c in selected if (c.get("image") or [None])[0] == hero]

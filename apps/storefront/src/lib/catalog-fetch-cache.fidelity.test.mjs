@@ -25,23 +25,26 @@ describe("catalog-fetch-cache fidelity", () => {
     assert.match(apiBase, /function medusaFetch[\s\S]*cache:\s*"no-store"/)
   })
 
-  it("bounds Medusa wait with Promise.race, not AbortSignal on patched fetch", () => {
+  it("cancels abandoned server reads and timed-out work without changing caller-owned signals", () => {
     const fn = apiBase.match(
       /async function fetchWithMedusaTimeout[\s\S]*?\n\}/
     )?.[0]
     assert.ok(fn, "fetchWithMedusaTimeout missing")
     assert.match(fn, /Promise\.race/)
     assert.match(fn, /Medusa fetch timed out after/)
-    assert.doesNotMatch(fn, /AbortSignal\.timeout|new AbortController/)
-    // Default path must not invent a signal; caller-owned signal still passthrough.
+    assert.match(fn, /new AbortController/)
+    assert.match(fn, /controller\.abort\(error\)/)
+    assert.match(fn, /cacheSignal\(\)/)
+    assert.match(fn, /method === "GET" \|\| method === "HEAD"/)
     assert.match(fn, /if \(init\?\.signal\)/)
   })
 
-  it("routes getCatalogProducts through medusaCatalogFetch without React.cache", () => {
+  it("reads fresh product prices/media while room membership retains its own cache", () => {
     assert.doesNotMatch(productsApi, /function requestCache/)
     assert.doesNotMatch(productsApi, /React\.cache|requestCache\(/)
     assert.match(productsApi, /export async function getCatalogProducts/)
-    assert.match(productsApi, /medusaCatalogFetch/)
+    assert.doesNotMatch(productsApi, /medusaCatalogFetch/)
+    assert.match(productsApi, /medusaFetch\(`\$\{base\}\/store\/catalog-products\$\{query\}`, signal/)
     assert.match(productsApi, /getProduct[\s\S]*medusaFetch/)
   })
 
