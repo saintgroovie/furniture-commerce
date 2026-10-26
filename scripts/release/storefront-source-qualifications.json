@@ -42,7 +42,7 @@
         "scripts/release/validate-isolated-storefront-bake.cjs": "d71863b2025443951f76d9724cd0c8b65cd85baa18d913cf3ce4b940dd0438c6"
       },
       "workflow": ".github/workflows/qualify-storefront-source.yml",
-      "workflow_sha256": "98333501fba7b63a04f359322d97873802eecf1ed970dbc4e6a89817dc6ef2a9",
+      "workflow_sha256": "15d01bb9cf1c749cf898b551c5a0a241f00dfa370f4c261fcdc1105fcdeb6a5c",
       "retained_backend_proof": {
         "source_sha": "e983c436dac64e4e443917976e9a59dfb16c99b8",
         "runtime_policy": "node20-to-node24-catalog-v1",
@@ -50,6 +50,706 @@
         "purpose": "Authenticated accepted BEcomponent only; never a qualification of newcartsource"
       },
       "context_scope_note": "Keeps historical pr-checks.yml immutable; new validator mandatory PR-only job lives in this new qualification workflow. Three qualification jobs run only on workflow_dispatch. Backend authenticated reuse remains unchanged historical component proof."
+    },
+    "common-storefront-b461-v1": {
+      "source_sha": "01f0110921527aef5fde9db18e69dabee9a423cd",
+      "source_tree": "eec34c015dd96faef39fb4478131cb2e4b2e780e",
+      "base_sha": "b461419acee8ffe2909d58d8a65bbf5d1ead59e6",
+      "base_tree": "a1dd140f5ba986fd362db8c20f107780b31c0e2b",
+      "release_ref": "release/common-storefront-20261026",
+      "backend_revision": "ec0d00550ed9b3558fc9dbb08c636ab2802d5b4a",
+      "backend_digest": "sha256:a1c7bec2d2fc5f71ee560a35c14137b18380920a44409a0a0af079ab2241c0c7",
+      "backend_tree": "46b9a0e273e4489914c643fd3c9acf69f21f9453",
+      "production_storefront_digest": "sha256:c1036b81d4a79b879243444953ad27667c2add863b9d9126a2c5c37fe3448983",
+      "protected": {
+        "apps/storefront/src/lib/analytics-goals.ts": "a22654d7617f5355c6f4d9001c128383feb4bbbb6e995d254323a64d24104dbf",
+        "apps/storefront/src/lib/analytics-metrika.ts": "6535619b07f86b182ddb3be4eb294538dca32cdc29eb53e75b677342790c225b",
+        "apps/storefront/src/components/storefront-analytics.tsx": "8d1e92ebf1d63fe5d8b4798743c9b54dd3442572a4b6dd3d7352a2aa3f724377",
+        "apps/storefront/src/components/bespoke-form.tsx": "eaa9568c88aebf217bb0d89fec90aa7355cb492404bca26e7de3b3d230b56f57",
+        "apps/storefront/src/components/checkout-form.tsx": "3d49c8334d5993f51dc350817fbcb79fc4978b6fb4c5e114f0eafb662407c72e",
+        "apps/storefront/src/proxy.ts": "a7f7b9096a4b51a139eb7bba2f7678f985d16a117dfe051120191b1c6abbd55b",
+        "apps/storefront/package.json": "27efcbb3257add043c70a4dbd54c6eaaa796da75078c80ec47b9dc8aadcee298",
+        "apps/storefront/yarn.lock": "92f8e832b6c696a9bb4f9e422c98fc2ecd0fd5d8a4d68ae35a32f1572e82c459",
+        "apps/storefront/.yarnrc.yml": "a0305ab3fc20b06d20d0fcb3dcfb6cd52ec4310d442e3bc2e722becca38ca477",
+        "apps/storefront/Dockerfile": "a2d1ce5ab83c76e74dd875df21929fcd4a1eb90562ae6763bdf7fbfdd96e5ee7",
+        "apps/storefront/src/lib/api/base.ts": "f98ef87935650cbfa455b95e7435927303bc74381e3e04ec4f92bcd955b874d9",
+        "apps/storefront/src/lib/api/products.ts": "4e4ba22b44521e3885dafd2346bb2a967ad8d151bb670b2994ae4e19634debc6",
+        "apps/storefront/src/lib/catalog-read-budget.ts": "72f6f21a2678ea4ec1782a40589aa3b3e6f4c7c8a47944ae1ea7412506962154",
+        "apps/storefront/src/lib/api/catalog-browse-pool-client.ts": "2c2502fa9f8286251b765195282e19e33d9cd0936e9366d200893e0487497a9f",
+        "apps/storefront/src/components/catalog-browse-client.tsx": "21f41ea55fd22160f6c3318e9adb70a8977017c73664069c421d63dc0b16232e",
+        "apps/storefront/src/app/catalog/page.tsx": "af243e2d3a89f4d0315a417d7f18fac762e2c75fa478b4b3d2152c53a3806e0b",
+        "apps/storefront/src/app/kids/catalog/page.tsx": "f72cbfa3d41dc8a90c0bb06de4915eed7aa2c1fb8ce4a9e8b6372eb08db3e3df",
+        "apps/storefront/src/lib/catalog-fetch-cache.fidelity.test.mjs": "a5c74a68fecaa954fb4068f62a454645bc658cdfa870297e730154869c826f18"
+      },
+      "test_overlays": {},
+      "context_hashes": {
+        ".github/workflows/pr-checks.yml": "9d67c7ebd33db880a2298f363ddea0a829fdf38921947f6b238f9363df1691c6",
+        "scripts/release/storefront-runtime-policies.json": "cc286523d35bb7aef90c230dd427be9b447767db9894dc3ed5f7e89c4578cb57",
+        "scripts/release/validate-isolated-storefront-bake.cjs": "d71863b2025443951f76d9724cd0c8b65cd85baa18d913cf3ce4b940dd0438c6"
+      },
+      "workflow": ".github/workflows/qualify-storefront-source.yml",
+      "workflow_sha256": "15d01bb9cf1c749cf898b551c5a0a241f00dfa370f4c261fcdc1105fcdeb6a5c",
+      "retained_backend_proof": {
+        "source_sha": "e983c436dac64e4e443917976e9a59dfb16c99b8",
+        "runtime_policy": "node20-to-node24-catalog-v1",
+        "run_id": 40121396368,
+        "purpose": "Authenticated accepted BEcomponent only; never a qualification of newcartsource"
+      },
+      "context_scope_note": "Common SF only; exact79 accepted bytes. Published goals/consent/CSP/memory/dependencies preserved. Checkout goal+naming merge explicit in paths and protected target hash. No backend rebuild or runtime exception. Sealed cache test already in source, overlay is empty. Actual local source commit registered; remote ref must be fetched and verified before qualification.",
+      "kind": "common-storefront-b461-v1",
+      "paths": {
+        "apps/storefront/docs/design/kids-rooms-images-20261023.json": {
+          "before": null,
+          "after": "b608e163060ac38edb69860316b0abdfb0faea6e8454f3057ccf83f6722a8b73",
+          "mode": "100644",
+          "after_blob": "0363533cf32f9b2c96a0339286474ac32901dedf",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/public/editorial/kids/oliver-hand-painting.webp": {
+          "before": null,
+          "after": "2efd693a3b1b9be47b67b56a6f9562ad7662e0ec8efaef7a6a2d335d2ee97cea",
+          "mode": "100644",
+          "after_blob": "17410c49470e67f68f972a9e5ab1748a96ead9a7",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/public/editorial/kids/oliver-nursery.webp": {
+          "before": null,
+          "after": "c289eaf64ac8ed344f43289f8f1f1b9baccb9a999565a2ad544ff46ac5c65a0b",
+          "mode": "100644",
+          "after_blob": "4001a99f13cdaa12586c937a18011f2796b81129",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/public/editorial/kids/oliver-playroom.webp": {
+          "before": null,
+          "after": "12147db944e51cbefa9c3e5784885388bf1644085f40807c05bb6f5e36dcd0cb",
+          "mode": "100644",
+          "after_blob": "6591254adec0073e9a121dc02b5d714f581aa78e",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/public/editorial/kids/rural-scenery.webp": {
+          "before": null,
+          "after": "52f1869beaddbc7336e4094f369a1cd7886fbb70f3db9a81d68a19899d289c8f",
+          "mode": "100644",
+          "after_blob": "30c55211aabaea5aab433d65843f1d282d297f5b",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/public/editorial/rooms/spalnya-cloud.jpg": {
+          "before": null,
+          "after": "ed532ebba90ed37572d4b797390233767fbd0f779578cf99ba0eceeda8aadadb",
+          "mode": "100644",
+          "after_blob": "34f0b0229ef635e911f16d29d9020bb357e2f6a9",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/public/editorial/rooms/spalnya-greenwich.jpg": {
+          "before": null,
+          "after": "5aa549592487e01c79f7756e194999054c60929510c72ea17cb8642700b5ab42",
+          "mode": "100644",
+          "after_blob": "443b5d870647a1c2c8f799b72a3d02bd0765645d",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/scripts/catalog-schema-check.py": {
+          "before": "062bb988b348e7c528ebdee5de567b40c247044a26e95920d2e9c9b54e83927e",
+          "after": "c865100ec9cc7d2e6b518fddb332fc92f485224b67bd01894101cf8cf50d6a3b",
+          "mode": "100644",
+          "after_blob": "02c3b8cd93731622e0db648ec6f100d55e5d2fbb",
+          "before_blob": "eb44168217f886a8a5fc7a5f4c800277e52d5d81",
+          "before_mode": "100644"
+        },
+        "apps/storefront/scripts/catalog-schema-check.test.py": {
+          "before": "6e95dc2863a21b23142de65b920065b3f6362265cb1d3d9603b7fd508bf7ebbb",
+          "after": "58a3813a9eecab890168b06758591eacaea249ad77d37f0fd6d6a7adc39abf20",
+          "mode": "100644",
+          "after_blob": "ce5c4fedf3078f562362ecabac631c59156e7774",
+          "before_blob": "400d99c46524af700ea2c3762a320b487fe9e25b",
+          "before_mode": "100644"
+        },
+        "apps/storefront/scripts/test_catalog_schema_stream.py": {
+          "before": null,
+          "after": "24a99649aae311a5de87268aed01f3ab8e488726938e8580169eb67e6f5b0553",
+          "mode": "100644",
+          "after_blob": "2c262b58d205d9fc67b2464c85b5be84f3d45700",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/app/globals.css": {
+          "before": "2c7b1ff4ea254a6c3ecc54867a98ce259a31ed1b69c0ece87e40b1398fd5f55b",
+          "after": "258bd0bf6aba6dc1eccea8f76c4f720f9bb5cc10085e7eac5918134463a65bb2",
+          "mode": "100644",
+          "after_blob": "07725580750ce99b18db1637277bb8a2b6335f62",
+          "before_blob": "2ecc1702eac4051ef3f8be6e344e966cca799d97",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/app/kids/layout.tsx": {
+          "before": "9493319c5fe15d8c56ea0abfccf768b5208dc062392a2ef813c026e09cd95f42",
+          "after": "bd2223b2b83e9b67f813bc3fd38975f8c6e4b3e00739509093e99987872ee3f6",
+          "mode": "100644",
+          "after_blob": "92089ee01a5aa18e41e5c2b1b43a93185cce73a1",
+          "before_blob": "2890f82ffe6b35f6e3b4fa5793d04ae2f80a7049",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/app/kids/page.tsx": {
+          "before": "c80f0f7be40418140a6b741d226a9a03454477821bdeb9d5ae95392b004af549",
+          "after": "63d59fe42ef9a5c1f92ecfe8dc18208ff77cc3bdc2d885f82de8b90c70e67ff4",
+          "mode": "100644",
+          "after_blob": "dc505964063879901a0ea85a01341e8c1504b4c3",
+          "before_blob": "595224be807f02da2aeebad172e8e4ebc9879bb2",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/app/layout.tsx": {
+          "before": "2fb572289455efdc7d88ac862aebdf9fce3be61437bb7a22e477b235edba7c71",
+          "after": "876e290bfaf4805fa30b18469c414b095f57ca1fc7b6baff3cf25ef3b217f502",
+          "mode": "100644",
+          "after_blob": "c0aa5a41a686299f1eddea52e465fb5f0b26221b",
+          "before_blob": "b4f512fa1ae80e9569ab332565b74e5362c47c9c",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/app/product/[id]/page.tsx": {
+          "before": "803edc0f0ae7046def99e93cf31b7809f382862087f4c71a232ce1487169569d",
+          "after": "56fa4b25f618308f3aca2219b43e1fa29c0a4ccd83d33490d24aa02a106831a9",
+          "mode": "100644",
+          "after_blob": "9818a82b41da43d3df02585f1f20489912d949b2",
+          "before_blob": "84f34943e83748354bc68d0fbb1f69325ce8ad33",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/app/rooms/[slug]/page.tsx": {
+          "before": "6a4ad46e1e093efc3626ec9eaa76dbb7640aa86aeec72b1b5250f0611eb840dc",
+          "after": "91f8b1f79321dc1879f6635c4a25a19be44bfb398abd8c15a666f51a853b2f97",
+          "mode": "100644",
+          "after_blob": "f7bf8b3308ab97b9d7be04f8974228f3839e8eda",
+          "before_blob": "7f2144fb74aa4d1c43b9a50f3bebe911d5b264b2",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/app/rooms/page.tsx": {
+          "before": "7ff4e49a5e5fd901a326aa33bfaa2af58822146bb2a40b5ab14947a962b012cf",
+          "after": "fa1e5ac0b2577e345164ec350daa19864f588876dd980890b6c41f036901abbe",
+          "mode": "100644",
+          "after_blob": "2bef1eb0e0485d5abf43d19075c8f8b586fac6e6",
+          "before_blob": "4be25fc57cb98f29a14d946c367ccdf777cefcd1",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/cart-summary.tsx": {
+          "before": "c7035d0a55d016c49a4a46267f728719a77ce5b5a8d388c635f085091b4f63e2",
+          "after": "44933daf01a302e82f628cceb1cdaab852b0b82d293163b9108b4cd7704d311f",
+          "mode": "100644",
+          "after_blob": "1f4c4261ff867152e2f3b7b38e299780f16c69b0",
+          "before_blob": "5ba00c9b7ae71b0b72b081d0e192157503cb894d",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/catalog-freshness.tsx": {
+          "before": null,
+          "after": "0c015af3dd63fd7ab4044a15c6143e8ebf2de235dc0be0c935877fa9681e955e",
+          "mode": "100644",
+          "after_blob": "31efa5134c3839419f018ef6814d4a1c5222ac10",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/components/checkout-form.tsx": {
+          "before": "5a51cdfc83246632fc9c0be1bba4100ef11cf82911dc9c4d109c998f357b81ec",
+          "after": "3d49c8334d5993f51dc350817fbcb79fc4978b6fb4c5e114f0eafb662407c72e",
+          "mode": "100644",
+          "after_blob": "2469e57b3200e5fb4126c882d42e21c636e92844",
+          "before_blob": "a58aa69780b64fc7c5c5ffc195cbbf0b206ebbfd",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/editorial-shoppable-image.tsx": {
+          "before": null,
+          "after": "630aed6bc989805dc5ac7a855e46d2e56c0841376d13ed7a80e3966adaa78084",
+          "mode": "100644",
+          "after_blob": "589a1199e176294626c06289eaeeb8b99f4f1ccd",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/components/kids-editorial-landing.tsx": {
+          "before": null,
+          "after": "d527e6af3aaf1b516ac46d1afbb4d05a318244b54a235059e69c426dbf09fa2c",
+          "mode": "100644",
+          "after_blob": "cf43fdb4519315fe06cfb93165eba821ef521f34",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/components/kids-rooms-editorial.css": {
+          "before": null,
+          "after": "f0c356b4cd0432c237ad42a5749f2df71ceb294a666c908038c4af9831ae94ec",
+          "mode": "100644",
+          "after_blob": "50ee74ec1b11e76460906fc96848f808d9936c93",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/components/pdp-greenwich-bed-json-ld.tsx": {
+          "before": null,
+          "after": "7004ba3da088ee24b606422a2e28f2471131b943b0edb901131bd116256cab9f",
+          "mode": "100644",
+          "after_blob": "6c4ff3bd952b8d836a5302c8f82dfae70e4bdc88",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/components/pdp-material-tier-select.tsx": {
+          "before": "ef43a31d79a41c1d51bd4e22a58b0e9a0207728a9d9fcfbb17a831df9b1528cb",
+          "after": "f8021503e98ef94dc9f967e58b52e789e1a1b36d4c52163d78b05aa50988049a",
+          "mode": "100644",
+          "after_blob": "801fa2f9a9df94046464fb030c02645e8f1935ec",
+          "before_blob": "a6ea84526686963350addf432b962439f88483b4",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/pdp-oliver-facade-json-ld.tsx": {
+          "before": null,
+          "after": "2311e5e7b30159c3f2cdcecdea2d36a36df796d0bb0b001e293698241d0e0277",
+          "mode": "100644",
+          "after_blob": "cd04a07ce0726e924621aacb1dc8e3828903b0c0",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/components/pdp-size-chips.tsx": {
+          "before": "482e8ea3b04625c52a972ad676641470d0172b96197f81a5b54763b074ffd0c0",
+          "after": "b37c7b9adbae28ea6e93fe45d8a8036436f0796ea66d6e9f8ce48fd95aff6b14",
+          "mode": "100644",
+          "after_blob": "e41a0240daae0e646f544b28cd11aec550869ef0",
+          "before_blob": "d440560decf255e25f2583eaea1526755fa56d43",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/pdp-upholstery-json-ld.tsx": {
+          "before": null,
+          "after": "4f94b4cc229bd5f457ddc8f6956b6fb9304ed0f74412b4b68c1d49b764067fc6",
+          "mode": "100644",
+          "after_blob": "b16903594892b149cfd7139b469ab20f4836e713",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/components/product-card.tsx": {
+          "before": "eb04ad0b416fee1f8c5640cb9f7b9a26f49656256357ad8febf06532ad83a3be",
+          "after": "c22f4b0cea5e9f083b11b552609782edd4f2e4a2c22dac7756ea81962a2f7094",
+          "mode": "100644",
+          "after_blob": "dda96c7d582f58e9d804ae36d8b2172a38cfeee8",
+          "before_blob": "bd6cf11c971a05f359e4b90dbd4aea0efdcf43a7",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/promotion-card.tsx": {
+          "before": "dd5377d5fb5a031dfc4755da669a19db1ce6dace8a66ad806852dbaf761eee16",
+          "after": "8987e05c00f25c299df1eb280f637feebd26faf747c439b3047c9b7540c105ca",
+          "mode": "100644",
+          "after_blob": "7de91de0eac53afa06dddc082ac188e17a10b8d4",
+          "before_blob": "3bab634619df0ed2e02ab4d58c5018cd08d4c40e",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/rooms-editorial-landing.tsx": {
+          "before": null,
+          "after": "2c7408392e0851dc6e22059af322b7dbb5eb45c21e4a434ff2ab9f69d4199dde",
+          "mode": "100644",
+          "after_blob": "f3748f65c30a37c1bcfbc7c4445e9d89ddd74a1e",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/components/willie-winkie-motif-product-card.tsx": {
+          "before": "58630cd683c0541eca7cff497ba3c2c33c44f4da93b0a143445b10cf8ba0f786",
+          "after": "e9a3bbf9660460afff3299ceb3b32d1bf6dae35e0d22b816741a2b24df5f52eb",
+          "mode": "100644",
+          "after_blob": "9f082facfd1284d0ea3585eaf2289207c24fcd0d",
+          "before_blob": "b75c71a23d86d5c29cf30691a1c320375d4f5f5b",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/api/cart.ts": {
+          "before": "3fd2a38bbbf7ed20527129336553032a58b234a4a91fd87af337b8cd3ed8450a",
+          "after": "51278b3eb13422991d4098f365563d4eaf44a82480dba744d092e2d675bfa757",
+          "mode": "100644",
+          "after_blob": "c115abead5faf0e1eed8075f420d628a2c7c779d",
+          "before_blob": "b1588f4ec2fbda93236b25a7abf49aac74e4d135",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/api/motif-themes.ts": {
+          "before": "a4ae4a5e01fb2d421734fef6f6f435da08adb5c9beda204543d99aa4b8d5bc48",
+          "after": "f01dcc5fb5ec74dcd17df8bdb0d7f110d4988133932b05232480cdc460921eec",
+          "mode": "100644",
+          "after_blob": "b3c6682808a0c94b119ffcee7eab7921c858de30",
+          "before_blob": "ba7f182af0000861a5cd4a8fa441f7a036099860",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/audited-upholstery-jsonld-contract.json": {
+          "before": null,
+          "after": "5a65e600573236bed0c80939bba32d20bd67057059d4f7fc4a540bdfae362971",
+          "mode": "100644",
+          "after_blob": "b6e403bf7d7601c33aee983d2c512569538abb7b",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/buyer-variant-axis.fidelity.test.ts": {
+          "before": "af716ccc718685e588cbc67a0ba236b870830a14ccb9956b6d1c89e803c04276",
+          "after": "a259858f143901bb8b55ef3187c754b6842e805aed8d02805d711ecc6e09ce30",
+          "mode": "100644",
+          "after_blob": "add00e0c826544c7215397b6ec3520c9c7179540",
+          "before_blob": "1bc6fb00d0f21d1982c4ab03e75b557822ff64d2",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/buyer-variant-axis.ts": {
+          "before": "aee7589eac662ef90cf5b880dd3ba6fd1e5cea47fed364403440fe083c7745ce",
+          "after": "28e0af555c77659500d021664272b606751d5d4340872ef2566023026cfba65b",
+          "mode": "100644",
+          "after_blob": "a715947ae8ec08cfd04fa6af1deabdfeb8605f5e",
+          "before_blob": "57130c48ed2f604100fbc6c93bd37b0723af31c1",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/card-color-media.ts": {
+          "before": "8fc1c1bba60e45bd25a88fd8e8f88200761826219ee205b7f4e22f5c396545b5",
+          "after": "494f76cad4dabccfc06ac559f09ef40b4791c6b5d9542f40f7aa012638825c0a",
+          "mode": "100644",
+          "after_blob": "adb3f9a8efb96c47210755f0e35dc4f97e65f08f",
+          "before_blob": "c1d54376f086d47169cf5c6b5c9709ed177102d4",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/catalog-browse-pool.fidelity.test.ts": {
+          "before": "42b2efef0bb5ae0be807a2a3de227cfb742606716ad3601a285060968d90bdef",
+          "after": "87a75394e07944c17237ee7d232a913eca107a1199dad6065cbf80c4ebfac196",
+          "mode": "100644",
+          "after_blob": "219018bdfb8fd7684dd70775f16abc2eb0bdafac",
+          "before_blob": "059dc378dab2b3c5dab3d589d057a841f08b9c91",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/catalog-card-live-sync.fidelity.test.ts": {
+          "before": null,
+          "after": "add7e8d3b1316db863a29a327f98871e45fd43982091f9ab9a886a929b7bfc5c",
+          "mode": "100644",
+          "after_blob": "f2dd7b67f536144a379be1a6de605831e6a0d323",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/catalog-editor-sync.fidelity.test.ts": {
+          "before": null,
+          "after": "059c5f4a9a01bde8a3fa684c952af874c2cb02547df1e62d716a945121c070e9",
+          "mode": "100644",
+          "after_blob": "9d99888acf447ddc8d20d39078984ba7cb72bd90",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/catalog-fetch-cache.fidelity.test.mjs": {
+          "before": "15ec9851aa0248dee7dc7a1ce7b2fa857ff9883ced21e63cff75d0f09d99d317",
+          "after": "a5c74a68fecaa954fb4068f62a454645bc658cdfa870297e730154869c826f18",
+          "mode": "100644",
+          "after_blob": "22f0f086f9acc2fc229a42e2d70f8e4b12d59aec",
+          "before_blob": "df3a10a82b901711ee5ef00c26f3178c17e3d083",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/catalog-freshness-events.ts": {
+          "before": null,
+          "after": "14758325371d55f9a0ffdf4982ef1347e2604b70a71fac608d9a141caa93c13a",
+          "mode": "100644",
+          "after_blob": "8379ef23ac08f509cca9569c0c69628e543bb70c",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/catalog-freshness.fidelity.test.ts": {
+          "before": null,
+          "after": "cb1286e778545bab54c06127d75ff693d80be92c6a94adde1f3a6f199f4bc4ee",
+          "mode": "100644",
+          "after_blob": "aa9270721d9800677d41e7c4e3e4bfbf9a1dff65",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/catalog-read-budget.fidelity.test.ts": {
+          "before": null,
+          "after": "89452b4f71485d776045acc838c7aca1b45282f4b455a666494982eafe670985",
+          "mode": "100644",
+          "after_blob": "80a8e001272d5e04b9bcee008cf051a4dcac1cc1",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/catalog-scoped-read.fidelity.test.ts": {
+          "before": null,
+          "after": "6c771a123555161d852f97a06604cd49f7cfbd4202a61640c7566903bffa98b2",
+          "mode": "100644",
+          "after_blob": "40a4f492da74f2d8f1363d53a4e8ef210fe3ba6e",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/combined-naming-schema-seams.fidelity.test.ts": {
+          "before": null,
+          "after": "ae8bdd548141c814631a919d8e23eb22fd34a0707074254ea027274e485517d9",
+          "mode": "100644",
+          "after_blob": "02290043932f92b19503c4aeeec5057544229b7d",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/editorial-page-json-ld.ts": {
+          "before": "368e79c07c78fb414d6a497d42b78fa69770992e5d04130326cf68bc8193b132",
+          "after": "4e236bc8d9b5033b4d74d194128aa25b9be0e0b59be996fc25c670830f4e6d7b",
+          "mode": "100644",
+          "after_blob": "9b364eb556cb05ec314b569aaeea4d2ab333799c",
+          "before_blob": "cd0d47e6fc0a5c7f3df77d98eb7ca8667843e280",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/editorial-scenes.ts": {
+          "before": null,
+          "after": "a0ff6a7eadc537a8a68ee074b813ef684853790a9061c6614820668201d42eff",
+          "mode": "100644",
+          "after_blob": "d8fb0fa72af22f7c50995325bf808e609f4b139d",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/editorial-shopping-data.fidelity.test.ts": {
+          "before": null,
+          "after": "2c967b0ba593cb572d554b80404225a2a6d62aae5d24e7c2a7803f1c89236326",
+          "mode": "100644",
+          "after_blob": "d1a734e29c2f9a4069f74bc2b46af23486760d58",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/editorial-shopping-data.ts": {
+          "before": null,
+          "after": "d699247106227175bf06ab1bd92a8cc9b54e02a5d5f07ff5bc785cc05f7a01a5",
+          "mode": "100644",
+          "after_blob": "1e57ff042e40d7310280965ec2778157ac1c02c7",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/explicit-opening-variant.ts": {
+          "before": null,
+          "after": "5770954db48b760c7c1fed4fd1a2a9bd0809299bad7dbe7c59ae58df45979034",
+          "mode": "100644",
+          "after_blob": "46ad96f755ff214f293d9bcad8bf86e426a656ed",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/greenwich-bed-json-ld-contract.json": {
+          "before": null,
+          "after": "2324506d2615d81ab91657a4d939ae4f90f05c20882506a2e0309614526cd723",
+          "mode": "100644",
+          "after_blob": "708ca5a53408ca66ede0e4083c2390e33e74e246",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/greenwich-bed-json-ld.fidelity.test.ts": {
+          "before": null,
+          "after": "260d919b43c4a557be260afd936b97ab1898a60ff760a84cbfb34e992e827c76",
+          "mode": "100644",
+          "after_blob": "b239b62bdf0806fc6fa1ef2ecceba2a779804f4a",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/greenwich-bed-json-ld.ts": {
+          "before": null,
+          "after": "212196725a273e9ac5027634b7f88ec822bacf6e2247213df7d840c3ea75b747",
+          "mode": "100644",
+          "after_blob": "4c77c94cc6b79a74aae12391f4d02d898592fce3",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/medusa-fetch-timeout.fidelity.test.ts": {
+          "before": "b69d961ebbc67706b078615a5a433ab62a7d3a322d14066c6f8a0a3ccae723f4",
+          "after": "0927ad221c450b572adbc7e7d8759515ceb22312792337c41804b928fae669ee",
+          "mode": "100644",
+          "after_blob": "b10d519234a1fcac6933de4ef096ab8e0e7f5023",
+          "before_blob": "7d6c8835e6a333a87ab5e32127f052c6df2df1c8",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/motif-card-catalog.ts": {
+          "before": null,
+          "after": "e3f48f015b6d5d688123d0cbc42f86584bfdc3d1dcbed00834e97d7827c47107",
+          "mode": "100644",
+          "after_blob": "263a145d852d4eb8b024bed5847e393fecd6bd3a",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/native-variant-json-ld.ts": {
+          "before": "7cb098a46a200ac9d6036716271e42c3777aa7c800647896a54492a3b0aa3d1d",
+          "after": "489a1eedc239cca2e5ca633f555f40cf516c531b50cb941e96754f40105cf668",
+          "mode": "100644",
+          "after_blob": "fa922ce73d257e6e21ae41a98f2df356f9a843da",
+          "before_blob": "f56e5541e1e6e1f2395894e4ea51a9d87d0cbbc7",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/oliver-desk-variants.ts": {
+          "before": "cbc373eda1e47d30fbb1d3d7dbb230c6be01926388b5744fa45447424a4ca050",
+          "after": "36b25977315d245766fff2569f9757f6bbe4f0e2577a7f03bcd9145a5af35659",
+          "mode": "100644",
+          "after_blob": "f3b2953fae2628326b4d4a7c8bbab1bf297dbfe1",
+          "before_blob": "14c774b8c8f2b0e473dd46becce5437746256e89",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/oliver-facade-json-ld.fidelity.test.ts": {
+          "before": null,
+          "after": "9a58ebe980ecdaec12b21680d5a1963f12959edc56e7dbd96a3621b81823583c",
+          "mode": "100644",
+          "after_blob": "189cfe924cabcddfbe717a5393b9bce42ca7891f",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/oliver-facade-json-ld.ts": {
+          "before": null,
+          "after": "6e6a78785fff3b2c8b59ed16f3091e9fb6e86efc9b44a8bfccc4f95af9070ade",
+          "mode": "100644",
+          "after_blob": "72e2bbcd8c15846dc11c5eed0bdb3cb1ca0266e0",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/opening-variant.ts": {
+          "before": "3041b5fbdc6060965f96c919bec414f8961eff1af1ce01a757b4369a72fa83c2",
+          "after": "a85ddb74c62d6a665c48269c0d357b061809088cb4f9f892a44296f30fd43f61",
+          "mode": "100644",
+          "after_blob": "0a3a1f99edb54331e46a358db76427ee37988a26",
+          "before_blob": "3c6f402acb5951db347d116135d7267d4695187d",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/pdp-material-address.fidelity.test.ts": {
+          "before": null,
+          "after": "1e24afa9906809e403b188521f685f2071a810a47de7e5ae59ac3d6a132731e3",
+          "mode": "100644",
+          "after_blob": "e1063e07c5f96c2e11ad477b59dbacf17bda5252",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/pdp-material-address.ts": {
+          "before": null,
+          "after": "32bb1dd48cf6cc12ee970225c09f0691d08f0cd2c1405629487130b555cc9ecc",
+          "mode": "100644",
+          "after_blob": "2e824c52f23a00cea62c21aef544ab43cf60f063",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/product-heading.ts": {
+          "before": "d73d5ddafe8393b5149fccf2fdc80c60103ea9d5efdf5e70bfb3a6800bc9bc9a",
+          "after": "a3198772c941f99cc4d9ea95dfb501a80f97b645684e55b3f0bc7e202b8f3a85",
+          "mode": "100644",
+          "after_blob": "c6ef2432710bb5a210137e145b27c9b6e3b6bbfc",
+          "before_blob": "aa4209a6b0cf9db7cb95c7995a5e76612446b8a0",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/product-metadata.ts": {
+          "before": "b62963c3f837bf3167840e68b6e7d0666c322363f45b08177563a04ae6169adf",
+          "after": "c85ec9795e49cfc563a9d90a3e9aac37bcfe271aafe8740568f0d9e581e02f0c",
+          "mode": "100644",
+          "after_blob": "5dc42f9ec5bac19a46c174843022a9cd8c518e20",
+          "before_blob": "6705ac36338d14e5daa7df719c5a69edf369017e",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/product-name-consistency.fidelity.test.ts": {
+          "before": null,
+          "after": "659daca0e7c8ebade8b69b79fc3b8508225ee2d9dfbdcf546fa95ef4fab1b8ea",
+          "mode": "100644",
+          "after_blob": "8d3d58188bf6eb745a3af8bbcacd053ed386849f",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/product-title-json-ld.ts": {
+          "before": null,
+          "after": "83a33bf4e8fe293d95d75157f23b3bb7d87c86affa86a0450704c32104c819c6",
+          "mode": "100644",
+          "after_blob": "8c07a560803952a175ed05e762c11a0c0aa9b119",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/product-title-presentation.fidelity.test.ts": {
+          "before": null,
+          "after": "b0a29c7e7c44e8c11bb231f7cd9dc90eb87147418a8cef75cbe6b6cd3db7869e",
+          "mode": "100644",
+          "after_blob": "a5f1c97122b774a85ea6439179e3ecee502a14b5",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/product-title-presentation.ts": {
+          "before": null,
+          "after": "508c25fe18c2133fff4d20114fec02bad40cfe606e6d3484a12b8b57e43fc7de",
+          "mode": "100644",
+          "after_blob": "1f1631d98da5d93f49c76cd8923005ff3fc91dd5",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/product-upholstery-json-ld.fidelity.test.ts": {
+          "before": null,
+          "after": "9d035369f9f592a5265737272bcd4717dc32d72c6e5dac431cfe155e7bf41799",
+          "mode": "100644",
+          "after_blob": "f271489b4a92e3e471d158980b1d7a29e67b0b20",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/product-upholstery-json-ld.ts": {
+          "before": null,
+          "after": "74ae6ff1433448dc4fc451f7a675b119efd2daf0c93c707299f98a6b00c8f7b6",
+          "mode": "100644",
+          "after_blob": "c5c1417ca2be16387544c9de65007dc42cd8eb1f",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/product-variant-json-ld.ts": {
+          "before": "0f3fda05c0c92e445b776e7963f5815ba27245cbae5d03d364ab0ea00b1a0fea",
+          "after": "ece5f3406a14b21bef3f534be366e4b9f270c705a2fdf96c5f93f38618dab148",
+          "mode": "100644",
+          "after_blob": "d41b8b7990bf83dc31743b096bf259b0e410f796",
+          "before_blob": "47fd80254f11d28d31d22c07708295f58cec5917",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/provence-finish-json-ld.ts": {
+          "before": "5f4f04edaaedd5d7f7a9de64497c10f23cc3817712e1b41e66f0b66aade5098a",
+          "after": "93ed485ee286453aab175858ff68277b4821e2fc8b55d1a6e431258f16fb93ce",
+          "mode": "100644",
+          "after_blob": "a92be1072248a993a2539c049cf9f87abeec5f66",
+          "before_blob": "0187b2afeb292fea9951db0a8a34f814557267ee",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/retired-product-handles.fidelity.test.ts": {
+          "before": "27cc9829851fac5f680b0bf3f68b8b00bf78e6ddb174175fc6d95621ba3ba081",
+          "after": "260388e482a7b6f613110d2b61c9ae6a376d08173d59968102353901822a3c99",
+          "mode": "100644",
+          "after_blob": "d02052a5e03784ec0f758f9ca586ac751b507d95",
+          "before_blob": "55b8964a39c4bfa6f72b3a37be614f01db5b057c",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/retired-product-handles.ts": {
+          "before": "916525099354867b534ba94184df4b235c7c69964380aaa6f240866f02a99254",
+          "after": "acafdbd42b7c9eaa868c4e20bda8108a4ebdd414b11a19d8be90e8454c71628c",
+          "mode": "100644",
+          "after_blob": "c48519aced99f4ac84098b2889971706d2d05f35",
+          "before_blob": "b1662081645b89f0861e608a0b0f5c47ff47a86f",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/selected-oliver-facade-json-ld.ts": {
+          "before": null,
+          "after": "35321385a1efd37a7d0f9e1ce37fe5d3ee9207a692a670958284bc2237fec031",
+          "mode": "100644",
+          "after_blob": "3b9b3c3ebb41b7b8af40a08eaa831654be40e6b7",
+          "before_blob": null,
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/sparse-variant-map.ts": {
+          "before": "f97d96958333765857429aa1a46b1ab415f5d6542f26398e61f7965cb7fce0c8",
+          "after": "2a43bfcdfc819088bbb11ddedfc3b83f81ec6f03905bbee2dacb7794ba3b383b",
+          "mode": "100644",
+          "after_blob": "9455f4bf22f024ae21bb96e3f0303da2be29004a",
+          "before_blob": "9f1594f556910f5936851f94dc4ee6ded3363ff7",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/upholstery-gallery-colors.fidelity.test.ts": {
+          "before": null,
+          "after": "b1e44e2306b723aee1e6cb0364f7ea7086a848cb495dcc1d1d8849e9a4a366ed",
+          "mode": "100644",
+          "after_blob": "9fb4b64171338c6cf7eb33e1df135d109dda9375",
+          "before_blob": null,
+          "before_mode": null
+        }
+      },
+      "protected_before": {
+        "apps/storefront/src/lib/analytics-goals.ts": "a22654d7617f5355c6f4d9001c128383feb4bbbb6e995d254323a64d24104dbf",
+        "apps/storefront/src/lib/analytics-metrika.ts": "6535619b07f86b182ddb3be4eb294538dca32cdc29eb53e75b677342790c225b",
+        "apps/storefront/src/components/storefront-analytics.tsx": "8d1e92ebf1d63fe5d8b4798743c9b54dd3442572a4b6dd3d7352a2aa3f724377",
+        "apps/storefront/src/components/bespoke-form.tsx": "eaa9568c88aebf217bb0d89fec90aa7355cb492404bca26e7de3b3d230b56f57",
+        "apps/storefront/src/components/checkout-form.tsx": "5a51cdfc83246632fc9c0be1bba4100ef11cf82911dc9c4d109c998f357b81ec",
+        "apps/storefront/src/proxy.ts": "a7f7b9096a4b51a139eb7bba2f7678f985d16a117dfe051120191b1c6abbd55b",
+        "apps/storefront/package.json": "27efcbb3257add043c70a4dbd54c6eaaa796da75078c80ec47b9dc8aadcee298",
+        "apps/storefront/yarn.lock": "92f8e832b6c696a9bb4f9e422c98fc2ecd0fd5d8a4d68ae35a32f1572e82c459",
+        "apps/storefront/.yarnrc.yml": "a0305ab3fc20b06d20d0fcb3dcfb6cd52ec4310d442e3bc2e722becca38ca477",
+        "apps/storefront/Dockerfile": "a2d1ce5ab83c76e74dd875df21929fcd4a1eb90562ae6763bdf7fbfdd96e5ee7",
+        "apps/storefront/src/lib/api/base.ts": "f98ef87935650cbfa455b95e7435927303bc74381e3e04ec4f92bcd955b874d9",
+        "apps/storefront/src/lib/api/products.ts": "4e4ba22b44521e3885dafd2346bb2a967ad8d151bb670b2994ae4e19634debc6",
+        "apps/storefront/src/lib/catalog-read-budget.ts": "72f6f21a2678ea4ec1782a40589aa3b3e6f4c7c8a47944ae1ea7412506962154",
+        "apps/storefront/src/lib/api/catalog-browse-pool-client.ts": "2c2502fa9f8286251b765195282e19e33d9cd0936e9366d200893e0487497a9f",
+        "apps/storefront/src/components/catalog-browse-client.tsx": "21f41ea55fd22160f6c3318e9adb70a8977017c73664069c421d63dc0b16232e",
+        "apps/storefront/src/app/catalog/page.tsx": "af243e2d3a89f4d0315a417d7f18fac762e2c75fa478b4b3d2152c53a3806e0b",
+        "apps/storefront/src/app/kids/catalog/page.tsx": "f72cbfa3d41dc8a90c0bb06de4915eed7aa2c1fb8ce4a9e8b6372eb08db3e3df"
+      }
     }
   }
 }
