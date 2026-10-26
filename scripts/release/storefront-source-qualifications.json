@@ -42,7 +42,7 @@
         "scripts/release/validate-isolated-storefront-bake.cjs": "d71863b2025443951f76d9724cd0c8b65cd85baa18d913cf3ce4b940dd0438c6"
       },
       "workflow": ".github/workflows/qualify-storefront-source.yml",
-      "workflow_sha256": "15d01bb9cf1c749cf898b551c5a0a241f00dfa370f4c261fcdc1105fcdeb6a5c",
+      "workflow_sha256": "e9f2ce172a33fa4acbd3716ae83494446674e99c77eb3d4aca1a9ef1e009dee2",
       "retained_backend_proof": {
         "source_sha": "e983c436dac64e4e443917976e9a59dfb16c99b8",
         "runtime_policy": "node20-to-node24-catalog-v1",
@@ -85,10 +85,11 @@
       "context_hashes": {
         ".github/workflows/pr-checks.yml": "9d67c7ebd33db880a2298f363ddea0a829fdf38921947f6b238f9363df1691c6",
         "scripts/release/storefront-runtime-policies.json": "cc286523d35bb7aef90c230dd427be9b447767db9894dc3ed5f7e89c4578cb57",
-        "scripts/release/validate-isolated-storefront-bake.cjs": "d71863b2025443951f76d9724cd0c8b65cd85baa18d913cf3ce4b940dd0438c6"
+        "scripts/release/validate-isolated-storefront-bake.cjs": "d71863b2025443951f76d9724cd0c8b65cd85baa18d913cf3ce4b940dd0438c6",
+        "apps/workspace/src/server/catalog-policy.mjs": "5e2ffacbc354fb0c75cfaba6c7a0bd28b674375b040ceee1528283855f801a9d"
       },
       "workflow": ".github/workflows/qualify-storefront-source.yml",
-      "workflow_sha256": "15d01bb9cf1c749cf898b551c5a0a241f00dfa370f4c261fcdc1105fcdeb6a5c",
+      "workflow_sha256": "e9f2ce172a33fa4acbd3716ae83494446674e99c77eb3d4aca1a9ef1e009dee2",
       "retained_backend_proof": {
         "source_sha": "e983c436dac64e4e443917976e9a59dfb16c99b8",
         "runtime_policy": "node20-to-node24-catalog-v1",
@@ -749,7 +750,15 @@
         "apps/storefront/src/components/catalog-browse-client.tsx": "21f41ea55fd22160f6c3318e9adb70a8977017c73664069c421d63dc0b16232e",
         "apps/storefront/src/app/catalog/page.tsx": "af243e2d3a89f4d0315a417d7f18fac762e2c75fa478b4b3d2152c53a3806e0b",
         "apps/storefront/src/app/kids/catalog/page.tsx": "f72cbfa3d41dc8a90c0bb06de4915eed7aa2c1fb8ce4a9e8b6372eb08db3e3df"
-      }
+      },
+      "test_context": {
+        "apps/workspace/src/server/catalog-policy.mjs": {
+          "sha256": "5e2ffacbc354fb0c75cfaba6c7a0bd28b674375b040ceee1528283855f801a9d",
+          "blob": "3a53cf6ff04aceed950771e5d968d5fc81e86f4f",
+          "mode": "100644"
+        }
+      },
+      "test_context_note": "Exactly one existing accepted native595/c790 policy module, copied from trusted policy only into the ephemeral frontend qualification clone. Explicit testContext/digest attested and consumed by admission; source overlay remains empty. Never installed into image build. Owned cleanup and clean source proof required."
     }
   }
 }

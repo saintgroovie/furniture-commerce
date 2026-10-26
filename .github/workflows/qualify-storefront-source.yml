@@ -86,6 +86,22 @@ jobs:
             --production-storefront-digest "${SF_BASE_DIGEST}" \
             --release-ref "${RELEASE_REF}" --repo "${GITHUB_WORKSPACE}/." \
             --evidence-output "${GITHUB_WORKSPACE}/qualification.json"
+      - name: Install declared non-runtime test dependency
+        if: ${{ env.TEST_CONTEXT_MODE == 'sealed' }}
+        working-directory: .
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          TRUSTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node .runtime-policy/scripts/release/validate-storefront-source-qualification.cjs \
+            --install-test-context --qualification-job storefront \
+            --release-mode isolated_storefront --qualification-key "${POLICY_ID}" \
+            --trusted-policy-sha "${TRUSTED_SHA}" --source-sha "${SOURCE_SHA}" \
+            --production-base-sha "${BASE_SHA}" \
+            --backend-digest "${BE_DIGEST}" --backend-revision "${BE_REVISION}" \
+            --production-storefront-digest "${SF_BASE_DIGEST}" \
+            --release-ref "${RELEASE_REF}" --repo "${GITHUB_WORKSPACE}/."
       - name: Use registry sealed cache test overlay only when required
         if: ${{ env.TEST_OVERLAY_MODE == 'sealed' }}
         working-directory: .
@@ -254,6 +270,23 @@ jobs:
           name: source-qualification-${{ github.run_id }}-${{ github.run_attempt }}-storefront
           path: qualification.json
           if-no-files-found: error
+
+      - name: Remove only owned test dependency and verify source unchanged
+        if: ${{ always() && env.TEST_CONTEXT_MODE == 'sealed' }}
+        working-directory: .
+        env:
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          TRUSTED_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          node .runtime-policy/scripts/release/validate-storefront-source-qualification.cjs \
+            --cleanup-test-context --qualification-job storefront \
+            --release-mode isolated_storefront --qualification-key "${POLICY_ID}" \
+            --trusted-policy-sha "${TRUSTED_SHA}" --source-sha "${SOURCE_SHA}" \
+            --production-base-sha "${BASE_SHA}" \
+            --backend-digest "${BE_DIGEST}" --backend-revision "${BE_REVISION}" \
+            --production-storefront-digest "${SF_BASE_DIGEST}" \
+            --release-ref "${RELEASE_REF}" --repo "${GITHUB_WORKSPACE}/."
 
   qualify-backend-fidelity:
     if: ${{ github.event_name == 'workflow_dispatch' }}
