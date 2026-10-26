@@ -40,13 +40,50 @@ ENV = {'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
        'GIT_CONFIG_GLOBAL': '/dev/null', 'GIT_NO_REPLACE_OBJECTS': '1'}
 
 
-# BEGIN EXACT OPERATOR PARENT POLICY V1
+# BEGIN EXACT OPERATOR PARENT POLICY V2
 # The authorized deployment operator is trusted; hostile operator races are not
 # excluded by descriptors or checkpoints. This policy grants no release rights.
 class OperatorParentPolicy:
     BOOTSTRAP = '/etc/woodright/operator-parent-contract.json'
-    EXCEPTIONS = {'/srv/woodright': (1000, 1000, 0o700),
-                  '/srv/woodright/locks': (1000, 1000, 0o775)}
+    # Finite, role-specific ancestry only, behind the witnessed operator 0700 root.
+    # No world-write exception; regular authority/source/bootstrap leaves stay root.
+    PARENT_RULES = {
+        '/srv/woodright': (0o700, 'READ_PREFLIGHT STORAGE_PIPELINE GOVERNANCE_INSTALL GOVERNANCE_HANDOVER'),
+        '/srv/woodright/backups': (0o700, 'READ_PREFLIGHT STORAGE_PIPELINE'),
+        '/srv/woodright/backups/automated': (0o700, 'READ_PREFLIGHT STORAGE_PIPELINE'),
+        '/srv/woodright/backups/automated/public-production': (0o700, 'READ_PREFLIGHT STORAGE_PIPELINE'),
+        '/srv/woodright/backups/automated/public-production/state': (0o700, 'STORAGE_PIPELINE'),
+        '/srv/woodright/docs': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL'),
+        '/srv/woodright/docs/operator': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL'),
+        '/srv/woodright/evidence': (0o775, 'STORAGE_PIPELINE GOVERNANCE_INSTALL GOVERNANCE_HANDOVER'),
+        '/srv/woodright/locks': (0o775, 'READ_PREFLIGHT STORAGE_PIPELINE GOVERNANCE_INSTALL GOVERNANCE_HANDOVER'),
+        '/srv/woodright/locks/public_production': (0o755, 'READ_PREFLIGHT'),
+        '/srv/woodright/meta': (0o775, 'READ_PREFLIGHT GOVERNANCE_INSTALL GOVERNANCE_HANDOVER'),
+        '/srv/woodright/ops': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL GOVERNANCE_HANDOVER'),
+        '/srv/woodright/ops/backup': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL'),
+        '/srv/woodright/ops/backup/lib': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL'),
+        '/srv/woodright/ops/compose': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL'),
+        '/srv/woodright/ops/config': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL'),
+        '/srv/woodright/ops/config/public-launch': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL'),
+        '/srv/woodright/ops/config/runtime-environments': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL'),
+        '/srv/woodright/ops/lib': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL'),
+        '/srv/woodright/ops/monitoring': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL'),
+        '/srv/woodright/ops/release': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL GOVERNANCE_HANDOVER'),
+        '/srv/woodright/ops/systemd': (0o700, 'READ_PREFLIGHT GOVERNANCE_INSTALL'),
+        '/srv/woodright/src': (0o775, 'GOVERNANCE_INSTALL'),
+    }
+    LEASE_RULES = {
+        '/srv/woodright/locks/public_production/live-cutover.lock': ('READ_PREFLIGHT', fcntl.LOCK_SH),
+        '/srv/woodright/backups/automated/public-production/state/global.lock': ('STORAGE_PIPELINE', fcntl.LOCK_EX),
+        '/srv/woodright/backups/automated/public-production/state/media.lock': ('STORAGE_PIPELINE', fcntl.LOCK_EX),
+        '/srv/woodright/backups/automated/public-production/state/postgres.lock': ('STORAGE_PIPELINE', fcntl.LOCK_EX),
+    }
+    DIRECTORY_PURPOSES = {
+        ('READ_PREFLIGHT', 'backup_capacity'): {
+            '/srv/woodright/backups/automated',
+            '/srv/woodright/backups/automated/public-production'},
+        ('GOVERNANCE_INSTALL', 'evidence_parent'): {'/srv/woodright/evidence'},
+    }
     ROLES = {'READ_PREFLIGHT', 'STORAGE_PIPELINE', 'GOVERNANCE_INSTALL',
              'GOVERNANCE_HANDOVER'}
 
@@ -78,6 +115,7 @@ class OperatorParentPolicy:
         self._dirs = {}
         self._locks = []
         self._parents = {}
+        self._leases = {}
         self._closed = False
         self.role = role
         self.contract_sha256 = checksum
@@ -96,8 +134,8 @@ class OperatorParentPolicy:
                     result[key] = value
                 return result
             contract = json.loads(raw, object_pairs_hook=unique)
-            if (set(contract) != {'schema', 'trust_model', 'allowed_roles', 'parents'} or
-                    contract['schema'] != 'woodright-operator-parent-contract-v1' or
+            if (set(contract) != {'schema', 'trust_model', 'allowed_roles', 'parents', 'leases'} or
+                    contract['schema'] != 'woodright-operator-parent-contract-v2' or
                     contract['trust_model'] != 'authorized_operator_not_hostile_uid1000'):
                 raise ValueError('exact trusted-operator parent schema required')
             roles = contract['allowed_roles']
@@ -106,16 +144,29 @@ class OperatorParentPolicy:
                     len(roles) != len(set(roles)) or role not in roles):
                 raise ValueError('parent contract caller role refused')
             parents = contract['parents']
-            if not isinstance(parents, dict) or set(parents) != set(self.EXCEPTIONS):
-                raise ValueError('only two exact witnessed parents may differ')
+            if not isinstance(parents, dict) or set(parents) != set(self.PARENT_RULES):
+                raise ValueError('exact finite witnessed parent ledger required')
             for name, row in parents.items():
                 if (not isinstance(row, dict) or
                         set(row) != {'dev', 'ino', 'uid', 'gid', 'mode'} or
                         any(type(v) is not int for v in row.values()) or
                         row['dev'] <= 0 or row['ino'] <= 0 or
-                        (row['uid'], row['gid'], row['mode']) != self.EXCEPTIONS[name]):
+                        (row['uid'], row['gid'], row['mode']) !=
+                        (1000, 1000, self.PARENT_RULES[name][0])):
                     raise ValueError('exact witnessed parent identity required')
+            leases = contract['leases']
+            if not isinstance(leases, dict) or set(leases) != set(self.LEASE_RULES):
+                raise ValueError('exact finite purpose-only lease ledger required')
+            for row in leases.values():
+                if (not isinstance(row, dict) or
+                        set(row) != {'dev', 'ino', 'uid', 'gid', 'mode', 'nlink', 'size'} or
+                        any(type(v) is not int for v in row.values()) or
+                        row['dev'] <= 0 or row['ino'] <= 0 or
+                        (row['uid'], row['gid'], row['mode'], row['nlink'], row['size']) !=
+                        (1000, 1000, 0o644, 1, 0)):
+                    raise ValueError('exact witnessed canonical lease identity required')
             self._parents = parents
+            self._leases = leases
             self.checkpoint()
         except BaseException:
             self.close()
@@ -126,7 +177,8 @@ class OperatorParentPolicy:
         try:
             if expected is None:
                 self._root_object(info, directory=True)
-            elif (not stat.S_ISDIR(info.st_mode) or
+            elif (self.role not in self.PARENT_RULES[name][1].split() or
+                    not stat.S_ISDIR(info.st_mode) or
                     (info.st_dev, info.st_ino, info.st_uid, info.st_gid,
                      stat.S_IMODE(info.st_mode)) != tuple(expected[k] for k in
                                                          ['dev', 'ino', 'uid', 'gid', 'mode'])):
@@ -188,26 +240,39 @@ class OperatorParentPolicy:
                                  follow_symlinks=False)
             if self._identity(info) != expected or self._identity(actual) != expected:
                 raise ValueError('retained parent path or descriptor changed')
-        for path, fd, expected in self._locks:
+        for path, fd, expected, operation in self._locks:
             parent = self._dirs[str(Path(path).parent)][0]
             actual = os.stat(Path(path).name, dir_fd=parent, follow_symlinks=False)
-            self._root_object(actual)
+            self._lease_object(path, actual, operation)
+            self._lease_object(path, os.fstat(fd), operation)
             if (self._file_identity(actual) != expected or
                     self._file_identity(os.fstat(fd)) != expected):
                 raise ValueError('canonical lease pathname or inode changed')
 
     def _leaf(self, path, directory=False):
         path = self._path(path)
+        if path in self.LEASE_RULES:
+            raise ValueError('operator lease is not an authority or directory')
         self.checkpoint()
         parent = self._walk(str(Path(path).parent))
         info = os.stat(Path(path).name, dir_fd=parent, follow_symlinks=False)
         self._root_object(info, directory=directory)
         return parent, Path(path).name, info
 
-    def protected(self, path, directory=False):
-        _, _, info = self._leaf(path, directory)
+    def protected(self, path, directory=False, purpose=None):
+        path = self._path(path)
+        if purpose is None:
+            _, _, info = self._leaf(path, directory)
+        else:
+            if (not directory or path not in
+                    self.DIRECTORY_PURPOSES.get((self.role, purpose), set())):
+                raise ValueError('exact directory object purpose required')
+            self.checkpoint()
+            parent = self._walk(str(Path(path).parent))
+            info = os.stat(Path(path).name, dir_fd=parent, follow_symlinks=False)
+            self._parent(path, info)
         if directory:
-            self._walk(self._path(path))
+            self._walk(path)
         self.checkpoint()
         return info
 
@@ -243,16 +308,33 @@ class OperatorParentPolicy:
         finally:
             os.close(fd)
 
+    def _lease_object(self, path, info, operation):
+        if path not in self.LEASE_RULES:
+            self._root_object(info)
+            return
+        expected = self._leases.get(path)
+        if (expected is None or (self.role, operation) != self.LEASE_RULES[path] or
+                not stat.S_ISREG(info.st_mode) or
+                (info.st_dev, info.st_ino, info.st_uid, info.st_gid,
+                 stat.S_IMODE(info.st_mode), info.st_nlink, info.st_size) !=
+                tuple(expected[k] for k in ['dev', 'ino', 'uid', 'gid', 'mode', 'nlink', 'size'])):
+            raise ValueError('purpose-only canonical lease identity or role/mode refused')
+
     def open_lock(self, path, operation):
         if operation not in (fcntl.LOCK_SH, fcntl.LOCK_EX):
             raise ValueError('explicit nonblocking lease mode required')
-        parent, name, before = self._leaf(path)
+        path = self._path(path)
+        self.checkpoint()
+        parent = self._walk(str(Path(path).parent))
+        name = Path(path).name
+        before = os.stat(name, dir_fd=parent, follow_symlinks=False)
+        self._lease_object(path, before, operation)
         fd = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
         try:
             if self._file_identity(os.fstat(fd)) != self._file_identity(before):
                 raise ValueError('lease opened identity changed')
             fcntl.flock(fd, operation | fcntl.LOCK_NB)
-            self._locks.append((self._path(path), fd, self._file_identity(before)))
+            self._locks.append((path, fd, self._file_identity(before), operation))
             self.checkpoint()
             return fd
         except BaseException:
@@ -265,6 +347,8 @@ class OperatorParentPolicy:
             raise ValueError('read preflight cannot authorize output')
         self.checkpoint()
         path = self._path(path)
+        if path in self.LEASE_RULES:
+            raise ValueError('operator lease cannot be an output or authority')
         return self._walk(str(Path(path).parent)), Path(path).name
 
     def mkdir(self, path):
@@ -345,7 +429,7 @@ class OperatorParentPolicy:
     def close(self):
         # Caller must retain this object until every inherited worker is drained.
         # Close only: never LOCK_UN on a description shared with a child.
-        for _, fd, _ in self._locks:
+        for _, fd, _, _ in self._locks:
             os.close(fd)
         self._locks = []
         for fd, _ in reversed(list(self._dirs.values())):
@@ -355,8 +439,8 @@ class OperatorParentPolicy:
 
     def retained_fds(self):
         self.checkpoint()
-        return tuple(fd for fd, _ in self._dirs.values()) + tuple(fd for _, fd, _ in self._locks)
-# END EXACT OPERATOR PARENT POLICY V1
+        return tuple(fd for fd, _ in self._dirs.values()) + tuple(fd for _, fd, _, _ in self._locks)
+# END EXACT OPERATOR PARENT POLICY V2
 
 
 _PARENT_POLICY = None
@@ -365,9 +449,9 @@ def sha(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
-def protected(path, directory=False):
+def protected(path, directory=False, purpose=None):
     if _PARENT_POLICY is not None:
-        return _PARENT_POLICY.protected(path, directory)
+        return _PARENT_POLICY.protected(path, directory, purpose=purpose)
     path = Path(path)
     if not path.is_absolute():
         raise ValueError('absolute canonical path required')
@@ -701,7 +785,10 @@ def main():
     marker = read(TOOLS / 'INSTALLED_ENV_GOVERNANCE_SHA.txt').decode().strip()
     if marker != intent['expected_current_governance_source_sha'] or sha(read(TOOLS / 'ENV_GOVERNANCE_BUNDLE_MANIFEST.json')) != intent['expected_current_governance_manifest_sha256']:
         raise ValueError('current governance authority changed')
-    protected(args.evidence.parent, directory=True)
+    if args.evidence.parent == ROOT / 'evidence':
+        protected(args.evidence.parent, directory=True, purpose='evidence_parent')
+    else:
+        protected(args.evidence.parent, directory=True)
     _PARENT_POLICY.mkdir(args.evidence)  # unique; no overwrite or symlink reuse
     fd = _PARENT_POLICY.create_output(args.evidence / 'native-install-and-verify.log')
     result = {'state': 'RUNNING', 'source': intent['governance_source_sha'],
