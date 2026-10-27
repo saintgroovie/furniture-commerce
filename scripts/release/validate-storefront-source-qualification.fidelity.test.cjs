@@ -3,7 +3,9 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--gallery-only')){
+if(process.argv.includes('--contacts8-only')){
+ console.log(JSON.stringify(contacts8AdmissionRegression(),null,2));
+}else if(process.argv.includes('--gallery-only')){
  console.log(JSON.stringify(galleryAdmissionRegression(),null,2));
 }else if(process.argv.includes('--test-context-only')){
  console.log(JSON.stringify(testContextRegression(),null,2));
@@ -149,6 +151,7 @@ console.log(JSON.stringify({status:'PASS_COMMON_CLOSED_CONTRACT_AND_ADMISSION_SE
 console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 console.log(JSON.stringify(testContextRegression(),null,2));
 console.log(JSON.stringify(galleryAdmissionRegression(),null,2));
+console.log(JSON.stringify(contacts8AdmissionRegression(),null,2));
 }
 
 function retainedBackendContextRegression(){
@@ -321,4 +324,53 @@ function galleryAdmissionRegression(){
   put(names[0],'dirty\n');reject(()=>v.sourceFacts(contract,temp,false,'storefront',()=>{}));
  }finally{fs.rmSync(temp,{recursive:true,force:true});}
  return {status:'PASS_NEW_GALLERY_EXACT7_ADMISSION_CASES',cases,scope:'Only new gallery admission; isolated Git fixtures, no app/schema/network/CI/build/runtime or old suite rerun'};
+}
+
+function contacts8AdmissionRegression(){
+ const {execFileSync}=require('node:child_process'),os=require('node:os');
+ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+ const reg=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json')));
+ const key='contacts-roi-storefront-b173-exact8-v1',c8=reg.qualifications[key],names=[
+  'apps/storefront/src/components/contacts-page-layout.tsx',
+  'apps/storefront/src/components/contacts-showroom-carousel.css',
+  'apps/storefront/src/components/contacts-showroom-carousel.tsx',
+  'apps/storefront/src/components/product-card-media-gallery-core.tsx',
+  'apps/storefront/src/lib/oliver14-fabric-photo-swatch.fidelity.test.cjs',
+  'apps/storefront/src/lib/oliver14-fabric-photo-swatch.ts',
+  'apps/storefront/src/lib/showroom-carousel-media.ts',
+  'apps/storefront/src/lib/woodright-copy.ts',
+ ];
+ const input={sourceSha:c8.source_sha,productionBaseSha:c8.base_sha,releaseRef:c8.release_ref,backendRevision:c8.backend_revision,backendDigest:c8.backend_digest,productionStorefrontDigest:c8.production_storefront_digest,trustedPolicySha:'a'.repeat(40)};
+ let cases=0;const pass=f=>{f();cases++;},reject=f=>{assert.throws(f);cases++;};
+ pass(()=>{assert.equal(c8.source_sha,'cf211341a12f0c937b303969347281789c53fc66');assert.equal(c8.source_tree,'c6f5e4b53a62bf3c55d35cd7391ab75641ca45b5');assert.equal(c8.base_sha,'b173e0392b3c901fb1aad04c3eb1759364dee3cb');assert.equal(c8.base_tree,'c3662ce496f7b772b6a3a596438a557db4dfcee0');assert.equal(c8.release_ref,'release/contacts-roi-exact8-20261028');assert.equal(c8.production_storefront_digest,'sha256:ada3a70a66f16e644009b46c2284028dcdf4132a27037b62bc08dc22fca60f38');});
+ pass(()=>assert.deepEqual(Object.keys(v.sourcePaths(c8)),names));
+ pass(()=>assert.equal(v.selectContract(reg,input,key).id,key));
+ pass(()=>v.requireInput(c8,input));
+ pass(()=>assert(v.workflowEnvironment(key,c8).includes('POLICY_ID='+key+'\n')));
+ pass(()=>{assert.equal(Object.keys(v.sourcePaths(reg.qualifications['gallery-storefront-01f-exact7-v1'])).length,7);assert.equal(Object.keys(v.sourcePaths(reg.qualifications['common-storefront-b461-v1'])).length,79);});
+ pass(()=>{const parent=reg.qualifications['gallery-storefront-01f-exact7-v1'];assert.deepEqual(c8.protected,parent.protected);assert.deepEqual(c8.retained_backend_proof,parent.retained_backend_proof);assert.deepEqual(v.testContextMap(c8),v.testContextMap(parent));});
+ for(const mutate of [x=>delete x.paths,x=>delete x.kind,x=>x.kind='unregistered-contacts8',x=>x.kind='gallery-storefront-01f-exact7-v1',x=>x.kind='common-storefront-b461-v1',x=>delete x.paths[names[0]],x=>x.paths['apps/backend/src/injected.ts']=clone(x.paths[names[0]]),x=>{const p=x.paths[names[0]];delete x.paths[names[0]];x.paths['apps/storefront/src/other.ts']=p;},x=>x.paths=Object.fromEntries(Object.entries(x.paths).reverse()),x=>x.test_overlays[names[0]]='0'.repeat(64)]){const x=clone(c8);mutate(x);reject(()=>v.workflowEnvironment(key,x));}
+ for(const field of ['sourceSha','productionBaseSha','releaseRef','backendRevision','backendDigest','productionStorefrontDigest','trustedPolicySha'])reject(()=>v.requireInput(c8,{...input,[field]:'wrong'}));
+ for(const mismatch of [{...input,sourceSha:c8.base_sha},{...input,releaseRef:'release/gallery-exact7-20261027'},{...input,releaseRef:'release/unregistered'}])reject(()=>v.selectContract(reg,mismatch,key));
+ for(const mutate of [x=>x.kind='unregistered-contacts8',x=>x.test_context={},x=>x.context_hashes[v.TEST_CONTEXT_FILE]='0'.repeat(64)]){const x=clone(c8);mutate(x);reject(()=>v.testContextMap(x));}
+ const context=v.testContextMap(c8),seal={schema:1,sourceSha:c8.source_sha,sourceTree:c8.source_tree,baseSha:c8.base_sha,releaseRef:c8.release_ref,backendTree:c8.backend_tree,policySha:input.trustedPolicySha,registrySha:'b'.repeat(64),job:'storefront',runId:1001,attempt:1,postChecks:true,context:'candidate-with-sealed-test-context',overlay:{},testContext:context,testContextDigest:hash(JSON.stringify(context))};
+ pass(()=>v.validateSeal(c8,seal,input,'storefront',1001,'b'.repeat(64)));
+ for(const mutate of [x=>x.sourceSha=c8.base_sha,x=>x.sourceTree=c8.base_tree,x=>x.baseSha='01f0110921527aef5fde9db18e69dabee9a423cd',x=>x.releaseRef='release/gallery-exact7-20261027',x=>x.testContext={},x=>x.testContextDigest='0'.repeat(64)]){const x=clone(seal);mutate(x);reject(()=>v.validateSeal(c8,x,input,'storefront',1001,'b'.repeat(64)));}
+ // Exercise this new eight-path contract against real isolated Git identities.
+ const temp=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'wr-contacts8-contract-')));
+ const env={...process.env,GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:'/dev/null',GIT_AUTHOR_NAME:'Contacts fixture',GIT_AUTHOR_EMAIL:'fixture@example.invalid',GIT_COMMITTER_NAME:'Contacts fixture',GIT_COMMITTER_EMAIL:'fixture@example.invalid'};
+ const g=(...a)=>execFileSync('git',['-C',temp,...a],{env,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+ const put=(file,text)=>{const p=path.join(temp,file);fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,text);};
+ const added=new Set([names[4],names[5]]);
+ try{
+  g('init','-q');put('apps/backend/src/retained.ts','retained\n');put('apps/storefront/src/protected.ts','protected\n');for(const file of names)if(!added.has(file))put(file,'before\n');g('add','--','apps');g('commit','-qm','contacts baseline');const base=g('rev-parse','HEAD');
+  for(const file of names)put(file,'after\n');g('add','--','apps/storefront');g('commit','-qm','contacts exact8');const source=g('rev-parse','HEAD');
+  const fixture={...clone(c8),source_sha:source,source_tree:g('rev-parse','HEAD^{tree}'),base_sha:base,base_tree:g('rev-parse',base+'^{tree}'),backend_revision:base,backend_tree:g('rev-parse',base+':apps/backend'),protected:{'apps/storefront/src/protected.ts':hash('protected\n')},paths:{}};
+  delete fixture.test_context;fixture.protected_before={...fixture.protected};
+  for(const file of names){const after=g('ls-tree',source,'--',file).split(/\s+/),before=g('ls-tree',base,'--',file).split(/\s+/);fixture.paths[file]={before:added.has(file)?null:hash('before\n'),after:hash('after\n'),mode:after[0],after_blob:after[2],before_mode:added.has(file)?null:before[0],before_blob:added.has(file)?null:before[2]};}
+  g('update-ref','refs/remotes/origin/'+fixture.release_ref,source);pass(()=>v.sourceFacts(fixture,temp,false,'storefront',()=>{}));
+  for(const mutate of [x=>x.source_sha=base,x=>x.source_tree='0'.repeat(40),x=>x.base_sha=source,x=>x.base_tree='0'.repeat(40),x=>x.release_ref='release/wrong',x=>x.backend_tree='0'.repeat(40),x=>x.paths[names[0]].before='0'.repeat(64),x=>x.paths[names[0]].after='0'.repeat(64),x=>x.paths[names[0]].before_blob='0'.repeat(40),x=>x.paths[names[0]].after_blob='0'.repeat(40),x=>x.paths[names[0]].mode='100755',x=>x.protected['apps/storefront/src/protected.ts']='0'.repeat(64)]){const x=clone(fixture);mutate(x);reject(()=>v.sourceFacts(x,temp,false,'storefront',()=>{}));}
+  put(names[0],'dirty\n');reject(()=>v.sourceFacts(fixture,temp,false,'storefront',()=>{}));
+ }finally{fs.rmSync(temp,{recursive:true,force:true});}
+ return {status:'PASS_NEW_CONTACTS_ROI_EXACT8_ADMISSION_CASES',cases,scope:'New eight-path admission and preserved7/79 seams only; no app/schema/network/CI/build/runtime or prior fullsuite rerun'};
 }
