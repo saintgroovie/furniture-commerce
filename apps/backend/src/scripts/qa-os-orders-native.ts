@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, realpath, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import type { ExecArgs } from "@medusajs/framework/types";
+import type { ExecArgs, IUserModuleService } from "@medusajs/framework/types";
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils";
 import {
   createProductsWorkflow,
@@ -39,7 +39,7 @@ export default async function check({ container }: ExecArgs) {
     0,
     "New disposable native database only",
   );
-  const users = container.resolve(Modules.USER) as any,
+  const users = container.resolve<IUserModuleService>(Modules.USER),
     store = container.resolve(Modules.STORE) as any;
   const roles: StaffRole[] = [
     "seller",
@@ -56,6 +56,8 @@ export default async function check({ container }: ExecArgs) {
   process.env.WOODRIGHT_PRIVATE_FILES_ROOT = directory;
   process.env.WOODRIGHT_DESK_FEATURES = "1";
   const checks: string[] = [];
+  let primaryError: unknown;
+  const stage = (name: string) => console.log("OS_ORDERS_NATIVE_STAGE", name);
   const response = () => ({
     statusCode: 200,
     body: null as any,
@@ -101,6 +103,7 @@ export default async function check({ container }: ExecArgs) {
         email: `qa-orders-${role}@example.test`,
         metadata: { woodright_access: { role, enabled: true, version: 1 } },
       });
+    stage("roles_created");
     const channels = container.resolve(Modules.SALES_CHANNEL) as any;
     const channel = await channels.createSalesChannels({
       name: "Isolated orders QA",
@@ -172,6 +175,7 @@ export default async function check({ container }: ExecArgs) {
         product_classification_id: classification.id,
       },
     });
+    stage("catalog_created");
     await send("seller", {
       type: "company.create",
       id: "company_orders_native",
@@ -218,7 +222,9 @@ export default async function check({ container }: ExecArgs) {
         },
       ],
     };
+    stage("request_created");
     const first = await send("seller", { type: "order.create", order: input });
+    stage("native_order_created");
     const id = first.result.order.id;
     const again = await send("director", {
       type: "order.create",
@@ -407,29 +413,63 @@ export default async function check({ container }: ExecArgs) {
     assert.ok(customOrder);
     assert.equal(customOrder.items[0].variant_id ?? null, null);
     assert.equal(Number(customOrder.items[0].unit_price), 543.21);
-    const nativeCustom = await (container.resolve(Modules.ORDER) as any).retrieveOrder(customOrder.id, { relations: ["items"] });
+    const nativeCustom = await (
+      container.resolve(Modules.ORDER) as any
+    ).retrieveOrder(customOrder.id, { relations: ["items"] });
     assert.equal(nativeCustom.items[0].requires_shipping, true);
-    assert.equal(nativeCustom.items[0].metadata.agreed_specification, "Isolated agreed specification");
+    assert.equal(
+      nativeCustom.items[0].metadata.agreed_specification,
+      "Isolated agreed specification",
+    );
     checks.push(
       "native bespoke order preserves agreed price/specification without inventing a variant",
     );
-    console.log(
-      "OS_ORDERS_NATIVE_PASS",
-      JSON.stringify({ checks, syntheticOnly: true, publicData: false }),
-    );
+  } catch (error) {
+    primaryError = error;
+    console.error("OS_ORDERS_NATIVE_FAILURE", error);
+    throw error;
   } finally {
+    const cleanupErrors: unknown[] = [];
     for (const user of Object.values(staff) as any[])
-      await users.updateUsers(user.id, {
-        metadata: {
-          woodright_access: {
-            role: user.metadata.woodright_access.role,
-            enabled: false,
-            version: 2,
+      try {
+        await users.updateUsers({
+          id: user.id,
+          metadata: {
+            woodright_access: {
+              role: user.metadata.woodright_access.role,
+              enabled: false,
+              version: 2,
+            },
           },
-        },
-      });
+        });
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
     if (oldFiles === undefined) delete process.env.WOODRIGHT_PRIVATE_FILES_ROOT;
     else process.env.WOODRIGHT_PRIVATE_FILES_ROOT = oldFiles;
-    await rm(directory, { recursive: true, force: true });
+    try {
+      await rm(directory, { recursive: true, force: true });
+    } catch (error) {
+      cleanupErrors.push(error);
+    }
+    if (cleanupErrors.length) {
+      if (primaryError)
+        console.error("OS_ORDERS_NATIVE_CLEANUP_FAILURE", cleanupErrors);
+      else
+        throw new AggregateError(
+          cleanupErrors,
+          "Isolated order QA cleanup failed",
+        );
+    }
   }
+  console.log(
+    "OS_ORDERS_NATIVE_PASS",
+    JSON.stringify({
+      checks,
+      syntheticOnly: true,
+      publicData: false,
+      temporaryRolesDisabled: true,
+      temporaryFilesRemoved: true,
+    }),
+  );
 }
