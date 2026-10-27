@@ -5,6 +5,8 @@ main.page-section:has(.contacts-page--panorama) {
 
 .contacts-page--panorama {
   overflow: visible;
+  --contacts-page-action-height: 56px;
+  --contacts-page-showroom-text-gap: 0.5rem;
 }
 
 .contacts-showroom-hero {
@@ -17,7 +19,7 @@ main.page-section:has(.contacts-page--panorama) {
   position: relative;
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  height: clamp(25rem, 46vw, 43rem);
+  height: clamp(20rem, 36vw, 43.2rem);
   background: var(--color-bg);
   isolation: isolate;
   overflow: hidden;
@@ -41,6 +43,23 @@ main.page-section:has(.contacts-page--panorama) {
   visibility: visible;
 }
 
+.contacts-carousel-slide--collage {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.contacts-carousel-slide--bedrooms {
+  grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+}
+
+.contacts-carousel-panel {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
 .contacts-carousel-slide picture {
   position: relative;
   display: block;
@@ -52,30 +71,32 @@ main.page-section:has(.contacts-page--panorama) {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: center;
 }
 
 .contacts-carousel-slide--panorama picture img {
-  object-fit: cover;
   object-position: center 46%;
 }
 
-.contacts-carousel-backdrop {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: blur(28px);
-  transform: scale(1.08);
-  opacity: 0.48;
+.contacts-carousel-slide--exposition picture img {
+  /* Trim ceiling and, more heavily, the foreground floor. */
+  object-position: center 43%;
 }
 
-.contacts-carousel-fade {
-  position: absolute;
-  inset: 58% 0 0;
-  background: linear-gradient(to bottom, transparent, var(--color-bg) 88%);
-  pointer-events: none;
+.contacts-carousel-slide--exposition picture,
+.contacts-carousel-panel--alcove picture {
+  /* Exclude the neighbouring showroom at both edges. */
+  width: 104%;
+  margin-inline-start: -2%;
+}
+
+.contacts-carousel-panel--bed picture img {
+  object-position: center 80%;
+}
+
+.contacts-carousel-panel--alcove picture img {
+  object-position: center 72%;
 }
 
 .contacts-carousel .contacts-carousel-photo-toggle {
@@ -169,12 +190,146 @@ main.page-section:has(.contacts-page--panorama) {
   outline-offset: 3px;
 }
 
+.contacts-page-content {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(21rem, 0.9fr) minmax(0, 2.1fr);
+  gap: 1.5rem;
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+  margin-top: 1.75rem;
+}
+
 .contacts-page--panorama .contacts-page-masthead {
-  position: relative;
-  z-index: 3;
-  margin-top: -3rem;
-  max-width: 43rem;
-  pointer-events: none;
+  grid-column: auto;
+  margin: 0;
+  max-width: none;
+}
+
+.contacts-page--panorama .contacts-page-title {
+  font-size: clamp(2rem, 2.5vw, 2.5rem);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.contacts-page--panorama .contacts-page-intro {
+  margin: 0.75rem 0 0;
+  max-width: none;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.contacts-page--panorama .contacts-page-visit-hint {
+  margin: 0;
+  max-width: none;
+  font-size: 0.975rem;
+  line-height: 1.5rem;
+}
+
+.contacts-page--panorama .contacts-page-masthead .contacts-page-visit-hint {
+  margin-top: 0.75rem;
+}
+
+.contacts-page--panorama .contacts-page-stage {
+  --contacts-heading-to-content-gap: 1rem;
+  grid-column: auto;
+  display: grid;
+  grid-template-rows: auto minmax(var(--contacts-page-action-height), auto) repeat(2, var(--contacts-page-action-height));
+  column-gap: 1.5rem;
+  row-gap: 0.75rem;
+  margin-top: 0;
+}
+
+.contacts-page--panorama .contacts-page-stage::before {
+  display: none;
+}
+
+.contacts-page--panorama .contacts-page-col {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: 1 / -1;
+  row-gap: inherit;
+}
+
+.contacts-page--panorama .contacts-page-row--header {
+  grid-row: 1;
+}
+
+.contacts-page--panorama .contacts-page-col--channels .contacts-page-row--secondary {
+  grid-row: 4;
+}
+
+.contacts-page--panorama .contacts-page-row--primary-phones {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: 2 / span 2;
+  min-height: 0;
+  row-gap: inherit;
+}
+
+.contacts-page--panorama .contacts-page-phone-pair {
+  grid-row: 1 / -1;
+  grid-template-rows: subgrid;
+  row-gap: inherit;
+}
+
+.contacts-page--panorama .contacts-page-col--showroom .contacts-page-row--primary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--contacts-page-showroom-text-gap);
+  grid-row: 2;
+  align-self: center;
+}
+
+.contacts-page--panorama .contacts-page-col--showroom .contacts-page-row--secondary {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: 3 / span 2;
+  row-gap: inherit;
+}
+
+.contacts-page--panorama .contacts-page-showroom-actions {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: subgrid;
+  row-gap: inherit;
+}
+
+.contacts-page--panorama .contacts-page-col-title {
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.contacts-page--panorama .contacts-page-address {
+  gap: var(--contacts-page-showroom-text-gap);
+  font-size: 0.975rem;
+  line-height: 1.5rem;
+}
+
+.contacts-page-address-group {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.25rem;
+}
+
+.contacts-page-address-group .contacts-page-address-line {
+  white-space: nowrap;
+}
+
+.contacts-page--panorama .contacts-page-address-group:first-child {
+  color: var(--color-fg);
+}
+
+.contacts-page--panorama .contacts-page-cta {
+  margin-top: 2.5rem;
+}
+
+.contacts-page--panorama .contact-action-grid--channels {
+  --contacts-page-action-pad-inline: 0.5rem;
+  --contacts-page-action-gap: 0.375rem;
+  gap: 0.5rem;
 }
 
 .contacts-page--panorama .contacts-page-col--channels {
@@ -190,31 +345,53 @@ main.page-section:has(.contacts-page--panorama) {
   to { transform: scaleX(1); }
 }
 
-@media (max-width: 1100px) {
-  .contacts-carousel {
-    height: clamp(22rem, 52vw, 35rem);
+@media (max-width: 1180px) {
+  .contacts-page-content {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.5rem;
   }
 
-  .contacts-page--panorama .contacts-page-masthead {
-    margin-top: 0;
+  .contacts-page--panorama .contacts-page-intro {
+    max-width: 55ch;
   }
 
-  .contacts-page--panorama .contacts-page-col--channels {
-    margin-top: 0;
-    padding-bottom: 2.25rem;
-    border-bottom: 1px solid var(--color-border);
-  }
-
+  .contacts-page--panorama .contacts-page-col--channels,
   .contacts-page--panorama .contacts-page-col--showroom {
-    margin-top: 2.25rem;
+    margin-top: 0;
     padding-bottom: 0;
     border-bottom: 0;
   }
 }
 
+@media (max-width: 900px) {
+  .contacts-page--panorama .contacts-page-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .contacts-page--panorama .contacts-page-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .contacts-page--panorama .contacts-page-row--primary-phones,
+  .contacts-page--panorama .contacts-page-col--showroom .contacts-page-row--secondary {
+    display: block;
+  }
+
+  .contacts-page--panorama .contacts-page-phone-pair,
+  .contacts-page--panorama .contacts-page-showroom-actions {
+    grid-template-rows: none;
+    row-gap: 0.5rem;
+  }
+
+}
+
 @media (max-width: 640px) {
   .contacts-carousel {
-    height: 20rem;
+    height: 15rem;
   }
 
   .contacts-carousel-slide--panorama picture img {
@@ -222,8 +399,9 @@ main.page-section:has(.contacts-page--panorama) {
     object-position: 52% center;
   }
 
-  .contacts-carousel-fade {
-    inset: 48% 0 0;
+  .contacts-carousel-slide--collage {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px;
   }
 
   .contacts-carousel-controls {

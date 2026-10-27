@@ -69,3 +69,27 @@ export const showroomCarouselFrames: readonly PodiumFrame[] = [
     "smallAvif": "/editorial/contacts/professional/alcove-w800.avif"
   }
 ]
+
+/** Wide views first, followed by paired photographs of the showroom interiors. */
+export const showroomCarouselSlides = [
+  {
+    id: "panorama",
+    label: showroomCarouselFrames[0].alt,
+    frames: showroomCarouselFrames.slice(0, 1),
+  },
+  {
+    id: "exposition",
+    label: showroomCarouselFrames[1].alt,
+    frames: showroomCarouselFrames.slice(1, 2),
+  },
+  {
+    id: "interiors",
+    label: "Светлая спальня и детская мебель с авторской росписью",
+    frames: showroomCarouselFrames.slice(2, 4),
+  },
+  {
+    id: "bedrooms",
+    label: "Мягкая кровать и спальная экспозиция Woodright",
+    frames: showroomCarouselFrames.slice(4, 6),
+  },
+] as const

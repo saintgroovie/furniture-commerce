@@ -1217,17 +1217,13 @@ export const designersLandingCopy = {
 
 export const contactsCopy = {
   h1: "Контакты",
-  /** Single flowing intro - width driven by master-grid span, no forced breaks. */
-  lead: "Уточнить наличие, подобрать исполнение или обсудить индивидуальный проект можно по телефону или в мессенджерах",
-  visitHint: [
-    "Перед визитом лучше позвонить или написать",
-    "Так проще попасть, когда шоурум может принять",
-  ],
+  lead: ["Поможем выбрать мебель и отделку", "или обсудить ваш проект"],
+  visitHint: ["Перед визитом в шоурум позвоните или напишите."],
   showroomEyebrow: "Шоурум",
   /** Action-title pair with `channelsHeading` on the contacts column. */
-  showroomHeading: "Посетить магазин Woodright",
+  showroomHeading: "Приехать в шоурум",
   channelsEyebrow: "Контакты",
-  channelsHeading: "Связаться с Woodright",
+  channelsHeading: "Позвонить или написать",
   messengersLabel: "Мессенджеры",
   /** Full accessible name for the Yandex Maps link. */
   mapCta: "Посмотреть в Яндекс Картах",
@@ -1246,9 +1242,9 @@ export const contactsCopy = {
   messengerTelegramAria: "Написать в Telegram",
   messengerWhatsappAria: "Написать в WhatsApp",
   messengerMaxAria: "Написать в MAX",
-  ctaTitle: ["Есть вопрос по мебели", "или индивидуальному проекту?"],
+  ctaTitle: ["Нужна помощь с выбором?"],
   ctaBody:
-    "Оставьте заявку - менеджер свяжется с вами и поможет подобрать решение",
+    "Оставьте заявку — менеджер свяжется с вами.",
   ctaPrimary: "Оставить заявку",
 }
 

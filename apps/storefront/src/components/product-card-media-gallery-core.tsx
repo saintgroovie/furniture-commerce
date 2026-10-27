@@ -48,6 +48,7 @@ import { useVerifiedStripExtras } from "@/components/use-verified-strip-extras"
 import { CARD_STRIP_IMAGE_PROBE_LIMIT } from "@/lib/client/extra-image-url-verify"
 import { useSwatchColors } from "@/lib/use-swatch-colors"
 import { fallbackHexForToken } from "@/lib/swatch-fallback-colors"
+import { oliver14FabricPhotoSwatch } from "@/lib/oliver14-fabric-photo-swatch"
 import {
   clearPdpExecutionSelection,
   publishPdpExecutionSelection,
@@ -1616,6 +1617,11 @@ function ProductCardMediaGalleryCoreInner({
              those are execution heroes, not fabric/finish texture swatches. */
           const imageSrc = variant.swatchImageUrl?.trim() ?? ""
           const useImageSwatch = Boolean(imageSrc)
+          // A bounded, visually approved fabric-only ROI for these exact nine
+          // key/photo pairs. Explicit dedicated texture swatches keep priority.
+          const fabricPhoto = !imageSrc && ariaLabel === "Обивка"
+            ? oliver14FabricPhotoSwatch(productHandle, variant.key, variant.mainSrc)
+            : null
           // Catalog: never use image-sampled colors. Prefer curated hex, then token.
           const fillColor =
             variant.swatchHex?.trim() ||
@@ -1628,8 +1634,10 @@ function ProductCardMediaGalleryCoreInner({
               className={`product-card-execution-swatch${isActive ? " is-active" : ""}${isDisabled ? " is-unavailable" : ""}`}
               data-swatch-token={token ?? "neutral"}
               data-swatch-source={
-                useImageSwatch
-                  ? "fabric_image"
+                fabricPhoto
+                  ? "verified_photo_roi"
+                  : useImageSwatch
+                    ? "fabric_image"
                   : variant.swatchHex?.trim()
                     ? "metadata"
                     : layout === "pdp" && sampled?.source
@@ -1672,7 +1680,7 @@ function ProductCardMediaGalleryCoreInner({
                 <span
                   className="product-card-execution-swatch-fill"
                   aria-hidden="true"
-                  style={{ backgroundColor: fillColor }}
+                  style={{ backgroundColor: fillColor, ...fabricPhoto?.style }}
                 />
               )}
             </button>

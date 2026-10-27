@@ -2,10 +2,10 @@
 
 import { useEffect, useRef, useState } from "react"
 import { ContactsPodiumPhoto } from "@/components/contacts-podium-photo"
-import { showroomCarouselFrames } from "@/lib/showroom-carousel-media"
+import { showroomCarouselSlides } from "@/lib/showroom-carousel-media"
 
 const INTERVAL_MS = 3000
-const COUNT = showroomCarouselFrames.length
+const COUNT = showroomCarouselSlides.length
 
 export function ContactsShowroomCarousel() {
   const root = useRef<HTMLDivElement>(null)
@@ -72,23 +72,29 @@ export function ContactsShowroomCarousel() {
       }}
     >
       <div className="contacts-carousel-photos" aria-live={paused ? "polite" : "off"}>
-        {showroomCarouselFrames.map((frame, index) => (
+        {showroomCarouselSlides.map((slide, index) => (
           <div
-            key={frame.id}
-            className={`contacts-carousel-slide${index === active ? " is-active" : ""}${index === 0 ? " contacts-carousel-slide--panorama" : ""}`}
+            key={slide.id}
+            className={`contacts-carousel-slide contacts-carousel-slide--${slide.id}${index === active ? " is-active" : ""}${slide.frames.length > 1 ? " contacts-carousel-slide--collage" : ""}`}
             role="group"
             aria-roledescription="слайд"
             aria-label={`${index + 1} из ${COUNT}`}
             aria-hidden={index !== active}
           >
-            {index > 0 && (
-              <img className="contacts-carousel-backdrop" src={frame.smallWebp} alt="" aria-hidden="true" loading="lazy" decoding="async" />
-            )}
-            <ContactsPodiumPhoto frame={frame} sizes="100vw" priority={index === 0} />
+            {slide.frames.map((frame) => (
+              <div key={frame.id} className={`contacts-carousel-panel contacts-carousel-panel--${frame.id}`}>
+                <ContactsPodiumPhoto
+                  frame={frame}
+                  sizes={slide.id === "bedrooms"
+                    ? `(max-width: 640px) 50vw, ${frame.id === "bed" ? "37.5vw" : "62.5vw"}`
+                    : slide.frames.length > 1 ? "50vw" : "100vw"}
+                  priority={index === 0}
+                />
+              </div>
+            ))}
           </div>
         ))}
       </div>
-      <div className="contacts-carousel-fade" aria-hidden="true" />
       <button
         type="button"
         className="contacts-carousel-photo-toggle"
@@ -127,12 +133,12 @@ export function ContactsShowroomCarousel() {
           <img src="/images/footer/arrow-right.svg" alt="" width={18} height={18} />
         </button>
         <div className="contacts-carousel-pagination" role="group" aria-label="Выбрать фото">
-          {showroomCarouselFrames.map((frame, index) => (
+          {showroomCarouselSlides.map((slide, index) => (
             <button
-              key={frame.id}
+              key={slide.id}
               type="button"
               className="contacts-carousel-page"
-              aria-label={`Фото ${index + 1}: ${frame.alt}`}
+              aria-label={`Фото ${index + 1}: ${slide.label}`}
               aria-current={index === active ? "true" : undefined}
               onClick={() => select(index)}
             >
