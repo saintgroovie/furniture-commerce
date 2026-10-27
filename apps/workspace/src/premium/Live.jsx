@@ -882,7 +882,7 @@ export function LiveObjectDetail({
               </Section>
             )}
           {item.notes && (
-            <Section title="Примечание">
+            <Section title="Спецификация">
               <p className="preserve-lines">{item.notes}</p>
             </Section>
           )}

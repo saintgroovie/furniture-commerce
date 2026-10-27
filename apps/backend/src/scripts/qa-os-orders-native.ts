@@ -312,6 +312,21 @@ export default async function check({ container }: ExecArgs) {
     await production(request("production"), work as any);
     assert.equal(work.statusCode, 200);
     assert.ok(work.body.orders.orders.find((o: any) => o.id === id));
+    const productionOrder = work.body.orders.orders.find(
+      (o: any) => o.id === id,
+    );
+    assert.equal(
+      productionOrder.metadata.woodright_os.notes,
+      "Isolated specification",
+    );
+    assert.equal(
+      productionOrder.metadata.woodright_os.creation_input,
+      undefined,
+    );
+    assert.equal(
+      productionOrder.metadata.woodright_os.customer_name,
+      undefined,
+    );
     assert.ok(!JSON.stringify(work.body).includes("unit_price"));
     assert.ok(
       !JSON.stringify(work.body).includes("customer-orders@example.test"),
@@ -410,7 +425,7 @@ export default async function check({ container }: ExecArgs) {
       container,
     ).run({
       input: {
-        products: [{ title: "Isolated bespoke QA", status: "published" }],
+        products: [{ title: "Isolated bespoke QA", status: "published", options: [{ title: "Specification", values: ["Agreed"] }], variants: [] }],
       },
     });
     const customProduct = customProducts[0];
