@@ -24,7 +24,7 @@ export async function GET() {
       ["products", "/admin/woodright/products", "products"],
       ["people", "/admin/leads", "leads"],
       ["requests", "/admin/bespoke-requests", "bespoke_requests"],
-      ["orders", "/admin/orders", "orders"],
+      ["orders", "/admin/woodright/desk/orders", "orders"],
       ["processes", "/admin/woodright/order-processes", "order_processes"],
       ["rooms", "/admin/room-sets", "room_sets"],
     ] as const;

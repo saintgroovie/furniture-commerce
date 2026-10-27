@@ -63,7 +63,19 @@ jobs:
       - name: Real PostgreSQL concurrency and private file checks
         env:
           WOODRIGHT_DESK_TEST_DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk
-        run: node --import tsx --test src/lib/woodright-desk/desk.integration.test.ts src/lib/woodright-desk/mango.fidelity.test.ts src/lib/woodright-desk/staff-access.test.ts src/lib/woodright-desk/invoices.test.ts
+        run: node --import tsx --test src/lib/woodright-desk/desk.integration.test.ts src/lib/woodright-desk/mango.fidelity.test.ts src/lib/woodright-desk/staff-access.test.ts src/lib/woodright-desk/invoices.test.ts src/lib/woodright-desk/orders.test.ts
+      - name: Orders concurrency, interrupted save recovery and file permissions
+        env:
+          WOODRIGHT_DESK_TEST_DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_orders_ci
+        run: |
+          node --input-type=module - <<'JS'
+          import pg from "pg";
+          const client = new pg.Client({ connectionString: "postgres://postgres@127.0.0.1:5432/postgres" });
+          await client.connect();
+          try { await client.query("create database workspace_it_orders_ci"); }
+          finally { await client.end(); }
+          JS
+          node --import tsx --test src/lib/woodright-desk/orders.integration.test.ts
       - name: Targeted production migration rehearsal on disposable PostgreSQL
         env:
           DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_desk
@@ -98,6 +110,24 @@ jobs:
           finally { await client.end(); }
           JS
           node node_modules/@medusajs/cli/cli.js db:migrate
+      - name: Native Medusa order workflow and five role document access
+        env:
+          DATABASE_URL: postgres://postgres@127.0.0.1:5432/workspace_it_orders_native_ci
+          WOODRIGHT_OS_ORDERS_NATIVE_QA: isolated-only
+          WOODRIGHT_DESK_FEATURES: "1"
+          WOODRIGHT_EXPOSURE: private
+          NODE_ENV: development
+          MEDUSA_DISABLE_TELEMETRY: "1"
+        run: |
+          node --input-type=module - <<'JS'
+          import pg from "pg";
+          const client = new pg.Client({ connectionString: "postgres://postgres@127.0.0.1:5432/postgres" });
+          await client.connect();
+          try { await client.query("create database workspace_it_orders_native_ci"); }
+          finally { await client.end(); }
+          JS
+          node node_modules/@medusajs/cli/cli.js db:migrate
+          node node_modules/@medusajs/cli/cli.js exec ./src/scripts/qa-os-orders-native.ts
       - name: Build actual workspace for employee acceptance
         working-directory: apps/workspace
         env:

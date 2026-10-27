@@ -24,6 +24,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       contract: "woodright-desk-v1",
       maxAttachmentBytes: 8 * 1024 * 1024,
       ...roleCapabilities(access.role),
+      orderCreate: team && roleCapabilities(access.role).orderCreate,
       companies: team && roleCapabilities(access.role).companies,
       assignments: team && roleCapabilities(access.role).assignments,
       invoiceRead: invoices && roleCapabilities(access.role).invoiceRead,

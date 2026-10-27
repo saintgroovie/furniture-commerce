@@ -33,13 +33,26 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
             "display_id",
             "status",
             "created_at",
+            "status",
+            "is_draft_order",
+            "metadata",
             "items.id",
             "items.title",
             "items.quantity",
+            "items.variant_title",
+            "items.variant_sku",
           ],
           filters: { id: orderIds },
         })
       ).data;
+      orders = orders.map(({ metadata, ...order }) => ({
+        ...order,
+        metadata: {
+          woodright_os: {
+            request_id: metadata?.woodright_os?.request_id || null,
+          },
+        },
+      }));
       processes = (
         await sql.raw(
           "select id,order_id,current_stage,version,estimated_completion_date,internal_note from woodright_order_process where order_id = any(?::text[]) and deleted_at is null",

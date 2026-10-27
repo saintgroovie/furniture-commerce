@@ -87,6 +87,7 @@ export function roleCapabilities(role: StaffRole) {
   const crm = ["seller", "director", "god"].includes(role);
   return {
     crmCreate: crm,
+    orderCreate: crm,
     personUpdate: crm,
     requestUpdate: crm || role === "production",
     companies: role !== "production",
@@ -112,6 +113,8 @@ export function routeAllowed(role: StaffRole, method: string, path: string) {
   if (role === "god") return true;
   if (path === "/admin/users/me" && method === "GET") return true;
   if (path === "/admin/woodright/desk/access") return method === "GET";
+  if (path === "/admin/woodright/desk/order-catalog")
+    return method === "GET" && roleCapabilities(role).orderCreate;
   const deskRead = [
     "capabilities",
     "staff",
@@ -121,6 +124,7 @@ export function routeAllowed(role: StaffRole, method: string, path: string) {
     "history",
     "attachments",
     "production",
+    "orders",
   ];
   if (
     method === "GET" &&
@@ -208,7 +212,9 @@ export async function authorizeDeskCommand(
   const type = command?.type;
   const caps = roleCapabilities(access.role);
   const allowed =
-    type === "invoice.register"
+    type === "order.create"
+      ? caps.orderCreate
+      : type === "invoice.register"
       ? caps.invoiceRegister
       : type?.startsWith("invoice.")
         ? caps.invoiceDraft
