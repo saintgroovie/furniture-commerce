@@ -440,6 +440,7 @@
   .global-search {
     height: 35px;
     flex: 1;
+    min-width: 0;
     padding: 0 9px;
     gap: 7px;
     margin: 0;
@@ -447,6 +448,7 @@
   .global-search > span {
     font-size: 11px;
     display: block;
+    min-width: 0;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -467,6 +469,7 @@
   }
   .topbar-actions {
     margin-left: 0;
+    flex-shrink: 0;
   }
   .main-shell {
     padding-bottom: 66px;
