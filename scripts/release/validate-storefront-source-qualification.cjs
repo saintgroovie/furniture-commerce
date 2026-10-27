@@ -21,7 +21,7 @@ function canonicalTestContext(map){
 function testContextMap(c){
   if(c.test_context===undefined)return null;
   const map=canonicalTestContext(c.test_context);
-  if(c.kind!=='common-storefront-b461-v1'||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
+  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
   return map;
 }
 function contextOptions(c,opts={}){
@@ -177,9 +177,23 @@ function selectContract(reg,input,key){
   return {id,contract:c};
 }
 function sourcePaths(c){
-  if(c.paths===undefined)return {[c.path]:{before:c.before,after:c.after}};
+  if(c.paths===undefined){
+    if(c.kind==='gallery-storefront-01f-exact7-v1')fail('missing gallery path map');
+    return {[c.path]:{before:c.before,after:c.after}};
+  }
   const names=Object.keys(c.paths);
-  if(c.kind!=='common-storefront-b461-v1'||names.length!==79||JSON.stringify(names)!==JSON.stringify([...names].sort()))fail('closed common path map');
+  if(c.kind==='gallery-storefront-01f-exact7-v1'){
+    const galleryPaths=[
+      'apps/storefront/src/app/product/[id]/page.tsx',
+      'apps/storefront/src/components/pdp-hinge-side-media-switcher.tsx',
+      'apps/storefront/src/lib/data/media-near-dup-collapse.json',
+      'apps/storefront/src/lib/oliver-desk-variants.fidelity.test.ts',
+      'apps/storefront/src/lib/oliver-desk-variants.ts',
+      'apps/storefront/src/lib/pdp-hinge-side-media.fidelity.test.ts',
+      'apps/storefront/src/lib/pdp-hinge-side-media.ts',
+    ];
+    if(JSON.stringify(names)!==JSON.stringify(galleryPaths))fail('closed gallery path map');
+  }else if(c.kind!=='common-storefront-b461-v1'||names.length!==79||JSON.stringify(names)!==JSON.stringify([...names].sort()))fail('closed common path map');
   for(const file of names){
     const p=c.paths[file];
     if(!/^apps\/storefront\/(src|public|docs|scripts)\/[A-Za-z0-9._/\[\]()-]+$/.test(file)||file.split('/').includes('..')||!p||!/^([0-9a-f]{64})$/.test(p.after)||!(p.before===null||/^[0-9a-f]{64}$/.test(p.before))||!['100644','100755'].includes(p.mode)||!(/^[0-9a-f]{40}$/.test(p.after_blob))||!(p.before_blob===null||/^[0-9a-f]{40}$/.test(p.before_blob)))fail('common path contract');

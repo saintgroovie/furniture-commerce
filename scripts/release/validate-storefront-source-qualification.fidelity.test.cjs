@@ -3,7 +3,9 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--test-context-only')){
+if(process.argv.includes('--gallery-only')){
+ console.log(JSON.stringify(galleryAdmissionRegression(),null,2));
+}else if(process.argv.includes('--test-context-only')){
  console.log(JSON.stringify(testContextRegression(),null,2));
 }else if(process.argv.includes('--retained-backend-context-only')){
  console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
@@ -146,6 +148,7 @@ passes(()=>{for(const key of ['qualify-storefront','qualify-backend-fidelity','q
 console.log(JSON.stringify({status:'PASS_COMMON_CLOSED_CONTRACT_AND_ADMISSION_SEAMS',cases:commonCases,scope:'new contract and shared selector/seal regression; isolated Git fixture only, no apps/network/CI/build/runtime'},null,2));
 console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 console.log(JSON.stringify(testContextRegression(),null,2));
+console.log(JSON.stringify(galleryAdmissionRegression(),null,2));
 }
 
 function retainedBackendContextRegression(){
@@ -262,4 +265,60 @@ function testContextRegression(){
  const workflow=fs.readFileSync(path.join(__dirname,'../../.github/workflows/qualify-storefront-source.yml'),'utf8');
  pass(()=>{assert.equal((workflow.match(/--install-test-context/g)||[]).length,1);assert.equal((workflow.match(/--cleanup-test-context/g)||[]).length,1);assert(workflow.includes("always() && env.TEST_CONTEXT_MODE == 'sealed'"));});
  return {status:'PASS_CLOSED_OWNED_TEST_CONTEXT_AND_BUILD_CONSUMER',cases,scope:'new FD/ownership/cleanup/context-digest consumer cases only; synthetic API/ZIP envelope, actual archive parser reused; no old128/191/native/schema/network/install/server'};
+}
+
+function galleryAdmissionRegression(){
+ const {execFileSync}=require('node:child_process');
+ const os=require('node:os'),hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+ const reg=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json')));
+ const key='gallery-storefront-01f-exact7-v1',gallery=reg.qualifications[key];
+ const names=[
+  'apps/storefront/src/app/product/[id]/page.tsx',
+  'apps/storefront/src/components/pdp-hinge-side-media-switcher.tsx',
+  'apps/storefront/src/lib/data/media-near-dup-collapse.json',
+  'apps/storefront/src/lib/oliver-desk-variants.fidelity.test.ts',
+  'apps/storefront/src/lib/oliver-desk-variants.ts',
+  'apps/storefront/src/lib/pdp-hinge-side-media.fidelity.test.ts',
+  'apps/storefront/src/lib/pdp-hinge-side-media.ts',
+ ];
+ const input={sourceSha:gallery.source_sha,productionBaseSha:gallery.base_sha,releaseRef:gallery.release_ref,backendRevision:gallery.backend_revision,backendDigest:gallery.backend_digest,productionStorefrontDigest:gallery.production_storefront_digest,trustedPolicySha:'a'.repeat(40)};
+ let cases=0;const pass=fn=>{fn();cases++;},reject=fn=>{assert.throws(fn);cases++;};
+ pass(()=>{assert.equal(gallery.source_sha,'b173e0392b3c901fb1aad04c3eb1759364dee3cb');assert.equal(gallery.source_tree,'c3662ce496f7b772b6a3a596438a557db4dfcee0');assert.equal(gallery.base_sha,'01f0110921527aef5fde9db18e69dabee9a423cd');assert.equal(gallery.base_tree,'eec34c015dd96faef39fb4478131cb2e4b2e780e');assert.equal(gallery.release_ref,'release/gallery-exact7-20261027');});
+ pass(()=>assert.deepEqual(Object.keys(v.sourcePaths(gallery)),names));
+ pass(()=>assert.equal(v.selectContract(reg,input,key).id,key));
+ pass(()=>v.requireInput(gallery,input));
+ pass(()=>assert.deepEqual(v.testContextMap(gallery),v.testContextMap(reg.qualifications['common-storefront-b461-v1'])));
+ for(const mutate of [x=>x.kind='unregistered-gallery',x=>x.test_context={},x=>x.context_hashes[v.TEST_CONTEXT_FILE]='0'.repeat(64),x=>x.test_context['apps/workspace/src/extra.mjs']=clone(Object.values(x.test_context)[0])]){const changed=clone(gallery);mutate(changed);reject(()=>v.testContextMap(changed));}
+ pass(()=>assert(v.workflowEnvironment(key,gallery).includes('POLICY_ID='+key+'\n')));
+ pass(()=>assert.deepEqual(gallery.protected,reg.qualifications['common-storefront-b461-v1'].protected));
+ pass(()=>{assert.equal(Object.keys(v.sourcePaths(reg.qualifications['common-storefront-b461-v1'])).length,79);assert.equal(gallery.backend_digest,reg.qualifications['common-storefront-b461-v1'].backend_digest);assert.deepEqual(gallery.test_context,reg.qualifications['common-storefront-b461-v1'].test_context);});
+ for(const mutate of [x=>delete x.paths,x=>delete x.kind,x=>x.kind='unregistered-gallery',x=>delete x.paths[names[0]],x=>x.paths['apps/backend/src/injected.ts']=clone(x.paths[names[0]]),x=>{const e=x.paths[names[0]];delete x.paths[names[0]];x.paths['apps/storefront/src/unregistered.ts']=e;},x=>x.paths=Object.fromEntries(Object.entries(x.paths).reverse()),x=>x.kind='common-storefront-b461-v1',x=>x.test_overlays[names[0]]='a'.repeat(64)]){
+  const changed=clone(gallery);mutate(changed);reject(()=>v.workflowEnvironment(key,changed));
+ }
+ for(const field of ['sourceSha','productionBaseSha','releaseRef','backendRevision','backendDigest','productionStorefrontDigest','trustedPolicySha'])reject(()=>v.requireInput(gallery,{...input,[field]:'wrong'}));
+ for(const mismatch of [{...input,sourceSha:gallery.base_sha},{...input,releaseRef:'release/common-storefront-20261026'}])reject(()=>v.selectContract(reg,mismatch,key));
+ // Full candidate evidence must belong to this source, never the parent common run.
+ const context=v.testContextMap(gallery),seal={schema:1,sourceSha:gallery.source_sha,sourceTree:gallery.source_tree,baseSha:gallery.base_sha,releaseRef:gallery.release_ref,backendTree:gallery.backend_tree,policySha:input.trustedPolicySha,registrySha:'b'.repeat(64),job:'storefront',runId:999,attempt:1,postChecks:true,context:'candidate-with-sealed-test-context',overlay:{},testContext:context,testContextDigest:hash(JSON.stringify(context))};
+ pass(()=>v.validateSeal(gallery,seal,input,'storefront',999,'b'.repeat(64)));
+ for(const mutate of [x=>x.sourceSha=gallery.base_sha,x=>x.sourceTree=gallery.base_tree,x=>x.baseSha=reg.qualifications['common-storefront-b461-v1'].base_sha,x=>x.releaseRef='release/common-storefront-20261026',x=>x.testContext={},x=>x.testContextDigest='0'.repeat(64)]){const changed=clone(seal);mutate(changed);reject(()=>v.validateSeal(gallery,changed,input,'storefront',999,'b'.repeat(64)));}
+ // Real isolated Git fixture covers seven-file modes/blobs, parent and clean-tree CAS.
+ const temp=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'wr-gallery-contract-')));
+ const env={...process.env,GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:'/dev/null',GIT_AUTHOR_NAME:'Gallery fixture',GIT_AUTHOR_EMAIL:'fixture@example.invalid',GIT_COMMITTER_NAME:'Gallery fixture',GIT_COMMITTER_EMAIL:'fixture@example.invalid'};
+ const g=(...args)=>execFileSync('git',['-C',temp,...args],{env,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+ const put=(file,text)=>{const p=path.join(temp,file);fs.mkdirSync(path.dirname(p),{recursive:true});fs.writeFileSync(p,text);};
+ const newFiles=new Set([names[1],names[5],names[6]]);
+ try{
+  g('init','-q');put('apps/backend/src/retained.ts','retained\n');put('apps/storefront/src/protected.ts','protected\n');
+  for(const file of names)if(!newFiles.has(file))put(file,'before\n');
+  g('add','--','apps');g('commit','-qm','gallery fixture baseline');const base=g('rev-parse','HEAD');
+  for(const file of names)put(file,'after\n');g('add','--','apps/storefront');g('commit','-qm','exact seven gallery fixture');const source=g('rev-parse','HEAD');
+  const contract={...clone(gallery),source_sha:source,source_tree:g('rev-parse','HEAD^{tree}'),base_sha:base,base_tree:g('rev-parse',base+'^{tree}'),backend_revision:base,backend_tree:g('rev-parse',base+':apps/backend'),protected:{'apps/storefront/src/protected.ts':hash('protected\n')},paths:{}};
+  delete contract.test_context;contract.protected_before={...contract.protected};
+  for(const file of names){const after=g('ls-tree',source,'--',file).split(/\s+/),before=g('ls-tree',base,'--',file).split(/\s+/);contract.paths[file]={before:newFiles.has(file)?null:hash('before\n'),after:hash('after\n'),mode:after[0],after_blob:after[2],before_mode:newFiles.has(file)?null:before[0],before_blob:newFiles.has(file)?null:before[2]};}
+  g('update-ref','refs/remotes/origin/'+contract.release_ref,source);
+  pass(()=>v.sourceFacts(contract,temp,false,'storefront',()=>{}));
+  for(const mutate of [x=>x.source_sha=base,x=>x.source_tree='0'.repeat(40),x=>x.base_sha=source,x=>x.base_tree='0'.repeat(40),x=>x.release_ref='release/wrong',x=>x.backend_tree='0'.repeat(40),x=>x.paths[names[0]].before='0'.repeat(64),x=>x.paths[names[0]].after='0'.repeat(64),x=>x.paths[names[0]].before_blob='0'.repeat(40),x=>x.paths[names[0]].after_blob='0'.repeat(40),x=>x.paths[names[0]].mode='100755',x=>x.protected['apps/storefront/src/protected.ts']='0'.repeat(64)]){const changed=clone(contract);mutate(changed);reject(()=>v.sourceFacts(changed,temp,false,'storefront',()=>{}));}
+  put(names[0],'dirty\n');reject(()=>v.sourceFacts(contract,temp,false,'storefront',()=>{}));
+ }finally{fs.rmSync(temp,{recursive:true,force:true});}
+ return {status:'PASS_NEW_GALLERY_EXACT7_ADMISSION_CASES',cases,scope:'Only new gallery admission; isolated Git fixtures, no app/schema/network/CI/build/runtime or old suite rerun'};
 }
