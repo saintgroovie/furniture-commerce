@@ -54,7 +54,22 @@ assert.equal(product.subtitle, "Письменный стол с одной ту
 const allImages = product.images.map((image) => image.url.replace("/static/", "/product-static/"))
 const media = oliverDeskMedia(desk, "left", allImages[0], allImages.slice(1))
 assert.equal(media.mainSrc, allImages[1])
-assert.deepEqual(new Set([media.mainSrc, ...media.extraSrcs]), new Set(allImages))
+assert.deepEqual([media.mainSrc, ...media.extraSrcs], [allImages[1]])
+// Regression: the left/right switch must replace the entire gallery, including
+// after the user previously selected a detail photo. Prices and axes stay above.
+const imported = (name: string) => "/static/imports/WR-PFW-20260721T020528Z/" + name
+const rightAngle = imported("4d684e60dddd51d91391e9f278372ed9cb9c49c39f91e83c6965cc38b705d3b1.jpg")
+const leftAngle = imported("5eef871cfb0c0fa19676f75ee530dea350e2fc91f5ebf7a105bff40ae129a226.jpg")
+const directional = { ...product, images: [...product.images, { url: rightAngle }, { url: leftAngle }] }
+const scoped = verifiedOliverDesk(directional)!
+assert.ok(scoped)
+const visible = directional.images.map(({url}) => url.replace("/static/", "/product-static/"))
+const leftMedia = oliverDeskMedia(scoped, "left", visible[3], visible.filter((x) => x !== visible[3]))
+assert.deepEqual([leftMedia.mainSrc, ...leftMedia.extraSrcs], [visible[1], visible[4]])
+const rightMedia = oliverDeskMedia(scoped, "right", visible[4], visible.filter((x) => x !== visible[4]))
+assert.deepEqual([rightMedia.mainSrc, ...rightMedia.extraSrcs], [visible[0], visible[3]])
+assert.equal(oliverDeskAxis(scoped).choices.length, 2)
+assert.deepEqual(oliverDeskMedia(scoped, "unknown", visible[0], visible.slice(1)), {mainSrc:visible[0],extraSrcs:visible.slice(1)})
 assert.equal(verifiedOliverDesk({ ...product, variants: [...product.variants].reverse() })?.choices[0].sku, "OL-65-1")
 assert.equal(verifiedOliverDesk({ ...product, images: [product.images[0]] }), null)
 assert.equal(verifiedOliverDesk({ ...product, status: "draft" }), null)
@@ -62,3 +77,7 @@ assert.equal(verifiedOliverDesk({ ...product, variants: product.variants.map((v)
 assert.equal(verifiedOliverDesk({ ...product, variants: product.variants.map((v) => v.id === "left" ? { ...v, metadata: { woodright_import: { raw_code: "0П", package_sku: v.sku } } } : v) }), null)
 assert.equal(verifiedOliverDesk({ ...product, metadata: { ...product.metadata, buyer_default_configuration: { ...product.metadata.buyer_default_configuration, min_unit_price: 65000 } } }), null)
 console.log("oliver-desk-variants.fidelity.test.ts: ok")
+
+// Review P2: preferred hero absent must never restore opposite-side frames.
+assert.deepEqual(oliverDeskMedia(scoped, "left", visible[0], [visible[3], visible[4]]), { mainSrc: visible[4], extraSrcs: [] })
+assert.deepEqual(oliverDeskMedia(scoped, "left", visible[0], [visible[3]]), { mainSrc: "", extraSrcs: [] })

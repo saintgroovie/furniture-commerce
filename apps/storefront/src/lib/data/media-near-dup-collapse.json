@@ -357,6 +357,15 @@
         "hamming": 16,
         "reason": "filename_false_twin_distinct_angles"
       }
+    ],
+    "ol-08-2": [
+      {
+        "pair": [
+          "OL-08-2_closed_front_door_left_01.jpeg",
+          "OL-08-2_closed_front_door_right_01.jpeg"
+        ],
+        "reason": "Visually verified different door-knob handing. Same SKU, distinct execution photos, never collapse into a single role slot."
+      }
     ]
   }
 }

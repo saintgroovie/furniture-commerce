@@ -59,6 +59,8 @@ import {
 import { resolveOriginalBasePriceOf } from "@/lib/sale-price"
 import { PdpMaterialTierSelect } from "@/components/pdp-material-tier-select"
 import { PdpSizeChips } from "@/components/pdp-size-chips"
+import { PdpHingeSideMediaSwitcher } from "@/components/pdp-hinge-side-media-switcher"
+import { verifiedHingeSideMedia } from "@/lib/pdp-hinge-side-media"
 import { PdpHingeSideSelect } from "@/components/pdp-hinge-side-select"
 import { buildMaterialTierOptions } from "@/lib/material-tiers"
 import {
@@ -752,6 +754,7 @@ export default async function ProductPage({
 
   const greenwichBedContext = greenwichBedJsonLdContext({ product: viewProduct, selectedVariant, selectors: executionSelectors, displayedPrice: openingPrice, materialTierCount: materialTiers?.length ?? 0, jsonLd: productJsonLd })
 
+  const hingeSideMedia = verifiedHingeSideMedia(product)
   const cspNonce = (await headers()).get("x-nonce") ?? undefined
 
   return (
@@ -808,7 +811,9 @@ export default async function ProductPage({
       <section className="pdp-hero">
         <div className="pdp-hero-inner">
           <div className="pdp-media product-detail-media-col">
-            {isGreenwichBed ? (
+            {hingeSideMedia ? (
+              <PdpHingeSideMediaSwitcher productKey={handle || (product.id as string)} title={titleStr} media={hingeSideMedia} />
+            ) : isGreenwichBed ? (
               <GreenwichBedPdpMediaSwitcher
                 mainSrc={pdpMainSrc}
                 extraSrcs={pdpResolvedExtras}
