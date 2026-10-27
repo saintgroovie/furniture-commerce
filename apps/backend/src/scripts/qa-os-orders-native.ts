@@ -24,7 +24,7 @@ export default async function check({ container }: ExecArgs) {
   assert.ok(["127.0.0.1", "localhost"].includes(database.hostname));
   assert.match(
     database.pathname,
-    /^\/workspace_it_(orders_native_[a-zA-Z0-9_]+|desk_http)$/,
+    /^\/workspace_it_orders_native_[a-zA-Z0-9_]+$/,
   );
   assert.equal(process.env.WOODRIGHT_OS_ORDERS_NATIVE_QA, "isolated-only");
   assert.notEqual(process.env.WOODRIGHT_EXPOSURE, "public");
@@ -38,6 +38,51 @@ export default async function check({ container }: ExecArgs) {
     Number((await sql.raw('select count(*) as n from "order"')).rows[0].n),
     0,
     "New disposable native database only",
+  );
+  const existing = (
+    await sql.raw(
+      'select (select count(*) from "user") as users, (select count(*) from product) as products',
+    )
+  ).rows[0];
+  assert.equal(
+    Number(existing.users),
+    0,
+    "Native QA requires no existing employees",
+  );
+  assert.equal(
+    Number(existing.products),
+    0,
+    "Native QA requires no existing catalog",
+  );
+  // These existing legacy modules have no bootstrap migrations in this repository.
+  // Match their DML and the existing desk HTTP fixtures ONLY in this verified fresh
+  // isolated database. This is never a production migration or catalog seed.
+  await sql.raw(`
+    create table if not exists product_classification (
+      id text primary key, product_type text not null check (product_type in ('STANDARD','CONFIGURABLE','BESPOKE')),
+      created_at timestamptz not null default now(), updated_at timestamptz not null default now(), deleted_at timestamptz
+    );
+    create table if not exists lead (
+      id text primary key, source text not null check (source in ('bespoke','room_adapt','contact')),
+      name text, email text, phone text, comment text, payload jsonb, status text,
+      created_at timestamptz not null default now(), updated_at timestamptz not null default now(), deleted_at timestamptz
+    );
+    create table if not exists bespoke_request (
+      id text primary key, lead_id text not null, product_id text, room_set_id text,
+      dimensions text, materials text, budget text, comment text,
+      status text not null default 'new' check (status in ('new','contacted','quote_sent','paid','in_production','completed')),
+      internal_notes text, quoted_at timestamptz,
+      created_at timestamptz not null default now(), updated_at timestamptz not null default now(), deleted_at timestamptz
+    );
+  `);
+  const legacy = (
+    await sql.raw(
+      "select (select count(*) from lead) as leads, (select count(*) from bespoke_request) as requests, (select count(*) from product_classification) as classifications",
+    )
+  ).rows[0];
+  assert.ok(
+    Object.values(legacy).every((n) => Number(n) === 0),
+    "Native QA requires empty legacy fixture tables",
   );
   const users = container.resolve<IUserModuleService>(Modules.USER),
     store = container.resolve(Modules.STORE) as any;
