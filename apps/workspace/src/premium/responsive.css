@@ -756,6 +756,10 @@
   .section {
     margin-bottom: 27px;
   }
+  .object-workspace + .section,
+  .integration-grid + .section {
+    margin-top: 27px;
+  }
   .section-heading {
     margin-bottom: 15px;
     gap: 10px;
