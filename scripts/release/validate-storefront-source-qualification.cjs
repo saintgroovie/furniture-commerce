@@ -21,7 +21,7 @@ function canonicalTestContext(map){
 function testContextMap(c){
   if(c.test_context===undefined)return null;
   const map=canonicalTestContext(c.test_context);
-  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
+  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
   return map;
 }
 function contextOptions(c,opts={}){
@@ -179,6 +179,7 @@ function selectContract(reg,input,key){
 function sourcePaths(c){
   if(c.paths===undefined){
     if(c.kind==='gallery-storefront-01f-exact7-v1')fail('missing gallery path map');
+    if(c.kind==='contacts-roi-storefront-b173-exact8-v1')fail('missing contacts ROI path map');
     return {[c.path]:{before:c.before,after:c.after}};
   }
   const names=Object.keys(c.paths);
@@ -193,6 +194,18 @@ function sourcePaths(c){
       'apps/storefront/src/lib/pdp-hinge-side-media.ts',
     ];
     if(JSON.stringify(names)!==JSON.stringify(galleryPaths))fail('closed gallery path map');
+  }else if(c.kind==='contacts-roi-storefront-b173-exact8-v1'){
+    const contactsPaths=[
+      'apps/storefront/src/components/contacts-page-layout.tsx',
+      'apps/storefront/src/components/contacts-showroom-carousel.css',
+      'apps/storefront/src/components/contacts-showroom-carousel.tsx',
+      'apps/storefront/src/components/product-card-media-gallery-core.tsx',
+      'apps/storefront/src/lib/oliver14-fabric-photo-swatch.fidelity.test.cjs',
+      'apps/storefront/src/lib/oliver14-fabric-photo-swatch.ts',
+      'apps/storefront/src/lib/showroom-carousel-media.ts',
+      'apps/storefront/src/lib/woodright-copy.ts',
+    ];
+    if(JSON.stringify(names)!==JSON.stringify(contactsPaths))fail('closed contacts ROI path map');
   }else if(c.kind!=='common-storefront-b461-v1'||names.length!==79||JSON.stringify(names)!==JSON.stringify([...names].sort()))fail('closed common path map');
   for(const file of names){
     const p=c.paths[file];
