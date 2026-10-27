@@ -25,6 +25,7 @@ export async function POST(request: Request) {
     if (
       [
         "request.update",
+        "order.create",
         "request.create",
         "person.create",
         "person.update",
@@ -47,24 +48,28 @@ export async function POST(request: Request) {
         { session },
       );
       const required =
-        command.type === "invoice.register"
-          ? "invoiceRegister"
-          : command.type.startsWith("invoice.")
-            ? "invoiceDraft"
-            : command.type.startsWith("company.")
-              ? "companies"
-              : command.type === "record.update"
-                ? "assignments"
-                : command.type === "person.update"
-                  ? "personUpdate"
-                  : command.type.endsWith(".create") &&
-                      ["request.create", "person.create"].includes(command.type)
-                    ? "crmCreate"
-                    : command.type.startsWith("reminder.")
-                      ? "reminders"
-                      : command.type.startsWith("attachment.")
-                        ? "attachments"
-                        : "requestUpdate";
+        command.type === "order.create"
+          ? "orderCreate"
+          : command.type === "invoice.register"
+            ? "invoiceRegister"
+            : command.type.startsWith("invoice.")
+              ? "invoiceDraft"
+              : command.type.startsWith("company.")
+                ? "companies"
+                : command.type === "record.update"
+                  ? "assignments"
+                  : command.type === "person.update"
+                    ? "personUpdate"
+                    : command.type.endsWith(".create") &&
+                        ["request.create", "person.create"].includes(
+                          command.type,
+                        )
+                      ? "crmCreate"
+                      : command.type.startsWith("reminder.")
+                        ? "reminders"
+                        : command.type.startsWith("attachment.")
+                          ? "attachments"
+                          : "requestUpdate";
       if (
         capabilities.contract !== "woodright-desk-v1" ||
         capabilities[required] !== true

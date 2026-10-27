@@ -61,7 +61,7 @@ function fieldsFor(data, invoice, initialSource) {
           ? "entrepreneur"
           : "company"
         : "person",
-      name: company?.legalName || company?.name || person?.name || "",
+      name: company?.legalName || company?.name || person?.name || item?.customerName || "",
       inn: company?.taxId || "",
       kpp: company?.kpp || "",
       address: company?.address || "",
@@ -78,6 +78,7 @@ function fieldsFor(data, invoice, initialSource) {
             name: l.name,
             quantity: String(l.qty),
             price: l.price,
+            variantId: l.variantId || null,
           }))
         : [emptyLine()]),
     notes: invoice?.notes || "",

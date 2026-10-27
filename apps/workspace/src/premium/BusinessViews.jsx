@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { orderBoardStages } from "./order-input.mjs";
 import {
   Plus,
   ArrowUpRight,
@@ -456,7 +457,9 @@ export function ObjectList({ kind, data, go, openPanel }) {
         action={
           <Button
             disabled={
-              c.kind === "product"
+              c.kind === "order"
+                ? !data.capabilities.orderCreate
+                : c.kind === "product"
                 ? !data.capabilities.catalogEdit
                 : !data.capabilities.crmCreate ||
                   !["request", "person"].includes(c.kind)
@@ -553,7 +556,7 @@ export function ObjectList({ kind, data, go, openPanel }) {
         />
       ) : kind === "orders" && view === "production" ? (
         <div className="production-board">
-          {STAGES.map((stage) => (
+          {orderBoardStages(STAGES, rows).map((stage) => (
             <section key={stage}>
               <h3>
                 {stage}
@@ -572,7 +575,7 @@ export function ObjectList({ kind, data, go, openPanel }) {
                     <small>
                       {data.people.find((p) => p.id === o.personId)?.name}
                     </small>
-                    <Badge tone={tone(o.payment)}>{o.payment}</Badge>
+                    {data.access?.financial !== false && <Badge tone={tone(o.payment)}>{o.payment}</Badge>}
                   </button>
                 ))}
             </section>
@@ -584,10 +587,10 @@ export function ObjectList({ kind, data, go, openPanel }) {
             <thead>
               <tr>
                 <th>Заказ / клиент</th>
-                <th>Оплата</th>
+                {data.access?.financial !== false && <th>Оплата</th>}
                 <th>Изготовление</th>
                 <th>Доставка</th>
-                <th>Сумма</th>
+                {data.access?.financial !== false && <th>Сумма</th>}
                 <th />
               </tr>
             </thead>
@@ -601,27 +604,28 @@ export function ObjectList({ kind, data, go, openPanel }) {
                     >
                       {r.id} · {r.title}
                     </button>
+                    {r.draft && <Badge>Черновик</Badge>}
                     <small>
                       {data.people.find((p) => p.id === r.personId)?.name}
                     </small>
                   </td>
-                  <td>
+                  {data.access?.financial !== false && <td>
                     <Badge tone={tone(r.payment)}>{r.payment}</Badge>
-                  </td>
+                  </td>}
                   <td>
                     <Badge tone={tone(r.stage)}>{r.stage}</Badge>
                   </td>
                   <td>
                     <Badge tone="waiting">{r.delivery}</Badge>
                   </td>
-                  <td className="money">
+                  {data.access?.financial !== false && <td className="money">
                     {r.totalMinor == null
                       ? "Не указана"
                       : new Intl.NumberFormat("ru-RU", {
                           style: "currency",
                           currency: r.currency || "RUB",
                         }).format(r.totalMinor / 100)}
-                  </td>
+                  </td>}
                   <td>
                     <IconButton
                       icon={ArrowUpRight}

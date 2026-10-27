@@ -120,7 +120,8 @@ export function projectLive(
       id: text(o.id),
       title: `№ ${o.display_id ?? o.id}`,
       displayId: o.display_id ?? o.id,
-      personId: "",
+      personId: text(o.metadata?.woodright_os?.person_id),
+      customerName: text(o.metadata?.woodright_os?.customer_name),
       email: text(o.email),
       stage: process
         ? stageLabels[process.current_stage] || process.current_stage
@@ -137,7 +138,11 @@ export function projectLive(
         "Не указана",
       currency: text(o.currency_code).toUpperCase(),
       totalMinor: o.total == null ? null : Math.round(Number(o.total) * 100),
-      requestId: "",
+      requestId: text(o.metadata?.woodright_os?.request_id),
+      status: text(o.status),
+      draft: o.is_draft_order === true || o.status === "draft",
+      notes: text(o.metadata?.woodright_os?.notes),
+      creationInput: features.orderCreate === true ? o.metadata?.woodright_os?.creation_input || null : null,
       estimate: text(process?.estimated_completion_date),
       due: "",
       next: "",
@@ -146,6 +151,9 @@ export function projectLive(
       lines: array(o.items).map((l) => ({
         id: l.id,
         name: text(l.title) || text(l.product_title) || "Позиция",
+        variantId: text(l.variant_id),
+        variantTitle: text(l.variant_title),
+        sku: text(l.variant_sku),
         qty: Number(l.quantity),
         price: l.unit_price == null ? "" : String(l.unit_price),
       })),
@@ -277,6 +285,7 @@ export function projectLive(
         record ||
         (sourceStates.records?.ok && !sourceStates.records?.truncated),
       );
+      if (type === "order") item.setupPending = Boolean(item.creationInput && item.assignmentKnown && !record);
       item.assignee = item.assigneeId
         ? staff.find((s) => s.id === item.assigneeId)?.name ||
           "Сотрудник недоступен"
@@ -343,6 +352,13 @@ export function projectLive(
     identity,
     loadedAt: new Date().toISOString(),
     capabilities: {
+      orderCreate:
+        features.contract === "woodright-desk-v1" &&
+        features.writesEnabled === true &&
+        features.orderCreate === true &&
+        sourceStates.products?.ok === true &&
+        sourceStates.requests?.ok === true &&
+        sourceStates.orders?.ok === true,
       catalogEdit:
         features.access?.role === "god" &&
         features.writesEnabled === true &&

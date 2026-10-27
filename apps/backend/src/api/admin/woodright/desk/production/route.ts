@@ -6,7 +6,7 @@ import {
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
     const { sql, actorId } = await deskContext(req);
-    // Query only assigned entities. Client contacts, budgets, totals and payment details never leave this route.
+    // Only assigned work and production-facing specifications. Omit structured contacts and financial fields.
     const requests = (
       await sql.raw(
         `select b.id,b.lead_id,b.product_id,b.room_set_id,b.dimensions,b.materials,b.comment,b.status,b.internal_notes,b.created_at,b.updated_at
@@ -33,13 +33,30 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
             "display_id",
             "status",
             "created_at",
+            "status",
+            "is_draft_order",
+            "metadata",
             "items.id",
             "items.title",
             "items.quantity",
+            "items.variant_title",
+            "items.variant_sku",
           ],
           filters: { id: orderIds },
         })
       ).data;
+      orders = orders.map(({ metadata, ...order }) => ({
+        ...order,
+        metadata: {
+          woodright_os: {
+            request_id: metadata?.woodright_os?.request_id || null,
+            notes:
+              typeof metadata?.woodright_os?.notes === "string"
+                ? metadata.woodright_os.notes
+                : null,
+          },
+        },
+      }));
       processes = (
         await sql.raw(
           "select id,order_id,current_stage,version,estimated_completion_date,internal_note from woodright_order_process where order_id = any(?::text[]) and deleted_at is null",

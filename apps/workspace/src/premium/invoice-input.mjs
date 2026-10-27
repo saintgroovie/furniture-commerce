@@ -4,6 +4,8 @@ export const linkedInvoices = (data, id) =>
     (i) =>
       i.sourceId === id ||
       (i.sourceType === "request" &&
+        data.orders.some((o) => o.id === id && o.requestId === i.sourceId)) ||
+      (i.sourceType === "request" &&
         data.requests.some((r) => r.id === i.sourceId && r.personId === id)),
   );
 export function invoiceInputLines(lines) {

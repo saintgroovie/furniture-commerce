@@ -1,4 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+import { createOrderFromRequest } from "../../../../../lib/woodright-desk/orders";
+import { orderPorts } from "../../../../../lib/woodright-desk/orders-runtime";
 import { executeDeskCommand } from "../../../../../lib/woodright-desk/commands";
 import {
   deskContext,
@@ -33,6 +35,14 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         command.visibility =
           currentAccess.role === "production" ? "assigned" : "business";
       await authorizeDeskCommand(trx, currentAccess, command);
+      if (command.type === "order.create") {
+        return createOrderFromRequest(
+          trx,
+          actorId,
+          command,
+          orderPorts(req.scope, trx),
+        );
+      }
       return command.type === "attachment.upload"
         ? await attachFile(
             trx,

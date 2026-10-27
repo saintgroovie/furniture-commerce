@@ -41,6 +41,7 @@ import { ProductCreate, ProductEditor } from "./ProductEditor.jsx";
 import { InvoiceEditor } from "./Invoices.jsx";
 import { linkedInvoices } from "./invoice-input.mjs";
 import { RoleHelp } from "./RoleHelp.jsx";
+import { OrderCreate } from "./Orders.jsx";
 const types = {
   STANDARD: "Готовое изделие",
   CONFIGURABLE: "Выбор исполнения",
@@ -405,6 +406,7 @@ export function Integrations({ data, focus, compact = false }) {
 }
 export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
   const [busy, setBusy] = useState(false);
+  const [newLinkedInvoice, setNewLinkedInvoice] = useState(false);
   async function logout() {
     setBusy(true);
     try {
@@ -418,12 +420,16 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
       setBusy(false);
     }
   }
-  if (panel.type === "help") return (
-    <Drawer title="Помощь по Woodright OS" onClose={onClose} wide>
-      <RoleHelp data={data} go={go} onClose={onClose} />
-      <details><summary>Подключения и возможности</summary><Integrations data={data} compact /></details>
-    </Drawer>
-  );
+  if (panel.type === "help")
+    return (
+      <Drawer title="Помощь по Woodright OS" onClose={onClose} wide>
+        <RoleHelp data={data} go={go} onClose={onClose} />
+        <details>
+          <summary>Подключения и возможности</summary>
+          <Integrations data={data} compact />
+        </details>
+      </Drawer>
+    );
   const focus =
     panel.type === "invoiceEditor" ||
     panel.type === "invoices" ||
@@ -432,7 +438,7 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
       : panel.type === "files"
         ? "files"
         : undefined;
-  if (data.capabilities.invoiceDraft && panel.type === "invoiceEditor")
+  if (data.capabilities.invoiceDraft && (panel.type === "invoiceEditor" || (panel.type === "invoices" && newLinkedInvoice)))
     return (
       <Drawer title="Новый черновик счёта" onClose={onClose} wide>
         <InvoiceEditor
@@ -482,10 +488,7 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
           )}
           {data.capabilities.invoiceDraft && (
             <Button
-              onClick={() => {
-                onClose();
-                go("invoices", "new");
-              }}
+              onClick={() => setNewLinkedInvoice(true)}
             >
               Новый черновик
             </Button>
@@ -494,6 +497,21 @@ export function LivePanel({ panel, data, onClose, refresh, go, notify }) {
       </Drawer>
     );
   }
+  if (
+    data.capabilities.orderCreate &&
+    ((panel.type === "create" && panel.kind === "order") ||
+      panel.type === "orderCreate")
+  )
+    return (
+      <OrderCreate
+        data={data}
+        initialRequest={panel.requestId}
+        onClose={onClose}
+        refresh={refresh}
+        go={go}
+        notify={notify}
+      />
+    );
   if (data.capabilities.catalogEdit && panel.type === "productEditor")
     return (
       <ProductEditor
@@ -803,6 +821,13 @@ export function LiveObjectDetail({
         </>
       ) : kind === "orders" ? (
         <>
+          {item.setupPending && data.capabilities.orderCreate && <Notice><p>Сохранение назначения не завершено.</p><Button onClick={() => openPanel({ type: "orderCreate", requestId: item.requestId })}>Завершить сохранение заказа</Button></Notice>}
+          {item.draft && (
+            <Notice>
+              Черновик заказа в Medusa. Оплата, резерв и передача в производство
+              требуют отдельных подтверждений.
+            </Notice>
+          )}
           <div className="order-axes">
             {[
               ...(data.access?.financial === false
@@ -821,6 +846,10 @@ export function LiveObjectDetail({
             <Definition
               items={[
                 ["Номер", item.displayId],
+                [
+                  "Статус",
+                  item.draft ? "Черновик" : item.status || "Не указан",
+                ],
                 ...(data.access?.financial === false
                   ? []
                   : [["Сумма", formatTotal(item)]]),
@@ -834,13 +863,29 @@ export function LiveObjectDetail({
                       {person.name}
                     </button>
                   ) : (
-                    item.email || "Не указан"
+                    item.customerName || item.email || "Не указан"
                   ),
                 ],
                 ["Ориентир производства", item.estimate || "Не указан"],
               ]}
             />
           </Section>
+          {item.requestId &&
+            data.requests.some((r) => r.id === item.requestId) && (
+              <Section title="Исходное обращение">
+                <Button
+                  variant="secondary"
+                  onClick={() => go("requests", item.requestId)}
+                >
+                  Открыть обращение и его файлы
+                </Button>
+              </Section>
+            )}
+          {item.notes && (
+            <Section title="Спецификация">
+              <p className="preserve-lines">{item.notes}</p>
+            </Section>
+          )}
           <Section title="Позиции">
             {item.lines.length ? (
               <div className="table-scroll">
@@ -857,7 +902,17 @@ export function LiveObjectDetail({
                   <tbody>
                     {item.lines.map((l, i) => (
                       <tr key={l.id || i}>
-                        <td>{l.name}</td>
+                        <td>
+                          {l.name}
+                          {l.variantTitle && (
+                            <small>
+                              {l.variantTitle === "Default"
+                                ? "Базовое исполнение"
+                                : l.variantTitle}
+                            </small>
+                          )}
+                          {l.sku && <small>{l.sku}</small>}
+                        </td>
                         <td>{l.qty}</td>
                         {data.access?.financial !== false && (
                           <td>
@@ -886,6 +941,32 @@ export function LiveObjectDetail({
         </>
       ) : kind === "requests" ? (
         <>
+          {(data.capabilities.orderCreate ||
+            data.orders.some((o) => o.requestId === id)) && (
+            <Section title="Заказ по обращению">
+              {data.orders
+                .filter((o) => o.requestId === id)
+                .map((o) => (
+                  <Button
+                    key={o.id}
+                    variant="secondary"
+                    onClick={() => go("orders", o.id)}
+                  >
+                    Открыть заказ {o.title}
+                  </Button>
+                ))}
+              {data.capabilities.orderCreate &&
+                !data.orders.some((o) => o.requestId === id) && (
+                  <Button
+                    onClick={() =>
+                      openPanel({ type: "orderCreate", requestId: id })
+                    }
+                  >
+                    Создать заказ из обращения
+                  </Button>
+                )}
+            </Section>
+          )}
           <div className="object-state-bar">
             <Badge>{item.statusLabel}</Badge>
             {person && (
