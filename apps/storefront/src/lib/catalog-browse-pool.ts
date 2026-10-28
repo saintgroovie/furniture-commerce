@@ -82,7 +82,7 @@ export function collectAtfBrowseProducts(
 
 export function catalogItemListJsonLdPayload(
   siteUrl: string,
-  entries: Array<{ product: Record<string, unknown> }>
+  entries: Array<{ product: Record<string, unknown>; displayGroup?: { title?: string } }>
 ): Record<string, unknown> | null {
   if (!siteUrl || entries.length === 0) return null
   const base = siteUrl.replace(/\/$/, "")
@@ -96,7 +96,7 @@ export function catalogItemListJsonLdPayload(
         "@type": "ListItem",
         position: i + 1,
         url: `${base}${productCanonicalPath(product, String(product.id ?? ""))}`,
-        name: getBuyerFacingProductTitle(product) || undefined,
+        name: entry.displayGroup?.title ?? (getBuyerFacingProductTitle(product) || undefined),
       }
     }),
   }

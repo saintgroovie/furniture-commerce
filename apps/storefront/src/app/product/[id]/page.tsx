@@ -1,3 +1,7 @@
+import { buildOfferJsonLd } from "@/lib/product-json-ld"
+import { getCatalogProductsForHandles } from "@/lib/api/products"
+import { qualifiedNativeFamily, qualifiedFamilyMembers, withQualifiedNativeFamilyJsonLd } from "@/lib/qualified-native-family"
+import { PdpNativeFamilySelectors } from "@/components/pdp-native-family-selectors"
 import { PdpGreenwichBedJsonLd } from "@/components/pdp-greenwich-bed-json-ld"
 import { greenwichBedJsonLdContext } from "@/lib/greenwich-bed-json-ld"
 import Link from "next/link"
@@ -280,6 +284,15 @@ export default async function ProductPage({
     )
   }
 
+  const nativeFamily = qualifiedNativeFamily(product)
+  let nativeFamilyProducts: Record<string, unknown>[] = []
+  if (nativeFamily) {
+    try {
+      const siblings = await getCatalogProductsForHandles(nativeFamily.family.members.map(row => row.handle))
+      nativeFamilyProducts = qualifiedFamilyMembers(product, siblings.products).map(row => row.product)
+    } catch { /* Native PDP remains usable; no invented sibling choices. */ }
+  }
+
   const sparseMap = sparseVariantMap(product)
   const oliverDesk = verifiedOliverDesk(product)
   const variantAxis = sparseMap ? null : buyerVariantAxis(product) ?? (oliverDesk ? oliverDeskAxis(oliverDesk) : null)
@@ -420,11 +433,11 @@ export default async function ProductPage({
 
   const meta = product.metadata as Record<string, unknown> | undefined
   let displayGroupMembers: Record<string, unknown>[] = []
-  if (meta?.display_group) {
+  if (meta?.display_group && !nativeFamily) {
     try {
       // Lean browse projection keeps display_group* + collection + variant prices.
       // Avoid full `/store/products` list (~1.4MB) for sibling size chips only.
-      const plist = await getCatalogProducts()
+      const plist = await getCatalogProducts({ qualifyFamilies: false })
       const list = (plist.products ?? []) as Record<string, unknown>[]
       displayGroupMembers = getDisplayGroupMembers(product, list)
     } catch {
@@ -501,7 +514,7 @@ export default async function ProductPage({
         }
       : null,
   )
-  const titleStr = getBuyerFacingProductTitle(product)
+  const titleStr = nativeFamily?.family.title ?? getBuyerFacingProductTitle(product)
   const collectionLabel = getCollectionLabel(product)
   const subcollectionLabel = getSubcollectionLabel(product)
   const article =
@@ -674,7 +687,7 @@ export default async function ProductPage({
     displayedPriceRub: openingPrice,
   })
   const scalarProductJsonLd = withBuyerTitleProperties(buildProductJsonLd({
-    name: getBuyerFacingProductTitle(product) || "Товар",
+    name: titleStr || "Товар",
     description: getSeoDescriptionSource(textProduct),
     material: typeof (product.metadata as Record<string, unknown> | undefined)?.material === "string"
       ? (product.metadata as Record<string, unknown>).material as string : null,
@@ -703,7 +716,23 @@ export default async function ProductPage({
       ...sizeVariantInput, descriptionMembers: [product, ...sources],
     })
   }
+  const nativeFamilyOfferUrl = new URL(canonicalUrl)
+  if (nativeFamily) {
+    nativeFamilyOfferUrl.searchParams.set("variant", nativeFamily.member.variantId)
+    if (addressableMaterialTiers && materialTiers?.[0]) nativeFamilyOfferUrl.searchParams.set("material", materialTiers[0].code)
+    if (provencePrices) nativeFamilyOfferUrl.searchParams.set("finish", initialProvenceFinish)
+  }
+  const nativeFamilyJsonLd = withQualifiedNativeFamilyJsonLd(product, nativeFamilyProducts, {
+    ...scalarProductJsonLd,
+    url: nativeFamilyOfferUrl.href,
+    offers: buildOfferJsonLd({
+      url: nativeFamilyOfferUrl.href,
+      priceRub: isRequestQuoteProduct(product) ? null : openingPrice,
+      availability: offerAvailabilityFromPurchase(readProductPurchase(product)),
+    }),
+  })
   const productJsonLd =
+    nativeFamilyJsonLd ||
     (executionSelectors.provencePaintWood && buildProvenceFinishJsonLd(product, scalarProductJsonLd, [
       ...(executionSelectors.finish ?? []), ...(executionSelectors.wood ?? []),
     ])) ||
@@ -906,7 +935,7 @@ export default async function ProductPage({
               {/* 2. Title */}
               <div className="product-detail-header">
                 <h1 className="pdp-title">
-                  {titleLayout.lines.map((line, index) => (
+                  {nativeFamily ? nativeFamily.family.title : titleLayout.lines.map((line, index) => (
                     <Fragment key={index}>
                       {index > 0 ? <> {"\n"}<br /></> : null}
                       {line}
@@ -981,7 +1010,10 @@ export default async function ProductPage({
                   requestQuote={isRequestQuoteProduct(product)}
                 />
               )}
-              {sparseChipRows.map((row) => (
+              {nativeFamily && (
+                <PdpNativeFamilySelectors product={product} members={nativeFamilyProducts} />
+              )}
+              {!nativeFamily && sparseChipRows.map((row) => (
                 <PdpSizeChips
                   key={row.label}
                   productKey={handle || (product.id as string)}
@@ -993,7 +1025,7 @@ export default async function ProductPage({
                     ? resolvedSearchParams.material : undefined}
                 />
               ))}
-              {sparseChipRows.length === 0 && sizeChips.length > 0 && (
+              {!nativeFamily && sparseChipRows.length === 0 && sizeChips.length > 0 && (
                 <PdpSizeChips
                   productKey={handle || (product.id as string)}
                   chips={sizeChips}
@@ -1013,6 +1045,7 @@ export default async function ProductPage({
                   missing node; CSS collapses it when empty. */}
               <div id="pdp-color-options-slot" className="pdp-color-options-slot" />
 
+              <div className={`pdp-purchase-stack${handle === "ol-14-1" || handle === "ol-14-2" ? " pdp-purchase-stack--aligned" : ""}`}>
               {/* 6. Price — after required options; gated when execution controls exist */}
               <PdpPriceBlock
                 initialFinishKey={initialProvenceFinish}
@@ -1050,6 +1083,8 @@ export default async function ProductPage({
                 }
                 materialTiers={materialTiers}
               />
+
+              </div>
 
               {/* 8. Service block — real brand facts + real contact page only */}
               <div className="pdp-service-block">

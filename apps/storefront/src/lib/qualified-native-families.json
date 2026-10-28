@@ -1,0 +1,624 @@
+[
+  {
+    "key": "oliver:bed:five-sizes-footboard",
+    "title": "Кровать Оливер",
+    "collection": "oliver",
+    "axes": [
+      "Размер спального места",
+      "Изножье"
+    ],
+    "fixedProperties": {},
+    "members": [
+      {
+        "handle": "ol-14-1",
+        "productId": "prod_01KNTBXADFFPGAVHK024D20MEQ",
+        "variantId": "variant_01KNTBXBMB9XHDDS7MFKP5TYRE",
+        "sku": "OL-14-1",
+        "axes": {
+          "Размер спального места": "90×190 см",
+          "Изножье": "С изножьем"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-14-2",
+        "productId": "prod_01KNTBXADFNYAQGPEQKCM4NPZE",
+        "variantId": "variant_01KNTBXBMBTGQAE0VQC94SFJY6",
+        "sku": "OL-14-2",
+        "axes": {
+          "Размер спального места": "90×190 см",
+          "Изножье": "Без изножья"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-15-1",
+        "productId": "prod_01KNTBXADF36E724RQTW6Z73B0",
+        "variantId": "variant_01KNTBXBMBX03GX9WTGQAA35HW",
+        "sku": "OL-15-1",
+        "axes": {
+          "Размер спального места": "120×190 см",
+          "Изножье": "С изножьем"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-15-2",
+        "productId": "prod_01KNTBXADG6TFW8WB9SPQ4JTGD",
+        "variantId": "variant_01KNTBXBMB81GA2HENQ4Q54NDZ",
+        "sku": "OL-15-2",
+        "axes": {
+          "Размер спального места": "120×190 см",
+          "Изножье": "Без изножья"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-16-1",
+        "productId": "prod_01KNTBXADGPHKZEWKKT477WNR7",
+        "variantId": "variant_01KNTBXBMCHRJHHCED77MVCF82",
+        "sku": "OL-16-1",
+        "axes": {
+          "Размер спального места": "140×190 см",
+          "Изножье": "С изножьем"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-16-2",
+        "productId": "prod_01KNTBXADGH3EK5BM3RAZ2Z7KT",
+        "variantId": "variant_01KNTBXBMCT620T47GNE8ZKGH8",
+        "sku": "OL-16-2",
+        "axes": {
+          "Размер спального места": "140×190 см",
+          "Изножье": "Без изножья"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-17-1",
+        "productId": "prod_01KNTBXADHWB8K6BN1ZBM7WEWG",
+        "variantId": "variant_01KNTBXBMCDTGJ1G7N27Z6SMWD",
+        "sku": "OL-17-1",
+        "axes": {
+          "Размер спального места": "160×200 см",
+          "Изножье": "С изножьем"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-17-2",
+        "productId": "prod_01KNTBXADHZ2MG5CDS4EAVG1RJ",
+        "variantId": "variant_01KNTBXBMDKGQBDKVPG0T71PS3",
+        "sku": "OL-17-2",
+        "axes": {
+          "Размер спального места": "160×200 см",
+          "Изножье": "Без изножья"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-18-1",
+        "productId": "prod_01KNTBXADHE1YFJS2VEPCRJJBN",
+        "variantId": "variant_01KNTBXBMDNYZ72376HJJXGAQ6",
+        "sku": "OL-18-1",
+        "axes": {
+          "Размер спального места": "180×200 см",
+          "Изножье": "С изножьем"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-18-2",
+        "productId": "prod_01KNTBXADJ9A2N7GQFHZ4JTGD8",
+        "variantId": "variant_01KNTBXBMD9G2WYEDTYHYHGMG5",
+        "sku": "OL-18-2",
+        "axes": {
+          "Размер спального места": "180×200 см",
+          "Изножье": "Без изножья"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      }
+    ]
+  },
+  {
+    "key": "willie-winkie:albion:bed:size-14-15",
+    "title": "Кровать Альбион",
+    "collection": "willie-winkie",
+    "axes": [
+      "Размер спального места"
+    ],
+    "fixedProperties": {
+      "Роспись": "Альбион"
+    },
+    "members": [
+      {
+        "handle": "al-14-1",
+        "productId": "prod_WW6B5FC43C1785C240EAA2FD",
+        "variantId": "variant_WW6B5FC43C1785C240EAA2FD",
+        "sku": "al-14-1",
+        "axes": {
+          "Размер спального места": "90×190 см"
+        },
+        "collectionId": "pcol_01KV698P8P8SAJWGZ0TD18ASA9"
+      },
+      {
+        "handle": "al-15-1",
+        "productId": "prod_WWC6A9107D26C33C98251BFF",
+        "variantId": "variant_WWC6A9107D26C33C98251BFF",
+        "sku": "al-15-1",
+        "axes": {
+          "Размер спального места": "120×190 см"
+        },
+        "collectionId": "pcol_01KV698P8P8SAJWGZ0TD18ASA9"
+      }
+    ]
+  },
+  {
+    "key": "oliver-kids:bed-rail:70-100",
+    "title": "Бортик к кровати Оливер",
+    "collection": "oliver-kids",
+    "axes": [
+      "Длина бортика"
+    ],
+    "fixedProperties": {
+      "Раздел": "Детская мебель"
+    },
+    "members": [
+      {
+        "handle": "ol-84-1",
+        "productId": "prod_01KNTBXADX1KA6WGTERRHPPEV7",
+        "variantId": "variant_01KNTBXBMSYJF0DKCXR5XEJTRX",
+        "sku": "OL-84-1",
+        "axes": {
+          "Длина бортика": "70 см"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-84-2",
+        "productId": "prod_01KNTBXADX813WWJT86D6J2E9W",
+        "variantId": "variant_01KNTBXBMT206FEYP02V9TQAQT",
+        "sku": "OL-84-2",
+        "axes": {
+          "Длина бортика": "100 см"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      }
+    ]
+  },
+  {
+    "key": "oliver-kids:transformer:painting-fabric",
+    "title": "Кровать-трансформер Оливер",
+    "collection": "oliver-kids",
+    "axes": [
+      "Оформление"
+    ],
+    "fixedProperties": {
+      "Размер спального места": "80×150 см",
+      "Раздел": "Детская мебель"
+    },
+    "members": [
+      {
+        "handle": "ol-95-1",
+        "productId": "prod_01KNTBXADY06DZQTG915QFY9BW",
+        "variantId": "variant_01KNTBXBMW34VN5ZNM9V1W673D",
+        "sku": "OL-95-1",
+        "axes": {
+          "Оформление": "С рисунком"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-95-3",
+        "productId": "prod_01KNTBXADYET7AC1KCG28EK9RQ",
+        "variantId": "variant_01KNTBXBMWT7JHF336KKKNYG8C",
+        "sku": "OL-95-3",
+        "axes": {
+          "Оформление": "С обивкой"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      }
+    ]
+  },
+  {
+    "key": "princess-rose:bed-rail:70-100",
+    "title": "Бортик к кровати Принцесса Роза",
+    "collection": "princess-rose",
+    "axes": [
+      "Длина бортика"
+    ],
+    "fixedProperties": {
+      "Раздел": "Детская мебель"
+    },
+    "members": [
+      {
+        "handle": "pr-84-1",
+        "productId": "prod_01KY5SGVFEY7HTVYNXNZ716XQ4",
+        "variantId": "variant_01KY5SGVH6R6VPVMM64S0G1P83",
+        "sku": "PR-84-1",
+        "axes": {
+          "Длина бортика": "70 см"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      },
+      {
+        "handle": "pr-84-2",
+        "productId": "prod_01KY5SGVWKSZ8ZKQRPP8349G3M",
+        "variantId": "variant_01KY5SGVYEPG93Q6W9Z9ST13AM",
+        "sku": "PR-84-2",
+        "axes": {
+          "Длина бортика": "100 см"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      }
+    ]
+  },
+  {
+    "key": "princess-rose:transformer:decoration",
+    "title": "Кровать-трансформер Принцесса Роза",
+    "collection": "princess-rose",
+    "axes": [
+      "Оформление"
+    ],
+    "fixedProperties": {
+      "Размер спального места": "80×150 см",
+      "Раздел": "Детская мебель"
+    },
+    "members": [
+      {
+        "handle": "pr-95-1",
+        "productId": "prod_01KY5SGVWM5FB5BNSMVVX7ZV3C",
+        "variantId": "variant_01KY5SGVYF2SNY1SAZ8YDEB6VB",
+        "sku": "PR-95-1",
+        "axes": {
+          "Оформление": "С рисунком"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      },
+      {
+        "handle": "pr-95-2",
+        "productId": "prod_01KY5SGVWMB3WK9G8105MZXG2Q",
+        "variantId": "variant_01KY5SGVYF5SXR2702V2HVCMHH",
+        "sku": "PR-95-2",
+        "axes": {
+          "Оформление": "Без рисунка"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      },
+      {
+        "handle": "pr-95-3",
+        "productId": "prod_01KY5SGVWMN395JJZF3VENNC9Z",
+        "variantId": "variant_01KY5SGVYF2RA6JEHA1PT4CCKV",
+        "sku": "PR-95-3",
+        "axes": {
+          "Оформление": "С обивкой"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      }
+    ]
+  },
+  {
+    "key": "oliver:sofa:small-large",
+    "title": "Диван Оливер",
+    "collection": "oliver",
+    "axes": [
+      "Размер"
+    ],
+    "fixedProperties": {},
+    "members": [
+      {
+        "handle": "ol-57-1",
+        "productId": "prod_01KNTBXADVZVCXPHMZ1K8VZAJS",
+        "variantId": "variant_01KNTBXBMHT9GJQ0RY2ZK5GP7F",
+        "sku": "OL-57-1",
+        "axes": {
+          "Размер": "Малый — 163 см",
+          "Количество мест": "2"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      },
+      {
+        "handle": "ol-57-2",
+        "productId": "prod_01KNTBXADVKWH122FJREKPT5GD",
+        "variantId": "variant_01KNTBXBMJC0FFV0F9HYGKYW3T",
+        "sku": "OL-57-2",
+        "axes": {
+          "Размер": "Большой — 201 см",
+          "Количество мест": "3"
+        },
+        "collectionId": "pcol_01KNTB6GJK6R1B4TJS4QT33ZKZ"
+      }
+    ]
+  },
+  {
+    "key": "country-london-paris:bed:lift-size",
+    "title": "Кровать Кантри",
+    "collection": "country-london-paris",
+    "axes": [
+      "Размер спального места"
+    ],
+    "fixedProperties": {
+      "Подъёмный механизм": "Есть"
+    },
+    "members": [
+      {
+        "handle": "co-14-2",
+        "productId": "prod_01KNTBXADASA751ZC9C33QCE9M",
+        "variantId": "variant_01KNTBXBM27TJJKBJMJBJX98FV",
+        "sku": "CO-14-2",
+        "axes": {
+          "Размер спального места": "90×190 см"
+        },
+        "collectionId": "pcol_01KNTB6GHRCWQTEBGXXBXC39ZY"
+      },
+      {
+        "handle": "co-15-2",
+        "productId": "prod_01KNTBXADAMWN4PD2KMWP2E4MH",
+        "variantId": "variant_01KNTBXBM3B5WB3BH9311NTWPT",
+        "sku": "CO-15-2",
+        "axes": {
+          "Размер спального места": "120×190 см"
+        },
+        "collectionId": "pcol_01KNTB6GHRCWQTEBGXXBXC39ZY"
+      }
+    ]
+  },
+  {
+    "key": "provence:bed:size-headboard",
+    "title": "Кровать Прованс",
+    "collection": "provence",
+    "axes": [
+      "Размер спального места",
+      "Изголовье"
+    ],
+    "fixedProperties": {
+      "Изножье": "Без изножья"
+    },
+    "members": [
+      {
+        "handle": "pv-14-1",
+        "productId": "prod_01KNTBXADZFWE9YRK0K60DDHR2",
+        "variantId": "variant_01KNTBXBMYPPR2SKRZME3Y2WD3",
+        "sku": "PV-14-1",
+        "axes": {
+          "Размер спального места": "90×190 см",
+          "Изголовье": "Без обивки"
+        },
+        "collectionId": "pcol_01KNTB6GJXKA71WTR04T4FP4W7"
+      },
+      {
+        "handle": "pv-15-1",
+        "productId": "prod_01KNTBXADZTNAKE49PYM4N1C8W",
+        "variantId": "variant_01KNTBXBMYM0626YQFBN3P9PSD",
+        "sku": "PV-15-1",
+        "axes": {
+          "Размер спального места": "120×190 см",
+          "Изголовье": "Без обивки"
+        },
+        "collectionId": "pcol_01KNTB6GJXKA71WTR04T4FP4W7"
+      },
+      {
+        "handle": "pv-15-2",
+        "productId": "prod_01KNTBXADZV2X8RHE2JG709BTE",
+        "variantId": "variant_01KNTBXBMZPCZSJ179AGEKAAB9",
+        "sku": "PV-15-2",
+        "axes": {
+          "Размер спального места": "120×190 см",
+          "Изголовье": "С обивкой"
+        },
+        "collectionId": "pcol_01KNTB6GJXKA71WTR04T4FP4W7"
+      },
+      {
+        "handle": "pv-16-1",
+        "productId": "prod_01KNTBXAE066FZ9JPRECQ0GZMJ",
+        "variantId": "variant_01KNTBXBMZ0Q9GKHY6ME76Y63H",
+        "sku": "PV-16-1",
+        "axes": {
+          "Размер спального места": "140×190 см",
+          "Изголовье": "Без обивки"
+        },
+        "collectionId": "pcol_01KNTB6GJXKA71WTR04T4FP4W7"
+      },
+      {
+        "handle": "pv-16-2",
+        "productId": "prod_01KX1PJA6R9QNP7AQBG4NHWNED",
+        "variantId": "variant_01KX1PJADDV8ER718D3PZ3A0B4",
+        "sku": "PV-16-2",
+        "axes": {
+          "Размер спального места": "140×190 см",
+          "Изголовье": "С обивкой"
+        },
+        "collectionId": "pcol_01KNTB6GJXKA71WTR04T4FP4W7"
+      },
+      {
+        "handle": "pv-17-1",
+        "productId": "prod_01KNTBXAE02HB0SM89W0BM82A2",
+        "variantId": "variant_01KNTBXBN03X7QZTXTKZ7TV9JP",
+        "sku": "PV-17-1",
+        "axes": {
+          "Размер спального места": "160×200 см",
+          "Изголовье": "Без обивки"
+        },
+        "collectionId": "pcol_01KNTB6GJXKA71WTR04T4FP4W7"
+      },
+      {
+        "handle": "pv-18-1",
+        "productId": "prod_01KNTBXAE0HEVEGEFCZTYRNDG2",
+        "variantId": "variant_01KNTBXBN04TQYFZ43BRRG3AYE",
+        "sku": "PV-18-1",
+        "axes": {
+          "Размер спального места": "180×200 см",
+          "Изголовье": "Без обивки"
+        },
+        "collectionId": "pcol_01KNTB6GJXKA71WTR04T4FP4W7"
+      }
+    ]
+  },
+  {
+    "key": "monchelsea:bed:no-footboard-size",
+    "title": "Кровать Мончелси",
+    "collection": "monchelsea",
+    "axes": [
+      "Размер спального места"
+    ],
+    "fixedProperties": {
+      "Изножье": "Без изножья"
+    },
+    "members": [
+      {
+        "handle": "mnm-14-2",
+        "productId": "prod_01KY5SGS08JN8T4F8M43XD5ZTE",
+        "variantId": "variant_01KY5SGS37RBY1XZTW4TZ8G8WT",
+        "sku": "MNM-14-2",
+        "axes": {
+          "Размер спального места": "90×190 см"
+        },
+        "collectionId": "pcol_MONCHELSEA20261001WOODRT"
+      },
+      {
+        "handle": "mnm-16-2",
+        "productId": "prod_01KY5SGS08EMJPXZWFNYH92EMD",
+        "variantId": "variant_01KY5SGS37AGTN1T9EGTZ44HC6",
+        "sku": "MNM-16-2",
+        "axes": {
+          "Размер спального места": "140×190 см"
+        },
+        "collectionId": "pcol_MONCHELSEA20261001WOODRT"
+      }
+    ]
+  },
+  {
+    "key": "princess-rose:bed:painted-size-90-120",
+    "title": "Кровать Принцесса Роза",
+    "collection": "princess-rose",
+    "axes": [
+      "Размер спального места"
+    ],
+    "fixedProperties": {
+      "Изножье": "Без изножья",
+      "Оформление": "С рисунком",
+      "Раздел": "Детская мебель"
+    },
+    "members": [
+      {
+        "handle": "pr-14-1",
+        "productId": "prod_01KY5SGSVKW8G60D1ZNSPYQS87",
+        "variantId": "variant_01KY5SGSXK0JGMZVDDCE62FCGJ",
+        "sku": "PR-14-1",
+        "axes": {
+          "Размер спального места": "90×190 см"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      },
+      {
+        "handle": "pr-15-1",
+        "productId": "prod_01KY5SGSVK1AT4RJVH2FMYAFJX",
+        "variantId": "variant_01KY5SGSXKEW0YGEWMCWH7H638",
+        "sku": "PR-15-1",
+        "axes": {
+          "Размер спального места": "120×190 см"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      }
+    ]
+  },
+  {
+    "key": "princess-rose:desk:one-pedestal-swarovski",
+    "title": "Письменный стол Принцесса Роза",
+    "collection": "princess-rose",
+    "axes": [
+      "Комплектация"
+    ],
+    "fixedProperties": {
+      "Количество тумб": "1",
+      "Ручки": "Swarovski",
+      "Раздел": "Детская мебель"
+    },
+    "members": [
+      {
+        "handle": "pr-65-5",
+        "productId": "prod_01KY5SGTNJ3NCPAZK981Z7DXCC",
+        "variantId": "variant_01KY5SGTQE29FXZKD3M85PYGMW",
+        "sku": "PR-65-5",
+        "axes": {
+          "Комплектация": "Тумба с полками справа",
+          "Расположение тумбы": "Справа",
+          "Наполнение тумбы": "Полки"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      },
+      {
+        "handle": "pr-65-6",
+        "productId": "prod_01KY5SGTNJR43K6B77760KAHM8",
+        "variantId": "variant_01KY5SGTQEG2ZJ49VPSEZ3V8ZQ",
+        "sku": "PR-65-6",
+        "axes": {
+          "Комплектация": "Тумба с полками слева",
+          "Расположение тумбы": "Слева",
+          "Наполнение тумбы": "Полки"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      },
+      {
+        "handle": "pr-65-7",
+        "productId": "prod_01KY5SGTNJ8T30XBD3Q2F160KQ",
+        "variantId": "variant_01KY5SGTQEEKC7Y2C70RK2QBBT",
+        "sku": "PR-65-7",
+        "axes": {
+          "Комплектация": "Тумба с ящиками справа",
+          "Расположение тумбы": "Справа",
+          "Наполнение тумбы": "Ящики"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      },
+      {
+        "handle": "pr-65-8",
+        "productId": "prod_01KY5SGV1WEK35396GTXX77XGZ",
+        "variantId": "variant_01KY5SGV3ZDMJMDCQKG1FNK1KS",
+        "sku": "PR-65-8",
+        "axes": {
+          "Комплектация": "Тумба с ящиками слева",
+          "Расположение тумбы": "Слева",
+          "Наполнение тумбы": "Ящики"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      }
+    ]
+  },
+  {
+    "key": "princess-rose:desk:two-pedestal-swarovski",
+    "title": "Письменный стол Принцесса Роза",
+    "collection": "princess-rose",
+    "axes": [
+      "Комплектация"
+    ],
+    "fixedProperties": {
+      "Количество тумб": "2",
+      "Ручки": "Swarovski",
+      "Раздел": "Детская мебель"
+    },
+    "members": [
+      {
+        "handle": "pr-66-6",
+        "productId": "prod_01KY5SGV1WRRDFW11YCB0EA6T4",
+        "variantId": "variant_01KY5SGV3Z5AT0R05MCBNC8AFA",
+        "sku": "PR-66-6",
+        "axes": {
+          "Комплектация": "Полки слева, ящики справа"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      },
+      {
+        "handle": "pr-66-7",
+        "productId": "prod_01KY5SGV1XXQC4E0EQ1BWBY0HD",
+        "variantId": "variant_01KY5SGV3Z8KKYKX8ERA1GSJF6",
+        "sku": "PR-66-7",
+        "axes": {
+          "Комплектация": "Ящики слева, полки справа"
+        },
+        "collectionId": "pcol_PRINCESSROSE20261001WOODR"
+      }
+    ]
+  }
+]

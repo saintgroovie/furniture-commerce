@@ -1,3 +1,4 @@
+import { OL65_ORIGINAL_FRONT, OL65_LEFT_REFLECTED_FRONT } from "./ol65-front-reflection"
 import type { BuyerVariantAxis } from "./buyer-variant-axis"
 import { buildMaterialTierOptions, type MaterialTierOption } from "./material-tiers"
 import { buildProductJsonLd, offerAvailabilityFromPurchase, readUniformRubAmounts } from "./product-json-ld"
@@ -86,6 +87,13 @@ export function oliverDeskMedia(
   // Empty ownership uses the existing missing-photo state, never the other side.
   const own = choice.gallery.map((src) => src.replace(/^\/static\//, "/product-static/"))
     .filter((src) => images.includes(src))
+  // The attached original has pixel-for-pixel identity with this existing
+  // frontal photo. Its hash fragment changes presentation, never bitmap bytes.
+  // Only the exact selected LEFT SKU may append the owner-requested reflection.
+  const front = OL65_ORIGINAL_FRONT
+  if (choice.sku === "OL-65-2" && images.includes(front)) {
+    own.push(OL65_LEFT_REFLECTED_FRONT)
+  }
   const selectedMain = own.includes(hero) ? hero : (own[0] ?? "")
   return { mainSrc: selectedMain, extraSrcs: own.filter((src) => src !== selectedMain) }
 }

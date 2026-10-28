@@ -1,4 +1,5 @@
 import Link from "next/link"
+import { qualifiedNativeCardChoiceCaption } from "@/lib/qualified-native-family"
 import { formatRub } from "@/lib/format"
 import { resolveCatalogCardPrice } from "@/lib/catalog-card-price"
 import { resolveSalePrice } from "@/lib/sale-price"
@@ -122,8 +123,8 @@ export function ProductCard({
   const isOliver = handle.startsWith("ol-")
   const productHref = productCanonicalPath(product, String(product.id ?? ""))
   const titleLayout = getBuyerFacingProductTitleLayout(product as Record<string, unknown>)
-  const displayTitle = titleLayout.text
-  const choiceCaption = titleLayout.caption
+  const displayTitle = displayGroup?.title ?? titleLayout.text
+  const choiceCaption = qualifiedNativeCardChoiceCaption(product as Record<string, unknown>, displayGroup, titleLayout.caption)
   const thumbSrc = cardThumbnailSrc(product)
   const mainSrcForCard = thumbSrc ?? ""
 

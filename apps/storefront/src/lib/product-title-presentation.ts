@@ -1,3 +1,4 @@
+import { qualifiedNativeCartFamily } from "./qualified-native-family"
 /**
  * Buyer title projection.
  *
@@ -376,8 +377,21 @@ export function presentBuyerCartLine(item: Record<string, unknown>): BuyerTitleP
   const selection = (variantTitle && variantTitle !== title) || variantMeta || variantOptions
     ? { title: variantTitle, metadata: variantMeta, options: variantOptions }
     : null
-  return presentBuyerTitleParts({ title, handle, metadata, selection,
+  const presented = presentBuyerTitleParts({ title, handle, metadata, selection,
     options: Array.isArray(product?.options) ? product.options : undefined })
+  const qualified = qualifiedNativeCartFamily(item)
+  if (!qualified) return presented
+  const values = { ...qualified.family.fixedProperties, ...qualified.member.axes }
+  delete values["Раздел"]
+  const labels = new Set(Object.keys(values))
+  return {
+    ...presented, base_title: qualified.family.title, lines: [qualified.family.title],
+    caption: Object.entries(values).map(([label, value]) => `${label}: ${value}`).join(" · "),
+    attributes: [
+      ...presented.attributes.filter(attribute => !labels.has(attribute.label)),
+      ...Object.entries(values).map(([label, value]) => ({ label, value, source: "variant_option" as const })),
+    ],
+  }
 }
 
 const CODE_TO_PHRASE: Record<string, string> = {

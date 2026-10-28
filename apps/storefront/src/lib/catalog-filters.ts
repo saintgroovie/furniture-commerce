@@ -1,3 +1,5 @@
+import { qualifiedNativeFamily } from "./qualified-native-family"
+import { resolveCatalogCardPrice } from "./catalog-card-price"
 import type { DisplayEntry } from "./display-group"
 import { groupProductsForDisplay } from "./display-group"
 import { getPrice } from "./format"
@@ -223,7 +225,7 @@ function matchesCollection(product: Record<string, unknown>, collections: string
 /** getPrice() may return NaN on malformed backend price fields — treat any
     non-finite value as "no price" so it can't slip through range checks. */
 function finiteProductPrice(product: Record<string, unknown>): number | null {
-  const price = getPrice(product)
+  const price = qualifiedNativeFamily(product) ? resolveCatalogCardPrice(product).amount : getPrice(product)
   return price != null && Number.isFinite(price) ? price : null
 }
 

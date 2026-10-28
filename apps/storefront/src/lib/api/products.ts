@@ -1,3 +1,5 @@
+import { qualifyNativeFamilyCatalog } from "../qualified-native-family"
+import { resolveCatalogCardPrice } from "../catalog-card-price"
 import { cache, cacheSignal } from "react"
 import { isBuyerPublicProductStatus } from "../buyer-publication"
 import { getBaseUrl, medusaFetch, medusaFetchTimeoutMs } from "./base"
@@ -41,8 +43,21 @@ export async function getProducts(params?: {
  * Do not use the stale-while-revalidate cache used by room membership.
  * Catalog pages call this once per render; related cards use exact handle reads.
  */
-export async function getCatalogProducts() {
-  return withCatalogReadBudget(signal => readCatalogProducts(undefined, signal), cacheSignal(), medusaFetchTimeoutMs())
+export async function getCatalogProducts(options: { qualifyFamilies?: boolean } = {}) {
+  return withCatalogReadBudget(async signal => {
+    const data = await readCatalogProducts(undefined, signal)
+    if (options.qualifyFamilies !== false && Array.isArray(data.products)) {
+      data.products = await qualifyNativeFamilyCatalog(data.products, async id => {
+        signal.throwIfAborted()
+        const response = await medusaFetch(`${getBaseUrl()}/store/products/${encodeURIComponent(id)}`, { signal })
+        if (!response.ok) return null
+        const body = await response.json() as { product?: Record<string, unknown> }
+        return body.product ?? null
+      }, product => resolveCatalogCardPrice(product))
+    }
+    signal.throwIfAborted()
+    return data
+  }, cacheSignal(), medusaFetchTimeoutMs())
 }
 
 async function readCatalogProducts(handle?: string, signal?: AbortSignal) {
