@@ -1036,5 +1036,42 @@
       },
       "test_context_note": "Exactly one existing accepted native595/c790 policy module, copied from trusted policy only into the ephemeral frontend qualification clone. Explicit testContext/digest attested and consumed by admission; source overlay remains empty. Never installed into image build. Owned cleanup and clean source proof required."
     }
+  },
+  "retained_backend_components": {
+    "orders-main-b121-backend-v1": {
+      "mode": "authenticated-main-component-v1",
+      "source_sha": "b121f193064aea1733a132bca431f082e6ae8072",
+      "source_tree": "f41a36fa8fa6a1ec98f693796ea6a025a6889758",
+      "backend_tree": "ecd092a0f057865c361ae07f0c4efcee07210f41",
+      "digest": "sha256:98c0bf52c856b6a047957cc135ce8bdf5266ca5cb7859836a5b9c6ee69a0712f",
+      "source_ci": {
+        "run_id": 40602218381,
+        "attempt": 1,
+        "job_id": 122532901506,
+        "check_id": 122532901506
+      },
+      "official_build": {
+        "run_id": 40688946371,
+        "attempt": 1,
+        "job_id": 122818498560,
+        "check_id": 122818498560,
+        "artifact_id": 12816865555,
+        "artifact_name": "woodright-build-manifest-build-public-prod-b121f193064aea1733a132bca431f082e6ae8072-run-40688946371-attempt-1",
+        "archive_digest": "sha256:e1f95d4666d1ed37300cb06044f4eb70440a90ad844df6bfa3a1449db7b8e141",
+        "manifest_sha256": "e343494ae5b0a730f46a36f37bd539986de2d67e55f151e99ec42c90d4e9b420",
+        "unique_tag": "build-public-prod-b121f193064aea1733a132bca431f082e6ae8072-run-40688946371-attempt-1"
+      },
+      "oci": {
+        "platform_digest": "sha256:715aa6c9b8c0a457ba5b880fbbe587eacf64219ad3adad843dc9ddeada30e8ba",
+        "config_digest": "sha256:11482d5e9f61da0737fe0224d378923471ccb1c86a50ffa03c094564eb38bf0e"
+      },
+      "accepted_evidence_sha256": {
+        "artifact_ROOT": "00c8a4dbbee0a69215947b25e5b60c026915f63f2b440e0b172df7a53d3edd0f",
+        "artifact_receipt": "52a9c7fa6047580ce988e559b5cca8e2215fa7f6a4cf6b9e0ca9f542168d695d",
+        "actual_B3_ROOT": "f1020dfc5e699c4257e8ce9905d213b0a4964959f5899f43f600bb575f446066",
+        "actual_final_ROOT": "90cd7c362ddec541e7db7136ab614811217279b518352f9e8d87238c572804be",
+        "actual_stability": "7378b07900ebcd1afcf20aa93da0da558ec92db3e0bb23f1b648e80a45b83d86"
+      }
+    }
   }
 }

@@ -3,7 +3,9 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--contacts8-only')){
+if(process.argv.includes('--retained-main-component-only')){
+ console.log(JSON.stringify(retainedMainComponentRegression(),null,2));
+}else if(process.argv.includes('--contacts8-only')){
  console.log(JSON.stringify(contacts8AdmissionRegression(),null,2));
 }else if(process.argv.includes('--gallery-only')){
  console.log(JSON.stringify(galleryAdmissionRegression(),null,2));
@@ -152,6 +154,7 @@ console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 console.log(JSON.stringify(testContextRegression(),null,2));
 console.log(JSON.stringify(galleryAdmissionRegression(),null,2));
 console.log(JSON.stringify(contacts8AdmissionRegression(),null,2));
+console.log(JSON.stringify(retainedMainComponentRegression(),null,2));
 }
 
 function retainedBackendContextRegression(){
@@ -373,4 +376,77 @@ function contacts8AdmissionRegression(){
   put(names[0],'dirty\n');reject(()=>v.sourceFacts(fixture,temp,false,'storefront',()=>{}));
  }finally{fs.rmSync(temp,{recursive:true,force:true});}
  return {status:'PASS_NEW_CONTACTS_ROI_EXACT8_ADMISSION_CASES',cases,scope:'New eight-path admission and preserved7/79 seams only; no app/schema/network/CI/build/runtime or prior fullsuite rerun'};
+}
+
+function retainedMainComponentRegression(){
+ const cp=require('node:child_process'),os=require('node:os');
+ const temp=fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'wr-retained-main-')));
+ const env={...process.env,GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:'/dev/null',GIT_AUTHOR_NAME:'Component fixture',GIT_AUTHOR_EMAIL:'fixture@example.invalid',GIT_COMMITTER_NAME:'Component fixture',GIT_COMMITTER_EMAIL:'fixture@example.invalid'};
+ const g=(...a)=>cp.execFileSync('git',['-C',temp,...a],{env,encoding:'utf8',stdio:['ignore','pipe','pipe']}).trim();
+ const digest=b=>crypto.createHash('sha256').update(b).digest('hex'),clone=x=>JSON.parse(JSON.stringify(x));
+ let cases=0;const names=[];const pass=(name,fn)=>{fn();cases++;names.push(name);},reject=(name,fn)=>{assert.throws(fn);cases++;names.push(name);};
+ const registryPath=path.join(temp,'scripts/release/storefront-source-qualifications.json');
+ const zip=(entries)=>cp.execFileSync('python3',['-c',String.raw`import sys,json,zipfile,io,base64
+rows=json.load(sys.stdin);out=io.BytesIO()
+with zipfile.ZipFile(out,'w') as z:
+ for row in rows:
+  item=zipfile.ZipInfo(row['name']);item.external_attr=row.get('mode',0o100644)<<16
+  z.writestr(item,base64.b64decode(row['bytes']))
+sys.stdout.buffer.write(out.getvalue())`],{input:JSON.stringify(entries),maxBuffer:1024*1024,stdio:['pipe','pipe','pipe']});
+ const entry=(name,b,mode)=>({name,bytes:Buffer.from(b).toString('base64'),...(mode?{mode}:{})});
+ try{
+  fs.mkdirSync(path.join(temp,'apps/backend'),{recursive:true});fs.writeFileSync(path.join(temp,'apps/backend/retained.txt'),'exact backend fixture\n');g('init','-q');g('add','--','apps/backend');g('commit','-qm','retained source fixture');
+  const source=g('rev-parse','HEAD'),tree=g('rev-parse','HEAD^{tree}'),backendTree=g('rev-parse','HEAD:apps/backend');
+  fs.mkdirSync(path.dirname(registryPath),{recursive:true});const modulePath=path.join(temp,'scripts/release/validate-storefront-source-qualification.cjs');fs.copyFileSync(path.join(__dirname,'validate-storefront-source-qualification.cjs'),modulePath);
+  const mod=require(modulePath),extract=mod.mainBackendIO().manifest;
+  function fixture(){
+   const id='orders-main-b121-backend-v1',d=clone(JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).retained_backend_components[id]);d.source_sha=source;d.source_tree=tree;d.backend_tree=backendTree;d.official_build.unique_tag=`build-public-prod-${source}-run-${d.official_build.run_id}-attempt-1`;d.official_build.artifact_name='woodright-build-manifest-'+d.official_build.unique_tag;
+   const labels={'org.opencontainers.image.revision':source,'com.woodright.deployment-owner':'Dokploy','woodright.workflow.run_id':String(d.official_build.run_id),'woodright.workflow.run_attempt':'1','woodright.image.build_profile':'public_production','woodright.image.build_profile_checksum':'a'.repeat(64)};
+   const config=Buffer.from(JSON.stringify({os:'linux',architecture:'amd64',config:{Labels:labels,Env:['WOODRIGHT_BACKEND_SOURCE_SHA='+source],Cmd:['./node_modules/.bin/medusa','start'],WorkingDir:'/server'}}));
+   d.oci.config_digest='sha256:'+digest(config);const platform=Buffer.from(JSON.stringify({schemaVersion:2,config:{digest:d.oci.config_digest},layers:[]}));d.oci.platform_digest='sha256:'+digest(platform);
+   const root=Buffer.from(JSON.stringify({schemaVersion:2,manifests:[{digest:d.oci.platform_digest,platform:{os:'linux',architecture:'amd64'}}]}));d.digest='sha256:'+digest(root);
+   const manifest=Buffer.from(JSON.stringify({source_sha:source,source_branch:'main',workflow_run_id:String(d.official_build.run_id),workflow_run_attempt:1,event_name:'workflow_dispatch',build_profile:'public_production',profile_checksum:'a'.repeat(64),release_authorized:false,convenience_aliases:[],backend:{digest:d.digest,oci_revision:source,unique_tag:d.official_build.unique_tag}}));d.official_build.manifest_sha256=digest(manifest);
+   const archive=zip([entry('build-manifest.json',manifest)]);d.official_build.archive_digest='sha256:'+digest(archive);
+   const c={backend_revision:source,backend_tree:backendTree,backend_digest:d.digest,retained_backend_proof:{mode:d.mode,component_id:id}},apis={};
+   for(const [spec,workflow,event,name]of [[d.source_ci,'.github/workflows/pr-checks.yml','push','Backend fidelity tests'],[d.official_build,'.github/workflows/build-staging-images.yml','workflow_dispatch','build']]){
+    const suite=spec.run_id+1,checkUrl=`https://api.github.com/repos/saintgroovie/furniture-commerce/check-runs/${spec.check_id}`;
+    apis['actions/runs/'+spec.run_id]={id:spec.run_id,repository:{full_name:'saintgroovie/furniture-commerce'},path:workflow,event,head_branch:'main',head_sha:source,run_attempt:spec.attempt,status:'completed',conclusion:'success',check_suite_id:suite};
+    apis[`actions/runs/${spec.run_id}/attempts/${spec.attempt}/jobs?per_page=100`]={jobs:[{id:spec.job_id,name,run_id:spec.run_id,run_attempt:spec.attempt,head_sha:source,status:'completed',conclusion:'success',check_run_url:checkUrl,steps:[{name:'Build and push backend (unique tag)',conclusion:'success'},{name:'SHA parity + write build manifest (release_authorized=false)',conclusion:'success'},{name:'Promote mutable-sha alias (optional, non-authoritative)',conclusion:'skipped'}]}]};
+    apis['check-runs/'+spec.check_id]={id:spec.check_id,name,head_sha:source,app:{slug:'github-actions'},check_suite:{id:suite},status:'completed',conclusion:'success'};
+   }
+   apis[`actions/runs/${d.official_build.run_id}/artifacts?per_page=100`]={artifacts:[{id:d.official_build.artifact_id,name:d.official_build.artifact_name,expired:false,workflow_run:{id:d.official_build.run_id,head_sha:source},digest:d.official_build.archive_digest}]};
+   const objects={['manifests|'+d.digest]:root,['manifests|'+d.oci.platform_digest]:platform,['blobs|'+d.oci.config_digest]:config};
+   const f={id,d,c,apis,objects,archive,manifest,registry:{retained_backend_components:{[id]:d}},extract};
+   f.io={api:key=>clone(f.apis[key]),archive:()=>f.archive,manifest:bytes=>f.extract(bytes),oci:(kind,key)=>f.objects[kind+'|'+key]};return f;
+  }
+  function write(f){fs.writeFileSync(registryPath,JSON.stringify(f.registry));}
+  function run(f){write(f);return mod.collectMainBackend(f.c,f.io);}
+  pass('exact registered component + real ZIP parser + OCI descriptor chain',()=>{const f=fixture(),result=run(f);assert.deepEqual(result,mod.mainBackendSummary(f.c,f.d));assert.equal(result.origin,'authenticated-main-backend-component-v1');});
+  const changes=[
+   ['unknown proof mode',f=>f.c.retained_backend_proof.mode='unknown'],['untyped selector',f=>delete f.c.retained_backend_proof.mode],['extra legacy selector field',f=>f.c.retained_backend_proof.source_sha=source],['unknown component',f=>f.c.retained_backend_proof.component_id='absent'],
+   ['component source mismatch',f=>f.c.backend_revision='0'.repeat(40)],['backend tree mismatch',f=>f.c.backend_tree='0'.repeat(40)],['component digest mismatch',f=>f.c.backend_digest='sha256:'+'0'.repeat(64)],['registered source tree mismatch',f=>f.d.source_tree='0'.repeat(40)],
+  ];
+  for(const [name,change]of changes)reject(name,()=>{const f=fixture();change(f);run(f);});
+  reject('dispatch unknown mode never falls back to historical collector',()=>{const f=fixture();f.c.retained_backend_proof.mode='unknown';write(f);mod.retainedBackend(f.c,'a'.repeat(40));});
+  reject('dispatch untyped component never falls back to historical collector',()=>{const f=fixture();delete f.c.retained_backend_proof.mode;write(f);mod.retainedBackend(f.c,'a'.repeat(40));});
+  for(const [label,specName]of [['CI','source_ci'],['build','official_build']]){
+   for(const [field,value]of [['head_sha','0'.repeat(40)],['path','wrong.yml'],['event','pull_request'],['head_branch','other'],['run_attempt',2],['status','in_progress'],['conclusion','failure']])reject(label+' run '+field,()=>{const f=fixture();f.apis['actions/runs/'+f.d[specName].run_id][field]=value;run(f);});
+   for(const field of ['name','id','run_id','run_attempt','head_sha','check_run_url','conclusion'])reject(label+' job '+field,()=>{const f=fixture(),s=f.d[specName];f.apis[`actions/runs/${s.run_id}/attempts/${s.attempt}/jobs?per_page=100`].jobs[0][field]='wrong';run(f);});
+   for(const field of ['id','head_sha','name','app','check_suite','conclusion'])reject(label+' check '+field,()=>{const f=fixture();f.apis['check-runs/'+f.d[specName].check_id][field]='wrong';run(f);});
+  }
+  for(const field of ['id','name','expired','workflow_run','digest'])reject('artifact '+field,()=>{const f=fixture(),s=f.d.official_build,a=f.apis[`actions/runs/${s.run_id}/artifacts?per_page=100`].artifacts[0];a[field]=field==='expired'?true:'wrong';run(f);});
+  reject('download archive SHA',()=>{const f=fixture();f.archive=Buffer.from('wrong');run(f);});
+  for(const [label,entries]of [['duplicate',[['build-manifest.json','{}'],['build-manifest.json','{}']]],['extra',[['build-manifest.json','{}'],['extra.json','{}']]],['path traversal',[['../build-manifest.json','{}']]],['symlink',[['build-manifest.json','{}',0o120777]]],['missing',[['release-manifest.partial.json','{}']]]])reject('ZIP '+label,()=>{const f=fixture();f.archive=zip(entries.map(v=>entry(...v)));f.d.official_build.archive_digest='sha256:'+digest(f.archive);f.apis[`actions/runs/${f.d.official_build.run_id}/artifacts?per_page=100`].artifacts[0].digest=f.d.official_build.archive_digest;run(f);});
+  reject('native manifest raw SHA',()=>{const f=fixture();f.extract=()=>Buffer.from('{}');run(f);});
+  for(const field of ['source_sha','source_branch','workflow_run_id','workflow_run_attempt','event_name','build_profile','release_authorized','convenience_aliases','backend'])reject('native manifest '+field,()=>{const f=fixture(),m=JSON.parse(f.manifest);m[field]='wrong';const raw=Buffer.from(JSON.stringify(m));f.extract=()=>raw;f.d.official_build.manifest_sha256=digest(raw);run(f);});
+  reject('OCI raw response digest',()=>{const f=fixture();f.objects['manifests|'+f.d.digest]=Buffer.from('{}');run(f);});
+  for(const [name,mutate]of [['missing platform',x=>x.manifests=[]],['duplicate platform',x=>x.manifests.push(clone(x.manifests[0]))],['wrong platform descriptor',x=>x.manifests[0].digest='sha256:'+'0'.repeat(64)]])reject('OCI '+name,()=>{const f=fixture(),root=JSON.parse(f.objects['manifests|'+f.d.digest]);mutate(root);const rb=Buffer.from(JSON.stringify(root));f.d.digest='sha256:'+digest(rb);f.c.backend_digest=f.d.digest;const m=JSON.parse(f.manifest);m.backend.digest=f.d.digest;const mb=Buffer.from(JSON.stringify(m));f.extract=()=>mb;f.d.official_build.manifest_sha256=digest(mb);f.objects['manifests|'+f.d.digest]=rb;run(f);});
+  reject('ZIP oversized manifest member',()=>{const f=fixture();f.archive=zip([entry('build-manifest.json',Buffer.alloc(262145))]);f.d.official_build.archive_digest='sha256:'+digest(f.archive);f.apis[`actions/runs/${f.d.official_build.run_id}/artifacts?per_page=100`].artifacts[0].digest=f.d.official_build.archive_digest;run(f);});
+
+  for(const [name,mutate]of [['revision',x=>x.config.Labels['org.opencontainers.image.revision']='0'.repeat(40)],['source ENV',x=>x.config.Env=[]],['owner',x=>x.config.Labels['com.woodright.deployment-owner']='other'],['run',x=>x.config.Labels['woodright.workflow.run_id']='1'],['profile',x=>x.config.Labels['woodright.image.build_profile']='public_demo'],['CMD',x=>x.config.Cmd=['wrong']],['working dir',x=>x.config.WorkingDir='/wrong']]){
+   reject('OCI semantic '+name,()=>{const f=fixture(),cfg=JSON.parse(f.objects['blobs|'+f.d.oci.config_digest]);mutate(cfg);const cb=Buffer.from(JSON.stringify(cfg));f.d.oci.config_digest='sha256:'+digest(cb);const platform=Buffer.from(JSON.stringify({config:{digest:f.d.oci.config_digest},layers:[]}));f.d.oci.platform_digest='sha256:'+digest(platform);const root=Buffer.from(JSON.stringify({manifests:[{digest:f.d.oci.platform_digest,platform:{os:'linux',architecture:'amd64'}}]}));f.d.digest='sha256:'+digest(root);f.c.backend_digest=f.d.digest;const m=JSON.parse(f.manifest);m.backend.digest=f.d.digest;const mb=Buffer.from(JSON.stringify(m));f.extract=()=>mb;f.d.official_build.manifest_sha256=digest(mb);f.objects={['blobs|'+f.d.oci.config_digest]:cb,['manifests|'+f.d.oci.platform_digest]:platform,['manifests|'+f.d.digest]:root};run(f);});
+  }
+  pass('exact new mode seal',()=>{const f=fixture(),proof=run(f),c={...f.c,source_sha:'b'.repeat(40),source_tree:'c'.repeat(40),base_sha:'d'.repeat(40),release_ref:'release/future-fixture',test_overlays:{}};const input={trustedPolicySha:'e'.repeat(40)},seal={schema:1,sourceSha:c.source_sha,sourceTree:c.source_tree,baseSha:c.base_sha,releaseRef:c.release_ref,backendTree:c.backend_tree,policySha:input.trustedPolicySha,registrySha:'f'.repeat(64),job:'backend-fidelity',runId:77,attempt:1,postChecks:true,context:'retained-backend-proof',overlay:{},retainedBackend:proof};mod.validateSeal(c,seal,input,'backend-fidelity',77,'f'.repeat(64));for(const mutate of [x=>delete x.retainedBackend.officialBuild,x=>x.retainedBackend.origin='authenticated-retained-backend-only',x=>x.retainedBackend.componentRevision='0'.repeat(40)]){const bad=clone(seal);mutate(bad);assert.throws(()=>mod.validateSeal(c,bad,input,'backend-fidelity',77,'f'.repeat(64)));cases++;names.push('new seal missing/old-origin/wrong component rejected');}});
+  return {status:'PASS_NEW_RETAINED_MAIN_COMPONENT_ADMISSION_CASES',cases,checks:names,scope:'Only new component mode; isolated Git/ZIP/JSON fixtures + injected provenance IO; no network/production/old schema/native/business suites'};
+ }finally{fs.rmSync(temp,{recursive:true,force:true});}
 }
