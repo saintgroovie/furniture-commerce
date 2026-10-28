@@ -3,7 +3,11 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--retained-main-component-only')){
+if(process.argv.includes('--native-family20-binding-only')){
+ console.log(JSON.stringify(nativeFamily20BindingRegression(),null,2));
+}else if(process.argv.includes('--native-family20-only')){
+ console.log(JSON.stringify(nativeFamily20AdmissionRegression(),null,2));
+}else if(process.argv.includes('--retained-main-component-only')){
  console.log(JSON.stringify(retainedMainComponentRegression(),null,2));
 }else if(process.argv.includes('--contacts8-only')){
  console.log(JSON.stringify(contacts8AdmissionRegression(),null,2));
@@ -155,6 +159,8 @@ console.log(JSON.stringify(testContextRegression(),null,2));
 console.log(JSON.stringify(galleryAdmissionRegression(),null,2));
 console.log(JSON.stringify(contacts8AdmissionRegression(),null,2));
 console.log(JSON.stringify(retainedMainComponentRegression(),null,2));
+console.log(JSON.stringify(nativeFamily20AdmissionRegression(),null,2));
+console.log(JSON.stringify(nativeFamily20BindingRegression(),null,2));
 }
 
 function retainedBackendContextRegression(){
@@ -449,4 +455,36 @@ sys.stdout.buffer.write(out.getvalue())`],{input:JSON.stringify(entries),maxBuff
   pass('exact new mode seal',()=>{const f=fixture(),proof=run(f),c={...f.c,source_sha:'b'.repeat(40),source_tree:'c'.repeat(40),base_sha:'d'.repeat(40),release_ref:'release/future-fixture',test_overlays:{}};const input={trustedPolicySha:'e'.repeat(40)},seal={schema:1,sourceSha:c.source_sha,sourceTree:c.source_tree,baseSha:c.base_sha,releaseRef:c.release_ref,backendTree:c.backend_tree,policySha:input.trustedPolicySha,registrySha:'f'.repeat(64),job:'backend-fidelity',runId:77,attempt:1,postChecks:true,context:'retained-backend-proof',overlay:{},retainedBackend:proof};mod.validateSeal(c,seal,input,'backend-fidelity',77,'f'.repeat(64));for(const mutate of [x=>delete x.retainedBackend.officialBuild,x=>x.retainedBackend.origin='authenticated-retained-backend-only',x=>x.retainedBackend.componentRevision='0'.repeat(40)]){const bad=clone(seal);mutate(bad);assert.throws(()=>mod.validateSeal(c,bad,input,'backend-fidelity',77,'f'.repeat(64)));cases++;names.push('new seal missing/old-origin/wrong component rejected');}});
   return {status:'PASS_NEW_RETAINED_MAIN_COMPONENT_ADMISSION_CASES',cases,checks:names,scope:'Only new component mode; isolated Git/ZIP/JSON fixtures + injected provenance IO; no network/production/old schema/native/business suites'};
  }finally{fs.rmSync(temp,{recursive:true,force:true});}
+}
+
+// New V4 policy-only checks; no app/runtime/old suite or Git fixture execution.
+function nativeFamily20AdmissionRegression(){
+ const reg=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))),key="native-family-storefront-cf211-exact20-v1",n=reg.qualifications[key];
+ let cases=0;const pass=f=>{f();cases++;},reject=f=>{assert.throws(f);cases++;};
+ pass(()=>assert.equal(Object.keys(v.sourcePaths(n)).length,20));
+ pass(()=>assert.equal(n.source_tree,"7140fcbf0a43efe9778fb0c22def71b185218ef9"));
+ pass(()=>assert.deepEqual(n.retained_backend_proof,{mode:'authenticated-main-component-v1',component_id:'orders-main-b121-backend-v1'}));
+ pass(()=>assert.deepEqual(v.testContextMap(n),v.testContextMap(reg.qualifications['contacts-roi-storefront-b173-exact8-v1'])));
+ for(const file of Object.keys(n.protected))pass(()=>{
+   if(n.paths[file]){assert.equal(n.protected[file],n.paths[file].after);assert.equal(n.protected_before[file],n.paths[file].before);}
+   else assert.equal(n.protected[file],n.protected_before[file]);
+ });
+ // The actual reviewed source commit/ref is bound; no null draft identity is admitted.
+ pass(()=>assert(v.workflowEnvironment(key,n).includes('RELEASE_REF='+n.release_ref+'\n')));
+ for(const mutate of [x=>delete x.paths,x=>delete x.paths[Object.keys(x.paths)[0]],x=>x.paths.extra=clone(Object.values(x.paths)[0]),x=>Object.values(x.paths)[0].after='0'.repeat(64),x=>Object.values(x.paths)[0].before='0'.repeat(64),x=>Object.values(x.paths)[0].mode='100755',x=>Object.values(x.paths)[0].after_blob='0'.repeat(40),x=>x.paths=Object.fromEntries(Object.entries(x.paths).reverse()),x=>x.base_sha='0'.repeat(40),x=>x.source_tree='0'.repeat(40),x=>x.test_overlays={'apps/storefront/src/proxy.ts':'0'.repeat(64)}]){
+  const x=clone(n);mutate(x);reject(()=>v.sourcePaths(x));
+ }
+ for(const mutate of [x=>x.kind='unknown-native',x=>x.test_context={},x=>x.context_hashes[v.TEST_CONTEXT_FILE]='0'.repeat(64)]){const x=clone(n);mutate(x);reject(()=>v.testContextMap(x));}
+ return {status:'PASS_NEW_V4_CLOSED20_POLICY_ONLY',cases,source_commit:n.source_sha,release_ref:n.release_ref,registered:false,no_Git_CI_build_browser_network:true};
+}
+
+function nativeFamily20BindingRegression(){
+ const reg=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))),key='native-family-storefront-cf211-exact20-v1',n=reg.qualifications[key];
+ let cases=0;const pass=f=>{f();cases++;},reject=f=>{assert.throws(f);cases++;};
+ pass(()=>assert.equal(n.source_sha,'bb50b39df974c201b200ebc4cd95db2a76bd849e'));
+ pass(()=>assert.equal(n.release_ref,'release/native-family-storefront-20261029'));
+ pass(()=>assert.equal(n.source_tree,'7140fcbf0a43efe9778fb0c22def71b185218ef9'));
+ pass(()=>assert(v.workflowEnvironment(key,n).includes('RELEASE_REF='+n.release_ref+'\n')));
+ for(const mutate of [x=>x.source_sha=null,x=>x.release_ref=null,x=>x.source_tree='0'.repeat(40),x=>x.paths[Object.keys(x.paths)[0]].after='0'.repeat(64)]){const x=clone(n);mutate(x);reject(()=>v.workflowEnvironment(key,x));}
+ return {status:'PASS_NEW_ACTUAL_SOURCE_BINDING_ONLY',cases,source_commit:n.source_sha,registered:false,no_old_policy_checks_repeated:true};
 }
