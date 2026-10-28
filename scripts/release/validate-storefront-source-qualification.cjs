@@ -21,7 +21,7 @@ function canonicalTestContext(map){
 function testContextMap(c){
   if(c.test_context===undefined)return null;
   const map=canonicalTestContext(c.test_context);
-  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
+  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
   return map;
 }
 function contextOptions(c,opts={}){
@@ -180,6 +180,7 @@ function sourcePaths(c){
   if(c.paths===undefined){
     if(c.kind==='gallery-storefront-01f-exact7-v1')fail('missing gallery path map');
     if(c.kind==='contacts-roi-storefront-b173-exact8-v1')fail('missing contacts ROI path map');
+    if(c.kind==='native-family-storefront-cf211-exact20-v1')fail('missing native family V4 path map');
     return {[c.path]:{before:c.before,after:c.after}};
   }
   const names=Object.keys(c.paths);
@@ -206,6 +207,10 @@ function sourcePaths(c){
       'apps/storefront/src/lib/woodright-copy.ts',
     ];
     if(JSON.stringify(names)!==JSON.stringify(contactsPaths))fail('closed contacts ROI path map');
+  }else if(c.kind==='native-family-storefront-cf211-exact20-v1'){
+    // Exact reviewed V4 descriptors: no arbitrary path/hash/mode registration.
+    if(names.length!==20||hash(JSON.stringify(c.paths))!=='4e5e509725bdb34f7da4f9aeb2818be228d2858b401cccab3bf490ecf0bbb2a1')fail('closed native family V4 path/hash map');
+    if(c.base_sha!=='cf211341a12f0c937b303969347281789c53fc66'||c.base_tree!=='c6f5e4b53a62bf3c55d35cd7391ab75641ca45b5'||c.source_tree!=='7140fcbf0a43efe9778fb0c22def71b185218ef9')fail('native family V4 source/base trees');
   }else if(c.kind!=='common-storefront-b461-v1'||names.length!==79||JSON.stringify(names)!==JSON.stringify([...names].sort()))fail('closed common path map');
   for(const file of names){
     const p=c.paths[file];
