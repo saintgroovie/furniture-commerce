@@ -742,6 +742,321 @@ def pending_governance(packet, authority):
         raise ValueError('pending workspace governance qualification changed')
 
 
+# Cross-backend transitions are deliberately separate from same-backend rollback.
+TRANSITION_LABEL = 'com.woodright.workspace-transition'
+
+
+def transition_path():
+    return ROOT / 'BACKEND_TRANSITION.json'
+
+
+def transition_read():
+    path = transition_path()
+    if not path.exists() and not path.is_symlink():
+        return None
+    value = json.loads(regular(path))
+    if value.get('schema') != 'woodright-workspace-backend-transition-v1':
+        raise ValueError('invalid workspace transition journal')
+    return value
+
+
+def transition_guard(mode):
+    value = transition_read()
+    complete = value and value.get('state') in ['bridged', 'recovered'] and value.get('terminal') is True and value.get('reaped') is True
+    if value and not complete and mode != 'recover-backend-transition':
+        raise ValueError('incomplete backend transition blocks workspace mutators')
+    return value
+
+
+def transition_save(value, **changes):
+    value.update(changes)
+    operation = Path(value['operation'])
+    if operation.parent != ROOT or operation.is_symlink():
+        raise ValueError('owned transition journal directory required')
+    write(operation / 'backend-transition-journal.json', json_bytes(value))
+    write(transition_path(), json_bytes(value))
+    # write() fsyncs the file; persist the rename before a container mutation.
+    for directory in [operation, ROOT]:
+        fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY)
+        try: os.fsync(fd)
+        finally: os.close(fd)
+
+
+def transition_runtime(value, image, source, backend_source=None):
+    result = subprocess.run(['docker', 'inspect', CONTAINER, '--format', '{{json .}}'], capture_output=True, text=True)
+    if result.returncode:
+        raise ValueError('transition runtime inspection unavailable')
+    info = json.loads(result.stdout)
+    labels = info.get('Config', {}).get('Labels', {}) or {}
+    environment = info.get('Config', {}).get('Env', [])
+    pin = backend_source or value['target_backend']['source']
+    if (labels.get(TRANSITION_LABEL) != value['id'] or
+            labels.get('com.docker.compose.project') != PROJECT or
+            labels.get('com.docker.compose.service') != 'workspace' or
+            info.get('Config', {}).get('Image') != image or
+            labels.get('org.opencontainers.image.revision') != source or
+            'WOODRIGHT_EXPECTED_BACKEND_REVISION=' + pin not in environment):
+        raise ValueError('foreign or changed transition runtime refused')
+    identity = {'container_id': info['Id'], 'image': image, 'source': source}
+    if not re.fullmatch(r'[a-f0-9]{64}', identity['container_id']):
+        raise ValueError('exact owned container identity required')
+    return identity
+
+
+def begin_backend_transition(intent, intent_raw, authority, operation, baseline, existing, backend, compose):
+    before = json.loads(baseline['raw'])
+    old_pin = json.loads(regular(operation / 'compose.before.json'))['services']['workspace']['environment']['WOODRIGHT_EXPECTED_BACKEND_REVISION']
+    request = intent.get('backend_transition')
+    if old_pin == backend['source']:
+        if request is not None:
+            raise ValueError('cross-backend authorization cannot change a same-backend operation')
+        return None, compose
+    if (not isinstance(request, dict) or set(request) != {'id', 'previous_backend', 'storefront', 'compensation_intent_sha256'} or
+            not re.fullmatch(r'[a-f0-9]{32}', request.get('id', '')) or
+            not re.fullmatch(r'[a-f0-9]{64}', request.get('compensation_intent_sha256', '')) or
+            request['previous_backend'] != before.get('backend') or
+            request['previous_backend'].get('source') != old_pin or
+            existing['image'] != intent['image'] or existing['source'] != intent['source_sha'] or
+            before.get('state') != 'done_deployed_and_verified' or authority is None):
+        raise ValueError('exact accepted same-image backend bridge authorization required')
+    if inspect('woodright-public-production-storefront') != request['storefront']:
+        raise ValueError('retained storefront identity changed')
+    old_journal = transition_read()
+    if old_journal and (old_journal.get('state') not in ['bridged', 'recovered'] or old_journal.get('id') == request['id']):
+        raise ValueError('transition id cannot be reused')
+    value = {'schema': 'woodright-workspace-backend-transition-v1', 'id': request['id'],
+             'state': 'prepared', 'terminal': False, 'reaped': False,
+             'operation': str(operation), 'intent_sha256': digest(intent_raw),
+             'authority': authority, 'previous_backend': request['previous_backend'],
+             'target_backend': backend, 'storefront': request['storefront'],
+             'compensation_intent_sha256': request['compensation_intent_sha256'],
+             'previous_workspace': existing, 'phase': 'forward',
+             'forward_route_sha256': digest(json_bytes(router_document())),
+             'snapshots': {name: digest(regular(operation / name)) for name in
+                           ['owner-intent.json', 'build-manifest.json', 'baseline.json', 'compose.before.json', 'route.before.json', 'metadata-checksums.json']},
+             'before_metadata': json.loads(regular(operation / 'metadata-checksums.json'))}
+    document = json.loads(compose)
+    document['services']['workspace']['labels'][TRANSITION_LABEL] = value['id']
+    forward_compose = json_bytes(document)
+    value['forward_compose_sha256'] = digest(forward_compose)
+    value['current_compose_sha256'] = digest(forward_compose)
+    transition_save(value)
+    return value, forward_compose
+
+
+def transition_command(value, phase, argv, log, progress=None):
+    progress = progress if progress is not None else {}
+    progress['stage'] = 'not_started'
+    attempt = uuid.uuid4().hex
+    receipt = {'attempt': attempt, 'phase': phase, 'started': False, 'reaped': False}
+    handlers, received = {}, []
+    def defer_signal(number, frame):
+        # Never raise in the spawn-to-cleanup-registration interval.
+        received.append(number)
+    try:
+        for sig in [signal.SIGINT, signal.SIGTERM, signal.SIGHUP]:
+            handlers[sig] = signal.signal(sig, defer_signal)
+        transition_save(value, child_receipt=receipt)
+        with log.open('ab') as output:
+            process = None
+            try:
+                progress['stage'] = 'launching'
+                process = subprocess.Popen(argv, stdout=output, stderr=subprocess.STDOUT)
+                progress['stage'] = 'started'
+                transition_save(value, child_receipt={**receipt, 'started': True, 'pid': process.pid})
+                process.wait()
+            finally:
+                if process is not None:
+                    while True:
+                        try:
+                            code = process.wait()
+                            break
+                        except BaseException:
+                            # Keep foreground/leases until this exact child ends.
+                            continue
+                    if type(code) is not int:
+                        raise ValueError('exact transition child termination unknown')
+                    transition_save(value, child_receipt={**receipt, 'started': True,
+                        'pid': process.pid, 'reaped': True, 'returncode': code, 'no_forced_cancel': True})
+                    progress['stage'] = 'reaped'
+    finally:
+        for sig, handler in handlers.items(): signal.signal(sig, handler)
+    if received: raise InterruptedError('transition signal deferred until exact child reaped')
+    if code: raise ValueError('transition child failed; inspect protected operation log')
+
+
+def transition_capture_runtime(value, phase, image, source, pin):
+    receipt = value.get('child_receipt', {})
+    if receipt.get('phase') != phase or receipt.get('started') is not True or receipt.get('reaped') is not True or receipt.get('no_forced_cancel') is not True or type(receipt.get('returncode')) is not int:
+        raise ValueError('explicit exact-child reaped evidence required')
+    current = transition_runtime(value, image, source, pin)
+    if value.get('own_runtime_attempt') == receipt['attempt'] and current != value.get('own_workspace'):
+        raise ValueError('recorded own transition CID changed')
+    # A new CID is admitted only once at this explicit completed-child checkpoint.
+    transition_save(value, own_workspace=current, own_runtime_attempt=receipt['attempt'])
+    return current
+
+
+def transition_forward_receipt(value, image, source):
+    transition_capture_runtime(value, 'forward', image, source, value['target_backend']['source'])
+    transition_save(value, state='checking')
+
+
+def transition_failed(value):
+    transition_capture_runtime(value, 'forward', value['previous_workspace']['image'],
+                               value['previous_workspace']['source'], value['target_backend']['source'])
+    transition_save(value, state='recovery_required', terminal=True, reaped=True)
+
+
+def validate_compensation_proof(raw, expected, value, backend):
+    if not 0 < len(raw) <= 1024 * 1024:
+        raise ValueError('bounded canonical compensation proof required')
+    proof = json.loads(raw)
+    provenance = expected.get('compensation_provenance')
+    keys = {'payload_sha256', 'launcher_sha256', 'foreground_sha256', 'native_wait_sha256', 'helper_install_sha'}
+    if (not isinstance(provenance, dict) or set(provenance) != keys or
+            any(not re.fullmatch(r'[a-f0-9]{40}' if key == 'helper_install_sha' else r'[a-f0-9]{64}', val or '') for key, val in provenance.items()) or
+            proof.get('schema') != 'woodright-native-backend-compensation-proof-v1' or
+            proof.get('transition_id') != value['id'] or proof.get('forward_intent_sha256') != value['intent_sha256'] or
+            proof.get('provenance') != provenance):
+        raise ValueError('qualified compensation producer provenance required')
+    packet_raw = proof.get('canonical_packet_json')
+    if not isinstance(packet_raw, str) or digest(packet_raw.encode()) != proof.get('canonical_packet_sha256'):
+        raise ValueError('original canonical compensation packet required')
+    packet = json.loads(packet_raw)
+    native, transport = proof.get('native_execution', {}), proof.get('transport_receipt', {})
+    if (native.get('rc') != 0 or type(native.get('rc')) is not int or native.get('native_reaped') is not True or
+            native.get('expired') is not False or native.get('capture_complete') is not True or
+            native.get('no_forced_cancel') is not True or native.get('payload_sha256') != provenance['payload_sha256'] or
+            native.get('canonical_packet_sha256') != proof['canonical_packet_sha256'] or
+            not re.fullmatch(r'[a-f0-9]{64}', native.get('stdout_sha256', '')) or
+            transport.get('returncode') != 0 or type(transport.get('returncode')) is not int or
+            transport.get('local_client_reaped') is not True or transport.get('FREE') is not True or
+            transport.get('no_forced_cancel') is not True or transport.get('budget_expired') is not False or
+            transport.get('payload_sha256') != provenance['payload_sha256'] or
+            transport.get('canonical_approval_sha256') != value['compensation_intent_sha256']):
+        raise ValueError('native and transport terminal/reaped proof required')
+    candidates = packet.get('candidates', {}).get('backend', {})
+    actual = packet.get('current_containers', {})
+    approval = packet.get('owner_approval', {})
+    if (packet.get('tool') != 'cutover-public-production-pair.sh' or packet.get('mode') != 'execute' or
+            packet.get('environment') != 'public_production' or packet.get('component') != 'backend' or
+            packet.get('verdict') != 'committed' or packet.get('phase') != 'committed' or
+            packet.get('application_source_sha') != backend['source'] or packet.get('source_sha') != backend['source'] or
+            packet.get('operation_helper_install_sha') != provenance['helper_install_sha'] or
+            approval.get('checksum') != value['compensation_intent_sha256'] or approval.get('component') != 'backend' or
+            candidates.get('ref') != backend['image'] or candidates.get('oci_revision') != backend['source'] or
+            actual.get('backend', {}).get('id') != backend['container_id'] or actual.get('backend', {}).get('image') != backend['image'] or
+            actual.get('storefront', {}).get('id') != value['storefront']['container_id'] or
+            actual.get('storefront', {}).get('image') != value['storefront']['image']):
+        raise ValueError('canonical compensation intent/result binding changed')
+
+
+def recover_backend_transition(args, intent, authority, backend):
+    value = transition_guard('recover-backend-transition')
+    if not value or value.get('state') != 'recovery_required' or value.get('terminal') is not True or value.get('reaped') is not True:
+        raise ValueError('known terminal failed own bridge required; unknown is not FREE')
+    recovery = intent.get('transition_recovery')
+    proof_raw = regular(args.compensation_receipt) if args.compensation_receipt else None
+    if (not isinstance(recovery, dict) or set(recovery) != {'journal_sha256', 'forward_intent_sha256', 'compensation_intent_sha256', 'compensation_receipt_sha256', 'compensation_terminal', 'compensation_reaped', 'own_workspace', 'compensation_provenance'} or
+            recovery['journal_sha256'] != digest(regular(transition_path())) or
+            recovery['forward_intent_sha256'] != value['intent_sha256'] or
+            recovery['compensation_intent_sha256'] != value['compensation_intent_sha256'] or
+            recovery['compensation_terminal'] != 'committed' or recovery['compensation_reaped'] is not True or
+            proof_raw is None or digest(proof_raw) != recovery['compensation_receipt_sha256'] or
+            authority != value['authority'] or
+            backend['image'] != value['previous_backend']['image'] or backend['source'] != value['previous_backend']['source'] or
+            inspect('woodright-public-production-storefront') != value['storefront']):
+        raise ValueError('owner-bound terminal compensation and unchanged transition required')
+    validate_compensation_proof(proof_raw, recovery, value, backend)
+    old = value['previous_workspace']
+    if args.image != old['image'] or args.source != old['source']:
+        raise ValueError('recovery cannot select another workspace')
+    pin = value['previous_backend']['source'] if value.get('phase') == 'restore' else value['target_backend']['source']
+    current = transition_runtime(value, old['image'], old['source'], pin)
+    if current != value.get('own_workspace') or current != recovery['own_workspace']:
+        raise ValueError('recovery own runtime CAS changed')
+    operation = Path(value['operation'])
+    if operation.parent != ROOT or operation.is_symlink() or not re.fullmatch(r'operation-[0-9]{8}T[0-9]{6}Z-[a-f0-9]{8}', operation.name):
+        raise ValueError('owned transition operation required')
+    for name, checksum in value['snapshots'].items():
+        if digest(regular(operation / name)) != checksum:
+            raise ValueError('transition snapshot changed')
+    prior = {}
+    if set(value['before_metadata']) != {'PENDING_RELEASE.json', 'ACTIVE_RELEASE.json', 'ACTIVE_OWNER.json'}:
+        raise ValueError('complete transition metadata required')
+    for name, checksum in value['before_metadata'].items():
+        raw = regular(operation / (name + '.before')) if checksum is not None else None
+        if (digest(raw) if raw is not None else None) != checksum:
+            raise ValueError('transition metadata snapshot changed')
+        prior[name] = raw
+    # Only the journal's actual forward or restore files may be overwritten.
+    expected_compose = value['current_compose_sha256']
+    if digest(regular(ROOT / 'compose.json')) != expected_compose:
+        raise ValueError('transition compose CAS changed')
+    if digest(regular(ROUTE)) not in [value['snapshots']['route.before.json'], value['forward_route_sha256']]:
+        raise ValueError('transition route CAS changed')
+    for name, checksum in value['before_metadata'].items():
+        path = ROOT / name
+        raw = regular(path) if path.exists() or path.is_symlink() else None
+        actual = digest(raw) if raw is not None else None
+        allowed = [checksum, value.get('forward_metadata', {}).get(name, checksum), value.get('restore_metadata', {}).get(name, checksum)]
+        if actual not in allowed:
+            raise ValueError('transition metadata CAS changed')
+    baseline = json.loads(regular(operation / 'baseline.json'))
+    document = json.loads(regular(operation / 'compose.before.json'))
+    document['services']['workspace']['labels'][TRANSITION_LABEL] = value['id']
+    restore_compose = json_bytes(document)
+    transition_save(value, state='recovering', terminal=False, reaped=False,
+                    recovery_intent_sha256=args.intent_checksum,
+                    restore_compose_sha256=digest(restore_compose))
+    launch = {'stage': 'not_started'}
+    try:
+        write(ROOT / 'compose.json', restore_compose)
+        write(ROUTE, regular(operation / 'route.before.json'))
+        cli = ['docker', 'compose', '--project-name', PROJECT, '--file', str(ROOT / 'compose.json')]
+        transition_command(value, 'restore', cli + ['up', '-d', '--no-deps', '--pull', 'never', 'workspace'], operation / 'transition-recovery.log', launch)
+        restored = transition_capture_runtime(value, 'restore', old['image'], old['source'], backend['source'])
+        transition_save(value, phase='restore', current_compose_sha256=digest(restore_compose))
+        check_http(local_health_base(baseline['url']), old['source'])
+        restored_metadata = {}
+        for name, raw in prior.items():
+            if raw is not None and name in ['PENDING_RELEASE.json', 'ACTIVE_RELEASE.json']:
+                packet = json.loads(raw)
+                if packet.get('workspace') == old:
+                    packet['workspace'] = restored
+                    packet['compose_sha256'] = digest(restore_compose)
+                    if packet.get('backend') == value['previous_backend']:
+                        packet['backend'] = backend
+                    raw = json_bytes(packet)
+            restored_metadata[name] = raw
+        transition_save(value, restore_metadata={name: digest(raw) if raw is not None else None for name, raw in restored_metadata.items()})
+        for name, raw in restored_metadata.items():
+            if raw is None: (ROOT / name).unlink(missing_ok=True)
+            else: write(ROOT / name, raw)
+        check_http(baseline['url'], old['source'])
+        transition_save(value, state='recovered', terminal=True, reaped=True)
+        return {'status': 'backend_transition_recovered', 'workspace': restored, 'live_database_touched': False}
+    except BaseException:
+        if launch['stage'] != 'not_started':
+            # Capturing the same attempt enforces the already-recorded CID.
+            transition_capture_runtime(value, 'restore', old['image'], old['source'], backend['source'])
+            transition_save(value, state='recovery_required', phase='restore',
+                            current_compose_sha256=digest(restore_compose), terminal=True, reaped=True)
+        else:
+            # This invocation knows no child was launched. Permit only its exact
+            # original CID and atomic before/planned file bytes, never an adoption.
+            current = transition_runtime(value, old['image'], old['source'], pin)
+            actual_compose = digest(regular(ROOT / 'compose.json'))
+            actual_route = digest(regular(ROUTE))
+            if (current != value['own_workspace'] or actual_compose not in [expected_compose, digest(restore_compose)] or
+                    actual_route not in [value['snapshots']['route.before.json'], value['forward_route_sha256']]):
+                raise ValueError('unknown pre-child recovery state remains blocked')
+            transition_save(value, state='recovery_required', current_compose_sha256=actual_compose,
+                            terminal=True, reaped=True, pre_child_resume=True)
+        raise
+
+
 # Dedicated authority handover; these helpers never restart an application.
 HANDOVER_JOURNAL = ROOT / 'GOVERNANCE_HANDOVER_PENDING.json'
 HANDOVER_STORAGE_SIX = {
@@ -1015,7 +1330,7 @@ def handover_governance(args, authorization, authority, request, intent_raw, art
 def main():
     global _PARENT_POLICY
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', choices=['plan', 'deploy', 'finalize', 'rollback', 'handover-governance'], default='plan')
+    parser.add_argument('--mode', choices=['plan', 'deploy', 'finalize', 'rollback', 'handover-governance', 'recover-backend-transition'], default='plan')
     parser.add_argument('--source', required=True)
     parser.add_argument('--governance-source')
     parser.add_argument('--governance-manifest-checksum')
@@ -1029,6 +1344,7 @@ def main():
     parser.add_argument('--intent', type=Path, required=True)
     parser.add_argument('--intent-checksum', required=True)
     parser.add_argument('--dom-evidence', type=Path)
+    parser.add_argument('--compensation-receipt', type=Path)
     parser.add_argument('--governance-authorization', type=Path)
     parser.add_argument('--governance-authorization-checksum')
     parser.add_argument('--handover-recover', action='store_true')
@@ -1075,6 +1391,7 @@ def main():
         elif HANDOVER_JOURNAL.exists() or HANDOVER_JOURNAL.is_symlink():
             raise ValueError('incomplete governance handover blocks mutation')
         authority = verify_governance(governance)
+        transition_guard(args.mode)
     backend = inspect('woodright-public-production-backend')
     if not backend or backend['image'] != args.backend_ref or backend['source'] != args.backend_source:
         raise ValueError('aborted_conflict: backend identity changed')
@@ -1084,6 +1401,10 @@ def main():
     revision = subprocess.check_output(['docker', 'image', 'inspect', args.image, '--format', '{{index .Config.Labels "org.opencontainers.image.revision"}}'], text=True).strip()
     if revision != args.source: raise ValueError('workspace image revision mismatch')
     existing = inspect(CONTAINER)
+    if args.mode == 'recover-backend-transition':
+        print(json.dumps(recover_backend_transition(args, intent, authority, backend))); return
+    if args.compensation_receipt or intent.get('transition_recovery'):
+        raise ValueError('transition recovery authority cannot authorize ordinary mutators')
     if handover:
         _PARENT_POLICY.checkpoint()
         result = handover_governance(args, authorization, authority, governance, intent_raw, artifact_raw)
@@ -1148,6 +1469,11 @@ def main():
     if baseline: write(operation / 'baseline.json', json_bytes({key: value for key, value in baseline.items() if key != 'raw'}))
     write(operation / 'owner-intent.json', intent_raw); write(operation / 'build-manifest.json', artifact_raw)
     if authority is not None: write(operation / 'governance-qualification.json', json_bytes(authority))
+    transition = None
+    if baseline:
+        transition, compose = begin_backend_transition(intent, intent_raw, authority, operation, baseline, existing, backend, compose)
+    elif intent.get('backend_transition'):
+        raise ValueError('backend bridge requires accepted existing workspace')
     SECRET.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     if SECRET.exists():
         if SECRET.is_symlink() or SECRET.stat().st_uid != 0 or SECRET.stat().st_mode & 0o077 or not regular(SECRET).startswith(b'WOODRIGHT_WORKSPACE_SESSION_SECRET=') or len(regular(SECRET).split(b'=',1)[1].strip()) < 32:
@@ -1160,7 +1486,11 @@ def main():
         signal.signal(sig, lambda number, frame: (_ for _ in ()).throw(InterruptedError('deployment interrupted')))
     try:
         write(ROOT / 'compose.json', compose)
-        command(compose_cli + ['up','-d','--no-deps','--pull','never','workspace'], operation / 'container.log')
+        if transition:
+            transition_command(transition, 'forward', compose_cli + ['up','-d','--no-deps','--pull','never','workspace'], operation / 'container.log')
+        else:
+            command(compose_cli + ['up','-d','--no-deps','--pull','never','workspace'], operation / 'container.log')
+        if transition: transition_forward_receipt(transition, args.image, args.source)
         for attempt in range(40):
             try: check_http(local_health_base(URL), args.source); break
             except Exception:
@@ -1173,11 +1503,17 @@ def main():
                 if attempt == 19: raise
                 time.sleep(1)
         packet = {'schema':'woodright-team-workspace-release-v1','state':'deployed_not_verified','source':args.source,'workspace':inspect(CONTAINER),'backend':backend,'url':URL,'base_path':'','compose_sha256':digest(compose),'route_sha256':digest(route),'build_manifest_sha256':digest(artifact_raw),'workflow_run_id':artifact['workflow_run_id'],'workflow_run_attempt':artifact['workflow_run_attempt'],'owner_authorization_sha256':digest(intent_raw),'rollback_evidence':str(operation),'rollback_metadata_sha256':digest(metadata_checksums),'previous_workspace':existing,'previous_release_state':baseline['state'] if baseline else None,'previous_release_url':baseline['url'] if baseline else None,'previous_release_metadata_sha256':baseline['metadata_sha256'] if baseline else None,'controller':'deploy-team-workspace.py','claim_bypass_closed':False,'governance':authority,'activated_at':datetime.datetime.now(datetime.timezone.utc).isoformat()}
+        owner_packet = {'owner':'deploy-team-workspace.py','runtime_role':'team_workspace','url':URL,'database':'Medusa public_production_db via authenticated BFF','auto_deploy':False,'claim_bypass_closed':False,'source':args.source}
+        if transition: transition_save(transition, forward_metadata={'PENDING_RELEASE.json': digest(json_bytes(packet)), 'ACTIVE_OWNER.json': digest(json_bytes(owner_packet))})
         write(ROOT/'PENDING_RELEASE.json',json_bytes(packet))
-        write(ROOT/'ACTIVE_OWNER.json',json_bytes({'owner':'deploy-team-workspace.py','runtime_role':'team_workspace','url':URL,'database':'Medusa public_production_db via authenticated BFF','auto_deploy':False,'claim_bypass_closed':False,'source':args.source}))
+        write(ROOT/'ACTIVE_OWNER.json',json_bytes(owner_packet))
+        if transition: transition_save(transition, state='bridged', terminal=True, reaped=True)
         print(json.dumps({'status':packet['state'],'url':URL,'source':args.source,'evidence':str(operation)}))
     except BaseException:
         for sig in [signal.SIGINT,signal.SIGTERM,signal.SIGHUP]: signal.signal(sig, signal.SIG_IGN)
+        if transition:
+            transition_failed(transition)
+            raise
         restore_workspace(operation, existing, baseline, previous_compose, previous_route, previous_metadata, compose_cli)
         write(operation/'failure.json',json_bytes({'status':'rolled_back','previous_workspace':existing,'live_database_touched':False}))
         raise
