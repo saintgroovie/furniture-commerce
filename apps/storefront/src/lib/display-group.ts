@@ -1,3 +1,4 @@
+import { qualifiedNativeFamily, qualifiedNativeDisplayEntries } from "./qualified-native-family"
 import { buildDisplayGroupColorVariants } from "./card-color-media"
 import { resolveCatalogCardPrice } from "./catalog-card-price"
 import { getPrice } from "./format"
@@ -14,6 +15,9 @@ export type DisplayGroupMemberChip = {
 }
 
 export type DisplayGroup = {
+  familyKey?: string
+  title?: string
+  priceSuppressed?: boolean
   count: number
   minPrice: number | null
   hint?: string
@@ -174,9 +178,11 @@ function sortDisplayGroupMembers(
 export function groupProductsForDisplay(
   products: Record<string, unknown>[]
 ): DisplayEntry[] {
+  const prepared = qualifiedNativeDisplayEntries(products, product => resolveCatalogCardPrice(product))
   const groupMembers = new Map<string, Record<string, unknown>[]>()
 
-  for (const p of products) {
+  for (const { product: p, displayGroup } of prepared) {
+    if (displayGroup || qualifiedNativeFamily(p)) continue
     const meta = p.metadata as Record<string, unknown> | undefined
     const dg = meta?.display_group as string | undefined
     if (dg) {
@@ -188,7 +194,9 @@ export function groupProductsForDisplay(
   const seen = new Set<string>()
   const result: DisplayEntry[] = []
 
-  for (const p of products) {
+  for (const entry of prepared) {
+    const p = entry.product
+    if (entry.displayGroup || qualifiedNativeFamily(p)) { result.push(entry); continue }
     const meta = p.metadata as Record<string, unknown> | undefined
     const dg = meta?.display_group as string | undefined
 

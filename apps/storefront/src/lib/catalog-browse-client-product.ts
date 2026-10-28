@@ -1,3 +1,4 @@
+import { qualifiedNativeFamily, nativeFamilyPriceProof } from "./qualified-native-family"
 /**
  * W3e: compact browse view-model for CatalogBrowseClient / pool fetch.
  *
@@ -274,7 +275,10 @@ export function toCatalogBrowseClientProduct(
   product: Record<string, unknown>
 ): Record<string, unknown> {
   const classification = product.product_classification
+  const family = qualifiedNativeFamily(product)
   return {
+    // Only the explicit family allowlist needs these compact hydration guards.
+    ...(family ? { status: product.status, qualified_family_price: nativeFamilyPriceProof(product) } : {}),
     id: product.id,
     handle: product.handle,
     title: product.title,

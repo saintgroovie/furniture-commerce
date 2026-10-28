@@ -3,6 +3,7 @@
  *   npx --yes tsx src/lib/product-title-presentation.fidelity.test.ts
  */
 import assert from "node:assert/strict"
+import { qualifiedNativeFamily } from "./qualified-native-family"
 import { readFileSync } from "node:fs"
 import { withoutHeadingDimensions } from "./product-heading"
 import {
@@ -310,7 +311,17 @@ assert.equal(withoutHeadingDimensions("Кровать (120×190) без изно
 
 {
   const page = readFileSync(new URL("../app/product/[id]/page.tsx", import.meta.url), "utf8")
-  assert.match(page, /name:\s*getBuyerFacingProductTitle\(product\)/)
+  assert.match(page, /const titleStr = nativeFamily\?\.family\.title \?\? getBuyerFacingProductTitle\(product\)/)
+  assert.match(page, /name:\s*titleStr \|\| "Товар"/)
+  const native = {
+    id: "prod_01KNTBXADFNYAQGPEQKCM4NPZE", handle: "ol-14-2", status: "published",
+    title: "Кровать 1-сп. (90×190) без изножья", metadata: { collection: "oliver" },
+    variants: [{ id: "variant_01KNTBXBMBTGQAE0VQC94SFJY6", sku: "OL-14-2" }],
+  }
+  assert.equal(qualifiedNativeFamily(native)?.family.title, "Кровать Оливер")
+  const unqualified = { title: "Сундук пиратский", handle: "a-07-1" }
+  assert.equal(qualifiedNativeFamily(unqualified), null)
+  assert.equal(getBuyerFacingProductTitle(unqualified), "Сундук пиратский")
   assert.match(page, /pdp-choice/)
   assert.match(page, /const title = getProductSeoName\(product\)/)
 }

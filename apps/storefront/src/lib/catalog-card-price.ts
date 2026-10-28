@@ -1,3 +1,4 @@
+import { nativeFamilyPriceProof } from "./qualified-native-family"
 import type { DisplayGroup } from "@/lib/display-group"
 import { buyerDefaultConfiguration, getPrice } from "@/lib/format"
 import { buildMaterialTierOptions } from "@/lib/material-tiers"
@@ -46,6 +47,10 @@ export function resolveCatalogCardPrice(
   prefix: "от " | ""
   requestQuoteLabel: string | null
 } {
+  if (displayGroup?.priceSuppressed) {
+    return { amount: null, prefix: "", requestQuoteLabel: null }
+  }
+
   if (isRequestQuoteProduct(product)) {
     return {
       amount: null,
@@ -63,6 +68,11 @@ export function resolveCatalogCardPrice(
       prefix: "от ",
       requestQuoteLabel: null,
     }
+  }
+
+  const familyProof = nativeFamilyPriceProof(product)
+  if (familyProof) {
+    return { amount: familyProof.eligible ? familyProof.amount : null, prefix: familyProof.eligible ? "от " : "", requestQuoteLabel: null }
   }
 
   /* Prefer backend-projected default configuration (browse DTO contract). */

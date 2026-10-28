@@ -3,6 +3,7 @@
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react"
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
+import { isReflectedOliverDeskFront } from "@/lib/ol65-front-reflection"
 import { pdpLightboxCopy as copy } from "@/lib/woodright-copy"
 
 type Props = {
@@ -38,6 +39,7 @@ export function PdpImageLightbox({
 }: Props) {
   const count = images.length
   const src = images[activeIndex]
+  const mirroredFront = isReflectedOliverDeskFront(src)
   const caption = captions?.[src]?.trim()
   const captionId = useId()
   /* Guards effects when called with an empty list or out-of-range index:
@@ -346,10 +348,12 @@ export function PdpImageLightbox({
 
   const imageStyle = useMemo<CSSProperties>(
     () => ({
-      transform: `translate3d(${offset.x}px, ${offset.y}px, 0) scale(${zoom})`,
+      // Individual CSS scale reflects the bitmap; compensate pan X so dragging
+      // and point zoom still move in the user's screen direction.
+      transform: `translate3d(${mirroredFront ? -offset.x : offset.x}px, ${offset.y}px, 0) scale(${zoom})`,
       transition: dragging ? "none" : undefined,
     }),
-    [offset.x, offset.y, zoom, dragging]
+    [offset.x, offset.y, zoom, dragging, mirroredFront]
   )
 
   if (!hasImage) return null

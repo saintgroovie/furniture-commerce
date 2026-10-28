@@ -15975,3 +15975,48 @@ body:has(.analytics-consent) {
 .analytics-consent-revoke-btn:hover:not(:disabled) {
   color: var(--color-fg);
 }
+
+/* Original frontal bitmap, reflected only for the owner-approved LEFT desk
+   frame. Individual scale composes with the lightbox's pan/zoom transform. */
+img[src="/product-static/imports/WR-PFW-20260721T020528Z/4d684e60dddd51d91391e9f278372ed9cb9c49c39f91e83c6965cc38b705d3b1.jpg#ol65-left-front-mirror"] {
+  scale: -1 1;
+}
+
+/* OL14: one aligned purchase rhythm; all other PDP flex slots stay unchanged. */
+.pdp-purchase-stack { display: contents; }
+.pdp-purchase-stack--aligned {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  min-width: 0;
+}
+.pdp-purchase-stack--aligned .pdp-price-area { margin: 0; min-height: 0; }
+.pdp-purchase-stack--aligned > div:not(.pdp-price-area) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+}
+.pdp-purchase-stack--aligned .pdp-adapt-note { margin: 0; justify-self: start; }
+.pdp-purchase-stack--aligned .cta-group { margin: 0; width: 100%; }
+.pdp-purchase-stack--aligned .cta-group .btn { white-space: normal; overflow-wrap: anywhere; }
+.pdp-purchase-stack--aligned .pdp-adapt-request {
+  margin: 0;
+  padding-inline: 0;
+  justify-self: start;
+  justify-content: flex-start;
+  min-height: 44px;
+}
+/* Overrides the existing availability line's inline top margin only here. */
+.pdp-purchase-stack--aligned .info-text { margin: 0 !important; line-height: 1.45; }
+.pdp-panel:has(.pdp-purchase-stack--aligned) .pdp-service-block {
+  margin-top: 0;
+  padding-top: 16px;
+  gap: 6px;
+  line-height: 1.45;
+}
+
+.pdp-family-fixed-properties { display: grid; gap: 6px; margin: 0; color: var(--color-fg-secondary); font-size: .8125rem; }
+.pdp-family-fixed-properties > div { display: flex; flex-wrap: wrap; gap: 4px 8px; }
+.pdp-family-fixed-properties dt, .pdp-family-fixed-properties dd { margin: 0; }

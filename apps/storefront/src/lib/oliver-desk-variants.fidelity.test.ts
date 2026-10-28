@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { OL65_ORIGINAL_FRONT, OL65_LEFT_REFLECTED_FRONT } from "./ol65-front-reflection"
 import { buildProductJsonLd } from "./product-json-ld"
 import { materialOptionsForUrl } from "./product-variant-json-ld"
 import { buildOliverDeskJsonLd, oliverDeskAxis, oliverDeskMedia, oliverDeskTextProduct, verifiedOliverDesk } from "./oliver-desk-variants"
@@ -65,9 +66,12 @@ const scoped = verifiedOliverDesk(directional)!
 assert.ok(scoped)
 const visible = directional.images.map(({url}) => url.replace("/static/", "/product-static/"))
 const leftMedia = oliverDeskMedia(scoped, "left", visible[3], visible.filter((x) => x !== visible[3]))
-assert.deepEqual([leftMedia.mainSrc, ...leftMedia.extraSrcs], [visible[1], visible[4]])
+assert.equal(visible[3], OL65_ORIGINAL_FRONT)
+assert.equal(OL65_LEFT_REFLECTED_FRONT, visible[3] + "#ol65-left-front-mirror")
+assert.deepEqual([leftMedia.mainSrc, ...leftMedia.extraSrcs], [visible[1], visible[4], OL65_LEFT_REFLECTED_FRONT])
 const rightMedia = oliverDeskMedia(scoped, "right", visible[4], visible.filter((x) => x !== visible[4]))
 assert.deepEqual([rightMedia.mainSrc, ...rightMedia.extraSrcs], [visible[0], visible[3]])
+assert.equal(rightMedia.extraSrcs.includes(OL65_LEFT_REFLECTED_FRONT), false)
 assert.equal(oliverDeskAxis(scoped).choices.length, 2)
 assert.deepEqual(oliverDeskMedia(scoped, "unknown", visible[0], visible.slice(1)), {mainSrc:visible[0],extraSrcs:visible.slice(1)})
 assert.equal(verifiedOliverDesk({ ...product, variants: [...product.variants].reverse() })?.choices[0].sku, "OL-65-1")
@@ -78,6 +82,7 @@ assert.equal(verifiedOliverDesk({ ...product, variants: product.variants.map((v)
 assert.equal(verifiedOliverDesk({ ...product, metadata: { ...product.metadata, buyer_default_configuration: { ...product.metadata.buyer_default_configuration, min_unit_price: 65000 } } }), null)
 console.log("oliver-desk-variants.fidelity.test.ts: ok")
 
-// Review P2: preferred hero absent must never restore opposite-side frames.
-assert.deepEqual(oliverDeskMedia(scoped, "left", visible[0], [visible[3], visible[4]]), { mainSrc: visible[4], extraSrcs: [] })
-assert.deepEqual(oliverDeskMedia(scoped, "left", visible[0], [visible[3]]), { mainSrc: "", extraSrcs: [] })
+// Missing preferred hero retains only owned LEFT frames and the explicitly
+// approved reflected front; the unreflected opposite-side frame stays absent.
+assert.deepEqual(oliverDeskMedia(scoped, "left", visible[0], [visible[3], visible[4]]), { mainSrc: visible[4], extraSrcs: [OL65_LEFT_REFLECTED_FRONT] })
+assert.deepEqual(oliverDeskMedia(scoped, "left", visible[0], [visible[3]]), { mainSrc: OL65_LEFT_REFLECTED_FRONT, extraSrcs: [] })

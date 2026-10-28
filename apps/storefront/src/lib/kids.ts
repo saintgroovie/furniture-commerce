@@ -21,7 +21,7 @@ export function isKidsMetadataStorefrontProduct(
   const meta = (product.metadata as Record<string, unknown> | undefined) ?? {}
   if (meta.storefront_section === "kids") return true
   const collection = meta.collection
-  if (typeof collection === "string" && collection === WILLIE_WINKIE_COLLECTION_KEY) {
+  if (typeof collection === "string" && [WILLIE_WINKIE_COLLECTION_KEY, "princess-rose", "oxford"].includes(collection)) {
     return true
   }
   return false
