@@ -21,7 +21,7 @@ function canonicalTestContext(map){
 function testContextMap(c){
   if(c.test_context===undefined)return null;
   const map=canonicalTestContext(c.test_context);
-  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
+  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1','native-family-storefront-cf211-exact22-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
   return map;
 }
 function contextOptions(c,opts={}){
@@ -181,6 +181,7 @@ function sourcePaths(c){
     if(c.kind==='gallery-storefront-01f-exact7-v1')fail('missing gallery path map');
     if(c.kind==='contacts-roi-storefront-b173-exact8-v1')fail('missing contacts ROI path map');
     if(c.kind==='native-family-storefront-cf211-exact20-v1')fail('missing native family V4 path map');
+    if(c.kind==='native-family-storefront-cf211-exact22-v1')fail('missing native family22 path map');
     return {[c.path]:{before:c.before,after:c.after}};
   }
   const names=Object.keys(c.paths);
@@ -211,6 +212,10 @@ function sourcePaths(c){
     // Exact reviewed V4 descriptors: no arbitrary path/hash/mode registration.
     if(names.length!==20||hash(JSON.stringify(c.paths))!=='4e5e509725bdb34f7da4f9aeb2818be228d2858b401cccab3bf490ecf0bbb2a1')fail('closed native family V4 path/hash map');
     if(c.base_sha!=='cf211341a12f0c937b303969347281789c53fc66'||c.base_tree!=='c6f5e4b53a62bf3c55d35cd7391ab75641ca45b5'||c.source_tree!=='7140fcbf0a43efe9778fb0c22def71b185218ef9')fail('native family V4 source/base trees');
+  }else if(c.kind==='native-family-storefront-cf211-exact22-v1'){
+    // Separate exact22 source; historical exact20 admission remains unchanged.
+    if(names.length!==22||hash(JSON.stringify(c.paths))!=='b226fb2c9eb948bfbf431e9c3f72cd039ddd76ba973369974ee8e0bd45d292b7')fail('closed native family22 path/hash map');
+    if(c.base_sha!=='cf211341a12f0c937b303969347281789c53fc66'||c.base_tree!=='c6f5e4b53a62bf3c55d35cd7391ab75641ca45b5'||c.source_tree!=='2775fcfa8c379115ca93c6cc3ef24b2ed3c5e4a5')fail('native family22 source/base trees');
   }else if(c.kind!=='common-storefront-b461-v1'||names.length!==79||JSON.stringify(names)!==JSON.stringify([...names].sort()))fail('closed common path map');
   for(const file of names){
     const p=c.paths[file];
