@@ -70,10 +70,14 @@ export function escapeXml(value: string): string {
 /** Cap product URLs to keep generation bounded. */
 export const SITEMAP_PRODUCT_LIMIT = 5000
 
-export function collectStaticSitemapEntries(origin: string): SitemapEntry[] {
+export function collectStaticSitemapEntries(
+  origin: string,
+  options: { includeKidsRooms?: boolean } = {}
+): SitemapEntry[] {
   const legalPackLive = isLegalLaunchComplete()
   return STATIC_PATHS.filter((p) => !isBlockedSitemapPath(p))
     .filter((p) => (p === "/offer" ? legalPackLive : true))
+    .filter((p) => p !== "/kids/rooms" || options.includeKidsRooms !== false)
     .map((p) => ({
       loc: absoluteSitemapLoc(origin, p),
     }))
@@ -141,4 +145,44 @@ export function renderSitemapXml(entries: SitemapEntry[]): string {
     `${body}\n` +
     `</urlset>\n`
   )
+}
+
+/** Only explicit active backend rooms; never construct rooms from product names. */
+export function collectRoomSitemapEntries(
+  origin: string,
+  rooms: Array<{ slug?: unknown; is_active?: unknown }>,
+  limit = 256
+): SitemapEntry[] {
+  const paths = rooms.filter((room) => room.is_active === true)
+    .map((room) => typeof room.slug === "string" ? room.slug.trim() : "")
+  return collectDetailEntries(origin, "/rooms/", paths, limit)
+}
+
+/** Include a painting theme only when its public projection has real products. */
+export function collectMotifSitemapEntries(
+  origin: string,
+  themes: Array<{ motif_slug?: unknown; motif_available_product_count?: unknown }>,
+  limit = 256
+): SitemapEntry[] {
+  const paths = themes.filter((theme) =>
+    typeof theme.motif_available_product_count === "number" &&
+    Number.isSafeInteger(theme.motif_available_product_count) &&
+    theme.motif_available_product_count > 0
+  ).map((theme) => typeof theme.motif_slug === "string" ? theme.motif_slug.trim() : "")
+  return collectDetailEntries(origin, "/kids/willie-winkie/", paths, limit)
+}
+
+function collectDetailEntries(origin: string, prefix: string, slugs: string[], limit: number): SitemapEntry[] {
+  if (!Number.isSafeInteger(limit) || limit < 1) return []
+  const out: SitemapEntry[] = []
+  const seen = new Set<string>()
+  for (const slug of slugs) {
+    if (!/^[a-z0-9][a-z0-9-]{0,120}$/i.test(slug) || seen.has(slug)) continue
+    const loc = absoluteSitemapLoc(origin, `${prefix}${slug}`)
+    if (!isProductionSitemapLoc(loc)) continue
+    seen.add(slug)
+    out.push({ loc })
+    if (out.length >= limit) break
+  }
+  return out
 }
