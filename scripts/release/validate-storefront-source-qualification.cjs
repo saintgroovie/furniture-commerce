@@ -21,7 +21,7 @@ function canonicalTestContext(map){
 function testContextMap(c){
   if(c.test_context===undefined)return null;
   const map=canonicalTestContext(c.test_context);
-  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1','native-family-storefront-cf211-exact22-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
+  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1','native-family-storefront-cf211-exact22-v1','seo-storefront-ab1-exact5-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
   return map;
 }
 function contextOptions(c,opts={}){
@@ -182,6 +182,7 @@ function sourcePaths(c){
     if(c.kind==='contacts-roi-storefront-b173-exact8-v1')fail('missing contacts ROI path map');
     if(c.kind==='native-family-storefront-cf211-exact20-v1')fail('missing native family V4 path map');
     if(c.kind==='native-family-storefront-cf211-exact22-v1')fail('missing native family22 path map');
+    if(c.kind==='seo-storefront-ab1-exact5-v1')fail('missing P02 exact5 path map');
     return {[c.path]:{before:c.before,after:c.after}};
   }
   const names=Object.keys(c.paths);
@@ -216,6 +217,13 @@ function sourcePaths(c){
     // Separate exact22 source; historical exact20 admission remains unchanged.
     if(names.length!==22||hash(JSON.stringify(c.paths))!=='b226fb2c9eb948bfbf431e9c3f72cd039ddd76ba973369974ee8e0bd45d292b7')fail('closed native family22 path/hash map');
     if(c.base_sha!=='cf211341a12f0c937b303969347281789c53fc66'||c.base_tree!=='c6f5e4b53a62bf3c55d35cd7391ab75641ca45b5'||c.source_tree!=='2775fcfa8c379115ca93c6cc3ef24b2ed3c5e4a5')fail('native family22 source/base trees');
+  }else if(c.kind==='seo-storefront-ab1-exact5-v1'){
+    // Independent P02 contract. Historical P01 exact22 admission stays unchanged.
+    if(names.length!==5||hash(JSON.stringify(c.paths))!=='e9e79a24b3a41f05e44bfadbd3b2f4b4ba1297c020dad4a7793dfebaf161a3c6')fail('closed P02 exact5 path/hash/mode map');
+    if(c.base_sha!=='ab1c674c8ff19e7e9fcafba497b88be5fc20605c'||c.base_tree!=='2775fcfa8c379115ca93c6cc3ef24b2ed3c5e4a5')fail('P02 exact published base');
+    // Draft nulls cannot admit anything. Real metadata is later checked against Git
+    // by sourceFacts: exact HEAD/tree, sole genuine parent, branch tip, all5 blobs.
+    if(!/^[0-9a-f]{40}$/.test(c.source_sha||'')||!/^[0-9a-f]{40}$/.test(c.source_tree||'')||c.source_sha===c.base_sha||c.source_tree===c.base_tree||!/^release\/[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(c.release_ref||'')||c.release_ref.includes('..'))fail('P02 genuine immutable source metadata required');
   }else if(c.kind!=='common-storefront-b461-v1'||names.length!==79||JSON.stringify(names)!==JSON.stringify([...names].sort()))fail('closed common path map');
   for(const file of names){
     const p=c.paths[file];
