@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server"
-import { getCatalogProducts } from "@/lib/api/products"
+import { getSitemapSources } from "@/lib/api/sitemap-sources"
+import { KIDS_ROOM_TYPE } from "@/lib/kids"
 import { isIndexingAllowed } from "@/lib/indexing-policy"
 import { resolvePublicIndexableOrigin } from "@/lib/seo-mode"
 import {
   collectProductSitemapEntries,
+  collectRoomSitemapEntries,
+  collectMotifSitemapEntries,
   collectStaticSitemapEntries,
   mergeSitemapEntries,
   renderSitemapXml,
@@ -18,7 +21,7 @@ export const dynamic = "force-dynamic"
  *
  * Fail-closed on catalog fetch errors (no partial corrupt XML of invented URLs).
  */
-export async function GET() {
+export async function GET(request?: Request) {
   if (!isIndexingAllowed()) {
     return new NextResponse(null, {
       status: 404,
@@ -30,25 +33,17 @@ export async function GET() {
   }
 
   const origin = resolvePublicIndexableOrigin()
-  const staticEntries = collectStaticSitemapEntries(origin)
-  let productEntries: ReturnType<typeof collectProductSitemapEntries> = []
+  let entries: ReturnType<typeof collectStaticSitemapEntries>
   try {
-    const catalog = (await getCatalogProducts()) as {
-      products?: unknown
-    }
-    if (!catalog || !Array.isArray(catalog.products)) {
-      return new NextResponse(null, {
-        status: 503,
-        headers: {
-          "Cache-Control": "no-store",
-          "Content-Type": "text/plain; charset=utf-8",
-        },
-      })
-    }
-    productEntries = collectProductSitemapEntries(
-      origin,
-      catalog.products as Array<{ handle?: unknown; id?: unknown }>
-    )
+    const sources = await getSitemapSources(request?.signal)
+    entries = mergeSitemapEntries([
+      ...collectStaticSitemapEntries(origin, {
+        includeKidsRooms: sources.rooms.some(room => room.is_active === true && room.room_type === KIDS_ROOM_TYPE),
+      }),
+      ...collectProductSitemapEntries(origin, sources.products),
+      ...collectRoomSitemapEntries(origin, sources.rooms),
+      ...collectMotifSitemapEntries(origin, sources.motifs),
+    ])
   } catch {
     return new NextResponse(null, {
       status: 503,
@@ -59,7 +54,6 @@ export async function GET() {
     })
   }
 
-  const entries = mergeSitemapEntries([...staticEntries, ...productEntries])
   const xml = renderSitemapXml(entries)
   return new NextResponse(xml, {
     status: 200,
