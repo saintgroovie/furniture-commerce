@@ -427,7 +427,7 @@ jobs:
     # Raised from 10: the cutover execute-path shell harnesses spawn a few
     # thousand short-lived processes (fake docker/compose shims) and take a
     # couple of minutes on hosted runners.
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
