@@ -21,7 +21,7 @@ function canonicalTestContext(map){
 function testContextMap(c){
   if(c.test_context===undefined)return null;
   const map=canonicalTestContext(c.test_context);
-  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1','native-family-storefront-cf211-exact22-v1','seo-storefront-ab1-exact5-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
+  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1','native-family-storefront-cf211-exact22-v1','seo-storefront-ab1-exact5-v1','seo-storefront-ab1-exact6-v2'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
   return map;
 }
 function contextOptions(c,opts={}){
@@ -183,6 +183,7 @@ function sourcePaths(c){
     if(c.kind==='native-family-storefront-cf211-exact20-v1')fail('missing native family V4 path map');
     if(c.kind==='native-family-storefront-cf211-exact22-v1')fail('missing native family22 path map');
     if(c.kind==='seo-storefront-ab1-exact5-v1')fail('missing P02 exact5 path map');
+    if(c.kind==='seo-storefront-ab1-exact6-v2')fail('missing P02 corrected exact6 path map');
     return {[c.path]:{before:c.before,after:c.after}};
   }
   const names=Object.keys(c.paths);
@@ -224,6 +225,12 @@ function sourcePaths(c){
     // Draft nulls cannot admit anything. Real metadata is later checked against Git
     // by sourceFacts: exact HEAD/tree, sole genuine parent, branch tip, all5 blobs.
     if(!/^[0-9a-f]{40}$/.test(c.source_sha||'')||!/^[0-9a-f]{40}$/.test(c.source_tree||'')||c.source_sha===c.base_sha||c.source_tree===c.base_tree||!/^release\/[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(c.release_ref||'')||c.release_ref.includes('..'))fail('P02 genuine immutable source metadata required');
+  }else if(c.kind==='seo-storefront-ab1-exact6-v2'){
+    // New closed6 successor; the failed immutable exact5/v1 contract is preserved.
+    if(names.length!==6||hash(JSON.stringify(c.paths))!=='1eb4c0040151ab6b2e0a38cdf597534f27c44dd7ef994302752b6b113171fcbe')fail('closed P02 corrected exact6 path/hash/mode map');
+    if(c.base_sha!=='ab1c674c8ff19e7e9fcafba497b88be5fc20605c'||c.base_tree!=='2775fcfa8c379115ca93c6cc3ef24b2ed3c5e4a5')fail('P02 corrected exact published base');
+    if(!/^[0-9a-f]{40}$/.test(c.source_sha||'')||!/^[0-9a-f]{40}$/.test(c.source_tree||'')||c.source_sha===c.base_sha||c.source_tree===c.base_tree||!/^release\/[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(c.release_ref||'')||c.release_ref.includes('..'))fail('P02 corrected genuine immutable source metadata required');
+    if(c.source_sha==='94ac8e55270e0242a875f6677b83845d5f299e4e'||c.source_tree==='e847888e61f1552a7a8e748ba1fcf1ececb9c187'||c.release_ref==='release/seo-sitemap-rooms-ab1-20261030')fail('failed exact5 source identity cannot be reused');
   }else if(c.kind!=='common-storefront-b461-v1'||names.length!==79||JSON.stringify(names)!==JSON.stringify([...names].sort()))fail('closed common path map');
   for(const file of names){
     const p=c.paths[file];
