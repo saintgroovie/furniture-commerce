@@ -1738,7 +1738,7 @@
         "apps/workspace/src/server/catalog-policy.mjs": "5e2ffacbc354fb0c75cfaba6c7a0bd28b674375b040ceee1528283855f801a9d"
       },
       "workflow": ".github/workflows/qualify-storefront-source.yml",
-      "workflow_sha256": "e9f2ce172a33fa4acbd3716ae83494446674e99c77eb3d4aca1a9ef1e009dee2",
+      "workflow_sha256": "4935d5fc95383877bfb2e121731b1aa7646d34dad29ba8ed5dce928ff867689b",
       "retained_backend_proof": {
         "mode": "authenticated-main-component-v1",
         "component_id": "orders-main-b121-backend-v1"
