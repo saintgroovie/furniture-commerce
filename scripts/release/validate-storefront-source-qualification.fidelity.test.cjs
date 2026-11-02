@@ -63,6 +63,8 @@ for(const mutate of [p=>p.componentDigest='wrong',p=>p.componentRevision='wrong'
 f=fixture();assert.throws(()=>v.collectRun(c,{...good,runId:0},f.api,f.load,f.registrySha,f.extract));count++;
 f=fixture();f.load=()=>Buffer.from('download from wrong artifact');let extracted=false;f.extract=()=>{extracted=true;return Buffer.from('{}');};assert.throws(()=>collect(f),/archive digest/);assert.equal(extracted,false);count++;
 f=fixture();f.artifacts[0].digest='sha256:'+'0'.repeat(64);assert.throws(()=>collect(f),/archive digest/);count++;
+// Historical cart fixtures keep their sealed workflow identity; live bytes use the current exact6 contract.
+const currentWorkflowContract=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['seo-storefront-ab1-exact6-v2'];
 const workflow=fs.readFileSync(path.join(__dirname,'../../.github/workflows/qualify-storefront-source.yml'),'utf8');
 for(const name of Object.values(v.JOBS))assert(workflow.includes('name: '+name));
 assert(!/packages:\s*write|id-token:\s*write|docker\/build-push-action|docker\/login-action/.test(workflow));
@@ -87,7 +89,8 @@ function routeContract(doc){
 }
 const routing=parseYaml(workflow);routeContract(routing);count++;
 for(const mutate of [x=>delete x.jobs['qualify-storefront'].if,x=>x.jobs['qualify-backend-fidelity'].if="${{ github.event_name == 'pull_request' }}",x=>x.jobs['qualify-release-governance'].if='${{ always() }}',x=>x.jobs['source-contract-pr'].if="${{ github.event_name == 'workflow_dispatch' }}",x=>x.jobs['source-contract-pr'].steps[0].with['persist-credentials']=true,x=>x.jobs['source-contract-pr'].steps[2].run='curl ${{ secrets.TOKEN }}',x=>x.permissions.contents='write']){const q=clone(routing);mutate(q);assert.throws(()=>routeContract(q));count++;}
-assert.equal(crypto.createHash('sha256').update(workflow).digest('hex'),c.workflow_sha256);count++;
+assert.equal(currentWorkflowContract.workflow,'.github/workflows/qualify-storefront-source.yml');count++;
+assert.equal(crypto.createHash('sha256').update(workflow).digest('hex'),currentWorkflowContract.workflow_sha256);count++;
 assert.equal(c.context_hashes['.github/workflows/pr-checks.yml'],'9d67c7ebd33db880a2298f363ddea0a829fdf38921947f6b238f9363df1691c6');count++;
 const archiveFixtures={"good": "UEsDBBQAAAAAAAAAIQCQX9SnCwAAAAsAAAASAAAAcXVhbGlmaWNhdGlvbi5qc29ueyJvayI6dHJ1ZX1QSwECFAMUAAAAAAAAACEAkF/UpwsAAAALAAAAEgAAAAAAAAAAAAAAgAEAAAAAcXVhbGlmaWNhdGlvbi5qc29uUEsFBgAAAAABAAEAQAAAADsAAAAAAA==", "path": "UEsDBBQAAAAAAAAAIQBDv6ajAgAAAAIAAAAVAAAALi4vcXVhbGlmaWNhdGlvbi5qc29ue31QSwECFAMUAAAAAAAAACEAQ7+mowIAAAACAAAAFQAAAAAAAAAAAAAAgAEAAAAALi4vcXVhbGlmaWNhdGlvbi5qc29uUEsFBgAAAAABAAEAQwAAADUAAAAAAA==", "symlink": "UEsDBBQAAAAAAAAAIQD8L29GBgAAAAYAAAASAAAAcXVhbGlmaWNhdGlvbi5qc29udGFyZ2V0UEsBAhQDFAAAAAAAAAAhAPwvb0YGAAAABgAAABIAAAAAAAAAAAAAAP+hAAAAAHF1YWxpZmljYXRpb24uanNvblBLBQYAAAAAAQABAEAAAAA2AAAAAAA="};
 assert.equal(v.extractArchive(Buffer.from(archiveFixtures.good,'base64')).toString(),'{"ok":true}');count++;
