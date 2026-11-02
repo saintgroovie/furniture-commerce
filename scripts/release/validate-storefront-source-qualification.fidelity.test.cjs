@@ -3,7 +3,9 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--seo5-only')){
+if(process.argv.includes('--seo6-only')){
+ console.log(JSON.stringify(seo6AdmissionRegression(),null,2));
+}else if(process.argv.includes('--seo5-only')){
  console.log(JSON.stringify(seo5AdmissionRegression(),null,2));
 }else if(process.argv.includes('--native-family22-binding-only')){
  console.log(JSON.stringify(nativeFamily22BindingRegression(),null,2));
@@ -24,6 +26,7 @@ if(process.argv.includes('--seo5-only')){
 }else if(process.argv.includes('--retained-backend-context-only')){
  console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 }else{
+console.log(JSON.stringify(seo6AdmissionRegression(),null,2));
 console.log(JSON.stringify(seo5AdmissionRegression(),null,2));
 v.requireInput(c,good);count++;
 for(const key of ['sourceSha','productionBaseSha','releaseRef','backendRevision','backendDigest','productionStorefrontDigest','trustedPolicySha']){const x={...good,[key]:'wrong'};assert.throws(()=>v.requireInput(c,x));count++;}
@@ -550,4 +553,36 @@ function seo5AdmissionRegression(){
  pass(()=>v.validateSeal(n,seal,input,'storefront',888,registrySha));
  for(const mutate of [s=>s.sourceSha=p01.source_sha,s=>s.sourceTree=p01.source_tree,s=>s.baseSha=p01.base_sha,s=>s.releaseRef=p01.release_ref,s=>s.policySha='0'.repeat(40),s=>s.runId=777,s=>s.attempt=2,s=>s.overlay={'apps/storefront/src/proxy.ts':'0'.repeat(64)},s=>s.testContextDigest='0'.repeat(64)]){const s=clone(seal);mutate(s);reject(()=>v.validateSeal(n,s,input,'storefront',888,registrySha));}
  return {status:'PASS_NEW_P02_CLOSED5_AND_SOURCE_SEAL_BOUNDARIES',cases,source_commit:n.source_sha,old_checks_repeated:false};
+}
+
+function seo6AdmissionRegression(){
+ const reg=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))),key='seo-storefront-ab1-exact6-v2',n=reg.qualifications[key],old=reg.qualifications['seo-storefront-ab1-exact5-v1'];
+ // Actual immutable identities remain null in this LOCAL review proposal.
+ // Only real new Git metadata can enable this test/qualification registration.
+ assert.match(n.source_sha||'',/^[0-9a-f]{40}$/,'P02 corrected genuine source SHA pending');
+ assert.match(n.source_tree||'',/^[0-9a-f]{40}$/,'P02 corrected genuine source tree pending');
+ assert.match(n.release_ref||'',/^release\//,'P02 corrected genuine release ref pending');
+ let cases=0;const pass=f=>{f();cases++;},reject=f=>{assert.throws(f);cases++;};
+ const file='apps/storefront/src/lib/seo-mode.fidelity.test.ts';
+ pass(()=>assert.equal(Object.keys(v.sourcePaths(n)).length,6));
+ pass(()=>assert.deepEqual(Object.keys(n.paths),[...Object.keys(n.paths)].sort()));
+ pass(()=>assert.equal(old.source_sha,'94ac8e55270e0242a875f6677b83845d5f299e4e'));
+ pass(()=>assert.equal(Object.keys(old.paths).length,5));
+ for(const f of Object.keys(old.paths))pass(()=>assert.deepEqual(n.paths[f],old.paths[f]));
+ pass(()=>assert.equal(n.paths[file].before,'86ed0cb2408da4a3d1b510f24554e3f31388c12a3fe37f813a3a3ac7f2849ea9'));
+ pass(()=>assert.equal(n.paths[file].after,'b276f335ab98bd61265316aeff51722afe063b8e0b9d06418805fa9dc4bfea37'));
+ pass(()=>assert.equal(n.base_sha,old.base_sha));pass(()=>assert.equal(n.base_tree,old.base_tree));
+ pass(()=>assert.deepEqual(n.protected,old.protected));pass(()=>assert.deepEqual(n.protected_before,old.protected_before));
+ pass(()=>assert.deepEqual(v.testContextMap(n),v.testContextMap(old)));
+ pass(()=>assert.deepEqual(n.retained_backend_proof,old.retained_backend_proof));
+ pass(()=>assert(v.workflowEnvironment(key,n).includes('RELEASE_REF='+n.release_ref+'\n')));
+ for(const mutate of [x=>delete x.paths,x=>delete x.paths[file],x=>x.paths.extra=clone(x.paths[file]),x=>x.paths=Object.fromEntries(Object.entries(x.paths).reverse()),x=>x.paths[file].before='0'.repeat(64),x=>x.paths[file].after='0'.repeat(64),x=>x.paths[file].before_blob='0'.repeat(40),x=>x.paths[file].after_blob='0'.repeat(40),x=>x.paths[file].mode='100755',x=>x.paths[file].before_mode='100755',x=>x.base_sha=old.source_sha,x=>x.base_tree=old.source_tree,x=>x.source_sha=null,x=>x.source_tree=null,x=>x.release_ref=null,x=>x.source_sha=x.base_sha,x=>x.source_tree=x.base_tree,x=>x.source_sha=old.source_sha,x=>x.source_tree=old.source_tree,x=>x.release_ref=old.release_ref,x=>x.release_ref='release/../other',x=>x.test_overlays={[file]:'0'.repeat(64)}]){const x=clone(n);mutate(x);reject(()=>v.sourcePaths(x));}
+ reject(()=>v.sourcePaths({...clone(n),kind:old.kind}));
+ reject(()=>v.sourcePaths({...clone(old),kind:n.kind}));
+ reject(()=>v.testContextMap({...clone(n),kind:'unknown-seo6'}));
+ const input={sourceSha:n.source_sha,productionBaseSha:n.base_sha,releaseRef:n.release_ref,backendRevision:n.backend_revision,backendDigest:n.backend_digest,productionStorefrontDigest:n.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
+ const registrySha='b'.repeat(64),seal={schema:1,sourceSha:n.source_sha,sourceTree:n.source_tree,baseSha:n.base_sha,releaseRef:n.release_ref,backendTree:n.backend_tree,policySha:input.trustedPolicySha,registrySha,job:'storefront',runId:888,attempt:1,postChecks:true,context:'candidate-with-sealed-test-context',overlay:{},testContext:v.testContextMap(n),testContextDigest:crypto.createHash('sha256').update(JSON.stringify(v.testContextMap(n))).digest('hex')};
+ pass(()=>v.validateSeal(n,seal,input,'storefront',888,registrySha));
+ for(const mutate of [s=>s.sourceSha=old.source_sha,s=>s.sourceTree=old.source_tree,s=>s.releaseRef=old.release_ref,s=>s.baseSha=old.source_sha,s=>s.policySha='0'.repeat(40),s=>s.runId=41447323743,s=>s.attempt=2,s=>s.overlay={[file]:'0'.repeat(64)}]){const s=clone(seal);mutate(s);reject(()=>v.validateSeal(n,s,input,'storefront',888,registrySha));}
+ return {status:'PASS_NEW_P02_CLOSED6_TEST_CORRECTION_BOUNDARIES',cases,source_commit:n.source_sha,old68_checks_repeated:false};
 }
