@@ -3,7 +3,9 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--native-family22-binding-only')){
+if(process.argv.includes('--seo5-only')){
+ console.log(JSON.stringify(seo5AdmissionRegression(),null,2));
+}else if(process.argv.includes('--native-family22-binding-only')){
  console.log(JSON.stringify(nativeFamily22BindingRegression(),null,2));
 }else if(process.argv.includes('--native-family22-only')){
  console.log(JSON.stringify(nativeFamily22AdmissionRegression(),null,2));
@@ -22,6 +24,7 @@ if(process.argv.includes('--native-family22-binding-only')){
 }else if(process.argv.includes('--retained-backend-context-only')){
  console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 }else{
+console.log(JSON.stringify(seo5AdmissionRegression(),null,2));
 v.requireInput(c,good);count++;
 for(const key of ['sourceSha','productionBaseSha','releaseRef','backendRevision','backendDigest','productionStorefrontDigest','trustedPolicySha']){const x={...good,[key]:'wrong'};assert.throws(()=>v.requireInput(c,x));count++;}
 assert(v.recognized(c,good));assert(v.recognized(c,{releaseRef:c.release_ref,sourceSha:'wrong'}));assert(!v.recognized(c,{releaseRef:'release/other',sourceSha:'other'}));count+=3;
@@ -522,4 +525,29 @@ function nativeFamily22BindingRegression(){
  pass(()=>assert(v.workflowEnvironment(key,n).includes('RELEASE_REF='+n.release_ref+'\n')));
  for(const mutate of [x=>x.source_sha=null,x=>x.release_ref=null,x=>x.source_tree='0'.repeat(40),x=>x.paths[Object.keys(x.paths)[0]].after='0'.repeat(64)]){const x=clone(n);mutate(x);reject(()=>v.workflowEnvironment(key,x));}
  return {status:'PASS_NEW_EXACT22_ACTUAL_BINDING_ONLY',cases,source_commit:n.source_sha,registered:false,old_checks_repeated:false};
+}
+
+function seo5AdmissionRegression(){
+ const reg=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))),key='seo-storefront-ab1-exact5-v1',n=reg.qualifications[key],p01=reg.qualifications['native-family-storefront-cf211-exact22-v1'];
+ // Intentional gate: this local proposal cannot become passing/admissible until
+ // only real frozen source metadata has replaced the three null registry fields.
+ assert.match(n.source_sha||'',/^[0-9a-f]{40}$/,'P02 actual frozen source SHA pending');
+ assert.match(n.source_tree||'',/^[0-9a-f]{40}$/,'P02 actual frozen source tree pending');
+ assert.match(n.release_ref||'',/^release\//,'P02 actual frozen release ref pending');
+ let cases=0;const pass=f=>{f();cases++;},reject=f=>{assert.throws(f);cases++;};
+ pass(()=>assert.equal(Object.keys(v.sourcePaths(n)).length,5));
+ pass(()=>assert.equal(n.base_sha,p01.source_sha));pass(()=>assert.equal(n.base_tree,p01.source_tree));
+ pass(()=>assert.deepEqual(v.testContextMap(n),v.testContextMap(p01)));
+ pass(()=>assert.deepEqual(n.retained_backend_proof,p01.retained_backend_proof));
+ pass(()=>assert(v.workflowEnvironment(key,n).includes('RELEASE_REF='+n.release_ref+'\n')));
+ for(const [file,spec]of Object.entries(p01.paths))pass(()=>{assert.equal(n.protected[file],spec.after);assert.equal(n.protected_before[file],spec.after);});
+ for(const mutate of [x=>delete x.paths,x=>delete x.paths[Object.keys(x.paths)[0]],x=>x.paths.extra=clone(Object.values(x.paths)[0]),x=>x.paths=Object.fromEntries(Object.entries(x.paths).reverse()),x=>Object.values(x.paths)[0].before='0'.repeat(64),x=>Object.values(x.paths)[0].after='0'.repeat(64),x=>Object.values(x.paths)[0].before_blob='0'.repeat(40),x=>Object.values(x.paths)[0].after_blob='0'.repeat(40),x=>Object.values(x.paths)[0].mode='100755',x=>Object.values(x.paths)[0].before_mode='100755',x=>x.base_sha='0'.repeat(40),x=>x.base_tree='0'.repeat(40),x=>x.source_sha=null,x=>x.source_tree=null,x=>x.release_ref=null,x=>x.source_sha=x.base_sha,x=>x.source_tree=x.base_tree,x=>x.release_ref='release/../other',x=>x.test_overlays={'apps/storefront/src/proxy.ts':'0'.repeat(64)}]){const x=clone(n);mutate(x);reject(()=>v.sourcePaths(x));}
+ for(const mutate of [x=>x.kind='unknown-seo5',x=>x.test_context={},x=>x.context_hashes[v.TEST_CONTEXT_FILE]='0'.repeat(64)]){const x=clone(n);mutate(x);reject(()=>v.testContextMap(x));}
+ const input={sourceSha:n.source_sha,productionBaseSha:n.base_sha,releaseRef:n.release_ref,backendRevision:n.backend_revision,backendDigest:n.backend_digest,productionStorefrontDigest:n.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
+ pass(()=>v.requireInput(n,input));
+ for(const field of ['sourceSha','productionBaseSha','releaseRef','backendRevision','backendDigest','productionStorefrontDigest','trustedPolicySha'])reject(()=>v.requireInput(n,{...input,[field]:'wrong'}));
+ const registrySha='b'.repeat(64),seal={schema:1,sourceSha:n.source_sha,sourceTree:n.source_tree,baseSha:n.base_sha,releaseRef:n.release_ref,backendTree:n.backend_tree,policySha:input.trustedPolicySha,registrySha,job:'storefront',runId:888,attempt:1,postChecks:true,context:'candidate-with-sealed-test-context',overlay:{},testContext:v.testContextMap(n),testContextDigest:crypto.createHash('sha256').update(JSON.stringify(v.testContextMap(n))).digest('hex')};
+ pass(()=>v.validateSeal(n,seal,input,'storefront',888,registrySha));
+ for(const mutate of [s=>s.sourceSha=p01.source_sha,s=>s.sourceTree=p01.source_tree,s=>s.baseSha=p01.base_sha,s=>s.releaseRef=p01.release_ref,s=>s.policySha='0'.repeat(40),s=>s.runId=777,s=>s.attempt=2,s=>s.overlay={'apps/storefront/src/proxy.ts':'0'.repeat(64)},s=>s.testContextDigest='0'.repeat(64)]){const s=clone(seal);mutate(s);reject(()=>v.validateSeal(n,s,input,'storefront',888,registrySha));}
+ return {status:'PASS_NEW_P02_CLOSED5_AND_SOURCE_SEAL_BOUNDARIES',cases,source_commit:n.source_sha,old_checks_repeated:false};
 }
