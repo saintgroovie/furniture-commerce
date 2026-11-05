@@ -10,6 +10,12 @@ on:
         description: CI-qualified PR head with identical backend and workspace sources
         type: string
         required: true
+      artifact_kind:
+        description: Runtime image or isolated compiler dependencies (never deployment)
+        type: choice
+        required: false
+        default: runtime
+        options: [runtime, compiler-deps]
 permissions:
   contents: read
   checks: read
@@ -26,6 +32,11 @@ jobs:
         with:
           ref: ${{ inputs.source_sha }}
           fetch-depth: 0
+      - name: Validate explicit artifact kind
+        env:
+          KIND: ${{ inputs.artifact_kind }}
+        run: |
+          case "${KIND:-runtime}" in runtime|compiler-deps) ;; *) exit 1 ;; esac
       - name: Qualify immutable source
         env:
           SOURCE: ${{ inputs.source_sha }}
@@ -48,12 +59,15 @@ jobs:
           assert required <= good, ('source is not qualified',sorted(required-good))
           PY
       - uses: docker/setup-buildx-action@v3
+        if: ${{ inputs.artifact_kind != 'compiler-deps' }}
       - uses: docker/login-action@v3
+        if: ${{ inputs.artifact_kind != 'compiler-deps' }}
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v6
+        if: ${{ inputs.artifact_kind != 'compiler-deps' }}
         id: workspace
         with:
           context: apps/workspace
@@ -69,6 +83,7 @@ jobs:
           cache-from: type=gha,scope=woodright-workspace
           cache-to: type=gha,mode=max,scope=woodright-workspace
       - name: Write artifact provenance
+        if: ${{ inputs.artifact_kind != 'compiler-deps' }}
         env:
           SOURCE: ${{ inputs.source_sha }}
           DIGEST: ${{ steps.workspace.outputs.digest }}
@@ -81,6 +96,351 @@ jobs:
           open('workspace-build-manifest.json','w').write(json.dumps(d,indent=2)+'\n')
           PY
       - uses: actions/upload-artifact@v4
+        if: ${{ inputs.artifact_kind != 'compiler-deps' }}
         with:
           name: workspace-build-${{ inputs.source_sha }}-run-${{ github.run_id }}-attempt-${{ github.run_attempt }}
           path: workspace-build-manifest.json
+
+      - name: Stage only pinned dependency inputs
+        if: ${{ inputs.artifact_kind == 'compiler-deps' }}
+        timeout-minutes: 1
+        env:
+          DEPS_ROOT: ${{ runner.temp }}/ws-deps-${{ github.run_id }}-${{ github.run_attempt }}
+          REPOSITORY_PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          python3 - <<'PYCODE'
+          import hashlib,json,os,pathlib
+          assert os.environ['REPOSITORY_PRIVATE']=='true', 'compiler archive requires private artifact access'
+          root=pathlib.Path(os.environ['DEPS_ROOT']); root.mkdir(mode=0o700)
+          context=root/'context'; context.mkdir(mode=0o700)
+          expected={'package.json':'af406ed10d6538c6e0a01d51cea743463781ea3ff757944160e507a77699d162','package-lock.json':'2454941cea800fd97e82cba41a7ac8051a409e8816e647c06d9e9ba4d7b35a1c','Dockerfile':'a5664dcd9ce7b5644368f61f7b5d46630e0d1916587a9e3f4b51a842b9b5f6b1'}
+          rows={}
+          for name,sha in expected.items():
+              src=pathlib.Path('apps/workspace')/name
+              assert src.is_file() and not src.is_symlink()
+              data=src.read_bytes(); assert hashlib.sha256(data).hexdigest()==sha
+              dst=context/name
+              with dst.open('xb') as f: f.write(data)
+              dst.chmod(0o600); rows[name]={'bytes':len(data),'sha256':sha}
+          assert sorted(x.name for x in context.iterdir())==sorted(expected)
+          (root/'inputs.json').write_text(json.dumps(rows,sort_keys=True)+'\n')
+          PYCODE
+      - name: Reserve exact dependency builder ownership
+        if: ${{ inputs.artifact_kind == 'compiler-deps' }}
+        id: deps_ownership
+        timeout-minutes: 2
+        env:
+          DEPS_ROOT: ${{ runner.temp }}/ws-deps-${{ github.run_id }}-${{ github.run_attempt }}
+          RUN_ID: ${{ github.run_id }}
+          ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 - <<'PYCODE'
+          import json,os,pathlib,re,stat,subprocess,time
+          root=pathlib.Path(os.environ['DEPS_ROOT']); builder='ws-deps-'+os.environ['RUN_ID']+'-'+os.environ['ATTEMPT']
+          assert re.fullmatch('ws-deps-[0-9]+-[0-9]+',builder)
+          container='buildx_buildkit_'+builder+'0'; volume=container+'_state'; endpoint='unix:///var/run/docker.sock'
+          end=time.monotonic()+75
+
+          def call(args):
+              left=end-time.monotonic(); assert left>0
+              p=subprocess.run(['docker','--host',endpoint]+args,capture_output=True,text=True,timeout=min(12,left))
+              assert len(p.stdout.encode())<=65536 and len(p.stderr.encode())<=16384
+              return p
+
+          def probe(kind,name,token):
+              if kind=='container':
+                  wanted='WOODRIGHT_BUILDER_OWNER='+token
+                  fmt='{"Id":{{json .Id}},"Name":{{json .Name}},"Owners":[{{range .Config.Env}}{{if eq . '+json.dumps(wanted)+'}}{{json .}}{{end}}{{end}}],"StateVolumes":[{{range .Mounts}}{{if eq .Destination "/var/lib/buildkit"}}{{json .Name}}{{end}}{{end}}]}'
+              else:
+                  fmt='{"Name":{{json .Name}},"Owner":{{json (index .Labels "woodright.wsdeps.owner")}}}'
+              p=call([kind,'inspect','--format',fmt,name])
+              if p.returncode==0: return json.loads(p.stdout)
+              missing=r'(?:Error response from daemon: |Error: )?No such (?:container|object|volume): '+re.escape(name)
+              if p.returncode==1 and not p.stdout.strip() and re.fullmatch(missing,p.stderr.strip()): return None
+              raise RuntimeError('DAEMON_OR_METADATA_UNKNOWN')
+
+          def daemon():
+              p=call(['info','--format','{{json .ID}}']); assert p.returncode==0
+              value=json.loads(p.stdout); assert isinstance(value,str) and 0<len(value)<=256
+              return value
+
+          def save(path,data):
+              temp=path.with_suffix('.tmp')
+              with temp.open('x') as f:
+                  os.chmod(temp,0o600); json.dump(data,f,sort_keys=True); f.write('\n'); f.flush(); os.fsync(f.fileno())
+              os.replace(temp,path)
+          import secrets
+          assert root.is_dir() and not root.is_symlink()
+          config=root/'buildx'; config.mkdir(mode=0o700)
+          nonce=secrets.token_hex(16)
+          record={'schema':'workspace-builder-ownership-v1','builder':builder,'container':container,'volume':volume,'endpoint':endpoint,'nonce':nonce,'config':str(config),'initial_absence_verified':False,'daemon_id':daemon()}
+          save(root/'ownership.json',record)
+          assert probe('container',container,nonce) is None and probe('volume',volume,nonce) is None, 'PREEXISTING_RESOURCE_NOT_OWNED'
+          record['initial_absence_verified']=True; save(root/'ownership.json',record)
+          p=call(['volume','create','--label','woodright.wsdeps.owner='+nonce,volume]); assert p.returncode==0
+          v=probe('volume',volume,nonce); assert v and v['Name']==volume and v['Owner']==nonce
+          record['reserved_volume_verified']=True; save(root/'ownership.json',record)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f: f.write('nonce='+nonce+'\n')
+          PYCODE
+      - name: Create owned dependency builder
+        if: ${{ inputs.artifact_kind == 'compiler-deps' }}
+        id: deps_builder
+        uses: docker/setup-buildx-action@v3
+        timeout-minutes: 2
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
+          BUILDX_CONFIG: ${{ runner.temp }}/ws-deps-${{ github.run_id }}-${{ github.run_attempt }}/buildx
+        with:
+          name: ws-deps-${{ github.run_id }}-${{ github.run_attempt }}
+          driver: docker-container
+          endpoint: unix:///var/run/docker.sock
+          cleanup: false
+          driver-opts: |
+            env.WOODRIGHT_BUILDER_OWNER=${{ steps.deps_ownership.outputs.nonce }}
+            memory=2g
+            memory-swap=2g
+            cpu-period=100000
+            cpu-quota=150000
+      - name: Export dependency stage only
+        if: ${{ inputs.artifact_kind == 'compiler-deps' }}
+        id: deps
+        timeout-minutes: 11
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
+          BUILDX_CONFIG: ${{ runner.temp }}/ws-deps-${{ github.run_id }}-${{ github.run_attempt }}/buildx
+          DEPS_ROOT: ${{ runner.temp }}/ws-deps-${{ github.run_id }}-${{ github.run_attempt }}
+          BUILDER: ws-deps-${{ github.run_id }}-${{ github.run_attempt }}
+          SOURCE: ${{ inputs.source_sha }}
+          RUN_ID: ${{ github.run_id }}
+          ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          test "$(uname -s)" = Linux
+          export WRITER_LIMITER='import os,resource,sys; n=int(sys.argv[1]); resource.setrlimit(resource.RLIMIT_FSIZE,(n,n)); assert resource.getrlimit(resource.RLIMIT_FSIZE)==(n,n); os.execvp(sys.argv[2],sys.argv[2:])'
+          python3 - <<'PYCODE'
+          import errno,json,os,pathlib,subprocess,sys
+          root=pathlib.Path(os.environ['DEPS_ROOT']); cap=65536
+          # Mirrors docker -> buildx plugin fork/exec; child writes inherited regular stdout.
+          plugin="import errno,json,os,resource,sys; assert resource.getrlimit(resource.RLIMIT_FSIZE)==(65536,65536); os.write(1,b'x'*65536);\ntry: os.write(1,b'y'); sys.exit(90)\nexcept OSError as e: assert e.errno==errno.EFBIG; os.write(2,b'KERNEL_FSIZE_EFBIG'); sys.exit(73)"
+          parent="import subprocess,sys; sys.exit(subprocess.run([sys.executable,'-c',sys.argv[1]]).returncode)"
+          target=root/'cap-failure-fixture'; assert not target.exists()
+          with target.open('xb') as sink:
+              result=subprocess.run([sys.executable,'-c',os.environ['WRITER_LIMITER'],str(cap),sys.executable,'-c',parent,plugin],stdout=sink,stderr=subprocess.PIPE,timeout=10)
+          assert result.returncode==73 and result.stderr==b'KERNEL_FSIZE_EFBIG' and target.stat().st_size==cap
+          proof={'schema':'workspace-oci-writer-limit-v1','mechanism':'RLIMIT_FSIZE_soft_and_hard_before_exec_inherited_by_plugin','archive_cap_bytes':2147483648,'failure_test_cap_bytes':cap,'failure_exit':result.returncode,'failure_file_bytes':target.stat().st_size,'cap_failure_check_passed':True,'observed_platform':sys.platform}
+          target.unlink(); (root/'writer-limit.json').write_text(json.dumps(proof)+'\n')
+          PYCODE
+          # stdout is the regular archive FD; the actual Buildx plugin inherits
+          # soft+hard RLIMIT_FSIZE through docker CLI fork/exec before any write.
+          test ! -e "$DEPS_ROOT/compiler-deps.oci.tar"
+          timeout --signal=TERM --kill-after=15s 600s \
+            python3 -c "$WRITER_LIMITER" 2147483648 \
+            docker buildx build --builder "$BUILDER" \
+              --file "$DEPS_ROOT/context/Dockerfile" --target deps --platform linux/amd64 \
+              --output type=oci,dest=- --provenance=mode=max --sbom=true --progress=plain \
+              --metadata-file "$DEPS_ROOT/buildx-metadata.json" \
+              --label com.woodright.component=workspace-compiler-deps \
+              --label "org.opencontainers.image.revision=$SOURCE" \
+              --label "woodright.workflow.run_id=$RUN_ID" \
+              --label "woodright.workflow.run_attempt=$ATTEMPT" \
+              --label woodright.compiler.recipe_sha256=a5664dcd9ce7b5644368f61f7b5d46630e0d1916587a9e3f4b51a842b9b5f6b1 \
+              "$DEPS_ROOT/context" > "$DEPS_ROOT/compiler-deps.oci.tar"
+          python3 - <<'PYCODE'
+          import json,os,pathlib,re
+          root=pathlib.Path(os.environ['DEPS_ROOT']); p=root/'buildx-metadata.json'
+          assert p.is_file() and not p.is_symlink() and p.stat().st_size<=1048576
+          digest=json.loads(p.read_text())['containerimage.digest']; assert re.fullmatch('sha256:[a-f0-9]{64}',digest)
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f: f.write('digest='+digest+'\n')
+          PYCODE
+      - name: Remove only this run's dependency builder
+        if: ${{ always() && inputs.artifact_kind == 'compiler-deps' }}
+        timeout-minutes: 2
+        env:
+          DEPS_ROOT: ${{ runner.temp }}/ws-deps-${{ github.run_id }}-${{ github.run_attempt }}
+          RUN_ID: ${{ github.run_id }}
+          ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 - <<'PYCODE'
+          import json,os,pathlib,re,stat,subprocess,time
+          root=pathlib.Path(os.environ['DEPS_ROOT']); builder='ws-deps-'+os.environ['RUN_ID']+'-'+os.environ['ATTEMPT']
+          assert re.fullmatch('ws-deps-[0-9]+-[0-9]+',builder)
+          container='buildx_buildkit_'+builder+'0'; volume=container+'_state'; endpoint='unix:///var/run/docker.sock'
+          end=time.monotonic()+75
+
+          def call(args):
+              left=end-time.monotonic(); assert left>0
+              p=subprocess.run(['docker','--host',endpoint]+args,capture_output=True,text=True,timeout=min(12,left))
+              assert len(p.stdout.encode())<=65536 and len(p.stderr.encode())<=16384
+              return p
+
+          def probe(kind,name,token):
+              if kind=='container':
+                  wanted='WOODRIGHT_BUILDER_OWNER='+token
+                  fmt='{"Id":{{json .Id}},"Name":{{json .Name}},"Owners":[{{range .Config.Env}}{{if eq . '+json.dumps(wanted)+'}}{{json .}}{{end}}{{end}}],"StateVolumes":[{{range .Mounts}}{{if eq .Destination "/var/lib/buildkit"}}{{json .Name}}{{end}}{{end}}]}'
+              else:
+                  fmt='{"Name":{{json .Name}},"Owner":{{json (index .Labels "woodright.wsdeps.owner")}}}'
+              p=call([kind,'inspect','--format',fmt,name])
+              if p.returncode==0: return json.loads(p.stdout)
+              missing=r'(?:Error response from daemon: |Error: )?No such (?:container|object|volume): '+re.escape(name)
+              if p.returncode==1 and not p.stdout.strip() and re.fullmatch(missing,p.stderr.strip()): return None
+              raise RuntimeError('DAEMON_OR_METADATA_UNKNOWN')
+
+          def daemon():
+              p=call(['info','--format','{{json .ID}}']); assert p.returncode==0
+              value=json.loads(p.stdout); assert isinstance(value,str) and 0<len(value)<=256
+              return value
+
+          def save(path,data):
+              temp=path.with_suffix('.tmp')
+              with temp.open('x') as f:
+                  os.chmod(temp,0o600); json.dump(data,f,sort_keys=True); f.write('\n'); f.flush(); os.fsync(f.fileno())
+              os.replace(temp,path)
+          # Always runs, including setupfailure/timeout; never trusts setup outcome.
+          result={'builder':builder,'container_id':None,'removed':False,'scope':'only_this_run','status':'HOLD_OWNERSHIP_OR_DAEMON_UNKNOWN'}
+          try:
+              record_path=root/'ownership.json'; record=None
+              if os.path.lexists(record_path):
+                  s=record_path.lstat(); assert stat.S_ISREG(s.st_mode) and not record_path.is_symlink() and s.st_nlink==1 and s.st_size<=16384
+                  record=json.loads(record_path.read_text()); assert record['schema']=='workspace-builder-ownership-v1'
+                  assert record['builder']==builder and record['container']==container and record['volume']==volume and record['endpoint']==endpoint
+                  assert re.fullmatch('[a-f0-9]{32}',record['nonce']) and record['config']==str(root/'buildx')
+              token=record['nonce'] if record else 'no-ownership-record'
+              actual_daemon=daemon()
+              if record: assert actual_daemon==record['daemon_id'], 'DAEMON_CHANGED'
+              c=probe('container',container,token); v=probe('volume',volume,token)
+              instance=root/'buildx'/'instances'/builder
+              node=None
+              if os.path.lexists(instance.parent): assert instance.parent.is_dir() and not instance.parent.is_symlink()
+              if os.path.lexists(instance):
+                  s=instance.lstat(); assert stat.S_ISREG(s.st_mode) and not instance.is_symlink() and s.st_nlink==1 and s.st_size<=65536
+                  node=json.loads(instance.read_text())
+              # No namespace proof permits only observing verified absence, never deletion.
+              if not record or not record['initial_absence_verified']:
+                  assert c is None and v is None and node is None, 'UNOWNED_OR_PREEXISTING_RESOURCE'
+              else:
+                  assert (root/'buildx').is_dir() and not (root/'buildx').is_symlink()
+                  if node is not None:
+                      assert node['Name']==builder and node['Driver']=='docker-container' and len(node['Nodes'])==1
+                      n=node['Nodes'][0]
+                      assert n['Name']==builder+'0' and n['Endpoint']==endpoint and n['DriverOpts']['env.WOODRIGHT_BUILDER_OWNER']==token, 'AMBIGUOUS_NODE_OWNER'
+                  if c is not None:
+                      assert c['Name']=='/'+container and re.fullmatch('[a-f0-9]{64}',c['Id']) and c['Owners']==['WOODRIGHT_BUILDER_OWNER='+token], 'AMBIGUOUS_CONTAINER_OWNER'
+                      assert c['StateVolumes']==[volume], 'UNEXPECTED_STATE_VOLUME'
+                  if v is not None: assert v['Name']==volume and v['Owner']==token, 'AMBIGUOUS_VOLUME_OWNER'
+                  # Only immutable owned CID is removed, never a possibly replaced name.
+                  if c is not None:
+                      result['container_id']=c['Id']; p=call(['container','rm','--force',c['Id']]); assert p.returncode==0
+                  if v is not None:
+                      # Recheck the ownership token immediately before deleting namedvolume.
+                      current=probe('volume',volume,token); assert current==v, 'VOLUME_CHANGED'
+                      p=call(['volume','rm',volume]); assert p.returncode==0
+                  if node is not None: instance.unlink()
+              assert probe('container',container,token) is None and probe('volume',volume,token) is None and not os.path.lexists(instance), 'OWN_RESOURCE_REMAINS'
+              result.update(removed=True,status='VERIFIED_ABSENT_AFTER_SETUP_OR_PARTIAL_FAILURE' if record else 'VERIFIED_NOT_CREATED',daemon_id=actual_daemon)
+          except Exception as exc:
+              result['error_type']=type(exc).__name__
+              raise
+          finally:
+              root.mkdir(mode=0o700,parents=True,exist_ok=True)
+              save(root/'cleanup.json',result)
+              print(json.dumps({'cleanup_status':result['status'],'removed':result['removed']}))
+          PYCODE
+      - name: Seal bounded dependency archive
+        if: ${{ success() && inputs.artifact_kind == 'compiler-deps' }}
+        timeout-minutes: 3
+        env:
+          DEPS_ROOT: ${{ runner.temp }}/ws-deps-${{ github.run_id }}-${{ github.run_attempt }}
+          SOURCE: ${{ inputs.source_sha }}
+          QUALIFIED: ${{ inputs.qualification_sha }}
+          WORKFLOW_SHA: ${{ github.sha }}
+          DIGEST: ${{ steps.deps.outputs.digest }}
+          RUN_ID: ${{ github.run_id }}
+          ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          python3 - <<'PYCODE'
+          import hashlib,json,os,pathlib,re,tarfile
+          def hashstream(stream):
+              value=hashlib.sha256()
+              for chunk in iter(lambda: stream.read(1048576),b''): value.update(chunk)
+              return value.hexdigest()
+          root=pathlib.Path(os.environ['DEPS_ROOT']); archive=root/'compiler-deps.oci.tar'
+          assert archive.is_file() and not archive.is_symlink() and archive.stat().st_size<=2147483648
+          cleanup=json.loads((root/'cleanup.json').read_text()); assert cleanup['removed'] is True and cleanup['scope']=='only_this_run'
+          assert cleanup['builder']=='ws-deps-'+os.environ['RUN_ID']+'-'+os.environ['ATTEMPT'] and re.fullmatch('[a-f0-9]{64}',cleanup['container_id'])
+          writer=json.loads((root/'writer-limit.json').read_text())
+          assert writer['schema']=='workspace-oci-writer-limit-v1' and writer['archive_cap_bytes']==2147483648 and writer['cap_failure_check_passed'] is True
+          assert writer['observed_platform']=='linux' and writer['failure_exit']==73 and writer['failure_file_bytes']==writer['failure_test_cap_bytes']==65536
+          expected={'package.json':'af406ed10d6538c6e0a01d51cea743463781ea3ff757944160e507a77699d162','package-lock.json':'2454941cea800fd97e82cba41a7ac8051a409e8816e647c06d9e9ba4d7b35a1c','Dockerfile':'a5664dcd9ce7b5644368f61f7b5d46630e0d1916587a9e3f4b51a842b9b5f6b1'}
+          assert set(x.name for x in (root/'context').iterdir())==set(expected)
+          for name,sha in expected.items():
+              for folder in [root/'context',pathlib.Path('apps/workspace')]:
+                  p=folder/name; assert p.is_file() and not p.is_symlink() and hashlib.sha256(p.read_bytes()).hexdigest()==sha
+          for name in ['SOURCE','QUALIFIED','WORKFLOW_SHA']: assert re.fullmatch('[a-f0-9]{40}',os.environ[name])
+          assert re.fullmatch('sha256:[a-f0-9]{64}',os.environ['DIGEST'])
+          with archive.open('rb') as f: archive_sha=hashstream(f)
+          # No archive extraction, links or application-layer execution. Hash streamed blobs.
+          with tarfile.open(archive,'r:') as tar:
+              members={}; total=0
+              for i,entry in enumerate(tar):
+                  assert i<4096
+                  if entry.isdir():
+                      assert entry.name.rstrip('/') in ['blobs','blobs/sha256']; continue
+                  assert entry.isfile() and not entry.issym() and not entry.islnk()
+                  name=entry.name; assert name not in members and (name in ['index.json','oci-layout'] or re.fullmatch('blobs/sha256/[a-f0-9]{64}',name))
+                  total+=entry.size; assert total<=2147483648
+                  with tar.extractfile(entry) as f: sha=hashstream(f)
+                  if name.startswith('blobs/'): assert sha==name.split('/')[-1]
+                  members[name]=entry
+              def read(name):
+                  entry=members[name]; assert entry.size<=16777216
+                  return json.load(tar.extractfile(entry))
+              def blob(desc):
+                  assert re.fullmatch('sha256:[a-f0-9]{64}',desc['digest'])
+                  name='blobs/sha256/'+desc['digest'].split(':')[1]; assert members[name].size==desc['size']; return read(name)
+              index=read('index.json'); assert len(index['manifests'])==1
+              descriptor=index['manifests'][0]; assert descriptor['digest']==os.environ['DIGEST']
+              node=blob(descriptor)
+              children=node.get('manifests',[descriptor]); assert len(children)<=16
+              platforms=[d for d in children if d.get('platform',{}).get('os')=='linux' and d.get('platform',{}).get('architecture')=='amd64']
+              assert len(platforms)==1
+              platform=platforms[0]; manifest=blob(platform); config=blob(manifest['config'])
+              assert config['os']=='linux' and config['architecture']=='amd64'
+              labels=config['config'].get('Labels',{})
+              assert labels.get('com.woodright.component')=='workspace-compiler-deps'
+              assert labels.get('org.opencontainers.image.revision')==os.environ['SOURCE']
+              assert labels.get('woodright.compiler.recipe_sha256')==expected['Dockerfile']
+              assert labels.get('woodright.workflow.run_id')==os.environ['RUN_ID'] and labels.get('woodright.workflow.run_attempt')==os.environ['ATTEMPT']
+              statements=[]
+              for d in children:
+                  if d.get('platform',{}).get('os')!='unknown': continue
+                  att=blob(d)
+                  for layer in att.get('layers',[]):
+                      if layer.get('mediaType')=='application/vnd.in-toto+json': statements.append((layer,blob(layer)))
+              assert len(statements)<=16
+              packages=set(); materials=[]; proofs=[]
+              for desc,s in statements:
+                  assert any(x.get('digest',{}).get('sha256')==platform['digest'].split(':')[1] for x in s.get('subject',[]))
+                  predicate=s.get('predicate',{}); kind=s.get('predicateType','')
+                  if 'spdx' in kind:
+                      packages.update((p.get('name'),p.get('versionInfo')) for p in predicate.get('packages',[]))
+                  if 'slsa' in kind:
+                      materials.extend(predicate.get('materials',[])); materials.extend(predicate.get('buildDefinition',{}).get('resolvedDependencies',[]))
+                  proofs.append({'type':kind,'digest':desc['digest'],'bytes':desc['size']})
+              for p in [('next','16.2.12'),('react','19.2.8'),('react-dom','19.2.8'),('typescript','5.9.3'),('@next/swc-linux-x64-gnu','16.2.12')]: assert p in packages
+              assert any(m.get('digest',{}).get('sha256')=='4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da' for m in materials)
+              result={'schema':'woodright-workspace-compiler-deps-v1','component':'workspace-compiler-deps','source_sha':os.environ['SOURCE'],'qualification_sha':os.environ['QUALIFIED'],'workflow_sha':os.environ['WORKFLOW_SHA'],'workflow_run_id':os.environ['RUN_ID'],'workflow_run_attempt':os.environ['ATTEMPT'],'target':'deps','platform':'linux/amd64','inputs':expected,'base':'docker.io/library/node@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da','node_version_recipe_asserted':'22.23.4','npm_version_recipe_asserted':'10.9.4','archive_bytes':archive.stat().st_size,'archive_sha256':archive_sha,'OCI_index':descriptor['digest'],'OCI_platform':platform['digest'],'OCI_config':manifest['config']['digest'],'proofs':proofs,'cleanup':cleanup,'writer_limit':writer,'release_authorized':False,'deploy_eligible':False,'current_workspace_compiled':False}
+              (root/'compiler-deps-manifest.json').write_text(json.dumps(result,indent=2)+'\n')
+          PYCODE
+      - name: Preserve compiler dependencies separately from runtime releases
+        if: ${{ success() && inputs.artifact_kind == 'compiler-deps' }}
+        uses: actions/upload-artifact@v4
+        timeout-minutes: 5
+        with:
+          name: workspace-compiler-deps-${{ inputs.source_sha }}-run-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/ws-deps-${{ github.run_id }}-${{ github.run_attempt }}/compiler-deps.oci.tar
+            ${{ runner.temp }}/ws-deps-${{ github.run_id }}-${{ github.run_attempt }}/compiler-deps-manifest.json
+            ${{ runner.temp }}/ws-deps-${{ github.run_id }}-${{ github.run_attempt }}/cleanup.json
+            ${{ runner.temp }}/ws-deps-${{ github.run_id }}-${{ github.run_attempt }}/writer-limit.json
+          if-no-files-found: error
+          retention-days: 7

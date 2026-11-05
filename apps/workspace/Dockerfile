@@ -1,7 +1,9 @@
-FROM node:22-bookworm-slim AS build
+FROM node:22-bookworm-slim@sha256:4b150b48b4116e2a22f2c39cc27025fbf4f153e2078fd3b14d159fdb5c7279da AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN test "$(node --version)" = "v22.23.4" && test "$(npm --version)" = "10.9.4" && npm ci
+
+FROM deps AS build
 COPY . .
 ARG SOURCE_SHA
 ENV NEXT_PUBLIC_WORKSPACE_BASE_PATH=""
