@@ -21,7 +21,7 @@ function canonicalTestContext(map){
 function testContextMap(c){
   if(c.test_context===undefined)return null;
   const map=canonicalTestContext(c.test_context);
-  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1','native-family-storefront-cf211-exact22-v1','seo-storefront-ab1-exact5-v1','seo-storefront-ab1-exact6-v2'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
+  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1','native-family-storefront-cf211-exact22-v1','seo-storefront-ab1-exact5-v1','seo-storefront-ab1-exact6-v2','seo-storefront-ab1-exact8-room-preflight-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
   return map;
 }
 function contextOptions(c,opts={}){
@@ -184,6 +184,7 @@ function sourcePaths(c){
     if(c.kind==='native-family-storefront-cf211-exact22-v1')fail('missing native family22 path map');
     if(c.kind==='seo-storefront-ab1-exact5-v1')fail('missing P02 exact5 path map');
     if(c.kind==='seo-storefront-ab1-exact6-v2')fail('missing P02 corrected exact6 path map');
+    if(c.kind==='seo-storefront-ab1-exact8-room-preflight-v1')fail('missing P02 room preflight exact8 path map');
     return {[c.path]:{before:c.before,after:c.after}};
   }
   const names=Object.keys(c.paths);
@@ -231,6 +232,15 @@ function sourcePaths(c){
     if(c.base_sha!=='ab1c674c8ff19e7e9fcafba497b88be5fc20605c'||c.base_tree!=='2775fcfa8c379115ca93c6cc3ef24b2ed3c5e4a5')fail('P02 corrected exact published base');
     if(!/^[0-9a-f]{40}$/.test(c.source_sha||'')||!/^[0-9a-f]{40}$/.test(c.source_tree||'')||c.source_sha===c.base_sha||c.source_tree===c.base_tree||!/^release\/[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(c.release_ref||'')||c.release_ref.includes('..'))fail('P02 corrected genuine immutable source metadata required');
     if(c.source_sha==='94ac8e55270e0242a875f6677b83845d5f299e4e'||c.source_tree==='e847888e61f1552a7a8e748ba1fcf1ececb9c187'||c.release_ref==='release/seo-sitemap-rooms-ab1-20261030')fail('failed exact5 source identity cannot be reused');
+  }else if(c.kind==='seo-storefront-ab1-exact8-room-preflight-v1'){
+    // Replacement source on the genuine published base; sourceFacts stays unchanged.
+    if(names.length!==8||hash(JSON.stringify(c.paths))!=='6578811a134a3b447d95dada6ab2e0a57b94455457484c69a86b4c0a79678b15')fail('closed P02 room preflight exact8 path/hash/mode map');
+    if(c.base_sha!=='ab1c674c8ff19e7e9fcafba497b88be5fc20605c'||c.base_tree!=='2775fcfa8c379115ca93c6cc3ef24b2ed3c5e4a5'||c.production_storefront_digest!=='sha256:95eacfce54758c435e58d5872e269ea171aecb888d013b4e4877bae28824410c')fail('P02 room preflight exact published base');
+    if(c.backend_revision!=='b121f193064aea1733a132bca431f082e6ae8072'||c.backend_tree!=='ecd092a0f057865c361ae07f0c4efcee07210f41'||c.backend_digest!=='sha256:98c0bf52c856b6a047957cc135ce8bdf5266ca5cb7859836a5b9c6ee69a0712f')fail('P02 room preflight retained backend');
+    if(hash(JSON.stringify({protected:c.protected,protected_before:c.protected_before,context_hashes:c.context_hashes,test_context:c.test_context,retained_backend_proof:c.retained_backend_proof}))!=='c1c22ed500382b429623f8adcea6e4a4e91ab55d881ef932dcefaa67cc378af9')fail('P02 room preflight preserved context');
+    // Draft nulls are deliberately non-executable; only an actual Git receipt fills them.
+    if(!/^[0-9a-f]{40}$/.test(c.source_sha||'')||!/^[0-9a-f]{40}$/.test(c.source_tree||'')||c.source_sha===c.base_sha||c.source_tree===c.base_tree||!/^release\/[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(c.release_ref||'')||c.release_ref.includes('..'))fail('P02 room preflight genuine immutable source metadata required');
+    if(['94ac8e55270e0242a875f6677b83845d5f299e4e','4a42f3bd3ddf2b13e141f8de23d08dabdd4eb4b0'].includes(c.source_sha)||['e847888e61f1552a7a8e748ba1fcf1ececb9c187','7ec15dba0d54aceb63f4e8ec3e7aca7f918dc103'].includes(c.source_tree)||['release/seo-sitemap-rooms-ab1-20261030','release/seo-sitemap-rooms-ab1-closed6-20261102'].includes(c.release_ref))fail('historical P02 identities cannot be reused for exact8');
   }else if(c.kind!=='common-storefront-b461-v1'||names.length!==79||JSON.stringify(names)!==JSON.stringify([...names].sort()))fail('closed common path map');
   for(const file of names){
     const p=c.paths[file];

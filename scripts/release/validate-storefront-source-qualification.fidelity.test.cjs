@@ -3,7 +3,11 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--seo6-only')){
+if(process.argv.includes('--seo8-inert-only')){
+ console.log(JSON.stringify(seo8RoomPreflightRegression(true),null,2));
+}else if(process.argv.includes('--seo8-only')){
+ console.log(JSON.stringify(seo8RoomPreflightRegression(false),null,2));
+}else if(process.argv.includes('--seo6-only')){
  console.log(JSON.stringify(seo6AdmissionRegression(),null,2));
 }else if(process.argv.includes('--seo5-only')){
  console.log(JSON.stringify(seo5AdmissionRegression(),null,2));
@@ -26,6 +30,7 @@ if(process.argv.includes('--seo6-only')){
 }else if(process.argv.includes('--retained-backend-context-only')){
  console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 }else{
+console.log(JSON.stringify(seo8RoomPreflightRegression(false),null,2));
 console.log(JSON.stringify(seo6AdmissionRegression(),null,2));
 console.log(JSON.stringify(seo5AdmissionRegression(),null,2));
 v.requireInput(c,good);count++;
@@ -588,4 +593,58 @@ function seo6AdmissionRegression(){
  pass(()=>v.validateSeal(n,seal,input,'storefront',888,registrySha));
  for(const mutate of [s=>s.sourceSha=old.source_sha,s=>s.sourceTree=old.source_tree,s=>s.releaseRef=old.release_ref,s=>s.baseSha=old.source_sha,s=>s.policySha='0'.repeat(40),s=>s.runId=41447323743,s=>s.attempt=2,s=>s.overlay={[file]:'0'.repeat(64)}]){const s=clone(seal);mutate(s);reject(()=>v.validateSeal(n,s,input,'storefront',888,registrySha));}
  return {status:'PASS_NEW_P02_CLOSED6_TEST_CORRECTION_BOUNDARIES',cases,source_commit:n.source_sha,old68_checks_repeated:false};
+}
+
+function seo8RoomPreflightRegression(localInert=false){
+  const reg=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))),key='seo-storefront-ab1-exact8-room-preflight-v1',draft=reg.qualifications[key],old=reg.qualifications['seo-storefront-ab1-exact6-v2'];
+  let cases=0;const pass=f=>{f();cases++;},reject=(f,re)=>{assert.throws(f,re);cases++;};
+  if(localInert){
+    pass(()=>assert.deepEqual([draft.source_sha,draft.source_tree,draft.release_ref],[null,null,null]));
+    reject(()=>v.sourcePaths(draft),/genuine immutable source metadata/);
+    reject(()=>v.workflowEnvironment(key,draft));
+  }else{
+    // Official CI cannot accept the inert review template as a qualified source.
+    assert.match(draft.source_sha||'',/^[0-9a-f]{40}$/,'P02 exact8 actual Git source SHA pending');
+    assert.match(draft.source_tree||'',/^[0-9a-f]{40}$/,'P02 exact8 actual Git source tree pending');
+    assert.match(draft.release_ref||'',/^release\//,'P02 exact8 actual Git release ref pending');
+  }
+  // Synthetic identities exist only in this in-memory pure-contract fixture.
+  // They never enter the registry, a Git receipt, qualification, image or seal.
+  const n=localInert?{...clone(draft),source_sha:'1'.repeat(40),source_tree:'2'.repeat(40),release_ref:'release/unit-test-exact8-not-a-real-source'}:clone(draft);
+  pass(()=>assert.equal(Object.keys(v.sourcePaths(n)).length,8));
+  pass(()=>assert.deepEqual(Object.keys(n.paths),Object.keys(n.paths).sort()));
+  pass(()=>assert.equal(n.base_sha,old.base_sha));pass(()=>assert.equal(n.base_tree,old.base_tree));
+  pass(()=>assert.equal(n.production_storefront_digest,old.production_storefront_digest));
+  const overlap='apps/storefront/src/app/rooms/[slug]/page.tsx';
+  for(const file of Object.keys(old.paths).filter(f=>f!==overlap))pass(()=>assert.deepEqual(n.paths[file],old.paths[file]));
+  pass(()=>assert.equal(n.paths[overlap].before_blob,old.paths[overlap].before_blob));
+  pass(()=>assert.notEqual(n.paths[overlap].after_blob,old.paths[overlap].after_blob));
+  pass(()=>assert.deepEqual(Object.keys(n.paths).filter(f=>!old.paths[f]),['apps/storefront/src/app/layout.tsx','apps/storefront/src/lib/api/room-sets.ts']));
+  pass(()=>assert.deepEqual(v.testContextMap(n),v.testContextMap(old)));
+  pass(()=>assert(v.workflowEnvironment(key,n).includes('BASE_SHA='+old.base_sha+'\n')));
+  pass(()=>assert(v.workflowEnvironment(key,n).includes('SF_BASE_DIGEST='+old.production_storefront_digest+'\n')));
+  for(const file of Object.keys(n.paths))for(const field of ['before','after','mode','before_blob','after_blob','before_mode']){
+    const x=clone(n);x.paths[file][field]=field.includes('mode')?'100755':field.includes('blob')?'0'.repeat(40):'0'.repeat(64);
+    reject(()=>v.sourcePaths(x),/closed P02 room preflight exact8/);
+  }
+  for(const mutate of [x=>delete x.paths,x=>delete x.paths[overlap],x=>x.paths.extra=clone(x.paths[overlap]),x=>x.paths=Object.fromEntries(Object.entries(x.paths).reverse()),x=>x.base_sha=old.source_sha,x=>x.base_tree=old.source_tree,x=>x.production_storefront_digest='sha256:'+'0'.repeat(64),x=>x.backend_revision='0'.repeat(40),x=>x.backend_tree='0'.repeat(40),x=>x.backend_digest='sha256:'+'0'.repeat(64),x=>x.protected={},x=>x.protected_before={},x=>x.context_hashes={},x=>x.test_context={},x=>x.retained_backend_proof={},x=>x.test_overlays={[overlap]:'0'.repeat(64)}]){
+    const x=clone(n);mutate(x);reject(()=>v.sourcePaths(x));
+  }
+  for(const field of ['source_sha','source_tree','release_ref']){
+    for(const value of [null,'wrong',old[field],reg.qualifications['seo-storefront-ab1-exact5-v1'][field]]){
+      const x=clone(n);x[field]=value;reject(()=>v.sourcePaths(x));
+    }
+  }
+  for(const mutate of [x=>x.source_sha=x.base_sha,x=>x.source_tree=x.base_tree,x=>x.release_ref='release/../other',x=>x.release_ref='main']){
+    const x=clone(n);mutate(x);reject(()=>v.sourcePaths(x));
+  }
+  // New exact8 cannot be routed through an historical exact6 admission kind.
+  reject(()=>v.sourcePaths({...clone(n),kind:old.kind}));
+  reject(()=>v.sourcePaths({...clone(old),kind:n.kind}));
+  reject(()=>v.testContextMap({...clone(n),kind:'unknown-room-preflight'}));
+  const input={sourceSha:n.source_sha,productionBaseSha:n.base_sha,releaseRef:n.release_ref,backendRevision:n.backend_revision,backendDigest:n.backend_digest,productionStorefrontDigest:n.production_storefront_digest,trustedPolicySha:'a'.repeat(40)};
+  pass(()=>v.requireInput(n,input));
+  reject(()=>v.requireInput(n,{...input,productionBaseSha:old.source_sha}));
+  reject(()=>v.requireInput(n,{...input,productionStorefrontDigest:'sha256:a73625c0a1b14eb73d8c5475b332dac20096164a02742b6bc9c875b3432d4656'}));
+  return {status:localInert?'PASS_NEW_EXACT8_INERT_TEMPLATE_GUARDS_NOT_SOURCE_QUALIFICATION':'PASS_NEW_EXACT8_ACTUAL_IDENTITY_CONTRACT_GUARDS',cases,inert_template:localInert,fixture_identity:localInert?'SYNTHETIC_IN_MEMORY_ONLY':null,actual_source:localInert?null:n.source_sha,Git_or_qualification_executed:false,old_checks_repeated:false};
 }
