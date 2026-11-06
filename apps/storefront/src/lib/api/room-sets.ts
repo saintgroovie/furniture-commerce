@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { getBaseUrl, medusaCatalogFetch, medusaFetch } from "./base"
 
 /** Room-set list (catalog kids membership + `/rooms` / `/kids/rooms` listings).
@@ -59,3 +60,7 @@ export async function getRoomSetStorefrontBySlug(slug: string) {
   }
   return res.json()
 }
+
+/** One promise (including rejection) per slug within a React server request.
+ * Shared by root preflight, metadata and page; never a cross-request data cache. */
+export const getCachedRoomSetStorefrontBySlug = cache(getRoomSetStorefrontBySlug)

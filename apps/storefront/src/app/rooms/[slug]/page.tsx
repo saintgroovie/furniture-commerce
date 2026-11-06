@@ -2,9 +2,9 @@ import { EditorialPageJsonLd } from "@/components/editorial-page-json-ld"
 import { roomPageJsonLd } from "@/lib/editorial-page-json-ld"
 import Link from "next/link"
 import type { Metadata } from "next"
-import { cache } from "react"
+import { notFound } from "next/navigation"
 import { getSiteUrl } from "@/lib/api/base"
-import { getRoomSetStorefrontBySlug, NOT_FOUND } from "@/lib/api/room-sets"
+import { getCachedRoomSetStorefrontBySlug as loadRoomSet, NOT_FOUND } from "@/lib/api/room-sets"
 import { RoomSetCta } from "@/components/room-set-cta"
 import { CopyLines } from "@/components/copy-lines"
 import { indexingCanonical } from "@/lib/indexing-policy"
@@ -35,8 +35,6 @@ type RoomItem = {
   product?: RoomProduct
 }
 
-const loadRoomSet = cache(async (slug: string) => getRoomSetStorefrontBySlug(slug))
-
 function productHref(product: RoomProduct | undefined): string | null {
   const handle = typeof product?.handle === "string" ? product.handle.trim() : ""
   if (!handle) return null
@@ -55,7 +53,7 @@ export async function generateMetadata({
     const data = await loadRoomSet(slug)
     const roomSet = data.room_set
     if (!roomSet) {
-      return { title: "Комплект", ...(selfCanonical ? { alternates: selfCanonical } : {}) }
+      return { title: "Комплект", robots: { index: false, follow: true } }
     }
     const title = String(roomSet.title ?? "Комплект")
     const desc = roomSet.description ? truncate(String(roomSet.description), 160) : `Готовый комплект мебели: ${title}.`
@@ -70,7 +68,7 @@ export async function generateMetadata({
       ...(selfCanonical ? { alternates: selfCanonical } : {}),
     }
   } catch {
-    return { title: "Комплект", ...(selfCanonical ? { alternates: selfCanonical } : {}) }
+    return { title: "Комплект", robots: { index: false, follow: true } }
   }
 }
 
@@ -85,14 +83,7 @@ export default async function RoomSetPage({
     data = await loadRoomSet(slug)
   } catch (e) {
     if (e instanceof Error && e.message === NOT_FOUND) {
-      return (
-        <div data-state="not_found">
-          <p>{roomSetDetail.notFound}</p>
-          <p>
-            <Link href="/rooms">К списку комнат</Link>
-          </p>
-        </div>
-      )
+      notFound()
     }
     return (
       <div data-state="error">
@@ -105,14 +96,7 @@ export default async function RoomSetPage({
   }
   const roomSet = data.room_set
   if (!roomSet) {
-    return (
-      <div data-state="not_found">
-        <p>{roomSetDetail.notFound}</p>
-        <p>
-          <Link href="/rooms">К списку комнат</Link>
-        </p>
-      </div>
-    )
+    notFound()
   }
   const items = ((roomSet.items as RoomItem[]) ?? []).slice().sort(
     (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0)

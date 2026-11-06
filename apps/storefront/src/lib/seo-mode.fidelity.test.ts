@@ -24,6 +24,7 @@ import {
   renderSitemapXml,
 } from "./sitemap-entries"
 import { isIndexingAllowed, robotsTxtBody } from "./indexing-policy"
+import { readSitemapSources } from "./api/sitemap-sources"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..")
 
@@ -315,7 +316,9 @@ const sitemapRoute = read("src/app/sitemap.xml/route.ts")
 assert.match(sitemapRoute, /status:\s*200/)
 assert.match(sitemapRoute, /status:\s*404/)
 assert.match(sitemapRoute, /status:\s*503/)
-assert.match(sitemapRoute, /Array\.isArray\(catalog\.products\)/)
+// Source validation is delegated; the request's cancellation signal must follow it.
+assert.match(sitemapRoute, /import\s*\{\s*getSitemapSources\s*\}\s*from\s*["']@\/lib\/api\/sitemap-sources["']/)
+assert.match(sitemapRoute, /await\s+getSitemapSources\(request\?\.signal\)/)
 assert.match(sitemapRoute, /renderSitemapXml/)
 assert.match(sitemapRoute, /isIndexingAllowed/)
 
@@ -400,4 +403,19 @@ assert.doesNotMatch(profile, /runtime-ownership-production[^-]/)
   assert.throws(() => productionSiteOrigin(undefined), /requires NEXT_PUBLIC_SITE_URL/)
 }
 
-console.log("seo-mode.fidelity: ok")
+// The budget suite covers size/row limits and cancellation. This missing case
+// checks that malformed catalog data rejects the batch before later requests.
+async function malformedCatalogFailsClosed() {
+  let requests = 0
+  await assert.rejects(readSitemapSources(async () => {
+    requests += 1
+    return new Response(JSON.stringify({ products: {} }))
+  }, new AbortController().signal))
+  assert.equal(requests, 1, "malformed catalog must stop subsequent directory reads")
+}
+malformedCatalogFailsClosed().then(() => {
+  console.log("seo-mode.fidelity: ok")
+}).catch(error => {
+  console.error(error)
+  process.exitCode = 1
+})

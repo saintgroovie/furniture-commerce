@@ -3,6 +3,7 @@ import Link from "next/link"
 import { cookies, headers } from "next/headers"
 import { notFound } from "next/navigation"
 import { getProduct, NOT_FOUND } from "@/lib/api/products"
+import { getCachedRoomSetStorefrontBySlug, NOT_FOUND as ROOM_NOT_FOUND } from "@/lib/api/room-sets"
 import { StorefrontAnalytics } from "@/components/storefront-analytics"
 import { CatalogFreshness } from "@/components/catalog-freshness"
 import { getSiteUrl } from "@/lib/api/base"
@@ -106,6 +107,28 @@ async function rejectUnpublishedProduct(headerList: Headers) {
   }
 }
 
+/** Resolve missing rooms before the root loading boundary can send a 200 shell. */
+async function rejectMissingRoom(headerList: Headers) {
+  const path = headerList.get("x-woodright-pathname") ?? ""
+  const match = path.match(/^\/rooms\/([^/]+)\/?$/)
+  if (!match?.[1]) return
+  let slug = match[1]
+  try {
+    slug = decodeURIComponent(slug)
+  } catch {
+    notFound()
+  }
+  let data: { room_set?: Record<string, unknown> }
+  try {
+    data = await getCachedRoomSetStorefrontBySlug(slug)
+  } catch (e) {
+    if (e instanceof Error && e.message === ROOM_NOT_FOUND) notFound()
+    // The page reuses this cached rejection and retains its existing error UI.
+    return
+  }
+  if (!data.room_set) notFound()
+}
+
 export default async function RootLayout({
   children,
 }: {
@@ -114,6 +137,7 @@ export default async function RootLayout({
   // CSP nonce from middleware (x-nonce). Required for JSON-LD + Next bootstrap.
   const headerList = await headers()
   await rejectUnpublishedProduct(headerList)
+  await rejectMissingRoom(headerList)
   const nonce = headerList.get("x-nonce") ?? undefined
   const analytics = loadAnalyticsPublicConfig()
   const ymConsent = analytics.yandexMetrikaId
