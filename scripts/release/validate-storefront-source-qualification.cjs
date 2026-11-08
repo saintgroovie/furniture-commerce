@@ -21,7 +21,7 @@ function canonicalTestContext(map){
 function testContextMap(c){
   if(c.test_context===undefined)return null;
   const map=canonicalTestContext(c.test_context);
-  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1','native-family-storefront-cf211-exact22-v1','seo-storefront-ab1-exact5-v1','seo-storefront-ab1-exact6-v2','seo-storefront-ab1-exact8-room-preflight-v1','photo-card-sku-c3f1-exact166-v1','photo-card-sku-c3f1-exact166-ts2300-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
+  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1','native-family-storefront-cf211-exact22-v1','seo-storefront-ab1-exact5-v1','seo-storefront-ab1-exact6-v2','seo-storefront-ab1-exact8-room-preflight-v1','photo-card-sku-c3f1-exact166-v1','photo-card-sku-c3f1-exact166-ts2300-v1','photo-card-sku-c3f1-exact166-origin-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
   return map;
 }
 function contextOptions(c,opts={}){
@@ -187,6 +187,7 @@ function sourcePaths(c){
     if(c.kind==='seo-storefront-ab1-exact8-room-preflight-v1')fail('missing P02 room preflight exact8 path map');
     if(c.kind==='photo-card-sku-c3f1-exact166-v1')fail('missing exact166 path map');
     if(c.kind==='photo-card-sku-c3f1-exact166-ts2300-v1')fail('missing TS2300 exact166 path map');
+    if(c.kind==='photo-card-sku-c3f1-exact166-origin-v1')fail('missing origin exact166 path map');
     return {[c.path]:{before:c.before,after:c.after}};
   }
   const names=Object.keys(c.paths);
@@ -243,13 +244,14 @@ function sourcePaths(c){
     // Draft nulls are deliberately non-executable; only an actual Git receipt fills them.
     if(!/^[0-9a-f]{40}$/.test(c.source_sha||'')||!/^[0-9a-f]{40}$/.test(c.source_tree||'')||c.source_sha===c.base_sha||c.source_tree===c.base_tree||!/^release\/[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(c.release_ref||'')||c.release_ref.includes('..'))fail('P02 room preflight genuine immutable source metadata required');
     if(['94ac8e55270e0242a875f6677b83845d5f299e4e','4a42f3bd3ddf2b13e141f8de23d08dabdd4eb4b0'].includes(c.source_sha)||['e847888e61f1552a7a8e748ba1fcf1ececb9c187','7ec15dba0d54aceb63f4e8ec3e7aca7f918dc103'].includes(c.source_tree)||['release/seo-sitemap-rooms-ab1-20261030','release/seo-sitemap-rooms-ab1-closed6-20261102'].includes(c.release_ref))fail('historical P02 identities cannot be reused for exact8');
-  }else if(['photo-card-sku-c3f1-exact166-v1','photo-card-sku-c3f1-exact166-ts2300-v1'].includes(c.kind)){
-    const ts2300=c.kind==='photo-card-sku-c3f1-exact166-ts2300-v1';
+  }else if(['photo-card-sku-c3f1-exact166-v1','photo-card-sku-c3f1-exact166-ts2300-v1','photo-card-sku-c3f1-exact166-origin-v1'].includes(c.kind)){
+    const profileOrigin=c.kind==='photo-card-sku-c3f1-exact166-origin-v1';
+    const ts2300=c.kind==='photo-card-sku-c3f1-exact166-ts2300-v1'||profileOrigin;
     // Reuse reviewed semantics; actual local166 blob descriptors are now closed too.
     // Genuine sourceFacts/Git and NULL-identity rejection remain mandatory.
     const semantic=Object.fromEntries(names.map(file=>{const p=c.paths[file];return [file,{before:p?.before,after:p?.after,mode:p?.mode,before_mode:p?.before_mode}];}));
-    if(names.length!==166||hash(JSON.stringify(semantic))!==(ts2300?'793a670d90d803e0b3a71c58cd73db63b0394cbba4c6d1dcc99a71eec716590a':'4b17fd6cdf99b80f6f8ee85851893f8e06008eb0fc1a3d62ac70a96798157986'))fail('closed exact166 path/hash/mode semantics');
-    if(hash(JSON.stringify(c.paths))!==(ts2300?'f054648a7a459ea456cc83a4c4042f3593cc82f3c561008fb58cbb506a6feec2':'8fb7019d0037058c2f3bca4c265a14807837fb73d8dac9e207cf7e0b2286cb01'))fail('closed exact166 actual blob map');
+    if(names.length!==166||hash(JSON.stringify(semantic))!==(profileOrigin?'5d732fae92e36c44f1e876f6a92c0df65da47e8cc34fe821234e04d6761971df':ts2300?'793a670d90d803e0b3a71c58cd73db63b0394cbba4c6d1dcc99a71eec716590a':'4b17fd6cdf99b80f6f8ee85851893f8e06008eb0fc1a3d62ac70a96798157986'))fail('closed exact166 path/hash/mode semantics');
+    if(hash(JSON.stringify(c.paths))!==(profileOrigin?'d97965459f225d2e8156535e6366b7504c197be58d0c55aaee75ba776542137f':ts2300?'f054648a7a459ea456cc83a4c4042f3593cc82f3c561008fb58cbb506a6feec2':'8fb7019d0037058c2f3bca4c265a14807837fb73d8dac9e207cf7e0b2286cb01'))fail('closed exact166 actual blob map');
     if(c.base_sha!=='c3f1bb46f74a326ea0cd2f0fa9465edecc530dac'||c.base_tree!=='21e92f51db20c3845981d6cf47c63f5bc4df9af5')fail('exact166 actual published P02 base');
     if(hash(JSON.stringify([c.protected_before,c.protected,c.context_hashes,c.test_context]))!==(ts2300?'966564651537ab32a29b24e297577127bd14e4d2238603de9aedfb5e198a66a6':'3f1f25952967be956427c43dd56a2ee6db17f5a67313afac5d0d70315596b723'))fail('closed exact166 protected/context pins');
     if(c.backend_revision!=='b121f193064aea1733a132bca431f082e6ae8072'||c.backend_tree!=='ecd092a0f057865c361ae07f0c4efcee07210f41'||c.backend_digest!=='sha256:98c0bf52c856b6a047957cc135ce8bdf5266ca5cb7859836a5b9c6ee69a0712f')fail('exact166 retained backend');

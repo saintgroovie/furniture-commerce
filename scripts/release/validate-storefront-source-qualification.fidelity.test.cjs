@@ -3,7 +3,9 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--photo-card-sku-ts2300-inert-only')){
+if(process.argv.includes('--photo-card-sku-origin-alias-only')){
+ console.log(JSON.stringify(photoCardSkuOriginAliasRegression(),null,2));
+}else if(process.argv.includes('--photo-card-sku-ts2300-inert-only')){
  console.log(JSON.stringify(photoCardSkuTs2300Regression(true),null,2));
 }else if(process.argv.includes('--photo-card-sku-ts2300-only')){
  console.log(JSON.stringify(photoCardSkuTs2300Regression(false),null,2));
@@ -40,6 +42,7 @@ if(process.argv.includes('--photo-card-sku-ts2300-inert-only')){
 }else if(process.argv.includes('--retained-backend-context-only')){
  console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 }else{
+console.log(JSON.stringify(photoCardSkuOriginAliasRegression(),null,2));
 console.log(JSON.stringify(photoCardSkuTs2300Regression(false),null,2));
 console.log(JSON.stringify(boundedGitBlobRegression(),null,2));
 console.log(JSON.stringify(photoCardSkuC3BindingRegression(false),null,2));
@@ -753,4 +756,14 @@ function photoCardSkuTs2300Regression(inertOnly=false){
  {const x=clone(n);delete x.paths;reject(()=>v.sourcePaths(x),/missing TS2300 exact166/);}
  for(const field of ['source_sha','source_tree','release_ref']){const x=clone(n);x[field]=null;reject(()=>v.sourcePaths(x),/genuine source identities/);}
  return {status:'PASS_NEW_TS2300_ALIAS_ONEFILE_MAP_PROTECTION_AND_INERT_GUARDS',cases,inertOnly,old_contract_suite_executed:false,sourceFacts_or_Git_or_media_reads:false,old7_51_schema_or_UI_checks_repeated:false};
+}
+
+function photoCardSkuOriginAliasRegression(){
+ const registry=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications;
+ const next=clone(registry['photo-card-sku-c3f1-exact166-origin-v1']),previous=clone(registry['photo-card-sku-c3f1-exact166-ts2300-v1']);
+ assert.equal(Object.keys(v.sourcePaths(next)).length,166);
+ assert.deepEqual(v.testContextMap(next),v.testContextMap(previous));
+ const nextWithOldMap=clone(next);nextWithOldMap.paths=clone(previous.paths);assert.throws(()=>v.sourcePaths(nextWithOldMap),/closed exact166 path\/hash\/mode semantics/);
+ const oldWithNewMap=clone(previous);oldWithNewMap.paths=clone(next.paths);assert.throws(()=>v.sourcePaths(oldWithNewMap),/closed exact166 path\/hash\/mode semantics/);
+ return {status:'PASS_NEW_ORIGIN_ALIAS_ONLY',cases:4};
 }
