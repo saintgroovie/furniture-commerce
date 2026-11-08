@@ -3,7 +3,11 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--git-blob-buffer-only')){
+if(process.argv.includes('--photo-card-sku-ts2300-inert-only')){
+ console.log(JSON.stringify(photoCardSkuTs2300Regression(true),null,2));
+}else if(process.argv.includes('--photo-card-sku-ts2300-only')){
+ console.log(JSON.stringify(photoCardSkuTs2300Regression(false),null,2));
+}else if(process.argv.includes('--git-blob-buffer-only')){
  console.log(JSON.stringify(boundedGitBlobRegression(),null,2));
 }else if(process.argv.includes('--photo-card-sku-c3f1-inert-only')){
  console.log(JSON.stringify(photoCardSkuC3BindingRegression(true),null,2));
@@ -36,6 +40,7 @@ if(process.argv.includes('--git-blob-buffer-only')){
 }else if(process.argv.includes('--retained-backend-context-only')){
  console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 }else{
+console.log(JSON.stringify(photoCardSkuTs2300Regression(false),null,2));
 console.log(JSON.stringify(boundedGitBlobRegression(),null,2));
 console.log(JSON.stringify(photoCardSkuC3BindingRegression(false),null,2));
 console.log(JSON.stringify(seo8RoomPreflightRegression(false),null,2));
@@ -728,4 +733,24 @@ function boundedGitBlobRegression(){
  pass(()=>assert.throws(fixture(4916811,{wrongAfter:true}),/source after blob/));
  pass(()=>assert.throws(fixture(4,{timeout:true}),e=>e.code==='ETIMEDOUT'));
  return {status:'PASS_NEW_BOUNDED_BINARY_GIT_BLOB_REGRESSION',cases,actual_synthetic_child_blob_reads:reads,maxBuffer:8*1024*1024,timeout:15000,synthetic_only:true,real_Git_media_registry_network_reads:false,old_suites_repeated:false};
+}
+
+function photoCardSkuTs2300Regression(inertOnly=false){
+ const reg=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))),key='photo-card-sku-c3f1-exact166-ts2300-v1',oldKey='photo-card-sku-c3f1-exact166-v1',n=clone(reg.qualifications[key]),old=reg.qualifications[oldKey],pdp='apps/storefront/src/app/product/[id]/page.tsx';
+ let cases=0;const pass=f=>{f();cases++;},reject=(f,re)=>{assert.throws(f,re);cases++;};
+ if(inertOnly){pass(()=>assert.deepEqual([n.source_sha,n.source_tree,n.release_ref],[null,null,null]));reject(()=>v.sourcePaths(n),/genuine source identities/);n.source_sha='1'.repeat(40);n.source_tree='2'.repeat(40);n.release_ref='release/unit-ts2300-only';}
+ else pass(()=>assert(/^[a-f0-9]{40}$/.test(n.source_sha||'')&&/^[a-f0-9]{40}$/.test(n.source_tree||'')&&/^release\//.test(n.release_ref||'')));
+ pass(()=>assert.equal(Object.keys(v.sourcePaths(n)).length,166));
+ pass(()=>assert.deepEqual(v.testContextMap(n),v.testContextMap(old)));
+ pass(()=>assert.deepEqual(n.protected_before,old.protected_before));
+ pass(()=>assert.deepEqual(Object.fromEntries(Object.entries(n.paths).filter(([f])=>f!==pdp)),Object.fromEntries(Object.entries(old.paths).filter(([f])=>f!==pdp))));
+ pass(()=>assert.deepEqual(Object.fromEntries(Object.entries(n.protected).filter(([f])=>f!==pdp)),Object.fromEntries(Object.entries(old.protected).filter(([f])=>f!==pdp))));
+ pass(()=>{assert.equal(n.paths[pdp].before,old.paths[pdp].before);assert.equal(n.paths[pdp].before_blob,old.paths[pdp].before_blob);assert.notEqual(n.paths[pdp].after,old.paths[pdp].after);assert.notEqual(n.paths[pdp].after_blob,old.paths[pdp].after_blob);assert.equal(n.protected[pdp],n.paths[pdp].after);assert.equal(Object.keys(n.protected).length,46);});
+ for(const [field,re]of [['after',/path\/hash\/mode semantics/],['after_blob',/actual blob map/]]){const x=clone(n);x.paths[pdp][field]='0'.repeat(field==='after'?64:40);reject(()=>v.sourcePaths(x),re);}
+ {const x=clone(n);x.protected[pdp]=old.protected[pdp];reject(()=>v.sourcePaths(x),/protected\/context/);}
+ reject(()=>v.sourcePaths({...n,kind:oldKey}),/path\/hash\/mode semantics/);
+ reject(()=>v.sourcePaths({...clone(old),kind:key}),/path\/hash\/mode semantics/);
+ {const x=clone(n);delete x.paths;reject(()=>v.sourcePaths(x),/missing TS2300 exact166/);}
+ for(const field of ['source_sha','source_tree','release_ref']){const x=clone(n);x[field]=null;reject(()=>v.sourcePaths(x),/genuine source identities/);}
+ return {status:'PASS_NEW_TS2300_ALIAS_ONEFILE_MAP_PROTECTION_AND_INERT_GUARDS',cases,inertOnly,old_contract_suite_executed:false,sourceFacts_or_Git_or_media_reads:false,old7_51_schema_or_UI_checks_repeated:false};
 }

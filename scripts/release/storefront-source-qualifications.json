@@ -3483,6 +3483,1466 @@
         }
       },
       "test_context_note": "Reuse exact accepted canonical non-runtime dependency only for qualification, existing owned cleanup; not installed in image."
+    },
+    "photo-card-sku-c3f1-exact166-ts2300-v1": {
+      "source_sha": "cb69c4d3c0bd1bb91f88697cd1451ca8619b1cde",
+      "source_tree": "a4ad332a2e9b2d1ed36557cd38b1c633a29270b9",
+      "base_sha": "c3f1bb46f74a326ea0cd2f0fa9465edecc530dac",
+      "base_tree": "21e92f51db20c3845981d6cf47c63f5bc4df9af5",
+      "release_ref": "release/r2-c3f1-exact166-ts2300-20261108",
+      "backend_revision": "b121f193064aea1733a132bca431f082e6ae8072",
+      "backend_digest": "sha256:98c0bf52c856b6a047957cc135ce8bdf5266ca5cb7859836a5b9c6ee69a0712f",
+      "backend_tree": "ecd092a0f057865c361ae07f0c4efcee07210f41",
+      "production_storefront_digest": "sha256:84b7a7efbd7109db7246eb1167ae0f1935d289333fec88d322d7b13391fcb230",
+      "protected": {
+        "apps/storefront/.yarnrc.yml": "a0305ab3fc20b06d20d0fcb3dcfb6cd52ec4310d442e3bc2e722becca38ca477",
+        "apps/storefront/Dockerfile": "a2d1ce5ab83c76e74dd875df21929fcd4a1eb90562ae6763bdf7fbfdd96e5ee7",
+        "apps/storefront/package.json": "27efcbb3257add043c70a4dbd54c6eaaa796da75078c80ec47b9dc8aadcee298",
+        "apps/storefront/src/app/catalog/page.tsx": "af243e2d3a89f4d0315a417d7f18fac762e2c75fa478b4b3d2152c53a3806e0b",
+        "apps/storefront/src/app/globals.css": "0ae0bb695a2696568d2df0fdd544583827f1837c787d6363ba87db9acf8ee3b3",
+        "apps/storefront/src/app/kids/catalog/page.tsx": "f72cbfa3d41dc8a90c0bb06de4915eed7aa2c1fb8ce4a9e8b6372eb08db3e3df",
+        "apps/storefront/src/app/layout.tsx": "37f31a45dedf89fb7f7265913a6cb5424f86cd50107eb9d360dee63b8b1c60ba",
+        "apps/storefront/src/app/product/[id]/page.tsx": "5e1288e4d31c1b13320170fff17e970c2e8b4bf931b381b923e3d6c963de4407",
+        "apps/storefront/src/app/rooms/[slug]/page.tsx": "416b9960e4a1788473655402f2e7febb091072aeb5c4756e8a044103da07edea",
+        "apps/storefront/src/app/sitemap.xml/route.ts": "3e799d0857330d364a14e77b8ba79cedbca19c4d6bf32fb239460417378f16a0",
+        "apps/storefront/src/components/bespoke-form.tsx": "eaa9568c88aebf217bb0d89fec90aa7355cb492404bca26e7de3b3d230b56f57",
+        "apps/storefront/src/components/catalog-browse-client.tsx": "21f41ea55fd22160f6c3318e9adb70a8977017c73664069c421d63dc0b16232e",
+        "apps/storefront/src/components/checkout-form.tsx": "3d49c8334d5993f51dc350817fbcb79fc4978b6fb4c5e114f0eafb662407c72e",
+        "apps/storefront/src/components/pdp-image-lightbox.tsx": "c7b3bf99ef345e5b60ce64aa0bc5c8f0b71f1064fdffda0008c2487c7037b60c",
+        "apps/storefront/src/components/pdp-native-family-selectors.tsx": "5813c5e9284bf375412247d3a32a16e771559fec50001ad7153715ce71de508c",
+        "apps/storefront/src/components/product-card.tsx": "8a252478fb8e83c959bac996aaff409813e85ce7a3b4f84905d5d1b319f75867",
+        "apps/storefront/src/components/storefront-analytics.tsx": "8d1e92ebf1d63fe5d8b4798743c9b54dd3442572a4b6dd3d7352a2aa3f724377",
+        "apps/storefront/src/lib/analytics-goals.ts": "a22654d7617f5355c6f4d9001c128383feb4bbbb6e995d254323a64d24104dbf",
+        "apps/storefront/src/lib/analytics-metrika.ts": "6535619b07f86b182ddb3be4eb294538dca32cdc29eb53e75b677342790c225b",
+        "apps/storefront/src/lib/api/base.ts": "f98ef87935650cbfa455b95e7435927303bc74381e3e04ec4f92bcd955b874d9",
+        "apps/storefront/src/lib/api/catalog-browse-pool-client.ts": "8ed6761f379141e9e602a0e81393c0b952666130ac4a2dd2a96145203dc881da",
+        "apps/storefront/src/lib/api/products.ts": "4574a553fc3bf9e6a77306cf9f04dd4f68ec00e411b6bc5db2c6e28df4cdcb80",
+        "apps/storefront/src/lib/api/room-sets.ts": "2cc525cee41ca7d62129e217c8204ba1a1d8a636f5479cfbf37e775d15d17525",
+        "apps/storefront/src/lib/api/sitemap-sources.ts": "618092e17280894a7732b38dba12984e03cbf0cac405a4b0fcfc573cb4143606",
+        "apps/storefront/src/lib/catalog-browse-client-product.ts": "0d5484a5346635ff929ab21fc5911604e21ad25c3005490756503b715d6f3262",
+        "apps/storefront/src/lib/catalog-browse-pool.ts": "15a4ddbf26b45fa6881c1d7f437a9d59096e55a24086624192b69f60931a7f40",
+        "apps/storefront/src/lib/catalog-card-price.ts": "e820134e354b3f9d2a65d13ee4d82d4807f4276ad74aef93a35b1586a3ce1328",
+        "apps/storefront/src/lib/catalog-fetch-cache.fidelity.test.mjs": "a5c74a68fecaa954fb4068f62a454645bc658cdfa870297e730154869c826f18",
+        "apps/storefront/src/lib/catalog-filters.ts": "d7ce817bdb872049fc5df1484c14c5bc3c1b9068e7025657a46ce3beaf06cd51",
+        "apps/storefront/src/lib/catalog-read-budget.ts": "72f6f21a2678ea4ec1782a40589aa3b3e6f4c7c8a47944ae1ea7412506962154",
+        "apps/storefront/src/lib/display-group.ts": "58fa4ecf22eef915c1b2e0c12fda39ce5788098c51488074151310e05286ac4a",
+        "apps/storefront/src/lib/kids.ts": "739bf22756170e4a0104caaf6e3f3f44be28a32e2cdd696038e65778006e5c02",
+        "apps/storefront/src/lib/ol65-front-reflection.fidelity.test.mjs": "2bd03e4a7c7e7454800657a9c78bed6da359d0870d64ec526169514232aefbb1",
+        "apps/storefront/src/lib/ol65-front-reflection.ts": "2d784493b7ba8539719f76e5f87cddc23005acd63343f17002850c80df68064f",
+        "apps/storefront/src/lib/oliver-desk-variants.fidelity.test.ts": "7b16089f43be1ab6b6d103719e3527a11cd27259b8e505dc5cf7d0e12c3fe36e",
+        "apps/storefront/src/lib/oliver-desk-variants.ts": "0b7e768188d6fc5737a8ae2e31e26b4133c3f2b82d9d276b90c728998902c623",
+        "apps/storefront/src/lib/product-title-presentation.fidelity.test.ts": "dd67f2bb5c69f800c2c7887a2aaa071677889826dbca48b9729cc2d567a86728",
+        "apps/storefront/src/lib/product-title-presentation.ts": "479a0c84f88fba93091e7786b97b42ac0cfc8ea4f9d12670a1b53fce05aaf2ab",
+        "apps/storefront/src/lib/qualified-native-families.json": "149a9918aff270ee292f6e2bfa808cc247525ad316a164b2960328cfe5990c87",
+        "apps/storefront/src/lib/qualified-native-family.fidelity.test.mjs": "01bd87e6c6ba2c45ee7481f339bc3a9d5959652efef070b3865c2c08fc1812a7",
+        "apps/storefront/src/lib/qualified-native-family.ts": "c66645d42e332e353b8fdb9e351c7a20e6da840bcdbfdeb8521aecb34a6bfbaa",
+        "apps/storefront/src/lib/seo-mode.fidelity.test.ts": "b276f335ab98bd61265316aeff51722afe063b8e0b9d06418805fa9dc4bfea37",
+        "apps/storefront/src/lib/sitemap-entries.ts": "1a81e208d4daa98a1ffe709edd520a32ca923f61679a75ffebf7a6da4210e76b",
+        "apps/storefront/src/lib/sitemap-source-budget.fidelity.test.mjs": "65c54e3aa20433c75bdfa1f69cc564fd1dfedeb7a044cb9fceddfd5f8cfb4d16",
+        "apps/storefront/src/proxy.ts": "a7f7b9096a4b51a139eb7bba2f7678f985d16a117dfe051120191b1c6abbd55b",
+        "apps/storefront/yarn.lock": "92f8e832b6c696a9bb4f9e422c98fc2ecd0fd5d8a4d68ae35a32f1572e82c459"
+      },
+      "test_overlays": {},
+      "context_hashes": {
+        ".github/workflows/pr-checks.yml": "9d67c7ebd33db880a2298f363ddea0a829fdf38921947f6b238f9363df1691c6",
+        "scripts/release/storefront-runtime-policies.json": "cc286523d35bb7aef90c230dd427be9b447767db9894dc3ed5f7e89c4578cb57",
+        "scripts/release/validate-isolated-storefront-bake.cjs": "d71863b2025443951f76d9724cd0c8b65cd85baa18d913cf3ce4b940dd0438c6",
+        "apps/workspace/src/server/catalog-policy.mjs": "5e2ffacbc354fb0c75cfaba6c7a0bd28b674375b040ceee1528283855f801a9d"
+      },
+      "workflow": ".github/workflows/qualify-storefront-source.yml",
+      "workflow_sha256": "4935d5fc95383877bfb2e121731b1aa7646d34dad29ba8ed5dce928ff867689b",
+      "retained_backend_proof": {
+        "mode": "authenticated-main-component-v1",
+        "component_id": "orders-main-b121-backend-v1"
+      },
+      "context_scope_note": "Exact166 sparse content on actual published stable c3f1/84b7; frozen reviewedsource30/assets136 unchanged, all8P02 protected. Actual source_sha/source_tree/release_ref remain NULL until a genuine new single-parent-c3f1 Git receipt; then DATA-only3scalar binding. No Git/runtime/qualification authority from this template.",
+      "kind": "photo-card-sku-c3f1-exact166-ts2300-v1",
+      "paths": {
+        "apps/storefront/public/prepared-gallery/03e661aa912b06dffb31e9ace085610d4e07e9c02d37f126d1ecd20bb5feea92/products/oliver/OL-17-2_color_lillian_04.jpg": {
+          "before": null,
+          "after": "03e661aa912b06dffb31e9ace085610d4e07e9c02d37f126d1ecd20bb5feea92",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "28ada2071f7454365ca84bb1d5da465a608860a7",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/040ae86501506255efcad75ed740082b455f29881033293b5d4054d839d2c59b/products/country-london-paris/CO-62-2_gallery_03.jpg": {
+          "before": null,
+          "after": "040ae86501506255efcad75ed740082b455f29881033293b5d4054d839d2c59b",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "b7b7a866730026667fc695a3de0ef13f04edb7ba",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/05292f974c3be921822517212b90efcd6f993f27decf9765cf28a7cb1f2d8a41/products/country-london-paris/CO-66-1_gallery_02.jpg": {
+          "before": null,
+          "after": "05292f974c3be921822517212b90efcd6f993f27decf9765cf28a7cb1f2d8a41",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "301d7e5758cbc06daf269a08623c5896e3addbf4",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/052a45a0f91021c8ed7e8702da41b5e83cd8c5fe43f8d0138a6fc7cdf802fb10/imports/WR-PFW-20260721T020528Z/4ccd95f17347eba6fb7071e03483a413a213102953ff2dcf03042c6c44444d2d.jpg": {
+          "before": null,
+          "after": "052a45a0f91021c8ed7e8702da41b5e83cd8c5fe43f8d0138a6fc7cdf802fb10",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "62dcadd7355cef36f8ca3c4dd3be38f197e87cd0",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/0720fdb9a385026ca0f131213a718116dc7809d1e94ec07fec8493d33cf73271/products/oliver/OL-14-1_color_lillian_02.jpg": {
+          "before": null,
+          "after": "0720fdb9a385026ca0f131213a718116dc7809d1e94ec07fec8493d33cf73271",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "c583a13c50206ddb2921cbf17fd2ddc3b3988b58",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/095ed53c5489a57fedb2bd103838f5b17512b1251fa1187eb0bab3e456772091/products/oliver/OL-18-1_color_lillian_04.jpg": {
+          "before": null,
+          "after": "095ed53c5489a57fedb2bd103838f5b17512b1251fa1187eb0bab3e456772091",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "575b56061498a42c8d0cfaa4f7a134cbff91695c",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/0a8bfd8a5b135f4b5ecd5a0913edd688c9d4a77b2da2888da6f65783772333e9/products/oliver/OL-17-1_color_lillian_01.jpg": {
+          "before": null,
+          "after": "0a8bfd8a5b135f4b5ecd5a0913edd688c9d4a77b2da2888da6f65783772333e9",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "788bc5c0890a8c3b2b5df6e00806d96835cdbb46",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/0ae69713edb01296350caad1d228f120c0854029fb5396b25430ea9a74484d11/imports/willie-winkie-20261010/e50ccd684911e60870c6e150f8d52d20e872fe6f962a6be5326abf1d34c0f660.jpg": {
+          "before": null,
+          "after": "0ae69713edb01296350caad1d228f120c0854029fb5396b25430ea9a74484d11",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "c9a73e3e8a1605950203c492dba7ff295dcbbda6",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/0b1ebe58e8e93df7601a2e33dab933202106c120d2e944cf6796649edebb7e35/products/oliver/OL-17-1_color_lillian_04.jpg": {
+          "before": null,
+          "after": "0b1ebe58e8e93df7601a2e33dab933202106c120d2e944cf6796649edebb7e35",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "f41abfcd5f3c5e19a63fc3b3bd8931f1a7f8a538",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/0e81bc7cde6533346c6c94bc0489a83bdd5e0188734fc6b9d5b0caa1d052e6a3/imports/WR-PFW-20260721T020528Z/5e36853dfd2d3e2b1f811b2a48e5b9a690241dbfe88984469aabfd34deaef8f4.jpg": {
+          "before": null,
+          "after": "0e81bc7cde6533346c6c94bc0489a83bdd5e0188734fc6b9d5b0caa1d052e6a3",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "d46e4c62221d2727bc0c70b8ad34991052b1a308",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/120678cd5f55c6c214ecd0ec54ca379313ab7dfaf9f167253d0b00fa02d63c5d/products/oliver/OL-85-1_gallery_01.jpg": {
+          "before": null,
+          "after": "120678cd5f55c6c214ecd0ec54ca379313ab7dfaf9f167253d0b00fa02d63c5d",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "dadfc59baa06787c7ae506086d3ff98bcd9c0743",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/158e9533ab9f65361c69f0e4d86ed9519c47d8c6d13ccd9978d111fb9d31f480/products/oliver/OL-16-1_color_lillian_01.jpg": {
+          "before": null,
+          "after": "158e9533ab9f65361c69f0e4d86ed9519c47d8c6d13ccd9978d111fb9d31f480",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "415514ed5e9a18e18ad4dce4a86b317234d7cf88",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/175ca657ecfeb734f896fb74de4699b62d258a133a12572ef51f63ecbb1b1434/products/oliver/OL-07-1_color_leona_02.jpg": {
+          "before": null,
+          "after": "175ca657ecfeb734f896fb74de4699b62d258a133a12572ef51f63ecbb1b1434",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "1ff3a29172f8be6d4c25d9b4f4950dcd992c0fbb",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/184f32a5257000e11183443387c60dfa47641de2ae771280ea33ed9e1bd3e8c0/products/oliver/OL-18-1_color_lillian_03.jpg": {
+          "before": null,
+          "after": "184f32a5257000e11183443387c60dfa47641de2ae771280ea33ed9e1bd3e8c0",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "2d212a49a6ed2cf4358c9d283055ea0b8c70f5e4",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/189797f28fb40108a378da04d029a0f727674f12c6981c95b8f76d0fe62ed6dd/products/oliver/OL-18-2_color_lillian_01.jpg": {
+          "before": null,
+          "after": "189797f28fb40108a378da04d029a0f727674f12c6981c95b8f76d0fe62ed6dd",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "4f626c93cdf9d92b22ce64e93f7dc0fbc24eca1c",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/1a9eaed01dfdd2c5ed43a5930f44e90e6ec3d579b7275f273dacb917dd4b3852/products/oliver/OL-17-2_color_lillian_05.jpg": {
+          "before": null,
+          "after": "1a9eaed01dfdd2c5ed43a5930f44e90e6ec3d579b7275f273dacb917dd4b3852",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "b5867a6de36e1ab53371554b1c3f0c8357d7fc98",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/1c27ea9e9956fcfda6d18c0e02627e32149b956ceabcce15071f64a1200c739e/products/country-london-paris/CO-05-1_gallery_01.jpg": {
+          "before": null,
+          "after": "1c27ea9e9956fcfda6d18c0e02627e32149b956ceabcce15071f64a1200c739e",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "ebd77900349cfd35792ea58d0dcdea608bbededa",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/1cb4282b65e73cdcfc23c22f0796ca3e7778952695c51ca5cb96690fe035138f/products/country-london-paris/CO-08-1_gallery_01.jpg": {
+          "before": null,
+          "after": "1cb4282b65e73cdcfc23c22f0796ca3e7778952695c51ca5cb96690fe035138f",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "f1ce76b0b0c90a58f3bb91af6073241d20b280bd",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/1f42854eef5a5a407a92de6f4120c1a60bda5d4f0cb89cece8086b897d545363/imports/catalog-recovery-20261001/153464ca32f9b95bfacb0355466826545bc6c47c0f9770fdc5510c90cb969e41.jpg": {
+          "before": null,
+          "after": "1f42854eef5a5a407a92de6f4120c1a60bda5d4f0cb89cece8086b897d545363",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "0100a2372931b52c6ca1c54b7c36bc1a39a3c01b",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/20c52ff3fd08548b7451c1e81f48a9f10d25238353331b442daebef693e1fe8e/imports/willie-winkie-20261010/358ecbfa73374d30592deb9424fc6481ab31cd5b142f2066af7ef12fbbbc9a8e.jpg": {
+          "before": null,
+          "after": "20c52ff3fd08548b7451c1e81f48a9f10d25238353331b442daebef693e1fe8e",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "5adeac0941bd5ccaac39a17ca48583c86421624b",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/22811d76c28e521aff4d0452b92179a0bff2a24ee1498ab5ab8fe2619175b0d7/imports/WR-PFW-20260721T020528Z/4c2c2ebe8c559702e825e95574efb9912bf704c23da2b72becefec4d825822fa.jpg": {
+          "before": null,
+          "after": "22811d76c28e521aff4d0452b92179a0bff2a24ee1498ab5ab8fe2619175b0d7",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "50f40c7b4dbba30833e16d2c4d752b9c7bda2549",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/2617c0e7d072d3541403cc9ad1be0d04363f0abbfb0c8d877ef8b221f8462f04/products/oliver/OL-16-1_color_lillian_03.jpg": {
+          "before": null,
+          "after": "2617c0e7d072d3541403cc9ad1be0d04363f0abbfb0c8d877ef8b221f8462f04",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "b60c3f4f90464d47511047220836161a3073d100",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/2844519948992ebbf2291838e8c7e7cb152058450d2067460d589560ce5827be/imports/WR-PFW-20260721T020528Z/238fef9295192acfde46b95b82d9b22ae23a3330412e987fa181483605bb4c69.jpg": {
+          "before": null,
+          "after": "2844519948992ebbf2291838e8c7e7cb152058450d2067460d589560ce5827be",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "78efaa89393225aa8c786f5639c8735f6bc9a7df",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/2a83973b75f3c2170546d300f5ce225cd1705b273a1957418c844df2aea84be7/products/willie-winkie/te-62-1-iso-2-600x600_uyqi-s2.jpg": {
+          "before": null,
+          "after": "2a83973b75f3c2170546d300f5ce225cd1705b273a1957418c844df2aea84be7",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "fdcff3b3ade812b4f0f1a1eff6c2b687e7a6b2fc",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/2b0a64eb891e4abae080a162c334e4fb4df2eb4a544f721735f6c81945220346/imports/WR-PFW-20260721T020528Z/d03499e2d1c30713122dc1aca4c5204dd102f2a1880097c63e775d5f10191eb4.jpg": {
+          "before": null,
+          "after": "2b0a64eb891e4abae080a162c334e4fb4df2eb4a544f721735f6c81945220346",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "292a43a723caa2d05562c912cc34e370fb2e8906",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/2cda25fb93cd5a7a40bf78020855c40d5115c6db67c7871e0365a40632be38e6/products/oliver/OL-82-1_color_linda_02.jpg": {
+          "before": null,
+          "after": "2cda25fb93cd5a7a40bf78020855c40d5115c6db67c7871e0365a40632be38e6",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "dd232cb11982d8d4ccf2ce2525a9cc400f304755",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/2dcb4215395f6fd236c21d4d9113dc161ab07d185b29f0bb28547dec87f28489/products/oliver/OL-21-1_gallery_02.jpg": {
+          "before": null,
+          "after": "2dcb4215395f6fd236c21d4d9113dc161ab07d185b29f0bb28547dec87f28489",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "c750727be025a30be4a1f18bc9cd36ea1a000bc1",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/2e2ab91bd24c0ae70c948ba01b5edaad3a8458e60f2def90b0e9f6635ce427d9/products/oliver/OL-21-1_gallery_04.jpg": {
+          "before": null,
+          "after": "2e2ab91bd24c0ae70c948ba01b5edaad3a8458e60f2def90b0e9f6635ce427d9",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "9563b5f06325327ab2be2c2edd0f9ddc78c601a3",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/2f446f46041c55ed78b130f4e58f5b1a4f013ef5e605928c5e2f0ee0225b52bb/imports/WR-PFW-20260721T020528Z/b1866c968a46baeb30285fde81b89e4594784fbedaa51238b8a8f82368eb2b2f.jpg": {
+          "before": null,
+          "after": "2f446f46041c55ed78b130f4e58f5b1a4f013ef5e605928c5e2f0ee0225b52bb",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "6de1a62620419948bd95c6d49bee5d4d6c7ef4ce",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/356d3f57058f313798897ac88697f233ccb79e289b92c184907948ca07a646cc/products/country-london-paris/CO-62-1_gallery_01.jpg": {
+          "before": null,
+          "after": "356d3f57058f313798897ac88697f233ccb79e289b92c184907948ca07a646cc",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "a5032f9facda494b0b8cc7d96d01ea6c62e7e41a",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/35d275609b575f817b02856d57e770a97f96b11d083a5a1380c26a29ff924438/imports/willie-winkie-20261010/d71d8e2460c5a8668207c4dbfa3c91eaf3a3c99c42cd22f5cd7b6420f823f8a3.jpg": {
+          "before": null,
+          "after": "35d275609b575f817b02856d57e770a97f96b11d083a5a1380c26a29ff924438",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "75154249c237e80433cdfde085899704be60447a",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/36d5227edbfaec0344dbe5474487acbc5b254b9b08ee404ae0311ad4e2157eb1/imports/WR-PFW-20260721T020528Z/240d5e3ac4d22fa5ebcdb41d62a0800c509fd88cc9ea4912e8a8b6c13025bc5e.jpg": {
+          "before": null,
+          "after": "36d5227edbfaec0344dbe5474487acbc5b254b9b08ee404ae0311ad4e2157eb1",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "25ab8e63773096f88e8b24348aec084bf06b1b59",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/38b5b6b8b43619c3a51dee893796d32988b05f92896896f810388df041640e2d/products/oliver/OL-26-2_gallery_01.jpg": {
+          "before": null,
+          "after": "38b5b6b8b43619c3a51dee893796d32988b05f92896896f810388df041640e2d",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "27c4ccc7a6efa4a215f5ffb05a08eb6784e52134",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/39c8f2ee92f0ef53e6f7f839ef39d8c813ff494881ed25491ed7dc47929d390f/imports/catalog-recovery-20261001/16bbdc68f5110b985799e1a5df2a6609cffca0f7e1e4fa6b7aa35712f7f810f0.jpg": {
+          "before": null,
+          "after": "39c8f2ee92f0ef53e6f7f839ef39d8c813ff494881ed25491ed7dc47929d390f",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "6771a7fcbfb640772b448a856eb08b4545043aa4",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/3a22074ba15b765d5d7b31f413e35eee6582b22f5eb6a0ac0a00d2fbf07e2090/imports/WR-PFW-20260721T020528Z/0295b26b0590c038a8da436b1bf1f3a45f332b1927de3715bc7473ec8c80dfe4.jpg": {
+          "before": null,
+          "after": "3a22074ba15b765d5d7b31f413e35eee6582b22f5eb6a0ac0a00d2fbf07e2090",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "b7ce37b489795e4493d557898d0aac9757932831",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/3a3453f5b1826db4b631e566f5ca6ac2c07537538d82a6e92c9ddd3edd51eb0d/imports/willie-winkie-20261010/982f27361b67ed8e22d057f9b34c58bd7f761ab0141d6a447f041f769b3a2c6e.jpg": {
+          "before": null,
+          "after": "3a3453f5b1826db4b631e566f5ca6ac2c07537538d82a6e92c9ddd3edd51eb0d",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "d5997c4aa2fa286c8e5e07303419bcc5da094675",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/3b222a57b1125a8320c5619924e1f1aa9a93fa50605a7c28bdea12528af2cd10/products/oliver/OL-85-1_gallery_02.jpg": {
+          "before": null,
+          "after": "3b222a57b1125a8320c5619924e1f1aa9a93fa50605a7c28bdea12528af2cd10",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "0a012411bf045ad93adc206d3c0bf33b10aae773",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/3d21a66bec85670015ef133c8dbe1bc32e1abab6cec047e5f26921c96f5d24ad/imports/WR-PFW-20260721T020528Z/5253d16868edf821abc55d9503a928ea6353c86796dac188721c164593e7b5d3.jpg": {
+          "before": null,
+          "after": "3d21a66bec85670015ef133c8dbe1bc32e1abab6cec047e5f26921c96f5d24ad",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "8490a30e9338742714ae3138ec816917ec330d7e",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/4099e45d3a60ac5921591ee8169b17b4b37747dfcd223e4668cc8efd126765d8/products/oliver/OL-23-1_color_leona_02.jpg": {
+          "before": null,
+          "after": "4099e45d3a60ac5921591ee8169b17b4b37747dfcd223e4668cc8efd126765d8",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "69289105181d5cac2f590a3363af27d20bdddaab",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/41ac230d8dd0243a74d5cf5a554bf754851cd303513fa5e92198b2844cddfcbc/products/oliver/OL-16-2_color_lillian_03.jpg": {
+          "before": null,
+          "after": "41ac230d8dd0243a74d5cf5a554bf754851cd303513fa5e92198b2844cddfcbc",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "5cda3844bf0b074eff59de63aca4ff40939e2b8f",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/420ff4928c7565ad5de5d6d5259c3670d4443e54c76d9a2e35983d8707202adf/imports/WR-PFW-20260721T020528Z/60c3ac3514100929fd3f020f16a28a1f6c504462f58638f653a1ef5c335f823d.jpg": {
+          "before": null,
+          "after": "420ff4928c7565ad5de5d6d5259c3670d4443e54c76d9a2e35983d8707202adf",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "c2b6a07782b8deaebfceb1c6b80d8a797dda3bea",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/423b870f5c5a6fadd9df493a97a642cd510d79cd427a62f3eb4d71ac3a2dfd21/products/oliver/OL-14-1_color_lillian_03.jpg": {
+          "before": null,
+          "after": "423b870f5c5a6fadd9df493a97a642cd510d79cd427a62f3eb4d71ac3a2dfd21",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "beea44ce9025514fa4261fd40f9079686afecd85",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/43c4941347b52244db4fe5e0abc79c63bea1c3fe5219f8a3c7fdff83d8e98a4e/products/oliver/OL-18-2_color_lillian_05.jpg": {
+          "before": null,
+          "after": "43c4941347b52244db4fe5e0abc79c63bea1c3fe5219f8a3c7fdff83d8e98a4e",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "22492f3b0c42679f894a717dc7e5ca98c5ef2724",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/474b6098415752ab0ae9c687dee79e81fb3243f2477ec2045439265baa72ccf2/products/oliver/OL-55-1_color_leona_01.jpg": {
+          "before": null,
+          "after": "474b6098415752ab0ae9c687dee79e81fb3243f2477ec2045439265baa72ccf2",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "763f4c5b006734b4adcbb434fbc5046b8d7df999",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/4955f276d0b325f381f5f770bb14f6168bca9675e08dd2f9548ce7332aef974a/products/country-london-paris/CO-02-1_gallery_03.jpg": {
+          "before": null,
+          "after": "4955f276d0b325f381f5f770bb14f6168bca9675e08dd2f9548ce7332aef974a",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "26f444c45197b55df2f2f29ef70fb6f5c481c380",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/49e4f6e5594001947d106d7a4da8f8657011ec39f7c7dc838f9e5e6fd672d110/products/country-london-paris/CO-65-2_gallery_01.jpg": {
+          "before": null,
+          "after": "49e4f6e5594001947d106d7a4da8f8657011ec39f7c7dc838f9e5e6fd672d110",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "8c25160e15431135d62db7a0f8667a8fef6bbf28",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/4d1d34f3845692c281bbf415db26e8ca001d75b0daa7c5a009e88bbcfc18ea7a/products/oliver/OL-17-2_color_lillian_02.jpg": {
+          "before": null,
+          "after": "4d1d34f3845692c281bbf415db26e8ca001d75b0daa7c5a009e88bbcfc18ea7a",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "94b5747327e9fe44818d8956d4ee7b19a59dd5c0",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/4dc0a3bec764d9c914b7a668858a92db974640095abe0f1c8747a5011ab118cf/imports/WR-PFW-20260721T020528Z/dae28b75ac16513637b80851141352a44fe972434e137ac47f8be7b5e20c5c28.jpg": {
+          "before": null,
+          "after": "4dc0a3bec764d9c914b7a668858a92db974640095abe0f1c8747a5011ab118cf",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "d5ec246ec77a30167aff6c062ff6e2645940e97b",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/4ed13662567ba52986a34c709e6cc79b7b209deb2577a94cf12419ccfe4b257e/products/oliver/OL-18-2_color_lillian_02.jpg": {
+          "before": null,
+          "after": "4ed13662567ba52986a34c709e6cc79b7b209deb2577a94cf12419ccfe4b257e",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "3790f2638505e0d6b13660ebd009436ecbc4ca23",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/4fa475b00ff56b2f0b3ba49abc394756b0e08b7066925ecdf1c898a59a9aa2b3/imports/WR-PFW-20260721T020528Z/8f7e9af6eda59e15724d7e5a139c5c543f4d2f81fdcde02cbde7f520d05f1fba.jpg": {
+          "before": null,
+          "after": "4fa475b00ff56b2f0b3ba49abc394756b0e08b7066925ecdf1c898a59a9aa2b3",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "02e19a53c2ecd8cfe462558504019b967e17d12f",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/51e031acfe79105ece60a2af4a2aa547e8da7b27a91a139c3cb5ed528f9132d0/products/country-london-paris/CO-02-1_gallery_01.jpg": {
+          "before": null,
+          "after": "51e031acfe79105ece60a2af4a2aa547e8da7b27a91a139c3cb5ed528f9132d0",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "6035249ca67a28d345e100db9af1b0b424285fa1",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/52a87e29d35fbed81951fb45a4d291c7d2ba65fa2a6873c7241b86f1d881b1ff/products/oliver/OL-17-2_color_lillian_01.jpg": {
+          "before": null,
+          "after": "52a87e29d35fbed81951fb45a4d291c7d2ba65fa2a6873c7241b86f1d881b1ff",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "ec3866b018ab99c6187bc35ca8da8be6c38b9009",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/52f8b3f853c04028234743a3912cf66160b0d700be4bfeee41ca04781c045c46/products/country-london-paris/CO-15-2_gallery_03.jpg": {
+          "before": null,
+          "after": "52f8b3f853c04028234743a3912cf66160b0d700be4bfeee41ca04781c045c46",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "d0fc148be0f9b1956d8178f0c777f2f878af432c",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/56dcbaac045133521d7ca965c83dc0b353592d40b5871ccc9d2dca5fa0d4c1a4/imports/catalog-recovery-20261001/69cea71cecce62a2163bb3334759ea1c7e8682d3c78aa80ad17c5f27ac3f89be.jpg": {
+          "before": null,
+          "after": "56dcbaac045133521d7ca965c83dc0b353592d40b5871ccc9d2dca5fa0d4c1a4",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "6270ff46aaf00e75607d34d6886bfbaad28171e9",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/57eaaef7064d2388e19fec820fe235b509b58e48f141b0616f864ffb247e43c3/imports/willie-winkie-20261010/ec118f060108f6b06abafaa8f3849c90e21805356aa0d72901db8fdc5898999c.jpg": {
+          "before": null,
+          "after": "57eaaef7064d2388e19fec820fe235b509b58e48f141b0616f864ffb247e43c3",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "51a9901d392394c4a6e4cc5314c2857276c3c644",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/5b318c18b613cbb5cf060c39f6c39c2f6283b8708628d8fa320c9649d92c32e5/products/oliver/OL-16-1_color_lillian_04.jpg": {
+          "before": null,
+          "after": "5b318c18b613cbb5cf060c39f6c39c2f6283b8708628d8fa320c9649d92c32e5",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "ae602dd5ec31cb6d27a33aebaf91b4a1524f8b8e",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/5b892ea88741296f6055554e86389c2040ae4a7700c4ed09b1257515e9cb1014/products/oliver/OL-85-2_gallery_01.jpg": {
+          "before": null,
+          "after": "5b892ea88741296f6055554e86389c2040ae4a7700c4ed09b1257515e9cb1014",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "462b5926aae2342df6dc7caf3859e3b0406e8e14",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/5e0b0738cf285ba514f205ce57d983a87968a333f42fee4c482369482f4b1dea/products/oliver/OL-21-1_gallery_03.jpg": {
+          "before": null,
+          "after": "5e0b0738cf285ba514f205ce57d983a87968a333f42fee4c482369482f4b1dea",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "1c2518793961a5151e61bbe8d0e4a2002aa718dd",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/63daf3e1c5d7714ed182cfc321ede6660d70aa5c3529ff35263c35a375c8b4e3/imports/willie-winkie-20261010/6e14eb39ad8b345cb1e73205a4d33d8167655bcf7b459d59970f50087150a2e1.jpg": {
+          "before": null,
+          "after": "63daf3e1c5d7714ed182cfc321ede6660d70aa5c3529ff35263c35a375c8b4e3",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "de44d904e5f46cefdc350ca2bb3d45b4f3cbd00f",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/64f8a5b002d4f55e5c108dc1b6188db73d03b452444ca822d558b6814a418e2e/products/oliver/OL-26-1_gallery_03.jpg": {
+          "before": null,
+          "after": "64f8a5b002d4f55e5c108dc1b6188db73d03b452444ca822d558b6814a418e2e",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "836055ea4c56f56db3313278ad18cf57b9e75064",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/66e99c53444e349e4c4add1a1c77ea1d65fd219261a5489994513444990a9f2f/imports/WR-PFW-20260721T020528Z/537bca886ed78a21d482ccf2f567253a0a3ccf3ffe1492799f4f6843f4800e13.jpg": {
+          "before": null,
+          "after": "66e99c53444e349e4c4add1a1c77ea1d65fd219261a5489994513444990a9f2f",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "2aa0695faaef02ed2fb09743bf6dff31aaae582c",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/673a74e9bc07c9878626e91bb329619c47f467efa5f42399557d169cd46f01c5/products/oliver/OL-26-2_gallery_03.jpg": {
+          "before": null,
+          "after": "673a74e9bc07c9878626e91bb329619c47f467efa5f42399557d169cd46f01c5",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "5e83d7bbbacf467f63efe47862e2d3a717362949",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/67c2b9d77d74d1ad0fece206e1da0ad89f30d089706dd83a3fe1ed156d056a21/products/oliver/OL-26-2_gallery_02.jpg": {
+          "before": null,
+          "after": "67c2b9d77d74d1ad0fece206e1da0ad89f30d089706dd83a3fe1ed156d056a21",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "deda2487dc17f5e0628cca1884e4cba16ceede38",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/6ac4f10ca0ad185da4c897ab1adc43995a9422100fed2c7645e33a3a60907297/products/oliver/OL-16-2_color_lillian_04.jpg": {
+          "before": null,
+          "after": "6ac4f10ca0ad185da4c897ab1adc43995a9422100fed2c7645e33a3a60907297",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "b92a66c81496a7ab3d651c0517c8e6bc20a3ea54",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/6e006acb2f3513c86065545176c5079eb36fa199458191d7df33b31d49b7565b/products/oliver/OL-17-2_color_lillian_03.jpg": {
+          "before": null,
+          "after": "6e006acb2f3513c86065545176c5079eb36fa199458191d7df33b31d49b7565b",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "e1f10e87e1c63d467dbe056f2941a8ef0d547cbf",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/6e93b90fa3a7b592d13c289dc0039d7669e2b2fe1d49c452f84860c0bbdf7684/products/oliver/OL-14-2_color_lillian_05.jpg": {
+          "before": null,
+          "after": "6e93b90fa3a7b592d13c289dc0039d7669e2b2fe1d49c452f84860c0bbdf7684",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "75f69f3fa5889ce4530b46efd3403dd788be0245",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/6f7ff08ec140bc547d648670aeb28ac7e9ca988655a06e072a8a1f1c0b1b9940/imports/willie-winkie-20261010/bc742c51a72af214193501213cedc098d2ba1be150906a3c6cd1cbd0fcfce596.jpg": {
+          "before": null,
+          "after": "6f7ff08ec140bc547d648670aeb28ac7e9ca988655a06e072a8a1f1c0b1b9940",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "502de6f677329f44aae3b00a957253cf505586ec",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/7037bc9f1f38e7cfbaeb2b944e812f2da3685c61cc1cb92695e22816658208c0/imports/WR-PFW-20260721T020528Z/9c3417fc705e5ad97ba29f84f91b42ce01edd170d24e3b9fa0352297d00202cb.jpg": {
+          "before": null,
+          "after": "7037bc9f1f38e7cfbaeb2b944e812f2da3685c61cc1cb92695e22816658208c0",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "a62311f3dc3216ea25ea5cce1d2e516f8a7e7711",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/703d5dcc216c7cd95d3f575f722f2e81f956bdf1840022193826286fda8b90a1/products/provence/pv-17-1_legacy_main.jpg": {
+          "before": null,
+          "after": "703d5dcc216c7cd95d3f575f722f2e81f956bdf1840022193826286fda8b90a1",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "953b89cf896979a063ab5867e373ce6a31065bfa",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/779763061366843d90c1d7ee64ba0fd72657594e411a277405336a14e2db3f81/products/oliver/OL-21-1_gallery_01.jpg": {
+          "before": null,
+          "after": "779763061366843d90c1d7ee64ba0fd72657594e411a277405336a14e2db3f81",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "21c12896b38c59ac8ae44d1781bffa19511b4200",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/79631c135acabffd575f1284847a25f9a754c40100e897d03680aa3aa2d50a6a/imports/WR-PFW-20260721T020528Z/12ece48c6360a305dbda9553302e7df5085387486e765161dcb3d81120bb7ac0.jpg": {
+          "before": null,
+          "after": "79631c135acabffd575f1284847a25f9a754c40100e897d03680aa3aa2d50a6a",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "8169eea7c3d0ea62df1d68ec4b46493acba712a5",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/7e455b33a549ab880f481f21f694b99601843cf8115134a6f920ce4af0c8e514/products/oliver/OL-14-1_color_lillian_05.jpg": {
+          "before": null,
+          "after": "7e455b33a549ab880f481f21f694b99601843cf8115134a6f920ce4af0c8e514",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "386f28e2069123961bb5dcd3ffea5ebc3a787291",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/7e7ad389f9ebff93dcb2fbf6bb1a99c9a13ccb7e32e9a8d568aab413cf35c4c9/products/country-london-paris/CO-62-1_gallery_02.jpg": {
+          "before": null,
+          "after": "7e7ad389f9ebff93dcb2fbf6bb1a99c9a13ccb7e32e9a8d568aab413cf35c4c9",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "d08191b7cd188967e83abe52435f091a28ab5e6f",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/7ebf04a12f1a91cac40e12feeb817a8bd2f32b4da0c11e9b50417caadb4da9a3/imports/WR-PFW-20260721T020528Z/dc6f104f5441ffc2f937d46d02c265849ed2c7cbd4508bf6220cc9a4ca48d2f6.jpg": {
+          "before": null,
+          "after": "7ebf04a12f1a91cac40e12feeb817a8bd2f32b4da0c11e9b50417caadb4da9a3",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "8c08652451c6d56aa9f9b804397a99cc2c356910",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/8776dd9fd57717ab6d1e279ad8822829f47a65bdabce2559b64c6c10b93711aa/products/oliver/OL-17-1_color_lillian_02.jpg": {
+          "before": null,
+          "after": "8776dd9fd57717ab6d1e279ad8822829f47a65bdabce2559b64c6c10b93711aa",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "04c50715b2f03307040d3cc916edf075ff5db84d",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/8a9209ef8edf057102506cc3fbed054965ab3185b48c911e0759b5218496badd/products/oliver/OL-16-2_color_lillian_05.jpg": {
+          "before": null,
+          "after": "8a9209ef8edf057102506cc3fbed054965ab3185b48c911e0759b5218496badd",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "05646a745ed3ce600ffd749c9183f4d1e60f918b",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/8d26868c16e3ee4876be4bcbf65c10a05a515ba3ca35d928aab8fdbf46337b0d/imports/WR-PFW-20260721T020528Z/32a1bd02af12adf0e15fe0d202b10c8ce32dbba73bc360ce8a8a3717b1080677.jpg": {
+          "before": null,
+          "after": "8d26868c16e3ee4876be4bcbf65c10a05a515ba3ca35d928aab8fdbf46337b0d",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "b760a70d5ed0326016c80597f300a3b1dd4d51fb",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/8dac083fc77afef08e933070b71fc1c10c917e6ef9afdb29f09890c852e344eb/products/country-london-paris/CO-61-1_gallery_01.jpg": {
+          "before": null,
+          "after": "8dac083fc77afef08e933070b71fc1c10c917e6ef9afdb29f09890c852e344eb",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "9bf6bb43d4fe913cb71e0094ea6e6aacfd76388b",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/8ff7dfdcfff698318f29232801918a0ac1752c1755ef16b897a4dc35e203ae6a/imports/WR-PFW-20260721T020528Z/136c251f53cca8bcebc5d672d72ead2c9846f3d7d161da0adaa1fcc71e0761e3.jpg": {
+          "before": null,
+          "after": "8ff7dfdcfff698318f29232801918a0ac1752c1755ef16b897a4dc35e203ae6a",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "88171c34f894abbbbb68499a6fe0f7c0da44922c",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/9076799504349a26d05ac2d9f46184a5834c0c8ea1bfbb0d535e448b38d742bf/products/country-london-paris/CO-08-1_gallery_02.jpg": {
+          "before": null,
+          "after": "9076799504349a26d05ac2d9f46184a5834c0c8ea1bfbb0d535e448b38d742bf",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "a3d31f29ff44ef6e4f1d2a285620314ff6206c67",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/90ae1ce58ff4c11263d85be3f5362f1c320599816e0e4e32963ad5af201c51be/products/country-london-paris/CO-15-2_gallery_04.jpg": {
+          "before": null,
+          "after": "90ae1ce58ff4c11263d85be3f5362f1c320599816e0e4e32963ad5af201c51be",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "c018a94855883470c1320da691f9be4098eafc84",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/915b7f2015105565fc4dd1f5c29928a8c0ffd403a7137296758d584e2c7dc034/products/country-london-paris/CO-61-1_gallery_03.jpg": {
+          "before": null,
+          "after": "915b7f2015105565fc4dd1f5c29928a8c0ffd403a7137296758d584e2c7dc034",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "3f2efc4199e882b4af676692e684ffe8c4ff77ae",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/9919e9302bf94e3fe73573a126504191ef600b1b32c2af2721739d9cb20b0a8f/imports/WR-PFW-20260721T020528Z/dc2542e8ee2ebff3965e3d972b2aa64ff85f2938f81b8281e38c650f16a5e796.jpg": {
+          "before": null,
+          "after": "9919e9302bf94e3fe73573a126504191ef600b1b32c2af2721739d9cb20b0a8f",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "881603ea8a91cd38b76085ffba6627c2184c5580",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/991dd63ea3dc02488c06c2b612aa24c27fd86695e3f6acb716ab08a0947b3ded/products/country-london-paris/CO-66-1_gallery_01.jpg": {
+          "before": null,
+          "after": "991dd63ea3dc02488c06c2b612aa24c27fd86695e3f6acb716ab08a0947b3ded",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "f8f25a21631edfccac78bfa323939bb6b920e119",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/9d9272509803f3cdb32627b071a03391e6fbbfbe0276944588693b1a88795072/imports/willie-winkie-20261010/9493e83450a233251978f0bbeb3964066b4db1098811ecb991e1e2a1c31254ef.jpg": {
+          "before": null,
+          "after": "9d9272509803f3cdb32627b071a03391e6fbbfbe0276944588693b1a88795072",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "7ecf85668946ba8a306fceefb5f54a8fd87d5e0d",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/9ffec5b9ef94f8d83d03e383b7897af9c85ebe07ef57ab08c65dd2888476b1e4/products/oliver/OL-26-1_gallery_01.jpg": {
+          "before": null,
+          "after": "9ffec5b9ef94f8d83d03e383b7897af9c85ebe07ef57ab08c65dd2888476b1e4",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "29a6a47ca313e17a8e0c0803d893692330eed5ff",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/a5a70a50717c861bc0cbda444d61f480a23b913afc16f9f692c4bc9842c5d516/products/oliver/OL-66-4_gallery_03.jpg": {
+          "before": null,
+          "after": "a5a70a50717c861bc0cbda444d61f480a23b913afc16f9f692c4bc9842c5d516",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "71c3178519c214551d531d7ce70157d48a315b0f",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/a896bff1dbdf7a72a947936a64ba840127f592ba405a8d75a03f804539324fe4/products/oliver/OL-17-1_color_lillian_03.jpg": {
+          "before": null,
+          "after": "a896bff1dbdf7a72a947936a64ba840127f592ba405a8d75a03f804539324fe4",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "0cef4061e22be0be87cad8c80304ba2da308758d",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/aa6bd083484b5e4bef5f34bcde26c637457000243253a92ade9aeb8af2568974/products/oliver/OL-16-1_color_lillian_02.jpg": {
+          "before": null,
+          "after": "aa6bd083484b5e4bef5f34bcde26c637457000243253a92ade9aeb8af2568974",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "76a01ad10da0faacfd0cb3c204c1e0aa87de2b81",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/ab03d15d64d72fb0216af2a324497a94acc1c4333934a55766d1f6bea8907164/imports/WR-PFW-20260721T020528Z/3410d6b0f9d787dd49ebd20434c370f32e5fc29dc156d84784b02b81ba091723.jpg": {
+          "before": null,
+          "after": "ab03d15d64d72fb0216af2a324497a94acc1c4333934a55766d1f6bea8907164",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "3fa8ac0f46203e2feda351181e95759b1881e59b",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/b132bc305278772289ccd552483f88826399e4d6b39cd3ed0a509d383fdca890/imports/WR-PFW-20260721T020528Z/c41c047419359501ff6a14982c404fac547c74a97371a924b78b0e21d6f18449.jpg": {
+          "before": null,
+          "after": "b132bc305278772289ccd552483f88826399e4d6b39cd3ed0a509d383fdca890",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "21dc3e8d32f96d618e5e644c897e36ba7397c7c1",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/b3bd5b5683a05d931cef3e8f37e78e1bcccb247c053733b129724ae71f14861c/imports/WR-PFW-20260721T020528Z/b14e360ac003fdfbed2c00e2fdd1b02711253103ae7c787340b8fb6edb1d8368.jpg": {
+          "before": null,
+          "after": "b3bd5b5683a05d931cef3e8f37e78e1bcccb247c053733b129724ae71f14861c",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "91af0cae30d84a5927166199508aa980bfff6643",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/b85b03d6e8906540be1f95f0fb964f85130316d4b5d0326eb207b7bba3fc9ac6/products/oliver/OL-16-1_color_lillian_05.jpg": {
+          "before": null,
+          "after": "b85b03d6e8906540be1f95f0fb964f85130316d4b5d0326eb207b7bba3fc9ac6",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "fb6b1e53a1b414552fd6aa55518c9cfdc995b6fe",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/b923525d360234f5661d5d6aee44d4d420e7aea525b90f1d62a207a7ace352bc/products/oliver/OL-17-1_color_lillian_05.jpg": {
+          "before": null,
+          "after": "b923525d360234f5661d5d6aee44d4d420e7aea525b90f1d62a207a7ace352bc",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "d5de18754637c01ec421621f9cb1250bce5826f9",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/b9c38a38c218a8715d41e6844e71ba3c6433aa350cc7f2aec60fb8031baf1d7a/products/oliver/OL-14-2_color_lillian_03.jpg": {
+          "before": null,
+          "after": "b9c38a38c218a8715d41e6844e71ba3c6433aa350cc7f2aec60fb8031baf1d7a",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "a77f55d586aca726393be5e658aa8b97ed0277f8",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/ba0f215dedcbf54b9f96f07b599f3e1a181a0b600be429fc41cbb54c54234690/imports/WR-ATTACH-20261020/OL-08-N_studio_front_01.jpg": {
+          "before": null,
+          "after": "ba0f215dedcbf54b9f96f07b599f3e1a181a0b600be429fc41cbb54c54234690",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "2b67ffc824015431e0017bb498ed2f9e0b2e29cb",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/bbb775422d498824838c73801088dba1a129a5403e69ed656af64083d784386c/products/oliver/OL-16-2_color_lillian_02.jpg": {
+          "before": null,
+          "after": "bbb775422d498824838c73801088dba1a129a5403e69ed656af64083d784386c",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "39368a05be373266021e018f54b212f842526520",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/bc283f2e2e61e603b79024cace9606d9508e4182cffa70a94e7970a220487e94/products/country-london-paris/CO-65-2_gallery_02.jpg": {
+          "before": null,
+          "after": "bc283f2e2e61e603b79024cace9606d9508e4182cffa70a94e7970a220487e94",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "49bf8286412504adf5094cef2eb42fe2f60d799e",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/bd9e35866aab40d1d4c4d72f274c5ad78c24bb39d19d00ac163bc59a5d79a3f8/products/oliver/OL-82-1_color_linda_01.jpg": {
+          "before": null,
+          "after": "bd9e35866aab40d1d4c4d72f274c5ad78c24bb39d19d00ac163bc59a5d79a3f8",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "1319b5549357769cfedbaa18ce3fb261afc575e9",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/bf01f20def5e8fa0856ed1d8b8eeafb439d24980d91ef6cb68afaaf1a0abd620/products/oliver/OL-18-1_color_lillian_01.jpg": {
+          "before": null,
+          "after": "bf01f20def5e8fa0856ed1d8b8eeafb439d24980d91ef6cb68afaaf1a0abd620",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "04187e201243c93caffaf7cc978d5496f9b3d78b",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/c1b0f9b5b473b0ce81569ceb19067202bd5ba52286dc574c60d2a0354166ebe8/imports/WR-PFW-20260721T020528Z/1751a8818eedf88450cf9c2a9fd8f760f11682dfcedce86da1b4de29db2a5f0f.jpg": {
+          "before": null,
+          "after": "c1b0f9b5b473b0ce81569ceb19067202bd5ba52286dc574c60d2a0354166ebe8",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "451f017847477958b82837f585523c752356ec91",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/c2295467c25ddcafff50e85b75faa3351c9c2397a7b8582423e22c85b240f0e5/products/oliver/OL-17-3_color_lillian_01.jpg": {
+          "before": null,
+          "after": "c2295467c25ddcafff50e85b75faa3351c9c2397a7b8582423e22c85b240f0e5",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "2ba5e90a475550877d3e5edd6ba92e6acd58a427",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/c2490e6a647591bd245b99a77c4103342c125fbefd90990098f00b0aa4ff2ca4/imports/willie-winkie-20261010/4d80566040f3dedb97361fd13e87e2b11ec6bfe529cdcad3fc7ec40ae908a270.jpg": {
+          "before": null,
+          "after": "c2490e6a647591bd245b99a77c4103342c125fbefd90990098f00b0aa4ff2ca4",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "10d04794964f95dbaeff9cb5f8cc88d87dbc06cb",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/c4d0de2a6da18cc85dfbc73771812030dab33fb7d6a04372aea7c9408427f843/products/oliver/OL-18-2_color_lillian_03.jpg": {
+          "before": null,
+          "after": "c4d0de2a6da18cc85dfbc73771812030dab33fb7d6a04372aea7c9408427f843",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "d2656e292bdccd00cf4af40b10d82abc146d3e22",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/c681128e83c8f498754af3c736ef10bee21d7a7faaba43114f367a901d38d0a3/products/country-london-paris/CO-65-1_gallery_02.jpg": {
+          "before": null,
+          "after": "c681128e83c8f498754af3c736ef10bee21d7a7faaba43114f367a901d38d0a3",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "6537364ef29605b2c118165bd40cc271df70079a",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/c7b105bc5f364d1c4b3e56d2e2372c8c0939a27c90b4fea0cf8437c296dbca5e/products/oliver/OL-18-2_color_lillian_04.jpg": {
+          "before": null,
+          "after": "c7b105bc5f364d1c4b3e56d2e2372c8c0939a27c90b4fea0cf8437c296dbca5e",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "271365e3149f6ed6002b8a2d1c25d4d254e2672c",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/c7c0751ab6416945417dd2a2b4ab4d0ab8b1b1cdefad2fb97c492664378bebc5/products/oliver/OL-18-1_color_lillian_05.jpg": {
+          "before": null,
+          "after": "c7c0751ab6416945417dd2a2b4ab4d0ab8b1b1cdefad2fb97c492664378bebc5",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "f2e0aa0e1e4b70859082543dc854a201f003a1bc",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/cf402f1fef04f4f7f2e132a6a3ab7f70685078c0844b26145d0967c690a2104b/products/oliver/OL-14-2_color_lillian_04.jpg": {
+          "before": null,
+          "after": "cf402f1fef04f4f7f2e132a6a3ab7f70685078c0844b26145d0967c690a2104b",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "88530e39b093a1c9238bb56f5ce2b634f4248913",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/d16a961b66022d474736221050400964dcd840a67ea4b82944f62b0038e7cad9/products/country-london-paris/CO-61-1_gallery_02.jpg": {
+          "before": null,
+          "after": "d16a961b66022d474736221050400964dcd840a67ea4b82944f62b0038e7cad9",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "bec772364e1deaa02eaf841566f29681b329c57c",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/d30446466d5b0143100540de92da7370fb4b21d4c32b2b3367c2d2c36be88f3f/products/country-london-paris/CO-62-1_gallery_03.jpg": {
+          "before": null,
+          "after": "d30446466d5b0143100540de92da7370fb4b21d4c32b2b3367c2d2c36be88f3f",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "0fa49d7964053c5e900133dfc72e8b6ca3299ea0",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/d8e25bdc34280adc37d3f29cec633ac1b5642478642f28cd23a1de82e73d266e/imports/WR-PFW-20260721T020528Z/81d3d301564699646f78d33ab0cbdd0397a1443babc69b37536ce0ef49732af7.jpg": {
+          "before": null,
+          "after": "d8e25bdc34280adc37d3f29cec633ac1b5642478642f28cd23a1de82e73d266e",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "994df8e7a65b6da1e34671b116949286c2c8ccab",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/d9eccfb80257bba178e39b4a49d8bbf2382a0b02823c356d11ee23b18d15289e/products/oliver/OL-23-1_color_leona_03.jpg": {
+          "before": null,
+          "after": "d9eccfb80257bba178e39b4a49d8bbf2382a0b02823c356d11ee23b18d15289e",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "1643c6f615ecff4cef7f6485305a015d03ab831a",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/da7d2286badf2515ccd44219d3a2f7e716b3539cf0aa1317aaa0ab842082455f/imports/willie-winkie-20261010/9ec6304d07b9916be52a1b23f14918970ca71e49fa99ed90de56ab407321aa6e.jpg": {
+          "before": null,
+          "after": "da7d2286badf2515ccd44219d3a2f7e716b3539cf0aa1317aaa0ab842082455f",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "ee4d43050fdd49271af235471bc48da2701cef64",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/dd0e7defa5d57b701a52d3ce002cc136be801488dc2d615cb04a152661d62c1b/products/oliver/OL-07-1_color_leona_01.jpg": {
+          "before": null,
+          "after": "dd0e7defa5d57b701a52d3ce002cc136be801488dc2d615cb04a152661d62c1b",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "aceee8a5ed7ba895cb793ccf779c3d9e210857e0",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/dd1ad5e7d6c68770e17f7fc760397bb33629d96e924511913b4e1ee58d0ae9fa/imports/willie-winkie-20261010/ed2c311cc3a6be6fa6dbfbc5d643ce2bd6c5ff13cb4f574bd0c6defa66bf4c28.jpg": {
+          "before": null,
+          "after": "dd1ad5e7d6c68770e17f7fc760397bb33629d96e924511913b4e1ee58d0ae9fa",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "7c1b13d3907f9fd143c448795937c561deef4d4c",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/deffcd58a43e5c6cf65a7aeaf5c64781d2346bb2340542c5d8e4cbc67377c93a/imports/WR-MEDIA-SAFE-20261020/b17cde423934989e49c62c40027b0e512396e4dd8a2787e4f4ac0ca449617d41.jpg": {
+          "before": null,
+          "after": "deffcd58a43e5c6cf65a7aeaf5c64781d2346bb2340542c5d8e4cbc67377c93a",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "f5f3130e9b6eddf9b04fd72142f9b520bc67d829",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/df83435477d51acaa4400df8d1777e749b6ed677dcb787b250bc84c61d8321b2/images/products/oliver/ol-66-4-with-chair-7695dc3e6059.jpg": {
+          "before": null,
+          "after": "df83435477d51acaa4400df8d1777e749b6ed677dcb787b250bc84c61d8321b2",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "b674757c6a43fdc9c9cb197b7f20ea3fae78c25c",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/e0614508c6f29fec3dc968ebc881af80a83fc9b8af6393108173040c4b8a0181/products/oliver/OL-66-4_gallery_01.jpg": {
+          "before": null,
+          "after": "e0614508c6f29fec3dc968ebc881af80a83fc9b8af6393108173040c4b8a0181",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "57b8d52efbd28a702615a9773cb6ab94ed8902d1",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/e0f0bc4b00f90a5ec0a29e1b308f5fc25fed087379bbc0469ac2472d1372d195/imports/willie-winkie-20261010/9d0483948777fa46fa0959834112b7ca79b6f906c7370583ac396f2ab76b962f.jpg": {
+          "before": null,
+          "after": "e0f0bc4b00f90a5ec0a29e1b308f5fc25fed087379bbc0469ac2472d1372d195",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "53e56d152b021718f9865abe2b2cc1f301c764a0",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/e34b7dc666da26096e6113f3afb5e860e6e43350311dae1edf59ccd616b93a36/products/oliver/OL-14-2_color_lillian_02.jpg": {
+          "before": null,
+          "after": "e34b7dc666da26096e6113f3afb5e860e6e43350311dae1edf59ccd616b93a36",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "164bc3968223607b06a6b1b8d2534f214c91831e",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/e3c58068aa4383dc11c4585374c47f41488dbcf82832450dcb8595cc4d77da7b/products/oliver/OL-14-2_color_lillian_01.jpg": {
+          "before": null,
+          "after": "e3c58068aa4383dc11c4585374c47f41488dbcf82832450dcb8595cc4d77da7b",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "e0c0cca0fd430097b2b0a8bcfab60d793a9404ab",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/e48fed6ce6ed111522c1bff79f9b602904c3d5a8fb9a5c3a37a94df3a785670d/products/oliver/OL-16-2_color_lillian_01.jpg": {
+          "before": null,
+          "after": "e48fed6ce6ed111522c1bff79f9b602904c3d5a8fb9a5c3a37a94df3a785670d",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "6153dcfb7652ee123252cbdf9734d361d615d697",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/e64146c71e8f2e3b57fd01a7e785ea9d064ae7f8982c908a5eaf9726ac57a26c/products/oliver/OL-17-3_color_lillian_02.jpg": {
+          "before": null,
+          "after": "e64146c71e8f2e3b57fd01a7e785ea9d064ae7f8982c908a5eaf9726ac57a26c",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "95eaa2670a2e614c119bccf6d5c7a31e2867c8a4",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/e7d1fa3e15ec457c60d3892fd8210573c5fb34a9aa72e10a0ec0c08fd0901fcb/products/oliver/OL-18-1_color_lillian_02.jpg": {
+          "before": null,
+          "after": "e7d1fa3e15ec457c60d3892fd8210573c5fb34a9aa72e10a0ec0c08fd0901fcb",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "1806600cb62b69125fad747c194407ef0dac2aaf",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/e84e61fa7c943b3ff363f8604e900b30a9790e3ed06f73580cfd03dca3e7e5d2/imports/willie-winkie-20261010/2ba8c4f928889c6c17dba7757b4b0c122011c38990cc4397bf7dead38e94f4ec.jpg": {
+          "before": null,
+          "after": "e84e61fa7c943b3ff363f8604e900b30a9790e3ed06f73580cfd03dca3e7e5d2",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "5728181b24e9bdb953f961e44e0de6436d0061b2",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/e8eb51482cdf5a9d3a3e7606a9b13aae1f0b782d34255e97cfd726cded147640/products/oliver/OL-14-1_color_lillian_01.jpg": {
+          "before": null,
+          "after": "e8eb51482cdf5a9d3a3e7606a9b13aae1f0b782d34255e97cfd726cded147640",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "f25460a115c01fbaa9fd63d5d1bd1e3ce2fa93de",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/ecef70c634eee1d25f1d0ccf252d6f6ebaf1235cae3cffbfb1565f7103c1b190/imports/WR-PFW-20260721T020528Z/8cef5552c9d13febbdfd267ac314f71c0cdfbcd27733c1517ae8e9fb6f47e020.jpg": {
+          "before": null,
+          "after": "ecef70c634eee1d25f1d0ccf252d6f6ebaf1235cae3cffbfb1565f7103c1b190",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "72d51b1b17c6adc9c99851c2932d4c104998171f",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/f0f6000f3517617a25ef540d3454559ddda830272567994fb02508f87e6f91a7/imports/WR-PFW-20260721T020528Z/36d9d91e7a859fe6ea0d6dfd73088e9736e41ef5a161e448dc085215e32fbc4c.jpg": {
+          "before": null,
+          "after": "f0f6000f3517617a25ef540d3454559ddda830272567994fb02508f87e6f91a7",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "ec576520d82f753d8a875fe91dbbc783b30651c1",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/f34975e015862f6d160f5a7020b3be7ebb4a9dc59d2ad61036f2893c22d308db/products/oliver/OL-14-1_color_lillian_04.jpg": {
+          "before": null,
+          "after": "f34975e015862f6d160f5a7020b3be7ebb4a9dc59d2ad61036f2893c22d308db",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "23232831e1babd8167a0e47f50270d3d79e3ec34",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/f36fb338e4d978ab86ec91c692b8b46409d39dd69e9ba3dc4d3f7962c165c3f8/imports/WR-PFW-20260721T020528Z/4680726b03e939c0781c9731bd23fd5fa4e642bf51339e0b0f8ebbfdc1a06eb6.jpg": {
+          "before": null,
+          "after": "f36fb338e4d978ab86ec91c692b8b46409d39dd69e9ba3dc4d3f7962c165c3f8",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "c28531034f2b82538f8005f4165bfbf309526a7b",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/f63a3d8c29460cd4e1988f06df2b11d4d407a258ec19115a888c01fd2a3bd2cc/products/oliver/OL-26-2_gallery_04.jpg": {
+          "before": null,
+          "after": "f63a3d8c29460cd4e1988f06df2b11d4d407a258ec19115a888c01fd2a3bd2cc",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "eca949cb9c4efa290e43d618b184133a35f7d77c",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/f89558b6895ca4e5f79bcfccea81e3d80cbd777e38f8a8334b9e26b63362a9fe/imports/willie-winkie-remainder-20261011/3586c932f1717fd5f2f4b768892f375d390449c96210d901337d62b4f95fd0ab.jpg": {
+          "before": null,
+          "after": "f89558b6895ca4e5f79bcfccea81e3d80cbd777e38f8a8334b9e26b63362a9fe",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "4ba83c7aed1cf91bd831f083d316da9c7454446f",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/fcdd00f5fba4dbab604a1d5c6c7b6982e8f425e899cbff42df70dbade4393b7a/products/oliver/OL-23-1_color_leona_01.jpg": {
+          "before": null,
+          "after": "fcdd00f5fba4dbab604a1d5c6c7b6982e8f425e899cbff42df70dbade4393b7a",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "fdde53de3f7e1b24afb433b64f6b6a5500688088",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/fd6670a173927f28421cb5db6aaf05ba39d4e658843c9c4459351f494d4ea0f4/products/country-london-paris/CO-65-1_gallery_01.jpg": {
+          "before": null,
+          "after": "fd6670a173927f28421cb5db6aaf05ba39d4e658843c9c4459351f494d4ea0f4",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "3bd376e3ac06b72b4212bad058e7144812d536a7",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/ffbb5325017b7a24cbac80fc7988f1419ee4576ac70908477e6f155bb8a73e7b/imports/willie-winkie-20261010/57eaa283fb68a857f6705df1d8ee678dd4f41bf1ac236fd0ffe0b2bedb7fb157.jpg": {
+          "before": null,
+          "after": "ffbb5325017b7a24cbac80fc7988f1419ee4576ac70908477e6f155bb8a73e7b",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "a9a7b4004c001edd8bd00467c912c8365ce5eafb",
+          "before_mode": null
+        },
+        "apps/storefront/public/prepared-gallery/ffded813125c046bafcd4bd41dec82171485eba4454a88ed09222549d4b6aac2/products/country-london-paris/CO-02-1_gallery_02.jpg": {
+          "before": null,
+          "after": "ffded813125c046bafcd4bd41dec82171485eba4454a88ed09222549d4b6aac2",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "686ab438cc2d367ae92ec6c9417f343a734238ea",
+          "before_mode": null
+        },
+        "apps/storefront/src/app/product/[id]/page.tsx": {
+          "before": "cac4acae58bcf75281466d1b1dccefbf8c828bbc3d263c4a011666b756b22e50",
+          "after": "5e1288e4d31c1b13320170fff17e970c2e8b4bf931b381b923e3d6c963de4407",
+          "mode": "100644",
+          "before_blob": "88616d3833ed3334a5a19e2f3fd379758d096720",
+          "after_blob": "1a2416c6412ac58a0d62ee6aea0987c62c01c217",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/oliver-pdp-media-switcher.tsx": {
+          "before": "bcc5930fb9db41aec4adddfc8dda32617666a5882513cdd898a2c86d01092773",
+          "after": "762839e96a4564d08ae3b1dc992666c0def4e4b9a981e691f94f2d58e0544a93",
+          "mode": "100644",
+          "before_blob": "0d92de896b57d8666f20fd13e14c1b5252649543",
+          "after_blob": "a8634957b1bac4fc49830a13380148226c2da6b9",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/pdp-image-lightbox.tsx": {
+          "before": "fa73ea4b7c8553ad871b3d1d6bfa7fc8d017ab95738f7c87c60f82bdb6d2e78b",
+          "after": "c7b3bf99ef345e5b60ce64aa0bc5c8f0b71f1064fdffda0008c2487c7037b60c",
+          "mode": "100644",
+          "before_blob": "ba0381cc5d776d8da54610b1bec7554a3139976e",
+          "after_blob": "dea4c1eb14d54e8c992aaba94cd4b80edf2265ab",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/pdp-supplemental-details.tsx": {
+          "before": null,
+          "after": "1d8d3f9501325a4c45f909202ce69a00a9eb8bfbe1c3c55f624f1427e5c293c8",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "4ba1e6c07a8d23bc0eb2dd98d7fd23948b8ef013",
+          "before_mode": null
+        },
+        "apps/storefront/src/components/prepared-photo-image.tsx": {
+          "before": null,
+          "after": "32fe09673c42b7229bbe71390836699e1ab398e4bece1b876cc1b56c05423777",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "3263fb55abb5d61e61eef60b6bf6039cad02204c",
+          "before_mode": null
+        },
+        "apps/storefront/src/components/prepared-photo-scope.tsx": {
+          "before": null,
+          "after": "94b54b0718c6845023af079953cb001d5c6bb1cfe61536fe3f33e0d02e7394aa",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "96734ea3e7fa3b68c02a21a367d78231c6c46df6",
+          "before_mode": null
+        },
+        "apps/storefront/src/components/product-card-media-gallery-core.tsx": {
+          "before": "4cde64e78d192301f3d7d58e78daabc64de5664b9a86928e03793a2daf3ae52d",
+          "after": "393274fc3b41d0df077cd7dc505c1db1cfca1e2049a3d17b6c6286f1d117eaf5",
+          "mode": "100644",
+          "before_blob": "0fa03408d0bf58ff9120b276b0ff346ef07a72d8",
+          "after_blob": "b32d1d77be9137ec24120136200e1434a381773a",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/product-card.tsx": {
+          "before": "e2566a2d72c4a06bc315246733eee86b4ae26cca849ec9843e01e67b73dc9bc0",
+          "after": "8a252478fb8e83c959bac996aaff409813e85ce7a3b4f84905d5d1b319f75867",
+          "mode": "100644",
+          "before_blob": "fae9f74c687ea51e3589ef52de11e145fc289a59",
+          "after_blob": "8e01cc213a129df022b9b2c8bf1d9c635dcf12b9",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/product-pdp-media-switcher.tsx": {
+          "before": "7e6d3776ff8f782a229461fb7a4137628f98a7269043391d63eddf8c36cbc6e2",
+          "after": "c8a428f8fd12389c03810226384d9d564c5bb349c1f7838f3be6ae2b116ef2f4",
+          "mode": "100644",
+          "before_blob": "6b21574b230263a376b8e86d140f59d99f049d6b",
+          "after_blob": "b53d2b29eb75d472c18c6454aff6037d0046ed26",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/product-thumb-carousel.tsx": {
+          "before": "cde1449f6d4c0fa9fdf09ea11bf3236108ed6de427b4be68735e587e21865428",
+          "after": "4b0f1c8c40adec0c29f6055cc4548daa6baa6fdfecd68bae7c1c0a6a81d7a266",
+          "mode": "100644",
+          "before_blob": "89afdf30ea0b4e2374cbe07c8a8872c36087ff02",
+          "after_blob": "b397f5a70f71124dbdfeddd4993a68fbe40301dd",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/components/use-verified-strip-extras.ts": {
+          "before": "a3c8220d1d32eeb20d714ce3cc8e005442c80f1da22ca3643460ea5d2c2acb9f",
+          "after": "9aa1668dfe3128f88bf1638e0e1a12914e85de5e8a5782aea90f215614d2d785",
+          "mode": "100644",
+          "before_blob": "4209318ddbc3fccab833468c9fab0dff4d991176",
+          "after_blob": "3c6fc3ad63eaed7e7fd3e84413d3b2b0f904c374",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/card-content-source-data.json": {
+          "before": null,
+          "after": "2a2c3622db91c9b6247724d4a5b35e2a039b80ede5a8757f4f7ef239034e20ff",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "995e545593dbbf5cd2a1215bc7430360b123a3d3",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/catalog-article-search.fidelity.test.ts": {
+          "before": null,
+          "after": "22b655e79959e6457dfe86fb3b89cf30f195d93f7709daaedae8e6a41d39e145",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "fbc62dc0a65e77ab600b6f056efb18451b65815d",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/catalog-article-search.ts": {
+          "before": null,
+          "after": "b92a4da3991ddcdbeceffe20e44e0cb687e01ce895cb2b5175886be0a66a08e2",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "e5f408b1639cc7da9e65f01fd9fa7d330ae371b8",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/catalog-browse-client-product.ts": {
+          "before": "05ef97b67f2cc46c77ed0d90a18a4acd6db8b3f57538028434618de852ba6d4d",
+          "after": "0d5484a5346635ff929ab21fc5911604e21ad25c3005490756503b715d6f3262",
+          "mode": "100644",
+          "before_blob": "82b3a875cea5f09c8b5e3e4ba448754708f590ed",
+          "after_blob": "c4e1f92a1921782c5ab34671c6d1ea788fee8c3c",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/catalog-filters.ts": {
+          "before": "05dd569989b76002f42be0ccd66024121ea1b17cc47e17dc1b07412ae9988251",
+          "after": "d7ce817bdb872049fc5df1484c14c5bc3c1b9068e7025657a46ce3beaf06cd51",
+          "mode": "100644",
+          "before_blob": "d359f558e6515997bf0d19b202490566428a7ce8",
+          "after_blob": "1c7ab33d929e9f7f4319a7053c982f4c599b17df",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/catalog-search-placeholder.fidelity.test.ts": {
+          "before": "5552649c4854a8de2ccba3ef47772df9b36ce7e10935bbb25b792cdd8c10dac8",
+          "after": "da8475160b8b0857ae48ae1a4f8ec099adf4e1454dc900a4a480dee6d10172ac",
+          "mode": "100644",
+          "before_blob": "98543fdc74b28a53d3c80b0a8d8136656cd3d586",
+          "after_blob": "2de65874c43520ac72d6c16f64c3649500e05288",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/client/extra-image-url-verify.ts": {
+          "before": "7d8a6a4a890a73e03f9c6cca7c1c82ffcd997c5e334d39bec1542864da8c1029",
+          "after": "9eb2fcc7a3353218def5a8d0207cc7debd5ba1b59e1468fae4f9cfb12fa57a20",
+          "mode": "100644",
+          "before_blob": "c18f2dd8847a899ef589878b0b5b863980ce3b98",
+          "after_blob": "88c7eb3b8a1ea43d9d005874378ad5cebd86c18d",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/coherent-p2-closure.fidelity.test.ts": {
+          "before": null,
+          "after": "ca17549002064a44d090d7b83edd0b75d87cd8329473e3632f78396521226fde",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "a0c56c9f5fd514a1f6438bed32fe6c57c47672e7",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/pdp-supplement-core.ts": {
+          "before": null,
+          "after": "bd0d2b83b4b05dec01476684acc7bdb09efaa9326227da822acc64a7534308ec",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "3315ffdc091b663683d1e65aa438a8acf2a095b1",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/pdp-supplement-geometry.ts": {
+          "before": null,
+          "after": "bd2432f5dca04e7667b14a9e656eef61ebe3a4977ed909cfd196a3721b0161fa",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "977e74e3ee1214c268d644c7afdc05a49417d879",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/pdp-supplement-view.ts": {
+          "before": null,
+          "after": "bb4410b0868315f67949856c451e5044dc7e66f2e92ff301675143d8289a441d",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "c6fcc484eeba0e3fd8dc6a0a6c9d6560ad15cf1b",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/pdp-supplement.fidelity.test.ts": {
+          "before": null,
+          "after": "2ec0f452e8a15dcb128317b4e9686d065c74dc6e862c488524d7bba438467d38",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "0e67726460fb057d672599a9488c9d1c792e29b0",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/pdp-supplement.server.ts": {
+          "before": null,
+          "after": "71c14894a54a6d988c75c46de184ccdd110350fe4fc4ea6db62b020f946970e6",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "3c17260856f7d4429d70a17cd8bc1e85e756fe99",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/photo-empty-projection.fidelity.test.ts": {
+          "before": null,
+          "after": "920d3faa1dd5d55c1d3e7d6ed3b6f5d8a9c2968c5cd693cfac1a6a664fdf21be",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "c23949fc74a19610e77d3cc3f0a8d126385ab144",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/prepared-photo-map.json": {
+          "before": null,
+          "after": "b01f87a7219d922d38af9ee03afc715abf30d9de771a41411deca6cd70069188",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "6497f7b2bc4de1c910eccbf2f682a27b87543772",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/prepared-photos.fidelity.test.ts": {
+          "before": null,
+          "after": "b90e85977c585c3c1a4824b222a551ae8be44f2cd36952e325cc8d2841ccd191",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "3f84467439ef5f5cb6d58fbbe2377f49953dff13",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/prepared-photos.ts": {
+          "before": null,
+          "after": "1b2b8d5b07321d47d4b772d29b9cad671f717272cec6ef7a4b13ff4147c8ffa1",
+          "mode": "100644",
+          "before_blob": null,
+          "after_blob": "f47a5f9bfa472ab7d2f05a668a0b52b7974fbef6",
+          "before_mode": null
+        },
+        "apps/storefront/src/lib/showroom-contacts.ts": {
+          "before": "a7f9a2e2649facab7634d6b27072194ead23739240f4f986dc0f19484d640057",
+          "after": "980ddeeb0cb7db3b36703dce0bae619af992899c015977252fa045f9346c0bd0",
+          "mode": "100644",
+          "before_blob": "4b678a1c1bf7dddb9d9523295852b08fd591bf37",
+          "after_blob": "6f8137df2abf97d0333f2202348fabec21dcf21e",
+          "before_mode": "100644"
+        },
+        "apps/storefront/src/lib/woodright-copy.ts": {
+          "before": "51a55ccd3e68544c0b5036f3f4f2a2eaf4a498c8fec5916145ccb060866d605a",
+          "after": "da25b20db1f9905dd9be25f5983276deb9488e4a13fbdd3d2759758e73349dcc",
+          "mode": "100644",
+          "before_blob": "414ce9ed6fe55ac5b139c5d08640e091961c4645",
+          "after_blob": "985402589ac5284bea0f3eddaeab98e1aafbfad4",
+          "before_mode": "100644"
+        }
+      },
+      "protected_before": {
+        "apps/storefront/.yarnrc.yml": "a0305ab3fc20b06d20d0fcb3dcfb6cd52ec4310d442e3bc2e722becca38ca477",
+        "apps/storefront/Dockerfile": "a2d1ce5ab83c76e74dd875df21929fcd4a1eb90562ae6763bdf7fbfdd96e5ee7",
+        "apps/storefront/package.json": "27efcbb3257add043c70a4dbd54c6eaaa796da75078c80ec47b9dc8aadcee298",
+        "apps/storefront/src/app/catalog/page.tsx": "af243e2d3a89f4d0315a417d7f18fac762e2c75fa478b4b3d2152c53a3806e0b",
+        "apps/storefront/src/app/globals.css": "0ae0bb695a2696568d2df0fdd544583827f1837c787d6363ba87db9acf8ee3b3",
+        "apps/storefront/src/app/kids/catalog/page.tsx": "f72cbfa3d41dc8a90c0bb06de4915eed7aa2c1fb8ce4a9e8b6372eb08db3e3df",
+        "apps/storefront/src/app/layout.tsx": "37f31a45dedf89fb7f7265913a6cb5424f86cd50107eb9d360dee63b8b1c60ba",
+        "apps/storefront/src/app/product/[id]/page.tsx": "cac4acae58bcf75281466d1b1dccefbf8c828bbc3d263c4a011666b756b22e50",
+        "apps/storefront/src/app/rooms/[slug]/page.tsx": "416b9960e4a1788473655402f2e7febb091072aeb5c4756e8a044103da07edea",
+        "apps/storefront/src/app/sitemap.xml/route.ts": "3e799d0857330d364a14e77b8ba79cedbca19c4d6bf32fb239460417378f16a0",
+        "apps/storefront/src/components/bespoke-form.tsx": "eaa9568c88aebf217bb0d89fec90aa7355cb492404bca26e7de3b3d230b56f57",
+        "apps/storefront/src/components/catalog-browse-client.tsx": "21f41ea55fd22160f6c3318e9adb70a8977017c73664069c421d63dc0b16232e",
+        "apps/storefront/src/components/checkout-form.tsx": "3d49c8334d5993f51dc350817fbcb79fc4978b6fb4c5e114f0eafb662407c72e",
+        "apps/storefront/src/components/pdp-image-lightbox.tsx": "fa73ea4b7c8553ad871b3d1d6bfa7fc8d017ab95738f7c87c60f82bdb6d2e78b",
+        "apps/storefront/src/components/pdp-native-family-selectors.tsx": "5813c5e9284bf375412247d3a32a16e771559fec50001ad7153715ce71de508c",
+        "apps/storefront/src/components/product-card.tsx": "e2566a2d72c4a06bc315246733eee86b4ae26cca849ec9843e01e67b73dc9bc0",
+        "apps/storefront/src/components/storefront-analytics.tsx": "8d1e92ebf1d63fe5d8b4798743c9b54dd3442572a4b6dd3d7352a2aa3f724377",
+        "apps/storefront/src/lib/analytics-goals.ts": "a22654d7617f5355c6f4d9001c128383feb4bbbb6e995d254323a64d24104dbf",
+        "apps/storefront/src/lib/analytics-metrika.ts": "6535619b07f86b182ddb3be4eb294538dca32cdc29eb53e75b677342790c225b",
+        "apps/storefront/src/lib/api/base.ts": "f98ef87935650cbfa455b95e7435927303bc74381e3e04ec4f92bcd955b874d9",
+        "apps/storefront/src/lib/api/catalog-browse-pool-client.ts": "8ed6761f379141e9e602a0e81393c0b952666130ac4a2dd2a96145203dc881da",
+        "apps/storefront/src/lib/api/products.ts": "4574a553fc3bf9e6a77306cf9f04dd4f68ec00e411b6bc5db2c6e28df4cdcb80",
+        "apps/storefront/src/lib/api/room-sets.ts": "2cc525cee41ca7d62129e217c8204ba1a1d8a636f5479cfbf37e775d15d17525",
+        "apps/storefront/src/lib/api/sitemap-sources.ts": "618092e17280894a7732b38dba12984e03cbf0cac405a4b0fcfc573cb4143606",
+        "apps/storefront/src/lib/catalog-browse-client-product.ts": "05ef97b67f2cc46c77ed0d90a18a4acd6db8b3f57538028434618de852ba6d4d",
+        "apps/storefront/src/lib/catalog-browse-pool.ts": "15a4ddbf26b45fa6881c1d7f437a9d59096e55a24086624192b69f60931a7f40",
+        "apps/storefront/src/lib/catalog-card-price.ts": "e820134e354b3f9d2a65d13ee4d82d4807f4276ad74aef93a35b1586a3ce1328",
+        "apps/storefront/src/lib/catalog-fetch-cache.fidelity.test.mjs": "a5c74a68fecaa954fb4068f62a454645bc658cdfa870297e730154869c826f18",
+        "apps/storefront/src/lib/catalog-filters.ts": "05dd569989b76002f42be0ccd66024121ea1b17cc47e17dc1b07412ae9988251",
+        "apps/storefront/src/lib/catalog-read-budget.ts": "72f6f21a2678ea4ec1782a40589aa3b3e6f4c7c8a47944ae1ea7412506962154",
+        "apps/storefront/src/lib/display-group.ts": "58fa4ecf22eef915c1b2e0c12fda39ce5788098c51488074151310e05286ac4a",
+        "apps/storefront/src/lib/kids.ts": "739bf22756170e4a0104caaf6e3f3f44be28a32e2cdd696038e65778006e5c02",
+        "apps/storefront/src/lib/ol65-front-reflection.fidelity.test.mjs": "2bd03e4a7c7e7454800657a9c78bed6da359d0870d64ec526169514232aefbb1",
+        "apps/storefront/src/lib/ol65-front-reflection.ts": "2d784493b7ba8539719f76e5f87cddc23005acd63343f17002850c80df68064f",
+        "apps/storefront/src/lib/oliver-desk-variants.fidelity.test.ts": "7b16089f43be1ab6b6d103719e3527a11cd27259b8e505dc5cf7d0e12c3fe36e",
+        "apps/storefront/src/lib/oliver-desk-variants.ts": "0b7e768188d6fc5737a8ae2e31e26b4133c3f2b82d9d276b90c728998902c623",
+        "apps/storefront/src/lib/product-title-presentation.fidelity.test.ts": "dd67f2bb5c69f800c2c7887a2aaa071677889826dbca48b9729cc2d567a86728",
+        "apps/storefront/src/lib/product-title-presentation.ts": "479a0c84f88fba93091e7786b97b42ac0cfc8ea4f9d12670a1b53fce05aaf2ab",
+        "apps/storefront/src/lib/qualified-native-families.json": "149a9918aff270ee292f6e2bfa808cc247525ad316a164b2960328cfe5990c87",
+        "apps/storefront/src/lib/qualified-native-family.fidelity.test.mjs": "01bd87e6c6ba2c45ee7481f339bc3a9d5959652efef070b3865c2c08fc1812a7",
+        "apps/storefront/src/lib/qualified-native-family.ts": "c66645d42e332e353b8fdb9e351c7a20e6da840bcdbfdeb8521aecb34a6bfbaa",
+        "apps/storefront/src/lib/seo-mode.fidelity.test.ts": "b276f335ab98bd61265316aeff51722afe063b8e0b9d06418805fa9dc4bfea37",
+        "apps/storefront/src/lib/sitemap-entries.ts": "1a81e208d4daa98a1ffe709edd520a32ca923f61679a75ffebf7a6da4210e76b",
+        "apps/storefront/src/lib/sitemap-source-budget.fidelity.test.mjs": "65c54e3aa20433c75bdfa1f69cc564fd1dfedeb7a044cb9fceddfd5f8cfb4d16",
+        "apps/storefront/src/proxy.ts": "a7f7b9096a4b51a139eb7bba2f7678f985d16a117dfe051120191b1c6abbd55b",
+        "apps/storefront/yarn.lock": "92f8e832b6c696a9bb4f9e422c98fc2ecd0fd5d8a4d68ae35a32f1572e82c459"
+      },
+      "test_context": {
+        "apps/workspace/src/server/catalog-policy.mjs": {
+          "sha256": "5e2ffacbc354fb0c75cfaba6c7a0bd28b674375b040ceee1528283855f801a9d",
+          "blob": "3a53cf6ff04aceed950771e5d968d5fc81e86f4f",
+          "mode": "100644"
+        }
+      },
+      "test_context_note": "Reuse exact accepted canonical non-runtime dependency only for qualification, existing owned cleanup; not installed in image."
     }
   },
   "retained_backend_components": {
