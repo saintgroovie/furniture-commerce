@@ -31,7 +31,7 @@ assert.doesNotMatch(lead0, /Bespoke, мебельное ателье/)
 assert.doesNotMatch(bespokeLanding.h1, /По проекту/)
 assert.match(bespokeLanding.lead[1], /каталог и штатные варианты/)
 
-assert.equal(seo.bespoke.title, "Woodright Bespoke")
+assert.equal(seo.bespoke.title, "Мебель по индивидуальному проекту - Woodright Bespoke")
 assert.match(seo.bespoke.description, /индивидуальному проекту/)
 assert.doesNotMatch(seo.bespoke.description, /bespoke, мебельное ателье/i)
 

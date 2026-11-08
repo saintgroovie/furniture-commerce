@@ -1,3 +1,4 @@
+import { matchesCatalogArticle } from "./catalog-article-search"
 import { qualifiedNativeFamily } from "./qualified-native-family"
 import { resolveCatalogCardPrice } from "./catalog-card-price"
 import type { DisplayEntry } from "./display-group"
@@ -143,22 +144,6 @@ export function getCollectionFilterLabel(key: string): string {
   return getCollectionLabel(sample) ?? key
 }
 
-function productSearchText(product: Record<string, unknown>): string {
-  const m = meta(product)
-  const parts = [
-    product.title,
-    m.canonical_name,
-    product.handle,
-    getCollectionLabel(product),
-    m.collection_label,
-    getCategoryFilterLabel(getProductCategoryKey(product) ?? ""),
-  ]
-  return parts
-    .filter((p) => typeof p === "string" && p.trim())
-    .join(" ")
-    .toLowerCase()
-}
-
 export function normalizeCollectionFilterKey(raw: string): string {
   const key = raw
     .trim()
@@ -192,12 +177,6 @@ export function normalizeCollectionFilterKey(raw: string): string {
     return "willie-winkie"
   }
   return key
-}
-
-function matchesText(product: Record<string, unknown>, q: string): boolean {
-  const needle = q.trim().toLowerCase()
-  if (!needle) return true
-  return productSearchText(product).includes(needle)
 }
 
 function matchesType(
@@ -249,7 +228,7 @@ export function applyCatalogFilters(
 ): Record<string, unknown>[] {
   return products.filter(
     (p) =>
-      matchesText(p, state.q ?? "") &&
+      matchesCatalogArticle(p, state.q ?? "") &&
       matchesType(p, state.type) &&
       matchesCategory(p, state.category) &&
       matchesCollection(p, state.collection) &&
@@ -410,7 +389,7 @@ export function buildAllCatalogFacets(
   state: CatalogFilterState
 ): CatalogFacets {
   const q = state.q ?? ""
-  const matchQ = products.map((p) => matchesText(p, q))
+  const matchQ = products.map((p) => matchesCatalogArticle(p, q))
   const matchType = products.map((p) => matchesType(p, state.type))
   const matchCategory = products.map((p) =>
     matchesCategory(p, state.category)
