@@ -3,7 +3,11 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--seo8-inert-only')){
+if(process.argv.includes('--photo-card-sku-c3f1-inert-only')){
+ console.log(JSON.stringify(photoCardSkuC3BindingRegression(true),null,2));
+}else if(process.argv.includes('--photo-card-sku-c3f1-only')){
+ console.log(JSON.stringify(photoCardSkuC3BindingRegression(false),null,2));
+}else if(process.argv.includes('--seo8-inert-only')){
  console.log(JSON.stringify(seo8RoomPreflightRegression(true),null,2));
 }else if(process.argv.includes('--seo8-only')){
  console.log(JSON.stringify(seo8RoomPreflightRegression(false),null,2));
@@ -30,6 +34,7 @@ if(process.argv.includes('--seo8-inert-only')){
 }else if(process.argv.includes('--retained-backend-context-only')){
  console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 }else{
+console.log(JSON.stringify(photoCardSkuC3BindingRegression(false),null,2));
 console.log(JSON.stringify(seo8RoomPreflightRegression(false),null,2));
 console.log(JSON.stringify(seo6AdmissionRegression(),null,2));
 console.log(JSON.stringify(seo5AdmissionRegression(),null,2));
@@ -647,4 +652,35 @@ function seo8RoomPreflightRegression(localInert=false){
   reject(()=>v.requireInput(n,{...input,productionBaseSha:old.source_sha}));
   reject(()=>v.requireInput(n,{...input,productionStorefrontDigest:'sha256:a73625c0a1b14eb73d8c5475b332dac20096164a02742b6bc9c875b3432d4656'}));
   return {status:localInert?'PASS_NEW_EXACT8_INERT_TEMPLATE_GUARDS_NOT_SOURCE_QUALIFICATION':'PASS_NEW_EXACT8_ACTUAL_IDENTITY_CONTRACT_GUARDS',cases,inert_template:localInert,fixture_identity:localInert?'SYNTHETIC_IN_MEMORY_ONLY':null,actual_source:localInert?null:n.source_sha,Git_or_qualification_executed:false,old_checks_repeated:false};
+}
+
+function photoCardSkuC3BindingRegression(inertOnly=false){
+ const reg=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))),key='photo-card-sku-c3f1-exact166-v1',n=clone(reg.qualifications[key]),p02=reg.qualifications['seo-storefront-ab1-exact8-room-preflight-v1'];
+ let cases=0;const pass=f=>{f();cases++;},reject=(f,re)=>{assert.throws(f,re);cases++;};
+ if(inertOnly){
+  pass(()=>assert.deepEqual([n.source_sha,n.source_tree,n.release_ref],[null,null,null]));
+  reject(()=>v.sourcePaths(n),/genuine source identities/);
+  // Contract-only fixture; actual sourceFacts/Git is never substituted.
+  n.source_sha='1'.repeat(40);n.source_tree='2'.repeat(40);n.release_ref='release/unit-binding-only';
+ }else{
+  pass(()=>assert.match(n.source_sha||'',/^[a-f0-9]{40}$/));
+  pass(()=>assert.match(n.source_tree||'',/^[a-f0-9]{40}$/));
+  pass(()=>assert.match(n.release_ref||'',/^release\//));
+ }
+ pass(()=>assert.equal(Object.keys(v.sourcePaths(n)).length,166));
+ pass(()=>assert.equal(n.base_sha,p02.source_sha));pass(()=>assert.equal(n.base_tree,p02.source_tree));
+ pass(()=>assert.equal(n.production_storefront_digest,'sha256:84b7a7efbd7109db7246eb1167ae0f1935d289333fec88d322d7b13391fcb230'));
+ pass(()=>assert.equal(Object.keys(n.protected).length,46));
+ pass(()=>assert.deepEqual(v.testContextMap(n),v.testContextMap(p02)));
+ const kept=Object.keys(p02.paths);pass(()=>assert.equal(kept.length,8));
+ for(const file of kept){
+  pass(()=>assert.equal(n.protected_before[file],p02.paths[file].after));
+  pass(()=>assert.equal(n.protected[file],p02.paths[file].after));
+  for(const field of ['protected_before','protected']){const x=clone(n);x[field][file]='0'.repeat(64);reject(()=>v.sourcePaths(x),/protected\/context/);}
+ }
+ for(const mutate of [x=>x.base_sha='4a42f3bd3ddf2b13e141f8de23d08dabdd4eb4b0',x=>x.base_tree='7ec15dba0d54aceb63f4e8ec3e7aca7f918dc103',x=>x.production_storefront_digest='sha256:a73625c0a1b14eb73d8c5475b332dac20096164a02742b6bc9c875b3432d4656',x=>x.production_storefront_digest=p02.production_storefront_digest]){const x=clone(n);mutate(x);reject(()=>v.sourcePaths(x));}
+ const added=Object.keys(n.paths).find(f=>n.paths[f].before===null),modified=Object.keys(n.paths).find(f=>n.paths[f].before!==null);assert(added&&modified);
+ for(const [file,field]of [[added,'after_blob'],[modified,'before_blob']]){const x=clone(n);x.paths[file][field]='0'.repeat(40);reject(()=>v.sourcePaths(x),/actual blob map/);}
+ for(const field of ['source_sha','source_tree','release_ref']){const x=clone(n);x[field]=null;reject(()=>v.sourcePaths(x),/genuine source identities/);}
+ return {status:'PASS_ONLY_NEW_C3F1_EXACT166_BASE_BLOBS_AND_P02_BINDINGS',cases,inertOnly,sourceFacts_or_Git_executed:false,old42_guard_suite_repeated:false,old_UI_photo_schema_or_native_checks_repeated:false};
 }
