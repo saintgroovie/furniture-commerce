@@ -3,7 +3,9 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--photo-card-sku-origin-alias-only')){
+if(process.argv.includes('--photo-card-sku-168-fidelity19-only')){
+ console.log(JSON.stringify(photoCardSku168Fidelity19Regression(),null,2));
+}else if(process.argv.includes('--photo-card-sku-origin-alias-only')){
  console.log(JSON.stringify(photoCardSkuOriginAliasRegression(),null,2));
 }else if(process.argv.includes('--photo-card-sku-ts2300-inert-only')){
  console.log(JSON.stringify(photoCardSkuTs2300Regression(true),null,2));
@@ -42,6 +44,7 @@ if(process.argv.includes('--photo-card-sku-origin-alias-only')){
 }else if(process.argv.includes('--retained-backend-context-only')){
  console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 }else{
+console.log(JSON.stringify(photoCardSku168Fidelity19Regression(),null,2));
 console.log(JSON.stringify(photoCardSkuOriginAliasRegression(),null,2));
 console.log(JSON.stringify(photoCardSkuTs2300Regression(false),null,2));
 console.log(JSON.stringify(boundedGitBlobRegression(),null,2));
@@ -766,4 +769,16 @@ function photoCardSkuOriginAliasRegression(){
  const nextWithOldMap=clone(next);nextWithOldMap.paths=clone(previous.paths);assert.throws(()=>v.sourcePaths(nextWithOldMap),/closed exact166 path\/hash\/mode semantics/);
  const oldWithNewMap=clone(previous);oldWithNewMap.paths=clone(next.paths);assert.throws(()=>v.sourcePaths(oldWithNewMap),/closed exact166 path\/hash\/mode semantics/);
  return {status:'PASS_NEW_ORIGIN_ALIAS_ONLY',cases:4};
+}
+
+function photoCardSku168Fidelity19Regression(){
+ const registry=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications;
+ const next=clone(registry['photo-card-sku-c3f1-exact168-fidelity19-v1']),previous=clone(registry['photo-card-sku-c3f1-exact166-origin-v1']),family='apps/storefront/src/lib/qualified-native-family.fidelity.test.mjs';
+ assert.equal(Object.keys(v.sourcePaths(next)).length,168);
+ assert.deepEqual(v.testContextMap(next),v.testContextMap(previous));
+ const nextWithOldMap=clone(next);nextWithOldMap.paths=clone(previous.paths);assert.throws(()=>v.sourcePaths(nextWithOldMap),/closed exact168 path\/hash\/mode semantics/);
+ const oldWithNewMap=clone(previous);oldWithNewMap.paths=clone(next.paths);assert.throws(()=>v.sourcePaths(oldWithNewMap),/closed exact166 path\/hash\/mode semantics/);
+ const oldProtected=clone(next);oldProtected.protected[family]=previous.protected[family];assert.throws(()=>v.sourcePaths(oldProtected),/closed exact168 protected\/context pins/);
+ const oldBlob=clone(next);assert.notEqual(oldBlob.paths[family].before_blob,oldBlob.paths[family].after_blob);oldBlob.paths[family].after_blob=oldBlob.paths[family].before_blob;assert.throws(()=>v.sourcePaths(oldBlob),/closed exact168 actual blob map/);
+ return {status:'PASS_NEW168_FIDELITY19_SEAMS_ONLY',cases:6};
 }
