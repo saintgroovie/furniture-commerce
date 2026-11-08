@@ -1,5 +1,9 @@
 "use client"
 
+import { usePreparedPhotoResolver } from "./prepared-photo-scope"
+
+import { PreparedPhotoImage } from "./prepared-photo-image"
+
 import Link from "next/link"
 import type { MouseEvent, ReactNode } from "react"
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
@@ -259,6 +263,7 @@ function ProductCardMediaGalleryCoreInner({
   productHandle,
   initialProvenceFinish = "cream",
 }: Props) {
+  const resolvePhoto = usePreparedPhotoResolver()
   const isGreenwichBed = Boolean(greenwichBedMatrix && greenwichBedMatrix.length > 0)
   const bedInteriorSrcs = sharedInteriorSrcs ?? []
   const bedMediaOptions = useMemo(
@@ -936,10 +941,11 @@ function ProductCardMediaGalleryCoreInner({
 
   const preloadExecutionHero = useCallback((src: string): Promise<boolean> => {
     const normalized = src.trim()
+    const loadURL = resolvePhoto(normalized, derivativeFallbackBySrc[normalized])
     if (!normalized || typeof Image === "undefined") {
       return Promise.resolve(false)
     }
-    const cached = executionHeroPreloadRef.current.get(normalized)
+    const cached = executionHeroPreloadRef.current.get(loadURL)
     if (cached) return cached
 
     let pending: Promise<boolean>
@@ -953,9 +959,9 @@ function ProductCardMediaGalleryCoreInner({
         settled = true
         if (
           !ok &&
-          executionHeroPreloadRef.current.get(normalized) === pending
+          executionHeroPreloadRef.current.get(loadURL) === pending
         ) {
-          executionHeroPreloadRef.current.delete(normalized)
+          executionHeroPreloadRef.current.delete(loadURL)
         }
         resolve(ok)
       }
@@ -971,13 +977,17 @@ function ProductCardMediaGalleryCoreInner({
         })
       }
       image.onload = decode
-      image.onerror = () => finish(false)
-      image.src = normalized
+      let originalTried = false
+      image.onerror = () => {
+        if (loadURL !== normalized && !originalTried) { originalTried = true; image.src = normalized; return }
+        finish(false)
+      }
+      image.src = loadURL
       if (image.complete && image.naturalWidth > 0) decode()
     })
-    executionHeroPreloadRef.current.set(normalized, pending)
+    executionHeroPreloadRef.current.set(loadURL, pending)
     return pending
-  }, [])
+  }, [resolvePhoto, derivativeFallbackBySrc])
 
   /* Greenwich wood toggles should feel immediate even on a cold connection.
      Prewarm only the alternate frame for the active paint (at most one image),
@@ -1855,8 +1865,9 @@ function ProductCardMediaGalleryCoreInner({
         aria-hidden="true"
       />
     ) : (
-      <img
+      <PreparedPhotoImage
         src={displayHeroSrc}
+        originalPhotoSource={derivativeFallbackBySrc[displayHeroSrc]}
         alt={alt}
         className={`${isPdp ? "product-detail-img" : "card-img"}${isPdp ? " is-zoomable" : ""}`}
         loading={(priorityHero || atfHero) && !isPdp ? "eager" : "lazy"}
@@ -2155,7 +2166,7 @@ function ProductCardMediaGalleryCoreInner({
         </Link>
       )}
       {pendingPreloadUrl && (
-        <img
+        <PreparedPhotoImage
           key={pendingPreloadUrl}
           src={pendingPreloadUrl}
           alt=""
