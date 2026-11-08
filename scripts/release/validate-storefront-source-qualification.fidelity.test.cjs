@@ -3,7 +3,9 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--photo-card-sku-c3f1-inert-only')){
+if(process.argv.includes('--git-blob-buffer-only')){
+ console.log(JSON.stringify(boundedGitBlobRegression(),null,2));
+}else if(process.argv.includes('--photo-card-sku-c3f1-inert-only')){
  console.log(JSON.stringify(photoCardSkuC3BindingRegression(true),null,2));
 }else if(process.argv.includes('--photo-card-sku-c3f1-only')){
  console.log(JSON.stringify(photoCardSkuC3BindingRegression(false),null,2));
@@ -34,6 +36,7 @@ if(process.argv.includes('--photo-card-sku-c3f1-inert-only')){
 }else if(process.argv.includes('--retained-backend-context-only')){
  console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 }else{
+console.log(JSON.stringify(boundedGitBlobRegression(),null,2));
 console.log(JSON.stringify(photoCardSkuC3BindingRegression(false),null,2));
 console.log(JSON.stringify(seo8RoomPreflightRegression(false),null,2));
 console.log(JSON.stringify(seo6AdmissionRegression(),null,2));
@@ -683,4 +686,46 @@ function photoCardSkuC3BindingRegression(inertOnly=false){
  for(const [file,field]of [[added,'after_blob'],[modified,'before_blob']]){const x=clone(n);x.paths[file][field]='0'.repeat(40);reject(()=>v.sourcePaths(x),/actual blob map/);}
  for(const field of ['source_sha','source_tree','release_ref']){const x=clone(n);x[field]=null;reject(()=>v.sourcePaths(x),/genuine source identities/);}
  return {status:'PASS_ONLY_NEW_C3F1_EXACT166_BASE_BLOBS_AND_P02_BINDINGS',cases,inertOnly,sourceFacts_or_Git_executed:false,old42_guard_suite_repeated:false,old_UI_photo_schema_or_native_checks_repeated:false};
+}
+
+function boundedGitBlobRegression(){
+ const vm=require('node:vm'),cp=require('node:child_process');
+ const code=fs.readFileSync(path.join(__dirname,'validate-storefront-source-qualification.cjs'),'utf8');
+ const file='apps/storefront/synthetic-release-blob.bin',source='1'.repeat(40),base='2'.repeat(40),tree='3'.repeat(40),baseTree='4'.repeat(40),backend='5'.repeat(40),backendTree='6'.repeat(40);
+ let cases=0,reads=0;const pass=f=>{f();cases++;};
+ function fixture(bytes,{wrongBefore=false,wrongAfter=false,timeout=false}={}){
+  const digest=n=>crypto.createHash('sha256').update(Buffer.alloc(n,165)).digest('hex');
+  const contract={kind:'synthetic-legacy-blob-unit',source_sha:source,source_tree:tree,base_sha:base,base_tree:baseTree,release_ref:'release/synthetic-blob-unit',backend_revision:backend,backend_tree:backendTree,path:file,before:wrongBefore?'0'.repeat(64):digest(4),after:wrongAfter?'0'.repeat(64):digest(bytes),protected:{},test_overlays:{}};
+  const exec=(name,args,opts)=>{
+   assert.equal(name,'git');assert.deepEqual(Array.from(args.slice(0,2)),['-C','/synthetic-release']);
+   const a=Array.from(args.slice(2));
+   if(a[0]==='show'&&a.length===2){
+    assert.equal(opts.timeout,15000);assert.equal(opts.maxBuffer,8*1024*1024);assert.equal(opts.encoding,undefined);
+    assert.deepEqual(Array.from(opts.stdio),['ignore','pipe','pipe']);
+    const n=a[1]===source+':'+file?bytes:a[1]===base+':'+file?4:null;assert.notEqual(n,null);reads++;
+    if(timeout){const e=Error('synthetic timeout');e.code='ETIMEDOUT';throw e;}
+    // Real bounded child output, synthetic bytes only. No Git or media reads.
+    return cp.execFileSync(process.execPath,['-e','process.stdout.write(Buffer.alloc('+n+',165))'],opts);
+   }
+   const answers=new Map([
+    [JSON.stringify(['rev-parse','HEAD']),source],[JSON.stringify(['rev-parse',source+'^{tree}']),tree],
+    [JSON.stringify(['show','-s','--format=%P',source]),base],[JSON.stringify(['rev-parse',base+'^{tree}']),baseTree],
+    [JSON.stringify(['rev-parse','refs/remotes/origin/release/synthetic-blob-unit']),source],
+    [JSON.stringify(['diff','--no-renames','--name-only',base,source]),file],
+    [JSON.stringify(['ls-tree',base,'--',file]),'100644 blob '+'7'.repeat(40)+'\t'+file],
+    [JSON.stringify(['ls-tree',source,'--',file]),'100644 blob '+'8'.repeat(40)+'\t'+file],
+    [JSON.stringify(['rev-parse',backend+':apps/backend']),backendTree],
+    [JSON.stringify(['diff','--name-only','HEAD']),'']
+   ]);assert(answers.has(JSON.stringify(a)),'unexpected Git query');return answers.get(JSON.stringify(a));
+  };
+  const m={exports:{}},req=name=>name==='node:child_process'?{execFileSync:exec}:require(name);req.main=null;
+  vm.runInNewContext(code,{require:req,module:m,exports:m.exports,__dirname:'/synthetic-policy/scripts/release',process:{argv:[],env:{}},Buffer,console},{timeout:1000});
+  return ()=>m.exports.sourceFacts(contract,'/synthetic-release',false,'release-governance',()=>{});
+ }
+ for(const bytes of [4916811,4566507,8*1024*1024])pass(()=>assert.equal(fixture(bytes)().sourceSha,source));
+ pass(()=>assert.throws(fixture(8*1024*1024+65536),e=>e.code==='ENOBUFS'));
+ pass(()=>assert.throws(fixture(4916811,{wrongBefore:true}),/source before blob/));
+ pass(()=>assert.throws(fixture(4916811,{wrongAfter:true}),/source after blob/));
+ pass(()=>assert.throws(fixture(4,{timeout:true}),e=>e.code==='ETIMEDOUT'));
+ return {status:'PASS_NEW_BOUNDED_BINARY_GIT_BLOB_REGRESSION',cases,actual_synthetic_child_blob_reads:reads,maxBuffer:8*1024*1024,timeout:15000,synthetic_only:true,real_Git_media_registry_network_reads:false,old_suites_repeated:false};
 }

@@ -281,7 +281,7 @@ function sourceFacts(c,repo,post,job,checkExtra=null,contextOpts=undefined){
   const names=git(repo,['diff','--no-renames','--name-only',c.base_sha,c.source_sha]).split('\n').filter(Boolean);
   const paths=sourcePaths(c);
   if(JSON.stringify(names)!==JSON.stringify(Object.keys(paths)))fail('exact source path map');
-  const blob=(ref,file)=>execFileSync('git',['-C',repo,'show',ref+':'+file],{stdio:['ignore','pipe','pipe']});
+  const blob=(ref,file)=>execFileSync('git',['-C',repo,'show',ref+':'+file],{stdio:['ignore','pipe','pipe'],timeout:15000,maxBuffer:8*1024*1024});
   for(const [file,p]of Object.entries(paths)){
     const before=git(repo,['ls-tree',c.base_sha,'--',file]),after=git(repo,['ls-tree',c.source_sha,'--',file]);
     if(p.before===null?before!=='':hash(blob(c.base_sha,file))!==p.before)fail('source before blob');
