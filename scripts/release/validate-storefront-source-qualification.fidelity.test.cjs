@@ -3,7 +3,9 @@ const v=require('./validate-storefront-source-qualification.cjs');
 const c=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications['cart-state-e983-v1'];
 const clone=x=>JSON.parse(JSON.stringify(x));let count=0;
 const good={sourceSha:c.source_sha,productionBaseSha:c.base_sha,releaseRef:c.release_ref,backendRevision:c.backend_revision,backendDigest:c.backend_digest,productionStorefrontDigest:c.production_storefront_digest,trustedPolicySha:'a'.repeat(40),runId:888};
-if(process.argv.includes('--photo-card-sku-168-fidelity19-only')){
+if(process.argv.includes('--photo-card-sku-168-prepared-recovery-only')){
+ console.log(JSON.stringify(photoCardSku168PreparedRecoveryRegression(),null,2));
+}else if(process.argv.includes('--photo-card-sku-168-fidelity19-only')){
  console.log(JSON.stringify(photoCardSku168Fidelity19Regression(),null,2));
 }else if(process.argv.includes('--photo-card-sku-origin-alias-only')){
  console.log(JSON.stringify(photoCardSkuOriginAliasRegression(),null,2));
@@ -44,6 +46,7 @@ if(process.argv.includes('--photo-card-sku-168-fidelity19-only')){
 }else if(process.argv.includes('--retained-backend-context-only')){
  console.log(JSON.stringify(retainedBackendContextRegression(),null,2));
 }else{
+console.log(JSON.stringify(photoCardSku168PreparedRecoveryRegression(),null,2));
 console.log(JSON.stringify(photoCardSku168Fidelity19Regression(),null,2));
 console.log(JSON.stringify(photoCardSkuOriginAliasRegression(),null,2));
 console.log(JSON.stringify(photoCardSkuTs2300Regression(false),null,2));
@@ -781,4 +784,22 @@ function photoCardSku168Fidelity19Regression(){
  const oldProtected=clone(next);oldProtected.protected[family]=previous.protected[family];assert.throws(()=>v.sourcePaths(oldProtected),/closed exact168 protected\/context pins/);
  const oldBlob=clone(next);assert.notEqual(oldBlob.paths[family].before_blob,oldBlob.paths[family].after_blob);oldBlob.paths[family].after_blob=oldBlob.paths[family].before_blob;assert.throws(()=>v.sourcePaths(oldBlob),/closed exact168 actual blob map/);
  return {status:'PASS_NEW168_FIDELITY19_SEAMS_ONLY',cases:6};
+}
+
+function photoCardSku168PreparedRecoveryRegression(){
+ const registry=JSON.parse(fs.readFileSync(path.join(__dirname,'storefront-source-qualifications.json'))).qualifications;
+ const key='photo-card-sku-c3f1-exact168-prepared-recovery-v1',oldKey='photo-card-sku-c3f1-exact168-fidelity19-v1',next=clone(registry[key]),previous=clone(registry[oldKey]);
+ let cases=0;const pass=f=>{f();cases++;},reject=(f,re)=>{assert.throws(f,re);cases++;};
+ pass(()=>assert.equal(Object.keys(v.sourcePaths(next)).length,168));
+ pass(()=>assert.deepEqual(v.testContextMap(next),v.testContextMap(previous)));
+ const changed=Object.keys(next.paths).filter(f=>JSON.stringify(next.paths[f])!==JSON.stringify(previous.paths[f]));
+ pass(()=>{assert.deepEqual(Object.keys(next.paths),Object.keys(previous.paths));assert.equal(changed.length,1);const a=previous.paths[changed[0]],b=next.paths[changed[0]];assert.equal(b.before,a.before);assert.equal(b.before_blob,a.before_blob);assert.equal(b.mode,a.mode);assert.equal(b.before_mode,a.before_mode);assert.notEqual(b.after,a.after);assert.notEqual(b.after_blob,a.after_blob);});
+ reject(()=>v.sourcePaths({...clone(next),kind:oldKey}),/path\/hash\/mode semantics/);
+ reject(()=>v.sourcePaths({...clone(previous),kind:key}),/path\/hash\/mode semantics/);
+ {const x=clone(next);x.paths[changed[0]].after_blob=previous.paths[changed[0]].after_blob;reject(()=>v.sourcePaths(x),/actual blob map/);}
+ {const x=clone(next);x.protected[Object.keys(x.protected)[0]]='0'.repeat(64);reject(()=>v.sourcePaths(x),/protected\/context/);}
+ {const x=clone(next);delete x.paths;reject(()=>v.sourcePaths(x),/missing prepared recovery exact168/);}
+ for(const field of ['source_sha','source_tree','release_ref']){const x=clone(next);x[field]=null;reject(()=>v.sourcePaths(x),/genuine source identities/);}
+ {const x=clone(next);delete x.paths[Object.keys(x.paths)[0]];reject(()=>v.sourcePaths(x),/path\/hash\/mode semantics/);}
+ return {status:'PASS_NEW168_PREPARED_RECOVERY_SEAMS_ONLY',cases,sourceFacts_Git_media_UI_schema_or_old_suites_executed:false};
 }
