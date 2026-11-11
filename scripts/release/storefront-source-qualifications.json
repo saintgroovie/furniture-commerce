@@ -7881,11 +7881,11 @@
       "test_context_note": "Reuse exact accepted canonical non-runtime dependency only for qualification, existing owned cleanup; not installed in image."
     },
     "photo-card-sku-c3f1-exact168-prepared-recovery-v1": {
-      "source_sha": "8800db11089b65e66e51145a473d5dc444c9710a",
-      "source_tree": "5900ac4ffc99214c4dade0af96a0b7218931f4b1",
+      "source_sha": "64a0143b5a2878cacbca6de72f138211fe1a8e29",
+      "source_tree": "d56773eb618e023891e3829b130c27b4a768512a",
       "base_sha": "c3f1bb46f74a326ea0cd2f0fa9465edecc530dac",
       "base_tree": "21e92f51db20c3845981d6cf47c63f5bc4df9af5",
-      "release_ref": "release/r2-c3f1-exact168-prepared-recovery-20261110",
+      "release_ref": "release/r2-c3f1-exact168-prepared-typefix-20261111",
       "backend_revision": "b121f193064aea1733a132bca431f082e6ae8072",
       "backend_digest": "sha256:98c0bf52c856b6a047957cc135ce8bdf5266ca5cb7859836a5b9c6ee69a0712f",
       "backend_tree": "ecd092a0f057865c361ae07f0c4efcee07210f41",
@@ -9076,10 +9076,10 @@
         },
         "apps/storefront/src/components/prepared-photo-image.tsx": {
           "before": null,
-          "after": "e2d07da785da5e8f9b00873088cc7efbaed12a73f4b18e3bc5ddf848a91dde74",
+          "after": "d4b4b369a99caa82b7d59552885fe255fe3b6344fac99debb3bfd39048be4c73",
           "mode": "100644",
           "before_blob": null,
-          "after_blob": "63db8c0ff86befae8bd152b26a4619515e2f1031",
+          "after_blob": "9918c6196f995f46f6d7c22e0bb17d3eb4636d08",
           "before_mode": null
         },
         "apps/storefront/src/components/prepared-photo-scope.tsx": {
