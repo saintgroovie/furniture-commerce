@@ -1,3 +1,8 @@
+import { PreparedPdpPhotoProvider } from "@/components/prepared-photo-scope"
+import { selectedPreparedPhotoScope } from "@/lib/prepared-photos"
+import { selectedPdpSupplement } from "@/lib/pdp-supplement.server"
+import { PdpSupplementalDetails } from "@/components/pdp-supplemental-details"
+import { CONFIRMED_LEGAL_DEFAULTS } from "@/lib/legal/owner-inputs"
 import { buildOfferJsonLd } from "@/lib/product-json-ld"
 import { getCatalogProductsForHandles } from "@/lib/api/products"
 import { qualifiedNativeFamily, qualifiedFamilyMembers, withQualifiedNativeFamilyJsonLd } from "@/lib/qualified-native-family"
@@ -5,7 +10,7 @@ import { PdpNativeFamilySelectors } from "@/components/pdp-native-family-selecto
 import { PdpGreenwichBedJsonLd } from "@/components/pdp-greenwich-bed-json-ld"
 import { greenwichBedJsonLdContext } from "@/lib/greenwich-bed-json-ld"
 import Link from "next/link"
-import { Fragment } from "react"
+import { Fragment, Suspense } from "react"
 import type { Metadata } from "next"
 import { headers } from "next/headers"
 import { notFound, redirect } from "next/navigation"
@@ -585,6 +590,18 @@ export default async function ProductPage({
       : []),
   ]
 
+  const supplementalDetails = selectedPdpSupplement(product, selectedVariantId, {
+    routeKey: id, productKey: handle, urlVariantAtRender: requestedVariantId ?? null,
+    existingLabels: [...specRows.map(row => row.label), ...titleLayout.attributes.map(row => row.label)],
+    nativeBodyShown: dimensionCells.length > 0, nativeSleepingShown: !!mattress,
+    nativePositionShown: dimensionCells.some(cell => !!cell.values_mm?.length || !!cell.labels?.length),
+    configurationShown: !!(variantAxis || sparseMap || nativeFamily || titleLayout.caption),
+    materialControlShown: !!materialTiers?.length,
+    resolvedCollection: getCollectionFilterKey(product),
+    initialMaterialCode: materialTiers?.[0]?.code ?? null,
+    deliveryPolicyText: CONFIRMED_LEGAL_DEFAULTS.delivery_regions_and_terms ?? "",
+  })
+
   /* Chip prices carry the base (full solid) amount; the client component
      applies the selected material multiplier so chips and the main price
      block never show conflicting numbers. */
@@ -840,6 +857,7 @@ export default async function ProductPage({
       <section className="pdp-hero">
         <div className="pdp-hero-inner">
           <div className="pdp-media product-detail-media-col">
+            <PreparedPdpPhotoProvider scope={selectedPreparedPhotoScope(product, selectedVariantId)} routeKey={id} urlVariantAtRender={requestedVariantId ?? null}>
             {hingeSideMedia ? (
               <PdpHingeSideMediaSwitcher productKey={handle || (product.id as string)} title={titleStr} media={hingeSideMedia} />
             ) : isGreenwichBed ? (
@@ -890,6 +908,7 @@ export default async function ProductPage({
                 heroObjectPosition={heroObjectPosition}
               />
             )}
+            </PreparedPdpPhotoProvider>
           </div>
 
           <div className="pdp-panel-col">
@@ -1109,7 +1128,7 @@ export default async function ProductPage({
       />
 
       {/* Below the first screen: editorial description + full specs */}
-      {(description || specRows.length > 0) && (
+      {(description || specRows.length > 0 || supplementalDetails) && (
         <section className="pdp-below">
           {description && (
             <div className="pdp-description-block">
@@ -1163,6 +1182,7 @@ export default async function ProductPage({
               </Link>
             </div>
           )}
+          {supplementalDetails && <Suspense fallback={null}><PdpSupplementalDetails key={supplementalDetails.variantId} record={supplementalDetails} /></Suspense>}
         </section>
       )}
       {motifContext &&

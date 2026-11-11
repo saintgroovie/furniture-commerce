@@ -17,19 +17,17 @@ function read(rel: string): string {
 
 assert.equal(
   catalogUiCopy.searchPlaceholder,
-  "Поиск по названию, коллекции или категории"
+  "Введите артикул"
 )
 assert.equal(
   catalogUiCopy.searchPlaceholderCompact,
-  "Название, коллекция или категория"
+  "Артикул"
 )
 assert.ok(
   catalogUiCopy.searchPlaceholderCompact.length <
     catalogUiCopy.searchPlaceholder.length
 )
-for (const token of ["Название", "коллекция", "категория"] as const) {
-  assert.match(catalogUiCopy.searchPlaceholderCompact, new RegExp(token, "i"))
-}
+assert.match(catalogUiCopy.searchPlaceholderCompact, /артикул/i)
 assert.doesNotMatch(catalogUiCopy.searchPlaceholderCompact, /\.\.\.|…/)
 assert.doesNotMatch(catalogUiCopy.searchPlaceholder, /\.\.\.|…/)
 
