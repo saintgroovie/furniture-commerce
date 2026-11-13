@@ -30,6 +30,68 @@ class AlignBuyerPublicTitle(unittest.TestCase):
         cur = _RoomSetCursor([{"product_id": "prod_shell"}])
         self.assertEqual(live_room_set_product_ids(cur, []), [])
         self.assertEqual(cur.sql, "")
+
+    def test_apply_skips_a_family_whose_shell_is_in_a_room_set(self):
+        from catalog_norm.sparse_apply import _apply_family
+
+        class Cur:
+            def __init__(self):
+                self.calls = []
+                self.queue = [
+                    [
+                        {
+                            "product_id": "prod_survivor",
+                            "title": "Кровать 90",
+                            "status": "published",
+                            "handle": "gr-09-1",
+                            "metadata": {},
+                            "variant_id": "var_90",
+                            "sku": "GR-09-1",
+                            "variant_metadata": {},
+                            "classification": "bed",
+                        },
+                        {
+                            "product_id": "prod_shell",
+                            "title": "Кровать 180",
+                            "status": "published",
+                            "handle": "gr-18-1",
+                            "metadata": {},
+                            "variant_id": "var_180",
+                            "sku": "GR-18-1",
+                            "variant_metadata": {},
+                            "classification": "bed",
+                        },
+                    ],
+                    [],
+                    [
+                        {"sku": "GR-09-1", "amount": 10000, "currency_code": "rub"},
+                        {"sku": "GR-18-1", "amount": 20000, "currency_code": "rub"},
+                    ],
+                    [{"product_id": "prod_shell"}],
+                ]
+
+            def execute(self, sql, _params=None):
+                self.calls.append(sql)
+                self.rows = self.queue.pop(0)
+
+            def fetchall(self):
+                return self.rows
+
+        cur = Cur()
+        result = _apply_family(
+            cur,
+            {
+                "family_key": "gr-bed",
+                "skus": ["GR-09-1", "GR-18-1"],
+                "title": "Кровать Гринвич",
+                "prices": {"GR-09-1": "10000", "GR-18-1": "20000"},
+            },
+        )
+        self.assertEqual(result["status"], "skipped")
+        self.assertIn("room-set", result["reason"])
+        self.assertEqual(result["room_set_product_ids"], ["prod_shell"])
+        verbs = [sql.strip().split()[0].upper() for sql in cur.calls]
+        self.assertEqual(verbs, ["SELECT", "SELECT", "SELECT", "SELECT"])
     def test_missing_public_title_is_not_invented(self):
         meta = {"source_title": "Гардероб 2-дв. с ящиками"}
         self.assertIsNone(align_buyer_public_title(meta, "Гардероб Гринвич"))
