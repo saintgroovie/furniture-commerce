@@ -1,3 +1,5 @@
+import { PreparedPhotoProvider } from "@/components/prepared-photo-scope"
+import { preparedCardPhotoScope } from "@/lib/prepared-photos"
 import Link from "next/link"
 import { qualifiedNativeCardChoiceCaption } from "@/lib/qualified-native-family"
 import { formatRub } from "@/lib/format"
@@ -326,7 +328,7 @@ export function ProductCard({
 
   return (
     <div className="card product-card">
-      {mediaBlock}
+      <PreparedPhotoProvider scope={preparedCardPhotoScope(productRecord)}>{mediaBlock}</PreparedPhotoProvider>
       <div className="card-body">
       <Link href={productHref} className="card-link">
         <div className="card-text-stack">

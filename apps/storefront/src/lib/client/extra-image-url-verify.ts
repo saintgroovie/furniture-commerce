@@ -32,7 +32,8 @@ export function selectUrlsToProbe(
 
 function probeOneImageUrl(
   url: string,
-  timeoutMs: number = STRIP_IMAGE_PROBE_TIMEOUT_MS
+  timeoutMs: number = STRIP_IMAGE_PROBE_TIMEOUT_MS,
+  loadUrl: string = url
 ): Promise<{ url: string; ok: boolean }> {
   return new Promise((resolve) => {
     let settled = false
@@ -46,8 +47,12 @@ function probeOneImageUrl(
     try {
       const im = new Image()
       im.onload = () => finish(true)
-      im.onerror = () => finish(false)
-      im.src = url
+      let originalTried = false
+      im.onerror = () => {
+        if (loadUrl !== url && !originalTried) { originalTried = true; im.src = url; return }
+        finish(false)
+      }
+      im.src = loadUrl
     } catch {
       finish(false)
     }
@@ -61,13 +66,14 @@ function probeOneImageUrl(
  */
 export function filterExtrasBySuccessfulImageLoad(
   urls: string[],
-  maxProbes: number = DEFAULT_STRIP_IMAGE_PROBE_LIMIT
+  maxProbes: number = DEFAULT_STRIP_IMAGE_PROBE_LIMIT,
+  resolveURL: (url: string) => string = (url) => url
 ): Promise<string[]> {
   const trimmed = selectUrlsToProbe(urls, maxProbes)
 
   if (trimmed.length === 0) return Promise.resolve([])
 
-  return Promise.all(trimmed.map((url) => probeOneImageUrl(url))).then(
+  return Promise.all(trimmed.map((url) => probeOneImageUrl(url, STRIP_IMAGE_PROBE_TIMEOUT_MS, resolveURL(url)))).then(
     (results) => results.filter((r) => r.ok).map((r) => r.url)
   )
 }

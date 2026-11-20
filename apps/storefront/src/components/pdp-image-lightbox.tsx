@@ -1,5 +1,9 @@
 "use client"
 
+import { usePreparedPhotoResolver } from "./prepared-photo-scope"
+
+import { PreparedPhotoImage } from "./prepared-photo-image"
+
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react"
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
@@ -37,6 +41,7 @@ export function PdpImageLightbox({
   onClose,
   onNavigate,
 }: Props) {
+  const resolvePhoto = usePreparedPhotoResolver()
   const count = images.length
   const src = images[activeIndex]
   const mirroredFront = isReflectedOliverDeskFront(src)
@@ -218,11 +223,11 @@ export function PdpImageLightbox({
       const url = images[((i % count) + count) % count]
       if (!url) return
       const img = new Image()
-      img.src = url
+      img.src = resolvePhoto(url)
     }
     preload(activeIndex + 1)
     preload(activeIndex - 1)
-  }, [images, activeIndex, count])
+  }, [images, activeIndex, count, resolvePhoto])
 
   /* --- Keep the active thumb visible --- */
   useEffect(() => {
@@ -432,7 +437,7 @@ export function PdpImageLightbox({
         onPointerUp={onStagePointerUp}
         onPointerCancel={onStagePointerCancel}
       >
-        <img
+        <PreparedPhotoImage
           key={src}
           src={src}
           alt={alt}
@@ -479,7 +484,7 @@ export function PdpImageLightbox({
               aria-current={i === activeIndex ? "true" : undefined}
               onClick={() => goTo(i)}
             >
-              <img src={url} alt="" loading="lazy" draggable={false} />
+              <PreparedPhotoImage src={url} alt="" loading="lazy" draggable={false} />
             </button>
           ))}
         </div>

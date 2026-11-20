@@ -1,5 +1,7 @@
 "use client"
 
+import { PreparedPhotoImage } from "./prepared-photo-image"
+
 import type { MouseEvent } from "react"
 import { useCallback, useMemo, useRef, useState } from "react"
 import { ProductThumbCarousel } from "@/components/product-thumb-carousel"
@@ -160,7 +162,7 @@ function ProductPdpMediaSwitcherInner({
             onClick={openLightbox}
             aria-label={`${alt} - ${pdpLightboxCopy.open}`}
           >
-            <img
+            <PreparedPhotoImage
               src={displayHeroSrc}
               alt={alt}
               className="product-detail-img is-zoomable"
@@ -186,7 +188,7 @@ function ProductPdpMediaSwitcherInner({
         />
       )}
       {pendingPreloadUrl && (
-        <img
+        <PreparedPhotoImage
           key={pendingPreloadUrl}
           src={pendingPreloadUrl}
           alt=""

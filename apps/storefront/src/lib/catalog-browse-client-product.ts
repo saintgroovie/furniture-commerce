@@ -1,3 +1,5 @@
+import { openingVariant } from "./opening-variant"
+import { selectedPreparedPhotoScope } from "./prepared-photos"
 import { qualifiedNativeFamily, nativeFamilyPriceProof } from "./qualified-native-family"
 /**
  * W3e: compact browse view-model for CatalogBrowseClient / pool fetch.
@@ -274,11 +276,15 @@ function projectVariants(variants: unknown): Array<Record<string, unknown>> {
 export function toCatalogBrowseClientProduct(
   product: Record<string, unknown>
 ): Record<string, unknown> {
+  const opening = openingVariant(product)
+  const preparedScope = selectedPreparedPhotoScope(product, typeof opening?.id === "string" ? opening.id : null)
   const classification = product.product_classification
   const family = qualifiedNativeFamily(product)
   return {
     // Only the explicit family allowlist needs these compact hydration guards.
     ...(family ? { status: product.status, qualified_family_price: nativeFamilyPriceProof(product) } : {}),
+    // Explicit null preserves a rejected/empty scope after native image IDs drop.
+    prepared_photo_scope: preparedScope,
     id: product.id,
     handle: product.handle,
     title: product.title,

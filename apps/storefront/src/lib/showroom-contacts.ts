@@ -25,12 +25,12 @@ export type ShowroomPhone = {
 const MESSENGER_E164_DIGITS = "79672587144"
 
 /**
- * Confirmed Yandex Maps organization card for МТК «Гранд»
- * (ул. Бутаково, 4, Химки). No separate Woodright org card found -
- * do not invent oid/ll parameters.
+ * Woodright organization card verified in Yandex Maps on 2026-10-31.
+ * Address: ул. Бутаково, 4, Химки, подъезд 3. The card links to woodright.ru.
+ * Keep the verified organization URL without invented coordinates.
  */
-const YANDEX_MAPS_GRAND_URL =
-  "https://yandex.ru/maps/org/grand/1554433878/" as const
+const YANDEX_MAPS_WOODRIGHT_URL =
+  "https://yandex.com/maps/org/woodright/172762064090/" as const
 
 export const showroomContacts = {
   title: "Шоурум Woodright",
@@ -71,10 +71,10 @@ export const showroomContacts = {
     streetAddress: "ул. Бутаково, д. 4, МТК «Гранд-2», вход 3, 4 этаж, подиум Woodright",
   },
   /**
-   * Confirmed Yandex Maps URL for the showroom venue (МТК Гранд / Бутаково 4).
-   * Verified org card: address matches; no invented coordinates.
+   * Verified Woodright organization card at the showroom address.
+   * Card ownership and phone synchronization require separate account access.
    */
-  yandexMapsUrl: YANDEX_MAPS_GRAND_URL,
+  yandexMapsUrl: YANDEX_MAPS_WOODRIGHT_URL,
   freeCall: {
     label: "Бесплатный звонок",
     display: "+7 (800) 555-17-36",

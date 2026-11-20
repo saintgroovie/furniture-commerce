@@ -1,5 +1,7 @@
 "use client"
 
+import { PreparedPhotoImage } from "./prepared-photo-image"
+
 import type { MouseEvent } from "react"
 import { useCallback, useId, useMemo, useRef, useState } from "react"
 import { ProductThumbCarousel } from "@/components/product-thumb-carousel"
@@ -182,7 +184,7 @@ function OliverPdpMediaSwitcherInner({ mainSrc, extraSrcs, title, captions }: Pr
             onClick={openLightbox}
             aria-label={`${title} - ${pdpLightboxCopy.open}`}
           >
-            <img
+            <PreparedPhotoImage
               src={displayHeroSrc}
               alt={title}
               aria-describedby={activeCaption ? captionId : undefined}
@@ -210,7 +212,7 @@ function OliverPdpMediaSwitcherInner({ mainSrc, extraSrcs, title, captions }: Pr
         />
       )}
       {pendingPreloadUrl && (
-        <img
+        <PreparedPhotoImage
           key={pendingPreloadUrl}
           src={pendingPreloadUrl}
           alt=""

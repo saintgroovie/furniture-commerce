@@ -1,5 +1,7 @@
 "use client"
 
+import { usePreparedPhotoResolver } from "./prepared-photo-scope"
+
 import { useEffect, useMemo, useState } from "react"
 import {
   DEFAULT_STRIP_IMAGE_PROBE_LIMIT,
@@ -33,6 +35,7 @@ export function useVerifiedStripExtras(
   failedExtras: Set<string>,
   options?: UseVerifiedStripExtrasOptions
 ): string[] {
+  const resolvePhoto = usePreparedPhotoResolver()
   const maxProbes = options?.maxProbes ?? DEFAULT_STRIP_IMAGE_PROBE_LIMIT
   const enabled = options?.enabled !== false
   const mode = options?.mode ?? "verify"
@@ -55,7 +58,7 @@ export function useVerifiedStripExtras(
       return
     }
     let cancelled = false
-    filterExtrasBySuccessfulImageLoad(extraSrcs, maxProbes).then((ok) => {
+    filterExtrasBySuccessfulImageLoad(extraSrcs, maxProbes, resolvePhoto).then((ok) => {
       if (!cancelled) {
         setVerified(ok)
         setProbeDone(true)
@@ -65,7 +68,7 @@ export function useVerifiedStripExtras(
       cancelled = true
     }
     // `key` encodes `extraSrcs` content; avoid `[extraSrcs]` to prevent ref-noise re-probes.
-  }, [key, enabled, maxProbes, mode]) // eslint-disable-line react-hooks/exhaustive-deps -- keyed by joined extraSrcs
+  }, [key, enabled, maxProbes, mode, resolvePhoto]) // eslint-disable-line react-hooks/exhaustive-deps -- keyed by joined extraSrcs
 
   return useMemo(() => {
     if (!enabled) return []

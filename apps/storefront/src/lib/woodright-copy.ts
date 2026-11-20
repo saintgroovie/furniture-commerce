@@ -64,15 +64,15 @@ export const analyticsConsentCopy = {
 
 /** Buyer catalog toolbar microcopy (search / filters chrome). */
 export const catalogUiCopy = {
-  searchLabel: "Поиск по каталогу",
+  searchLabel: "Поиск по артикулу",
   /** Desktop / wide: full hint; fits the single-line search bubble. */
-  searchPlaceholder: "Поиск по названию, коллекции или категории",
+  searchPlaceholder: "Введите артикул",
   /**
-   * ≤768px: same three search targets without the "Поиск по …" prefix so the
+   * ≤768px: short article hint so the
    * placeholder does not clip mid-word inside the narrow input. The visible
    * label remains `searchLabel` via sr-only.
    */
-  searchPlaceholderCompact: "Название, коллекция или категория",
+  searchPlaceholderCompact: "Артикул",
   searchClear: "Очистить поиск",
   searchSubmit: "Найти",
   /** ≤768px: horizontal chip row that surfaces the «Тип изделия» facet
@@ -1355,7 +1355,7 @@ export const seo = {
     description: "Мебель из массива Woodright: готовые модели, детские коллекции, ручная отделка, выбор исполнения и мебель по проекту.",
   },
   catalog: {
-    title: "Каталог мебели Woodright - кровати, шкафы, комоды, столы",
+    title: "Мебель из массива - каталог Woodright",
     description: "Каталог Woodright: кровати, шкафы, комоды, столы, стеллажи и тумбы из массива. Готовые модели и выбор исполнения.",
   },
   kids: {
@@ -1363,7 +1363,7 @@ export const seo = {
     description: "Детская мебель Woodright: кровати, шкафы, комоды, столы и коллекции с ручной росписью для детской комнаты.",
   },
   kidsCatalog: {
-    title: "Каталог детской мебели Woodright",
+    title: "Каталог детской мебели из массива - Woodright",
     description: "Детская мебель Woodright из массива: кровати, шкафы, комоды, столы и стеллажи с ручной росписью.",
   },
   willieWinkieMotifs: {
@@ -1376,17 +1376,17 @@ export const seo = {
     description: `Мебель Вилли Винки в росписи ${title}: предметы с подтверждёнными сочетаниями и ручной росписью.`,
   }),
   rooms: {
-    title: "Мебель по комнатам Woodright - спальни, детские, кабинеты, гостиные",
-    description: "Готовые сочетания мебели Woodright для спальни, детской, кабинета, гостиной и прихожей. Комплект целиком или по предметам.",
+    title: "Комнаты Woodright - готовые сочетания мебели",
+    description: "Готовые сочетания мебели Woodright: посмотрите состав комнаты, выберите предметы и подходящее исполнение.",
   },
   kidsRooms: {
     title: "Детские комнаты Woodright",
     description: "Готовые комплекты детской мебели Woodright - от первых лет до школы, с ручной росписью и массивом дерева.",
   },
   bespoke: {
-    title: "Woodright Bespoke",
+    title: "Мебель по индивидуальному проекту - Woodright Bespoke",
     description:
-      "Woodright Bespoke - мебель по индивидуальному проекту для задач, которые не решаются каталогом и штатными вариантами.",
+      "Мебель по индивидуальному проекту Woodright: размеры, конструкция и отделка под ваше пространство. Обсудите задачу и получите расчёт.",
   },
   wallPanels: {
     title: "Стеновые панели на заказ - Woodright Bespoke",
@@ -1420,11 +1420,11 @@ export const seo = {
     description: "Материалы мебели Woodright: массив дерева, варианты отделки и ткани для обивки.",
   },
   aboutProduction: {
-    title: "Производство Woodright",
+    title: "Производство мебели из массива - Woodright",
     description: "Как рождается мебель Woodright: массив дерева, ручная отделка, готовые и проектные исполнения.",
   },
   contacts: {
-    title: "Контакты Woodright",
+    title: "Шоурум Woodright в Химках - контакты и адрес",
     description:
       "Контакты Woodright: консультация по каталогу, детской мебели, отделкам и проектным заявкам. Шоурум в Химках, МТК «Гранд-2».",
   },

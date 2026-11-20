@@ -1,5 +1,7 @@
 "use client"
 
+import { PreparedPhotoImage } from "./prepared-photo-image"
+
 import type { MouseEvent } from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
@@ -117,8 +119,9 @@ export function ProductThumbCarousel({
               onClick={onThumbPick(url, isMain)}
               title={isMain ? "Основное фото" : "Показать фото"}
             >
-              <img
+              <PreparedPhotoImage
                 src={displaySrc}
+                originalPhotoSource={srcFallbackByUrl?.[displaySrc] ?? srcFallbackByUrl?.[url]}
                 alt=""
                 loading="lazy"
                 className="product-card-media-thumb-img"
