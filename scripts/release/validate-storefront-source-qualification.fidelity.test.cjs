@@ -792,11 +792,14 @@ function photoCardSku168PreparedRecoveryRegression(){
  let cases=0;const pass=f=>{f();cases++;},reject=(f,re)=>{assert.throws(f,re);cases++;};
  pass(()=>assert.equal(Object.keys(v.sourcePaths(next)).length,168));
  pass(()=>assert.deepEqual(v.testContextMap(next),v.testContextMap(previous)));
- const changed=Object.keys(next.paths).filter(f=>JSON.stringify(next.paths[f])!==JSON.stringify(previous.paths[f]));
- pass(()=>{assert.deepEqual(Object.keys(next.paths),Object.keys(previous.paths));assert.equal(changed.length,1);const a=previous.paths[changed[0]],b=next.paths[changed[0]];assert.equal(b.before,a.before);assert.equal(b.before_blob,a.before_blob);assert.equal(b.mode,a.mode);assert.equal(b.before_mode,a.before_mode);assert.notEqual(b.after,a.after);assert.notEqual(b.after_blob,a.after_blob);});
+ const pdp='apps/storefront/src/app/product/[id]/page.tsx',expectedChanged=["apps/storefront/src/app/product/[id]/page.tsx","apps/storefront/src/components/prepared-photo-image.tsx","apps/storefront/src/lib/pdp-supplement-core.ts","apps/storefront/src/lib/pdp-supplement.server.ts"];
+ const changed=Object.keys(next.paths).filter(f=>JSON.stringify(next.paths[f])!==JSON.stringify(previous.paths[f])).sort();
+ pass(()=>{assert.deepEqual(Object.keys(next.paths),Object.keys(previous.paths));assert.deepEqual(changed,expectedChanged);for(const file of expectedChanged){const a=previous.paths[file],b=next.paths[file];assert.equal(b.before,a.before);assert.equal(b.before_blob,a.before_blob);assert.equal(b.mode,a.mode);assert.equal(b.before_mode,a.before_mode);assert.notEqual(b.after,a.after);assert.notEqual(b.after_blob,a.after_blob);}});
+ pass(()=>{assert.deepEqual(next.protected_before,previous.protected_before);assert.deepEqual(next.protected,{...previous.protected,[pdp]:next.paths[pdp].after});});
  reject(()=>v.sourcePaths({...clone(next),kind:oldKey}),/path\/hash\/mode semantics/);
  reject(()=>v.sourcePaths({...clone(previous),kind:key}),/path\/hash\/mode semantics/);
- {const x=clone(next);x.paths[changed[0]].after_blob=previous.paths[changed[0]].after_blob;reject(()=>v.sourcePaths(x),/actual blob map/);}
+ for(const file of expectedChanged){const x=clone(next);x.paths[file].after_blob=previous.paths[file].after_blob;reject(()=>v.sourcePaths(x),/actual blob map/);}
+ {const x=clone(next);x.protected[pdp]=previous.protected[pdp];reject(()=>v.sourcePaths(x),/protected\/context/);}
  {const x=clone(next);x.protected[Object.keys(x.protected)[0]]='0'.repeat(64);reject(()=>v.sourcePaths(x),/protected\/context/);}
  {const x=clone(next);delete x.paths;reject(()=>v.sourcePaths(x),/missing prepared recovery exact168/);}
  for(const field of ['source_sha','source_tree','release_ref']){const x=clone(next);x[field]=null;reject(()=>v.sourcePaths(x),/genuine source identities/);}
