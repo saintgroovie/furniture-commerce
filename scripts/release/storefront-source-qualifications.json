@@ -7881,11 +7881,11 @@
       "test_context_note": "Reuse exact accepted canonical non-runtime dependency only for qualification, existing owned cleanup; not installed in image."
     },
     "photo-card-sku-c3f1-exact168-prepared-recovery-v1": {
-      "source_sha": "64a0143b5a2878cacbca6de72f138211fe1a8e29",
-      "source_tree": "d56773eb618e023891e3829b130c27b4a768512a",
+      "source_sha": "8b9e7810acfaf6fe11d2f80f0619c4309e764f8e",
+      "source_tree": "cbdc23ab79a0dd19b05487569cb44c5c99fac288",
       "base_sha": "c3f1bb46f74a326ea0cd2f0fa9465edecc530dac",
       "base_tree": "21e92f51db20c3845981d6cf47c63f5bc4df9af5",
-      "release_ref": "release/r2-c3f1-exact168-prepared-typefix-20261111",
+      "release_ref": "release/r2-pa05-exact3-20261118",
       "backend_revision": "b121f193064aea1733a132bca431f082e6ae8072",
       "backend_digest": "sha256:98c0bf52c856b6a047957cc135ce8bdf5266ca5cb7859836a5b9c6ee69a0712f",
       "backend_tree": "ecd092a0f057865c361ae07f0c4efcee07210f41",
@@ -7898,7 +7898,7 @@
         "apps/storefront/src/app/globals.css": "0ae0bb695a2696568d2df0fdd544583827f1837c787d6363ba87db9acf8ee3b3",
         "apps/storefront/src/app/kids/catalog/page.tsx": "f72cbfa3d41dc8a90c0bb06de4915eed7aa2c1fb8ce4a9e8b6372eb08db3e3df",
         "apps/storefront/src/app/layout.tsx": "37f31a45dedf89fb7f7265913a6cb5424f86cd50107eb9d360dee63b8b1c60ba",
-        "apps/storefront/src/app/product/[id]/page.tsx": "5e1288e4d31c1b13320170fff17e970c2e8b4bf931b381b923e3d6c963de4407",
+        "apps/storefront/src/app/product/[id]/page.tsx": "537c0c9e3ebd7b8f12d366c6600bea393032b467ade66e785a17c57343d10c19",
         "apps/storefront/src/app/rooms/[slug]/page.tsx": "416b9960e4a1788473655402f2e7febb091072aeb5c4756e8a044103da07edea",
         "apps/storefront/src/app/sitemap.xml/route.ts": "3e799d0857330d364a14e77b8ba79cedbca19c4d6bf32fb239460417378f16a0",
         "apps/storefront/src/components/bespoke-form.tsx": "eaa9568c88aebf217bb0d89fec90aa7355cb492404bca26e7de3b3d230b56f57",
@@ -9044,10 +9044,10 @@
         },
         "apps/storefront/src/app/product/[id]/page.tsx": {
           "before": "cac4acae58bcf75281466d1b1dccefbf8c828bbc3d263c4a011666b756b22e50",
-          "after": "5e1288e4d31c1b13320170fff17e970c2e8b4bf931b381b923e3d6c963de4407",
+          "after": "537c0c9e3ebd7b8f12d366c6600bea393032b467ade66e785a17c57343d10c19",
           "mode": "100644",
           "before_blob": "88616d3833ed3334a5a19e2f3fd379758d096720",
-          "after_blob": "1a2416c6412ac58a0d62ee6aea0987c62c01c217",
+          "after_blob": "3870b79000c01b0ee57077e297683180a7baa6ad",
           "before_mode": "100644"
         },
         "apps/storefront/src/components/oliver-pdp-media-switcher.tsx": {
@@ -9204,10 +9204,10 @@
         },
         "apps/storefront/src/lib/pdp-supplement-core.ts": {
           "before": null,
-          "after": "bd0d2b83b4b05dec01476684acc7bdb09efaa9326227da822acc64a7534308ec",
+          "after": "717046fe9c0b06b749f90031bb98241f28cc03e2526d22cdc141e726a0d8e269",
           "mode": "100644",
           "before_blob": null,
-          "after_blob": "3315ffdc091b663683d1e65aa438a8acf2a095b1",
+          "after_blob": "59392286a7a1f63d569a9feefd9c7645e3ec9d79",
           "before_mode": null
         },
         "apps/storefront/src/lib/pdp-supplement-geometry.ts": {
@@ -9236,10 +9236,10 @@
         },
         "apps/storefront/src/lib/pdp-supplement.server.ts": {
           "before": null,
-          "after": "71c14894a54a6d988c75c46de184ccdd110350fe4fc4ea6db62b020f946970e6",
+          "after": "10ca39da09f5940733454e95cdea4b96dd386ac47b20da47dfcb05029e647663",
           "mode": "100644",
           "before_blob": null,
-          "after_blob": "3c17260856f7d4429d70a17cd8bc1e85e756fe99",
+          "after_blob": "064a97f687196a4941b4a90649d3c255e1ced92c",
           "before_mode": null
         },
         "apps/storefront/src/lib/photo-empty-projection.fidelity.test.ts": {
