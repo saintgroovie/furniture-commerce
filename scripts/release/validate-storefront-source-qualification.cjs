@@ -21,7 +21,7 @@ function canonicalTestContext(map){
 function testContextMap(c){
   if(c.test_context===undefined)return null;
   const map=canonicalTestContext(c.test_context);
-  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1','native-family-storefront-cf211-exact22-v1','seo-storefront-ab1-exact5-v1','seo-storefront-ab1-exact6-v2','seo-storefront-ab1-exact8-room-preflight-v1','photo-card-sku-c3f1-exact166-v1','photo-card-sku-c3f1-exact166-ts2300-v1','photo-card-sku-c3f1-exact166-origin-v1','photo-card-sku-c3f1-exact168-fidelity19-v1','photo-card-sku-c3f1-exact168-prepared-recovery-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
+  if(!['common-storefront-b461-v1','gallery-storefront-01f-exact7-v1','contacts-roi-storefront-b173-exact8-v1','native-family-storefront-cf211-exact20-v1','native-family-storefront-cf211-exact22-v1','seo-storefront-ab1-exact5-v1','seo-storefront-ab1-exact6-v2','seo-storefront-ab1-exact8-room-preflight-v1','photo-card-sku-c3f1-exact166-v1','photo-card-sku-c3f1-exact166-ts2300-v1','photo-card-sku-c3f1-exact166-origin-v1','photo-card-sku-c3f1-exact168-fidelity19-v1','photo-card-sku-c3f1-exact168-prepared-recovery-v1','seo-category5-8b9e-exact10-v1'].includes(c.kind)||!map[TEST_CONTEXT_FILE]||c.context_hashes[TEST_CONTEXT_FILE]!==map[TEST_CONTEXT_FILE].sha256)fail('test context binding');
   return map;
 }
 function contextOptions(c,opts={}){
@@ -185,6 +185,7 @@ function sourcePaths(c){
     if(c.kind==='seo-storefront-ab1-exact5-v1')fail('missing P02 exact5 path map');
     if(c.kind==='seo-storefront-ab1-exact6-v2')fail('missing P02 corrected exact6 path map');
     if(c.kind==='seo-storefront-ab1-exact8-room-preflight-v1')fail('missing P02 room preflight exact8 path map');
+    if(c.kind==='seo-category5-8b9e-exact10-v1')fail('missing CATEGORY5 exact10 path map');
     if(c.kind==='photo-card-sku-c3f1-exact166-v1')fail('missing exact166 path map');
     if(c.kind==='photo-card-sku-c3f1-exact166-ts2300-v1')fail('missing TS2300 exact166 path map');
     if(c.kind==='photo-card-sku-c3f1-exact166-origin-v1')fail('missing origin exact166 path map');
@@ -246,6 +247,14 @@ function sourcePaths(c){
     // Draft nulls are deliberately non-executable; only an actual Git receipt fills them.
     if(!/^[0-9a-f]{40}$/.test(c.source_sha||'')||!/^[0-9a-f]{40}$/.test(c.source_tree||'')||c.source_sha===c.base_sha||c.source_tree===c.base_tree||!/^release\/[A-Za-z0-9][A-Za-z0-9._/-]*$/.test(c.release_ref||'')||c.release_ref.includes('..'))fail('P02 room preflight genuine immutable source metadata required');
     if(['94ac8e55270e0242a875f6677b83845d5f299e4e','4a42f3bd3ddf2b13e141f8de23d08dabdd4eb4b0'].includes(c.source_sha)||['e847888e61f1552a7a8e748ba1fcf1ececb9c187','7ec15dba0d54aceb63f4e8ec3e7aca7f918dc103'].includes(c.source_tree)||['release/seo-sitemap-rooms-ab1-20261030','release/seo-sitemap-rooms-ab1-closed6-20261102'].includes(c.release_ref))fail('historical P02 identities cannot be reused for exact8');
+  }else if(c.kind==='seo-category5-8b9e-exact10-v1'){
+    if(names.length!==10||hash(JSON.stringify(c.paths))!=='a03500dd0788cbbc0cd87fa91fa66e250f9357a586b191bfc2a443e4c815ed09')fail('closed CATEGORY5 exact10 path/blob/mode map');
+    if(c.base_sha!=='8b9e7810acfaf6fe11d2f80f0619c4309e764f8e'||c.base_tree!=='cbdc23ab79a0dd19b05487569cb44c5c99fac288'||c.production_storefront_digest!=='sha256:bf915038c37d38307c130e331aaf4d2c148fe00b415096a934f8b1f97677fa9b')fail('CATEGORY5 actual published base');
+    if(c.source_tree!=='6e2989372841018a798b6137d7f49c46f4a4bab3'||c.release_ref!=='release/seo-category5-8b9e-20261127')fail('CATEGORY5 exact reviewed tree/release');
+    if(c.backend_revision!=='b121f193064aea1733a132bca431f082e6ae8072'||c.backend_tree!=='ecd092a0f057865c361ae07f0c4efcee07210f41'||c.backend_digest!=='sha256:98c0bf52c856b6a047957cc135ce8bdf5266ca5cb7859836a5b9c6ee69a0712f')fail('CATEGORY5 retained backend');
+    if(hash(JSON.stringify({protected_before:c.protected_before,protected:c.protected,context_hashes:c.context_hashes,test_context:c.test_context,retained_backend_proof:c.retained_backend_proof,workflow:c.workflow,workflow_sha256:c.workflow_sha256}))!=='0ff318e94da3b90ce44eaf8422d8216a984e2a67871aadcbaaa1cbd9eef65186')fail('CATEGORY5 sealed protected/context/workflow pins');
+    // Draft NULL never admits a source. sourceFacts independently checks actual HEAD/tree/one-parent/ref/blobs.
+    if(!/^[0-9a-f]{40}$/.test(c.source_sha||'')||c.source_sha===c.base_sha)fail('CATEGORY5 genuine immutable source commit required');
   }else if(['photo-card-sku-c3f1-exact166-v1','photo-card-sku-c3f1-exact166-ts2300-v1','photo-card-sku-c3f1-exact166-origin-v1','photo-card-sku-c3f1-exact168-fidelity19-v1','photo-card-sku-c3f1-exact168-prepared-recovery-v1'].includes(c.kind)){
     const recovery168=c.kind==='photo-card-sku-c3f1-exact168-prepared-recovery-v1';
     const fidelity168=recovery168||c.kind==='photo-card-sku-c3f1-exact168-fidelity19-v1';
