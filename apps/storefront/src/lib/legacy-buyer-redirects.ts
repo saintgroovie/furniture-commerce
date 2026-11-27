@@ -7,6 +7,7 @@
 const COLLECTION_HUBS: Record<string, string> = {
   "/kollekcii/greenwich": "/catalog?collection=greenwich",
   "/kollekcii/oliver": "/catalog?collection=oliver",
+  "/kollekcii/oliver/page-2": "/catalog?collection=oliver",
   "/kollekcii/willie-winkie": "/kids/catalog?collection=willie-winkie",
 }
 

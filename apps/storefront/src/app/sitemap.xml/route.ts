@@ -1,3 +1,4 @@
+import { categorySitemapEntries } from "@/lib/category-page-data.server"
 import { NextResponse } from "next/server"
 import { getSitemapSources } from "@/lib/api/sitemap-sources"
 import { KIDS_ROOM_TYPE } from "@/lib/kids"
@@ -41,6 +42,7 @@ export async function GET(request?: Request) {
         includeKidsRooms: sources.rooms.some(room => room.is_active === true && room.room_type === KIDS_ROOM_TYPE),
       }),
       ...collectProductSitemapEntries(origin, sources.products),
+      ...await categorySitemapEntries(origin),
       ...collectRoomSitemapEntries(origin, sources.rooms),
       ...collectMotifSitemapEntries(origin, sources.motifs),
     ])

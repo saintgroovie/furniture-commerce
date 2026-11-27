@@ -1,3 +1,4 @@
+import { CategoryLinks } from "@/components/category-links"
 import Link from "next/link"
 import type { Metadata } from "next"
 import { CatalogBrowseClient } from "@/components/catalog-browse-client"
@@ -102,6 +103,8 @@ export default async function KidsCatalogPage({
         <h1>{kidsCatalogCopy.h1}</h1>
         <CopyLines className="info-text" lines={kidsCatalogCopy.lead} />
       </div>
+
+      <CategoryLinks scope="kids" products={scoped} />
 
       <CatalogItemListJsonLd
         siteUrl={siteUrl}
